@@ -1,0 +1,73 @@
+cmake_minimum_required (VERSION 2.6)
+
+project(svgpp_test)
+
+set(GTEST_DIR ../../third_party/gtest)
+
+include_directories(
+  ../..
+  ${GTEST_DIR}
+  ${GTEST_DIR}/include
+)
+
+file(GLOB_RECURSE SVGPP_HEADERS RELATIVE  ${CMAKE_CURRENT_SOURCE_DIR}/../../include/svgpp ${CMAKE_CURRENT_SOURCE_DIR}/../../include/svgpp/*.*)
+
+foreach(i ${SVGPP_HEADERS})
+  get_filename_component(_dir ${i} PATH)
+  set(_pregroup "Headers/${_dir}")
+  set(_name "../../include/svgpp/${i}")
+  list(APPEND SOURCES
+    ${_name}
+  )
+  string(REPLACE "/" "\\" _group ${_pregroup})
+  source_group(${_group} FILES ${_name})
+endforeach()
+
+add_executable( ParserGTest
+  ${SOURCES}
+  color_grammar_test.cpp 
+  dictionary_test.cpp
+  attribute_traversal_test.cpp 
+  css_style_iterator_test.cpp 
+  icc_color_grammar_test.cpp 
+  length_factory_test.cpp 
+  #path_adapter_test.cpp 
+  path_grammar_test.cpp 
+  path_markers_adapter_test.cpp 
+  preserveAspectRatio_test.cpp 
+  #supported_value_parsers_test.cpp 
+  transform_grammar_test.cpp 
+  value_parser_test.cpp
+  value_parser_length_test.cpp 
+  value_parser_paint_test.cpp 
+  ${GTEST_DIR}/src/gtest_main.cc 
+  ${GTEST_DIR}/src/gtest-all.cc 
+)
+
+set(CHECK_HEADERS_DIR check_headers)
+
+file(GLOB_RECURSE SVGPP_HEADERS_HPP RELATIVE  ${CMAKE_CURRENT_SOURCE_DIR}/../../include/svgpp ${CMAKE_CURRENT_SOURCE_DIR}/../../include/svgpp/*.hpp)
+
+foreach(i ${SVGPP_HEADERS_HPP})
+  string(REPLACE "/" "_" _name ${i})
+  string(REPLACE "." "_" _file_name ${_name})
+  set(_file_name "${CMAKE_BINARY_DIR}/${CHECK_HEADERS_DIR}/check_${_file_name}.cpp")
+  message(${_file_name})
+  file(WRITE ${_file_name} "#include <svgpp/${i}>")
+  list(APPEND CHECK_HEADERS_SOURCES
+    ${_file_name}
+  )
+endforeach()
+
+if (MSVC)
+  set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   /W4")
+  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /W4")
+endif()
+
+add_executable(CheckHeadersAutonomy
+  ${CHECK_HEADERS_SOURCES}
+)
+
+add_executable(boost_param_test
+  boost_param_test.cpp 
+)
