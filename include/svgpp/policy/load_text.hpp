@@ -1,0 +1,16 @@
+#pragma once
+
+namespace svgpp { namespace policy { namespace load_text 
+{
+
+template<class Context>
+struct forward_to_method
+{
+  template<class T>
+  static void set_text(Context & context, T const & value)
+  {
+    context.set_text(value);
+  }
+};
+
+}}}

@@ -1,0 +1,5 @@
+SVGPP_ON(animate)
+SVGPP_ON(animateColor)
+SVGPP_ON(animateMotion)
+SVGPP_ON(animateTransform)
+SVGPP_ON(set)

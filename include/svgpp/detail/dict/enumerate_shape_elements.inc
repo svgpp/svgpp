@@ -1,0 +1,7 @@
+ SVGPP_ON(circle)
+ SVGPP_ON(ellipse)
+ SVGPP_ON(line)
+ SVGPP_ON(path)
+ SVGPP_ON(polygon)
+ SVGPP_ON(polyline)
+ SVGPP_ON(rect)

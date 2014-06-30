@@ -1,0 +1,5 @@
+SVGPP_ON(defs)
+SVGPP_ON(g)
+SVGPP_ON(svg)
+SVGPP_ON(symbol)
+SVGPP_ON(use_)

@@ -1,0 +1,7 @@
+ SVGPP_ON(type) 
+ SVGPP_ON(tableValues) 
+ SVGPP_ON(slope) 
+ SVGPP_ON(intercept) 
+ SVGPP_ON(amplitude) 
+ SVGPP_ON(exponent) 
+ SVGPP_ON(offset)

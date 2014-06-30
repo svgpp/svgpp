@@ -1,0 +1,49 @@
+#pragma once
+
+#include <boost/spirit/include/qi.hpp>
+#include <svgpp/parser/detail/common.hpp>
+
+namespace svgpp
+{
+
+namespace qi = boost::spirit::qi;
+
+template <class Iterator>
+class iri_grammar:
+  public qi::grammar<Iterator, typename boost::iterator_range<Iterator>()>
+{
+  typedef iri_grammar<Iterator> this_type;
+public:
+  iri_grammar()
+    : this_type::grammar(rule_)
+  {
+    using detail::character_encoding_namespace::char_;
+
+    // TODO: More thorough RFC 3987 check
+    rule_ = qi::raw[ + (!char_(')') >> char_) ];
+  }
+
+private:
+  typename this_type::start_type rule_; 
+};
+
+template <class Iterator>
+class funciri_grammar:
+  public qi::grammar<Iterator, typename boost::iterator_range<Iterator>()>
+{
+  typedef funciri_grammar<Iterator> this_type;
+public:
+  funciri_grammar()
+    : this_type::grammar(rule_)
+  {
+    using detail::character_encoding_namespace::char_;
+
+    rule_ = qi::lit("url(") >> iri_ >> qi::lit(')');
+  }
+
+private:
+  typename this_type::start_type rule_; 
+  iri_grammar<Iterator> iri_;
+};
+
+}

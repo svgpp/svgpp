@@ -1,0 +1,31 @@
+#pragma once
+
+#include <svgpp/definitions.hpp>
+#include <boost/mpl/bool.hpp>
+
+namespace svgpp { namespace traits
+{
+  
+template<class AttributeTag>
+struct inherited_property: boost::mpl::true_ {}; // TODO: limit to properties only
+
+template<> struct inherited_property<tag::attribute::alignment_baseline>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::baseline_shift>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::clip>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::clip_path>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::display>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::dominant_baseline>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::enable_background>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::filter>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::flood_color>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::flood_opacity>: boost::mpl::false_ {};	
+template<> struct inherited_property<tag::attribute::lighting_color>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::mask>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::opacity>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::overflow>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::stop_color>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::stop_opacity>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::text_decoration>: boost::mpl::false_ {};
+template<> struct inherited_property<tag::attribute::unicode_bidi>: boost::mpl::false_ {};
+
+}}

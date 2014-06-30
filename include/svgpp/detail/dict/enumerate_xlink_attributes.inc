@@ -1,0 +1,7 @@
+SVGPP_ON_NS(xlink, href)
+SVGPP_ON_NS(xlink, show)
+SVGPP_ON_NS(xlink, actuate)
+SVGPP_ON_NS(xlink, type)
+SVGPP_ON_NS(xlink, role)
+SVGPP_ON_NS(xlink, arcrole)
+SVGPP_ON_NS(xlink, title)

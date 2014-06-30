@@ -1,0 +1,382 @@
+#pragma once
+
+#include <svgpp/detail/required_attributes_check.hpp>
+#include <svgpp/xml_policy_fwd.hpp>
+#include <svgpp/parser/css_style_iterator.hpp>
+#include <svgpp/detail/attribute_name_to_id.hpp>
+#include <svgpp/detail/names_dictionary.hpp>
+#include <svgpp/traits/attribute_groups.hpp>
+#include <svgpp/attribute_traversal_common.hpp>
+#include <svgpp/template_parameters.hpp>
+#include <svgpp/context_policy.hpp>
+#include <bitset>
+#include <boost/mpl/at.hpp>
+#include <boost/mpl/map.hpp>
+#include <boost/mpl/if.hpp>
+#include <boost/mpl/empty_sequence.hpp>
+#include <boost/mpl/joint_view.hpp>
+#include <boost/mpl/push_back.hpp>
+#include <boost/mpl/single_view.hpp>
+#include <boost/type_traits/is_same.hpp>
+#include <boost/parameter.hpp>
+
+namespace svgpp
+{
+
+template<class Op>
+struct context_operation;
+
+namespace traversal_detail
+{
+  struct priority_load_start
+  {
+    template<class Context, class AttributeLoadFunc>
+    static bool execute(Context &, AttributeLoadFunc &)
+    { return true; }
+  };
+
+  template<class Prev, class Attribute>
+  struct priority_load_op
+  {
+    template<class Context, class AttributeLoadFunc>
+    static bool execute(Context & context, AttributeLoadFunc & load_func)
+    {
+      if (!Prev::execute(context, load_func))
+        return false;
+      return load_func(Attribute::attribute_id);
+    }
+  };
+
+  template<class Prev, class Op>
+  struct priority_load_op<Prev, context_operation<Op> >
+  {
+    template<class Context, class AttributeLoadFunc>
+    static bool execute(Context & context, AttributeLoadFunc & load_func)
+    {
+      if (!Prev::execute(context, load_func))
+        return false;
+      Op::apply(context);
+      return true;
+    }
+  };
+
+  template<class State, class AttributeTag>
+  struct is_attribute_id_in_sequence_op
+  {
+    static bool check(detail::attribute_id id)
+    {
+      return AttributeTag::id == id || State::check(id);
+    }
+  };
+
+  struct is_attribute_id_in_sequence_start
+  {
+    BOOST_CONSTEXPR static bool check(detail::attribute_id)
+    {
+      return false;
+    }
+  };
+
+  template<class ValueSaver, bool ParseStyleAttribute>
+  class found_attributes;
+  
+  template<class ValueSaver>
+  class found_attributes<ValueSaver, true>
+  {
+  private:
+    typename ValueSaver::attribute_or_css_saved_value attribute_or_css_saved_values_[detail::styling_attribute_count];
+    typename ValueSaver::attribute_saved_value attribute_saved_values_[detail::attribute_count - detail::styling_attribute_count];
+    std::bitset<detail::attribute_count> attribute_found_;
+    std::bitset<detail::styling_attribute_count> css_found_;
+
+  public:
+    template<class XMLAttributesIterator>
+    void save_attribute(detail::attribute_id id, XMLAttributesIterator const & xml_attributes_iterator)
+    {
+      attribute_found_.set(id);
+      if (id <= detail::last_styling_attribute)
+      {
+        if (!css_found_.test(id))
+          ValueSaver::save(xml_attributes_iterator, attribute_or_css_saved_values_
+            [static_cast<size_t>(id)]);
+      }
+      else
+        ValueSaver::save(xml_attributes_iterator, attribute_saved_values_
+          [static_cast<size_t>(id - detail::styling_attribute_count)]);
+    }
+
+    template<class StyleValue>
+    void save_css(detail::attribute_id style_id, StyleValue const & style_value)
+    {
+      ValueSaver::save(style_value, attribute_or_css_saved_values_[static_cast<size_t>(style_id)]);
+      css_found_.set(static_cast<size_t>(style_id));
+    }
+
+    template<class Context, bool ClearFoundMark>
+    class load_func: boost::noncopyable
+    {
+    public:
+      load_func(Context & context, found_attributes<ValueSaver, true> & found_attributes)
+        : found_attributes_(found_attributes)
+        , context_(context)
+      {
+      }
+
+      bool operator()(detail::attribute_id id) const
+      {
+        if (id < detail::styling_attribute_count)
+        {
+          if (found_attributes_.css_found_.test(id))
+          {
+            if (ClearFoundMark)
+            {
+              found_attributes_.css_found_.reset(id);
+              found_attributes_.attribute_found_.reset(id);
+            }
+
+            return context_.load_attribute(id, 
+              ValueSaver::get_value(found_attributes_.attribute_or_css_saved_values_[id]),
+              tag::source::css());
+          }
+          else if (found_attributes_.attribute_found_.test(id))
+          {
+            if (ClearFoundMark)
+              found_attributes_.attribute_found_.reset(id);
+
+            return context_.load_attribute(id, 
+              ValueSaver::get_value(found_attributes_.attribute_or_css_saved_values_[id]),
+              tag::source::attribute());
+          }
+        }
+        else if (found_attributes_.attribute_found_.test(id))
+        {
+          if (ClearFoundMark)
+            found_attributes_.attribute_found_.reset(id);
+
+          return context_.load_attribute(id, ValueSaver::get_value(
+            found_attributes_.attribute_saved_values_[id - detail::styling_attribute_count]),
+            tag::source::attribute());
+        }
+        return true;
+      }
+
+    private:
+      found_attributes<ValueSaver, true> & found_attributes_;
+      Context & context_;
+    };
+  };
+
+  template<class ValueSaver>
+  class found_attributes<ValueSaver, false>
+  {
+  private:
+    typename ValueSaver::attribute_saved_value attribute_saved_values_[detail::attribute_count];
+    std::bitset<detail::attribute_count> attribute_found_;
+
+  public:
+    template<class XMLAttributesIterator>
+    void save_attribute(detail::attribute_id id, XMLAttributesIterator const & xml_attributes_iterator)
+    {
+      attribute_found_.set(id);
+      ValueSaver::save(xml_attributes_iterator, attribute_saved_values_
+        [static_cast<size_t>(id)]);
+    }
+
+    template<class Context, bool ClearFoundMark>
+    class load_func: boost::noncopyable
+    {
+    public:
+      load_func(Context & context, found_attributes<ValueSaver, false> & found_attributes)
+        : found_attributes_(found_attributes)
+        , context_(context)
+      {
+      }
+
+      bool operator()(detail::attribute_id id) const
+      {
+        if (found_attributes_.attribute_found_.test(id))
+        {
+          if (ClearFoundMark)
+            found_attributes_.attribute_found_.reset(id);
+
+          return context_.load_attribute(id, ValueSaver::get_value(
+            found_attributes_.attribute_saved_values_[id]),
+            tag::source::attribute());
+        }
+        else
+          return true;
+      }
+
+    private:
+      found_attributes<ValueSaver, false> & found_attributes_;
+      Context & context_;
+    };
+  };
+} // namespace traversal_detail
+
+template<class AttributeTraversalPolicy, bool ParseStyleAttribute = true, SVGPP_TEMPLATE_ARGS_DEF>
+struct attribute_traversal_prioritized
+{
+  typedef typename boost::parameter::parameters<
+      boost::parameter::optional<tag::xml_attribute_iterator_policy>,
+      boost::parameter::optional<tag::error_policy>,
+      boost::parameter::optional<tag::css_name_to_id_policy>
+  >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
+  typedef typename boost::parameter::value_type<args, tag::xml_attribute_iterator_policy, 
+    detail::parameter_not_set_tag >::type xml_attribute_policy_param;
+  typedef typename boost::parameter::value_type<args, tag::error_policy, 
+    detail::parameter_not_set_tag>::type error_policy_param;
+  typedef typename boost::parameter::value_type<args, tag::css_name_to_id_policy, 
+    css_name_to_id_policy_default>::type css_name_to_id_policy;
+
+  template<class XMLAttributesIterator, class Policy = xml_attribute_iterator_policy<XMLAttributesIterator> >
+  struct attribute_value_saver
+  {
+    typedef typename Policy::attribute_value_type attribute_saved_value;
+    typedef typename Policy::attribute_value_type attribute_or_css_saved_value;
+    typedef typename Policy::attribute_value_type value_type;
+
+    static void save(XMLAttributesIterator const & xml_attributes_iterator,
+      attribute_saved_value & store)
+    {
+      store = Policy::get_value(xml_attributes_iterator);
+    }
+
+    static void save(typename Policy::attribute_value_type const & range,
+      attribute_or_css_saved_value & store)
+    {
+      store = range;
+    }
+
+    static typename Policy::attribute_value_type const & get_value(attribute_saved_value const & store)
+    {
+      return store;
+    }
+  };
+
+  template<class XMLAttributesIterator, class Context>
+  static bool load(XMLAttributesIterator xml_attributes_iterator, Context & context)
+  {
+    typedef typename boost::mpl::if_<
+      boost::is_same<xml_attribute_policy_param, detail::parameter_not_set_tag>,
+      xml_attribute_iterator_policy<XMLAttributesIterator>,
+      xml_attribute_policy_param
+    >::type xml_policy;
+
+    typedef attribute_value_saver<XMLAttributesIterator> value_saver;
+    typedef traversal_detail::found_attributes<value_saver, ParseStyleAttribute> found_attributes;
+    typedef typename boost::mpl::if_<
+      boost::is_same<error_policy_param, detail::parameter_not_set_tag>,
+      context_policy<tag::error_policy, Context>,
+      error_policy_param
+    >::type error_policy_t;
+
+    detail::required_attributes_check<typename AttributeTraversalPolicy::required_attributes> required_check;
+    found_attributes found;
+    typename xml_policy::attribute_value_type style_value; // Iterators in the value persist till the end of function
+    for(; !xml_policy::is_end(xml_attributes_iterator); xml_policy::advance(xml_attributes_iterator))
+    {
+      detail::namespace_id ns = xml_policy::get_namespace(xml_attributes_iterator);
+      if (ns == detail::namespace_id::other)
+        continue;
+      xml_policy::attribute_name_type attribute_name = xml_policy::get_local_name(xml_attributes_iterator);
+      detail::attribute_id id = detail::attribute_name_to_id(ns, attribute_name);
+      switch (id)
+      {
+      case detail::unknown_attribute_id:
+        if (!error_policy_t::unknown_attribute(context, xml_attributes_iterator, attribute_name, tag::source::attribute()))
+          return false;
+        break;
+      case detail::attribute_id_style:
+        if (ParseStyleAttribute)
+        {
+          if (!load_style<xml_policy, error_policy_t>(xml_attributes_iterator, context, style_value, found))
+            return false;
+          break;
+        }
+      default:
+        required_check(id);
+        found.save_attribute(id, xml_attributes_iterator);
+        break;
+      }
+    }
+
+    detail::missing_attribute_visitor<error_policy_t, Context> visitor(context);
+    if (!required_check.visit_missing(visitor))
+      return false;
+    
+    {
+      // Load priority attributes in required order,
+      // mark them as loaded
+      typedef typename boost::mpl::fold<
+        typename AttributeTraversalPolicy::priority_attributes, 
+        traversal_detail::priority_load_start,
+        traversal_detail::priority_load_op<boost::mpl::_1, boost::mpl::_2> 
+      >::type priority_load_operations_t;
+
+      found_attributes::load_func<Context, true> load_func(context, found);
+      if (!priority_load_operations_t::execute(context, load_func))
+        return false;
+    }
+
+    typedef boost::mpl::fold<
+      typename AttributeTraversalPolicy::deferred_attributes,
+      traversal_detail::is_attribute_id_in_sequence_start,
+      traversal_detail::is_attribute_id_in_sequence_op<boost::mpl::_1, boost::mpl::_2>
+    >::type is_deferred_t;
+
+    // Load remaining attributes, excluding deferred
+    typedef found_attributes::load_func<Context, false> load_func_t;
+    load_func_t load_func(context, found);
+    for(size_t id = 0; id < detail::attribute_count; ++id)
+      if (!is_deferred_t::check(static_cast<detail::attribute_id>(id)))
+        if (!load_func(static_cast<detail::attribute_id>(id)))
+          return false;
+
+    // Loading deferred attributes
+    typedef typename boost::mpl::fold<
+      typename AttributeTraversalPolicy::deferred_attributes, 
+      traversal_detail::priority_load_start,
+      traversal_detail::priority_load_op<boost::mpl::_1, boost::mpl::_2> 
+    >::type deferred_load_operations_t;
+
+    return deferred_load_operations_t::execute(context, load_func);
+  }
+
+private:
+  template<class XMLPolicy, class ErrorPolicy, class XMLAttributesIterator, class Context, class FoundAttributes>
+  static bool load_style(XMLAttributesIterator const & xml_attributes_iterator, Context & context,
+    typename XMLPolicy::attribute_value_type & style_value,
+    FoundAttributes & found,
+    typename boost::enable_if_c<ParseStyleAttribute && (true || boost::is_void<XMLAttributesIterator>::value)>::type * = NULL)
+  {
+    style_value = XMLPolicy::get_value(xml_attributes_iterator);
+    typedef css_style_iterator<typename boost::range_iterator<typename XMLPolicy::attribute_value_type>::type> css_iterator;
+    for(css_iterator it(boost::begin(style_value), boost::end(style_value)); !it.eof(); ++it)
+    {
+      detail::attribute_id style_id = css_name_to_id_policy::find(it->first);
+      if (style_id == detail::unknown_attribute_id)
+      {
+        if (!ErrorPolicy::unknown_attribute(context, xml_attributes_iterator, it->first, tag::source::css()))
+          return false;
+      }
+      else
+      {
+        found.save_css(style_id, it->second);
+      }
+    }
+    return true;
+  }
+
+  template<class XMLPolicy, class ErrorPolicy, class XMLAttributesIterator, class Context, class FoundAttributes>
+  static bool load_style(XMLAttributesIterator const & xml_attributes_iterator, Context & context,
+    typename XMLPolicy::attribute_value_type & style_value,
+    FoundAttributes & found,
+    typename boost::disable_if_c<ParseStyleAttribute && (true || boost::is_void<XMLAttributesIterator>::value)>::type * = NULL)
+  {
+    BOOST_ASSERT(false); // Must not be called
+    return true;
+  }
+};
+
+}

@@ -1,0 +1,7 @@
+SVGPP_ON(calcMode)
+SVGPP_ON(values)
+SVGPP_ON(keyTimes)
+SVGPP_ON(keySplines)
+SVGPP_ON(from)
+SVGPP_ON(to)
+SVGPP_ON(by)

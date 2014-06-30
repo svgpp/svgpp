@@ -1,0 +1,3 @@
+SVGPP_ON(requiredFeatures)
+SVGPP_ON(requiredExtensions)
+SVGPP_ON(systemLanguage)

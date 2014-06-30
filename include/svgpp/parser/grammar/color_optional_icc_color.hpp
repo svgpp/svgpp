@@ -1,0 +1,40 @@
+#pragma once
+
+#include <svgpp/parser/grammar/color.hpp>
+#include <svgpp/parser/grammar/icc_color.hpp>
+
+namespace svgpp 
+{
+
+namespace qi = boost::spirit::qi;
+
+template <
+  class PropertySource, 
+  class Iterator, 
+  class ColorFactory,
+  class ICCColorFactory
+>
+class color_optional_icc_color_grammar:
+  public qi::grammar<Iterator, boost::tuple<typename ColorFactory::color_type, boost::optional<typename ICCColorFactory::icc_color_type> >() >
+{
+  typedef color_optional_icc_color_grammar<PropertySource, Iterator, ColorFactory, ICCColorFactory> this_type;
+public:
+  color_optional_icc_color_grammar()
+    : this_type::grammar(rule_)
+  {
+    using detail::character_encoding_namespace::space;
+
+    rule_ = 
+        color_rule_
+        >> - ( +space 
+                >> icc_color_rule_
+             );
+  }
+
+private:
+  color_grammar<Iterator, ColorFactory> color_rule_;
+  icc_color_grammar<PropertySource, Iterator, ICCColorFactory> icc_color_rule_;
+  typename this_type::start_type rule_; 
+};
+
+}
