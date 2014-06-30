@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE subs-interface-reply SYSTEM "http://account.ea.com/subsxml/subs-interface.dtd">
+<subs-interface-reply version="2.0">
+   <status>0</status>
+   <message>Success</message>
+   <get-registration-dictionary-reply>
+      <message-dictionary>
+         <message id="00GAMENAME-1"><![CDATA[FIFA 07]]></message>
+         <message id="BUTTONSANDLABELS-1"><![CDATA[REGISZTRÁCIÓ]]></message>
+         <message id="BUTTONSANDLABELS-10"><![CDATA[OK]]></message>
+         <message id="BUTTONSANDLABELS-11"><![CDATA[MÉGSE]]></message>
+         <message id="BUTTONSANDLABELS-12"><![CDATA[ÚJRA]]></message>
+         <message id="BUTTONSANDLABELS-13"><![CDATA[BEZÁR]]></message>
+         <message id="BUTTONSANDLABELS-14"><![CDATA[KILÉP]]></message>
+         <message id="BUTTONSANDLABELS-15"><![CDATA[KÉSŐBB]]></message>
+         <message id="BUTTONSANDLABELS-2"><![CDATA[REGISZTRÁCIÓ KÉSŐBB]]></message>
+         <message id="BUTTONSANDLABELS-3"><![CDATA[REGISZTRÁCIÓ MOST]]></message>
+         <message id="BUTTONSANDLABELS-4"><![CDATA[IGEN]]></message>
+         <message id="BUTTONSANDLABELS-5"><![CDATA[NEM]]></message>
+         <message id="BUTTONSANDLABELS-6"><![CDATA[ELŐZŐ]]></message>
+         <message id="BUTTONSANDLABELS-7"><![CDATA[TOVÁBB]]></message>
+         <message id="BUTTONSANDLABELS-8"><![CDATA[VISSZA]]></message>
+         <message id="BUTTONSANDLABELS-9"><![CDATA[KÉSZ]]></message>
+         <message id="CONNECT1A-1"><![CDATA[<B>A játék regisztrálásához fel kell lépned az Internetre.</b>]]></message>
+         <message id="CONNECT1A-2"><![CDATA[Ha még nem csatlakoztál az Internethez, kérjük tedd meg most. Amint csatlakoztál, nyomd meg a <b>Tovább</b> gombot a folytatáshoz.]]></message>
+         <message id="CONNECT1A-3"><![CDATA[<font color="#333399"><a href="asfunction:gotoURL,r3b"><u>Mit tegyek, ha nincs Internet kapcsolatom?</u></a></font>]]></message>
+         <message id="CONNECT1B-1"><![CDATA[<b>Regisztrációd megerősítéséhez, illetve izgalmas promóciós ajánlatokhoz csatlakozz az Internetre.</b>]]></message>
+         <message id="CONNECT1B-2"><![CDATA[Ha még nem csatlakoztál az Internethez, kérjük tedd meg most. Amint csatlakoztál, nyomd meg a <b>Tovább</b> gombot a folytatáshoz.]]></message>
+         <message id="CONNECT1B-3"><![CDATA[<font color="#333399"><a href="asfunction:gotoURL,r3b"><u>Mit tegyek, ha nincs Internet kapcsolatom?</u></a></font>]]></message>
+         <message id="CONNECT1C-1"><![CDATA[<b>Kapcsolódás az EA-hoz... </b>]]></message>
+         <message id="CONNECT1C-2"><![CDATA[<b>Kérjük, várj - a folyamat kis időt vehet igénybe.</b>]]></message>
+         <message id="CONNECTED1A-1"><![CDATA[<b>Kapcsolat létrejött.</b>]]></message>
+         <message id="CONNECTED1A-2"><![CDATA[<b>Regisztráció indítása…</b>]]></message>
+         <message id="CONNECTED1B-1"><![CDATA[<b>Csatlakozás sikertelen</b>]]></message>
+         <message id="CONNECTED1B-2"><![CDATA[Nem tudunk csatlakozni az EA regisztrációs rendszeréhez. Terméked regisztrációjához aktív Internetes kapcsolat szükséges. Ha még nem kapcsolódtál fel az Internetre, kérjük tedd meg most.]]></message>
+         <message id="CONNECTED1B-3"><![CDATA[Miután kapcsolódtál, nyomd meg az <b>ÚJRA</b> gombot.]]></message>
+         <message id="CONNECTED1B-4"><![CDATA[<font color="#333399"><a href="asfunction:gotoURL,r3b"><u>Mit tegyek, ha többszöri próbálkozásra sem sikerül a kapcsolat?</u></a></font>]]></message>
+         <message id="CONNECTHOWTO-1"><![CDATA[<b>A termék regisztrációjához Internet kapcsolat szükséges.</b>A játék elindításához nem kötelező a regisztráció.  Amennyiben regisztrálni kívánod a programot, de sikertelen a kapcsolatfelvétel az EA regisztrációs rendszerével, a következőket tanácsoljuk:]]></message>
+         <message id="CONNECTHOWTO-2"><![CDATA[Ellenőrizd Internet kapcsolatod működését!]]></message>
+         <message id="CONNECTHOWTO-3"><![CDATA[Lépj kapcsolatba az EA Terméktámogatással. Ennek elérhetőségét az adott játék kézikönyvében találod.]]></message>
+         <message id="CONNECTHOWTO-4"><![CDATA[Menj a <font color="#333399"><a href="http://www.eagamereg.com"><u>www.eagamereg.com</u></a> oldalra és töltsd ki a webes regisztrációs nyomtatványt.</font>]]></message>
+         <message id="CONNECTING-1"><![CDATA[<b>Kapcsolódás az EA-hoz</b>]]></message>
+         <message id="CONNECTING-2"><![CDATA[Csatlakozni próbálunk az EA termékregisztrációs rendszeréhez. Kérjük várj, a folyamat kis időt vehet igénybe.]]></message>
+         <message id="NOINTERNET-1"><![CDATA[<B>Nincs Internet kapcsolatod? Nem probléma!</B>]]></message>
+         <message id="NOINTERNET-2"><![CDATA[Játszhatsz a(z) {client:game-name} játékkal regisztráció nélkül is. Ha műszaki segítségnyújtásra van szükséged, regisztrálhatod a játékot telefonon keresztül is. A telefonszámot megtalálod a játék kézikönyvében.<BR>]]></message>
+         <message id="NOINTERNET-3"><![CDATA[Élvezd a játékot!]]></message>
+         <message id="NOINTERNET-4"><![CDATA[Electronic Arts]]></message>
+         <message id="OFFLINEEXITCONFIRM-1"><![CDATA[<b>Biztos vagy benne, hogy ki akarsz lépni?</b>]]></message>
+         <message id="REGISTERLATER-1"><![CDATA[<b>Ha nem regisztráltatod a terméket, az alábbi nagyszerű lehetőségeket hagyod ki:</b><BR>]]></message>
+         <message id="REGISTERLATER-2"><![CDATA[<li>Különleges ajánlatok EA játékokra</li>]]></message>
+         <message id="REGISTERLATER-3"><![CDATA[<li>Teljeskörű technikai támogatás</li>]]></message>
+         <message id="REGISTERLATER-4"><![CDATA[<li>Bennfentes információk a kedvenc EA játékaidról</li>]]></message>
+         <message id="REGISTERLATER-5"><![CDATA[<li> Ingyen csalás, vagy játéktipp a játékodhoz!</li>]]></message>
+         <message id="REGISTERLATER-6"><![CDATA[<BR><b>Regisztrálj, és élvezd a játékot.</b>]]></message>
+         <message id="SIGNIN1B-1"><![CDATA[<b>A(z) {client:game-name} ezen verzióját nem lehet regisztrálni.</b> A játék használatához nem kell regisztrálnod. A legfrissebb információkat megtalálod a <font color="#333399"><a href="http://www.ea.com"><u>www.ea.com</u></a></font> oldalon. Ugyanitt feliratkozhatsz az EA hírlevélre is.<BR>]]></message>
+         <message id="START1A-1"><![CDATA[<b>Szerezz csalásokat vagy játéktippeket, és még sokminden mást!</b> <BR><BR>]]></message>
+         <message id="START1A-2"><![CDATA[<b>Regisztráld a(z) {client:game-name} -t most és tiéd lehetnek!</b><BR>]]></message>
+         <message id="START1A-3"><![CDATA[<li> Ingyen csalás vagy játéktipp a játékodhoz!</li>]]></message>
+         <message id="START1A-4"><![CDATA[<li>Bennfentes információk a kedvenc EA játékaidról</li>]]></message>
+         <message id="START1A-5"><![CDATA[<li>Teljeskörű technikai támogatás</li>]]></message>
+         <message id="START1A-6"><![CDATA[<li>Különleges ajánlatok EA játékokra</li>]]></message>
+         <message id="START1B-1"><![CDATA[<b>Már regisztráltattad a(z) {client:game-name} -t.</b>]]></message>
+         <message id="START1B-2"><![CDATA[Át akarod nézni a regisztrációs információkat, illetve akarsz válaszolni még néhány kérdésre, hogy különleges ajánlatokat kapj EA játékokra?]]></message>
+         <message id="TITLE-PREFIX"><![CDATA[default]]></message>
+         <message id="TITLE-SUFFIX"><![CDATA[default]]></message>
+      </message-dictionary>
+   </get-registration-dictionary-reply>
+</subs-interface-reply>
+

@@ -1,0 +1,19 @@
+.default:
+	@echo Error: no target specified for internal make
+
+build: ../$(CONFIG)/$(BINARY)
+
+../$(CONFIG)/$(BINARY): $(SOURCES)
+	$(CC) -D $(CDEFINES) $(COPTIONS) -o $@ $^ >build-log.txt 2>&1
+
+run:
+	../$(CONFIG)/$(BINARY) >run-log.txt 2>&1
+
+clean:
+	@rm -f build-log.txt
+	@rm -f run-log.txt
+	@rm -f ../$(CONFIG)/*
+	@if [ -e ../$(CONFIG) ]; then \
+		rmdir ../$(CONFIG); \
+	fi
+
