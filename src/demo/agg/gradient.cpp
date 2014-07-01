@@ -1,6 +1,5 @@
 #include "gradient.hpp"
 
-#include <svgpp/xml/rapidxml_ns.hpp>
 #include <svgpp/document_traversal.hpp>
 #include <boost/mpl/set.hpp>
 
@@ -84,7 +83,7 @@ public:
   { data_.spreadMethod_ = GradientBase::spreadRepeat; }
 
 protected:
-  std::string id_;
+  svg_string_t id_;
   GradientBase & data_;
 };
 
@@ -166,7 +165,7 @@ private:
   bool fx_set_, fy_set_;
 };
 
-struct gradient_child_context_factories
+struct gradient_context_factories
 {
   template<class ParentContext, class ElementTag>
   struct apply;
@@ -174,25 +173,25 @@ struct gradient_child_context_factories
   template<>
   struct apply<GradientContext, svgpp::tag::element::linearGradient>
   {
-    typedef svgpp::child_context_factory_on_stack<GradientContext, LinearGradientContext> type;
+    typedef svgpp::context_factory::on_stack<GradientContext, LinearGradientContext> type;
   };
 
   template<>
   struct apply<GradientContext, svgpp::tag::element::radialGradient>
   {
-    typedef svgpp::child_context_factory_on_stack<GradientContext, RadialGradientContext> type;
+    typedef svgpp::context_factory::on_stack<GradientContext, RadialGradientContext> type;
   };
 
   template<class ParentContext>
   struct apply<ParentContext, svgpp::tag::element::stop>
   {
-    typedef svgpp::child_context_factory_on_stack<ParentContext, GradientStopContext> type;
+    typedef svgpp::context_factory::on_stack<ParentContext, GradientStopContext> type;
   };
 };
 
 }
 
-Gradient const * Gradients::get(std::string const & id)
+Gradient const * Gradients::get(svg_string_t const & id)
 {
   std::pair<GradientMap::iterator, bool> ins = gradients_.insert(
     GradientMap::value_type(id, boost::optional<Gradient>()));
@@ -201,15 +200,15 @@ Gradient const * Gradients::get(std::string const & id)
   return ins.first->second.get_ptr();
 }
 
-void Gradients::load_gradient(std::string const & id, boost::optional<Gradient> & out) const
+void Gradients::load_gradient(svg_string_t const & id, boost::optional<Gradient> & out) const
 {
   // TODO: inheritance via xlink::href
-  if (rapidxml_ns::xml_node<> const * node = xml_document_.find_element_by_id(id))
+  if (XMLElement node = xml_document_.find_element_by_id(id))
   {
     try
     {
       svgpp::document_traversal<
-        svgpp::child_context_factories<gradient_child_context_factories>,
+        svgpp::context_factories<gradient_context_factories>,
         svgpp::color_factory<color_factory>,
         svgpp::processed_elements<
           boost::mpl::set<
@@ -240,7 +239,7 @@ void Gradients::load_gradient(std::string const & id, boost::optional<Gradient> 
       >::load_referenced_element<svgpp::traits::gradient_elements>(node, out);
     } catch (std::exception const & e)
     {
-      std::cerr << "Error loading paint \"" << id << "\": " << e.what() << "\n";
+      std::cerr << "Error loading paint \"" << std::string(id.begin(), id.end()) << "\": " << e.what() << "\n";
     }
   }
 }

@@ -17,14 +17,17 @@
 namespace svgpp
 {
 
+namespace context_factory
+{
+
 template<class ParentContext, class ElementTag>
-class child_context_factory_same: boost::noncopyable
+class same: boost::noncopyable
 {
 public:
   typedef ParentContext type;
 
   template<class XMLElement, class LoaderState>
-  child_context_factory_same(ParentContext & context, XMLElement const &, LoaderState &)
+  same(ParentContext & context, XMLElement const &, LoaderState &)
     : context_(context)
   {
     context_.on_enter_element(ElementTag());
@@ -42,13 +45,13 @@ private:
 };
 
 template<class ParentContext, class ChildContext>
-class child_context_factory_on_stack: boost::noncopyable
+class on_stack: boost::noncopyable
 {
 public:
   typedef ChildContext type;
 
   template<class XMLElement, class LoaderState>
-  child_context_factory_on_stack(ParentContext & context, XMLElement const &, LoaderState &)
+  on_stack(ParentContext & context, XMLElement const &, LoaderState &)
     : context_(context)
   {
   }
@@ -70,13 +73,13 @@ template<
   class ChildContextPtr, 
   class ChildContext = typename boost::pointee<ChildContextPtr>::type 
 >
-class child_context_factory_get_ptr_from_parent: boost::noncopyable
+class get_ptr_from_parent: boost::noncopyable
 {
 public:
   typedef ChildContext type;
 
   template<class XMLElement, class LoaderState>
-  child_context_factory_get_ptr_from_parent(ParentContext & context, XMLElement const &, LoaderState &)
+  get_ptr_from_parent(ParentContext & context, XMLElement const &, LoaderState &)
     : context_(context.get_child_context(ElementTag()))
   {
   }
@@ -92,16 +95,18 @@ private:
   ChildContextPtr context_;
 };
 
-struct default_child_context_factories
+} // namespace context_factory
+
+struct default_context_factories
 {
   template<class ParentContext, class ElementTag>
   struct apply
   {
-    typedef child_context_factory_same<ParentContext, ElementTag> type;
+    typedef context_factory::same<ParentContext, ElementTag> type;
   };
 };
 
-BOOST_PARAMETER_TEMPLATE_KEYWORD(child_context_factories)
+BOOST_PARAMETER_TEMPLATE_KEYWORD(context_factories)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(xml_element_policy)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(ignored_elements)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(processed_elements)
@@ -111,7 +116,7 @@ class document_traversal
 {
 protected:
   typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::child_context_factories>
+      boost::parameter::optional<tag::context_factories>
     , boost::parameter::optional<tag::xml_element_policy>
     , boost::parameter::optional<tag::load_text_policy>
     , boost::parameter::optional<tag::error_policy>
@@ -119,8 +124,8 @@ protected:
     , boost::parameter::optional<tag::ignored_elements, boost::mpl::is_sequence<boost::mpl::_> >
     , boost::parameter::optional<tag::processed_elements, boost::mpl::is_sequence<boost::mpl::_> >
   >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
-  typedef typename boost::parameter::value_type<args, tag::child_context_factories, 
-    default_child_context_factories >::type child_context_factories;
+  typedef typename boost::parameter::value_type<args, tag::context_factories, 
+    default_context_factories >::type context_factories;
   typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
     detail::parameter_not_set_tag >::type xml_element_policy_param;
   typedef typename boost::parameter::value_type<args, tag::load_text_policy, 
@@ -201,7 +206,7 @@ public:
   static bool load_child_element(XMLElement & xml_element, ParentContext & parent_context, ElementTag element_tag, 
     state_holder const & state)
   {
-    typedef typename child_context_factories::template apply<ParentContext, ElementTag>::type context_factory_t;
+    typedef typename context_factories::template apply<ParentContext, ElementTag>::type context_factory_t;
     context_factory_t context_factory(parent_context, xml_element, state);
     if (!load_element<ExpectedChildElements>(xml_element, context_factory.get(), element_tag, state))
       return false;
@@ -365,7 +370,7 @@ protected:
 
     xml_policy_t::element_name_type element_name = xml_policy_t::get_local_name(xml_element);
     detail::element_type_id element_type_id = detail::element_name_to_id_dictionary::find(
-      element_name);
+      xml_policy_t::get_string_range(element_name));
     if (element_type_id != detail::unknown_element_type_id)
     {
       load_element_functor<XMLElement, Context, ParentElementTag> load_functor(xml_element, parent_context, state);
@@ -375,7 +380,7 @@ protected:
         return error_policy::unexpected_element(parent_context, xml_element);
     }
     else
-      return error_policy::unknown_element(parent_context, xml_element, element_name);
+      return error_policy::unknown_element(parent_context, xml_element, xml_policy_t::get_string_range(element_name));
   }
 };
 

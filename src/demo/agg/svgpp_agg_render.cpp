@@ -1,14 +1,22 @@
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 #define BOOST_MPL_LIMIT_SET_SIZE 40
 
-#include <rapidxml_ns/rapidxml_ns_utils.hpp>
-#include <svgpp/xml/rapidxml_ns.hpp>
+#include "common.hpp"
+
+#ifdef USE_MSXML
+# include <comip.h>
+# include <comdef.h>
+#else
+# include <rapidxml_ns/rapidxml_ns_utils.hpp>
+#endif
+
 #include <svgpp/document_traversal.hpp>
 
 #include <boost/bind.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/mpl/transform_view.hpp>
 #include <boost/optional.hpp>
+#include <boost/scope_exit.hpp>
 
 #include <agg_bounding_rect.h>
 #include <agg_rasterizer_scanline_aa.h>
@@ -28,11 +36,11 @@
 
 #include <map>
 #include <set>
+#include <fstream>
 
 #include "bmp_header.hpp"
 #include "stylable.hpp"
 #include "gradient.hpp"
-#include "common.hpp"
 
 class Canvas;
 class Path;
@@ -41,46 +49,63 @@ class Use;
 typedef agg::pixfmt_rgba32 pixfmt_t;
 typedef agg::renderer_base<pixfmt_t> renderer_base_t;
 
-rapidxml_ns::xml_node<> const * XMLDocument::find_element_by_id(rapidxml_ns::xml_node<> const * parent, std::string const & id)
+#ifndef USE_MSXML
+namespace
 {
-  for(rapidxml_ns::xml_node<> const * node = parent->first_node(); node; node = node->next_sibling())
+  rapidxml_ns::xml_node<> const * find_child_element_by_id(rapidxml_ns::xml_node<> const * parent, std::string const & id)
   {
-    if (rapidxml_ns::xml_attribute<> const * id_attr = node->first_attribute("id"))
-      if (boost::range::equal(boost::iterator_range<const char *>(id_attr->value(), id_attr->value() + id_attr->value_size()), id))
-        return node;
-    if (rapidxml_ns::xml_node<> const * child_node = find_element_by_id(node, id))
-      return child_node;
+    for(rapidxml_ns::xml_node<> const * node = parent->first_node(); node; node = node->next_sibling())
+    {
+      if (rapidxml_ns::xml_attribute<> const * id_attr = node->first_attribute("id"))
+        if (boost::range::equal(boost::iterator_range<const char *>(id_attr->value(), id_attr->value() + id_attr->value_size()), id))
+          return node;
+      if (rapidxml_ns::xml_node<> const * child_node = find_child_element_by_id(node, id))
+        return child_node;
+    }
+    return NULL;
   }
-  return NULL;
 }
 
-rapidxml_ns::xml_node<> const * XMLDocument::find_element_by_id(std::string const & id)
+XMLElement XMLDocument::find_element_by_id(svg_string_t const & id)
 {
   std::pair<element_by_id_t::iterator, bool> ins = element_by_id_.insert(element_by_id_t::value_type(id, NULL));
   if (ins.second)
-    ins.first->second = find_element_by_id(&root_, id);
+    ins.first->second = find_child_element_by_id(root_, id);
   return ins.first->second;
 }
+
+#else
+
+XMLElement XMLDocument::find_element_by_id(svg_string_t const & id)
+{
+  std::wstring xpath = L"//*[@id='" + id + L"']"; // TODO: escape id string, check namespace
+  _com_ptr_t<_com_IIID<IXMLDOMNode, &IID_IXMLDOMNode> > node;
+  if (S_OK != root_->selectSingleNode(_bstr_t(xpath.c_str()), &node))
+    return XMLElement();
+  return XMLElement(node.GetInterfacePtr());
+}
+
+#endif
 
 struct Document
 {
   class FollowRef;
 
-  Document(rapidxml_ns::xml_node<> const & xml_root)
+  Document(XMLElement const & xml_root)
     : xml_document_(xml_root)
     , gradients_(xml_document_)
   {}
 
   XMLDocument xml_document_;
   Gradients gradients_;
-  typedef std::set<rapidxml_ns::xml_node<> const *> followed_refs_t;
+  typedef std::set<XMLElement> followed_refs_t;
   followed_refs_t followed_refs_;
 };
 
 class Document::FollowRef
 {
 public:
-  FollowRef(Document & document, rapidxml_ns::xml_node<> const * el)
+  FollowRef(Document & document, XMLElement const & el)
     : document_(document)
   {
     std::pair<Document::followed_refs_t::iterator, bool> ins = document.followed_refs_.insert(el);
@@ -130,31 +155,31 @@ struct child_context_factories
   template<>
   struct apply<Canvas, svgpp::tag::element::svg, void>
   {
-    typedef svgpp::child_context_factory_on_stack<Canvas, Canvas> type;
+    typedef svgpp::context_factory::on_stack<Canvas, Canvas> type;
   };
 
   template<>
   struct apply<Canvas, svgpp::tag::element::g, void>
   {
-    typedef svgpp::child_context_factory_on_stack<Canvas, Canvas> type;
+    typedef svgpp::context_factory::on_stack<Canvas, Canvas> type;
   };
 
   template<>
   struct apply<Canvas, svgpp::tag::element::a, void>
   {
-    typedef svgpp::child_context_factory_on_stack<Canvas, Canvas> type;
+    typedef svgpp::context_factory::on_stack<Canvas, Canvas> type;
   };
 
   template<>
   struct apply<Canvas, svgpp::tag::element::use_, void>
   {
-    typedef svgpp::child_context_factory_on_stack<Canvas, Use> type;
+    typedef svgpp::context_factory::on_stack<Canvas, Use> type;
   };
 
   template<class ElementTag>
   struct apply<Canvas, ElementTag, typename boost::enable_if<boost::mpl::has_key<svgpp::traits::shape_elements, ElementTag> >::type>
   {
-    typedef svgpp::child_context_factory_on_stack<Canvas, Path> type;
+    typedef svgpp::context_factory::on_stack<Canvas, Path> type;
   };
 };
 
@@ -203,7 +228,7 @@ typedef boost::mpl::fold<
 
 typedef 
   svgpp::document_traversal<
-    svgpp::child_context_factories<child_context_factories>,
+    svgpp::context_factories<child_context_factories>,
     svgpp::color_factory<color_factory>,
     svgpp::processed_elements<boost::mpl::set<
       svgpp::tag::element::svg,
@@ -315,7 +340,7 @@ public:
 
   void on_exit_element()
   {
-    if (rapidxml_ns::xml_node<> const * element = document().xml_document_.find_element_by_id(fragment_id_))
+    if (XMLElement element = document().xml_document_.find_element_by_id(fragment_id_))
     {
       Document::FollowRef lock(document(), element);
       transform().premultiply(agg::trans_affine_translation(x_, y_));
@@ -343,7 +368,7 @@ public:
   { y_ = val; }
 
 private:
-  std::string fragment_id_;
+  svg_string_t fragment_id_;
   double x_, y_;
 };
 
@@ -694,11 +719,12 @@ Path::EffectivePaint Path::get_effective_paint(Paint const & paint) const
   return boost::get<agg::rgba8>(*solidPaint);
 }
 
-void render_document(rapidxml_ns::xml_node<> * svg_element, ImageBuffer & buffer)
+template<class XMLElement>
+void render_document(XMLElement & svg_element, ImageBuffer & buffer)
 {
   buffer.renderer_base().clear(pixfmt_t::color_type(255, 255, 255));
 
-  Document document(*svg_element);
+  Document document(svg_element);
   Canvas canvas(document, buffer);
   document_traversal_main::load_document(svg_element, canvas);
 }
@@ -710,6 +736,68 @@ int main(int argc, char * argv[])
     std::cout << "Usage: " << argv[0] << " <svg file name>\n";
     return 1;
   }
+  static const int frame_width = 1000, frame_height = 1000;
+  ImageBuffer buffer(frame_width, frame_height);
+
+#ifdef USE_MSXML
+  
+  //init
+  HRESULT hr;
+  if (FAILED(hr = CoInitialize(NULL)))
+  {
+    std::cerr << "CoInitialize failed with result 0x" << std::hex << hr << "\n" << std::dec;
+    return 1;
+  }
+  BOOST_SCOPE_EXIT(void) {
+    CoUninitialize();
+  } BOOST_SCOPE_EXIT_END
+
+  _com_ptr_t<_com_IIID<IXMLDOMDocument, &IID_IXMLDOMDocument> > docPtr;
+  if (FAILED(hr = docPtr.CreateInstance(L"Msxml2.DOMDocument.3.0")))
+  {
+    std::cerr << "Error creating DOMDocument 0x" << std::hex << hr << "\n" << std::dec;
+    return 1;
+  }
+
+  // Load a document.
+  docPtr->put_async(VARIANT_FALSE);
+  docPtr->put_resolveExternals(VARIANT_FALSE);
+  docPtr->put_validateOnParse(VARIANT_FALSE);
+  VARIANT_BOOL load_result;
+  if (S_OK != (hr = docPtr->load(_variant_t(argv[1]), &load_result)))
+  {
+    _com_ptr_t<_com_IIID<IXMLDOMParseError, &IID_IXMLDOMParseError> > parseError;
+    if (SUCCEEDED(docPtr->get_parseError(&parseError)))
+    {
+      _bstr_t reason;
+      if (S_OK == parseError->get_reason(reason.GetAddress()))
+      {
+        std::cerr << "Parse error: " << std::string(reason.GetBSTR(), reason.GetBSTR() + reason.length()) << "\n";
+        return 1;
+      }
+    }
+    std::cerr << "Error loading XML document 0x" << std::hex << hr << "\n" << std::dec;
+    return 1;
+  }
+
+  _com_ptr_t<_com_IIID<IXMLDOMElement, &IID_IXMLDOMElement> > root;
+  if (FAILED(hr = docPtr->get_documentElement(&root)))
+  {
+    std::cerr << "Error getting documentElement 0x" << std::hex << hr << "\n" << std::dec;
+    return 1;
+  }
+
+  try
+  {
+    render_document(root.GetInterfacePtr(), buffer);
+  }
+  catch(std::exception const & e)
+  {
+    std::cerr << "Error reading file " << argv[1] << ": " << e.what() << "\n";
+    return 1;
+  }
+
+#else
   try
   {
     rapidxml_ns::file<> xml_file(argv[1]);
@@ -717,21 +805,7 @@ int main(int argc, char * argv[])
     doc.parse<rapidxml_ns::parse_no_string_terminators>(xml_file.data());  
     if (rapidxml_ns::xml_node<> * svg_element = doc.first_node("svg"))
     {
-      static const int frame_width = 1000, frame_height = 1000;
-      ImageBuffer buffer(frame_width, frame_height);
       render_document(svg_element, buffer);
-      std::ofstream file("svgpp.bmp", std::ios::out | std::ios::binary);
-      if (file)
-      {
-        bmp::write_32bit_header(file, buffer.pixfmt().width(), buffer.pixfmt().height());
-        file.write(reinterpret_cast<const char *>(buffer.pixfmt().row_ptr(0)), 
-          buffer.pixfmt().width() * buffer.pixfmt().height() * 4);
-      }
-      else
-      {
-        std::cerr << "Can't open file for writing\n";
-        return 1;
-      }
     }
     else
     {
@@ -748,6 +822,21 @@ int main(int argc, char * argv[])
   catch(std::exception const & e)
   {
     std::cerr << "Error reading file " << argv[1] << ": " << e.what() << "\n";
+    return 1;
+  }
+#endif
+
+  // Saving output
+  std::ofstream file("svgpp.bmp", std::ios::out | std::ios::binary);
+  if (file)
+  {
+    bmp::write_32bit_header(file, buffer.pixfmt().width(), buffer.pixfmt().height());
+    file.write(reinterpret_cast<const char *>(buffer.pixfmt().row_ptr(0)), 
+      buffer.pixfmt().width() * buffer.pixfmt().height() * 4);
+  }
+  else
+  {
+    std::cerr << "Can't open file for writing\n";
     return 1;
   }
   return 0;

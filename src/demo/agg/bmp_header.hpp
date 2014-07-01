@@ -41,7 +41,7 @@ typedef struct _BITMAP_HEADER {
 
 #pragma pack(pop)
 
-void write_32bit_header(std::ofstream & os, int width, int height)
+void write_32bit_header(std::ostream & os, int width, int height)
 {
   BITMAP_FILEHEADER bfh;
 	BITMAP_HEADER bh;

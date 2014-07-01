@@ -3,16 +3,17 @@
 #include <boost/optional.hpp>
 #include <boost/variant.hpp>
 #include <agg_color_rgba.h>
+#include "common.hpp"
 
 typedef boost::variant<svgpp::tag::value::none, svgpp::tag::value::currentColor, agg::rgba8> SolidPaint;
 struct IRIPaint
 {
-  IRIPaint(std::string const & fragment, boost::optional<SolidPaint> const & fallback = boost::optional<SolidPaint>())
+  IRIPaint(svg_string_t const & fragment, boost::optional<SolidPaint> const & fallback = boost::optional<SolidPaint>())
     : fragment_(fragment)
     , fallback_(fallback)
   {}
 
-  std::string fragment_;
+  svg_string_t fragment_;
   boost::optional<SolidPaint> fallback_;
 };
 typedef boost::variant<SolidPaint, IRIPaint> Paint;
@@ -93,7 +94,7 @@ public:
 
   template<class IRI>
   void set(AttributeTag tag, svgpp::tag::iri_fragment, IRI const & fragment)
-  { paint_ = IRIPaint(std::string(boost::begin(fragment), boost::end(fragment))); }
+  { paint_ = IRIPaint(svg_string_t(boost::begin(fragment), boost::end(fragment))); }
 
   template<class IRI>
   void set(AttributeTag tag, IRI const &, svgpp::tag::value::none val)
@@ -101,7 +102,7 @@ public:
 
   template<class IRI>
   void set(AttributeTag tag, svgpp::tag::iri_fragment, IRI const & fragment, svgpp::tag::value::none val)
-  { paint_ = IRIPaint(std::string(boost::begin(fragment), boost::end(fragment)), boost::optional<SolidPaint>(val)); }
+  { paint_ = IRIPaint(svg_string_t(boost::begin(fragment), boost::end(fragment)), boost::optional<SolidPaint>(val)); }
 
   template<class IRI>
   void set(AttributeTag tag, IRI const &, svgpp::tag::value::currentColor val)
@@ -109,7 +110,7 @@ public:
 
   template<class IRI>
   void set(AttributeTag tag, svgpp::tag::iri_fragment, IRI const & fragment, svgpp::tag::value::currentColor val)
-  { paint_ = IRIPaint(std::string(boost::begin(fragment), boost::end(fragment)), boost::optional<SolidPaint>(val)); }
+  { paint_ = IRIPaint(svg_string_t(boost::begin(fragment), boost::end(fragment)), boost::optional<SolidPaint>(val)); }
 
   template<class IRI>
   void set(AttributeTag tag, IRI const &, agg::rgba8 val, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
@@ -117,7 +118,7 @@ public:
 
   template<class IRI>
   void set(AttributeTag tag, svgpp::tag::iri_fragment, IRI const & fragment, agg::rgba8 val, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
-  { paint_ = IRIPaint(std::string(boost::begin(fragment), boost::end(fragment)), boost::optional<SolidPaint>(val)); }
+  { paint_ = IRIPaint(svg_string_t(boost::begin(fragment), boost::end(fragment)), boost::optional<SolidPaint>(val)); }
   
 protected:
   Paint & paint_;

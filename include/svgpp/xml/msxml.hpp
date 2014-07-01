@@ -5,142 +5,341 @@
 #include <svgpp/definitions.hpp>
 #include <svgpp/xml_policy_fwd.hpp>
 #include <svgpp/detail/namespace.hpp>
+#include <boost/intrusive_ptr.hpp>
+#include <boost/noncopyable.hpp>
 #include <boost/range/iterator_range.hpp>
+
+#ifndef SVGPP_MSXML_NAMESPACE
+# define SVGPP_MSXML_NAMESPACE 
+#endif
+
+#ifndef SVGPP_MSXML_BOOST_INTRUSIVE_PTR_DEFINED
+namespace boost
+{
+  inline void intrusive_ptr_add_ref(SVGPP_MSXML_NAMESPACE::IXMLDOMNode * ptr)
+  { ptr->AddRef(); }
+
+  inline void intrusive_ptr_release(SVGPP_MSXML_NAMESPACE::IXMLDOMNode * ptr)
+  { ptr->Release(); }
+
+  inline void intrusive_ptr_add_ref(SVGPP_MSXML_NAMESPACE::IXMLDOMNamedNodeMap * ptr)
+  { ptr->AddRef(); }
+
+  inline void intrusive_ptr_release(SVGPP_MSXML_NAMESPACE::IXMLDOMNamedNodeMap * ptr)
+  { ptr->Release(); }
+}
+#endif
 
 namespace svgpp
 {
 
-template<class Ch>
-struct xml_attribute_iterator_policy<rapidxml_ns::xml_attribute<Ch> const *>
+namespace msxml_detail
 {
-  typedef rapidxml_ns::xml_attribute<Ch> const * iterator_type;
-  typedef boost::iterator_range<Ch const *> attribute_name_type;
-  typedef boost::iterator_range<Ch const *> attribute_value_type;
+
+class bstr_t: boost::noncopyable
+{
+public:
+  bstr_t()
+    : str_(NULL)
+  {}
+
+  bstr_t(bstr_t && src)
+    : str_(src.str_)
+  {
+    src.str_ = NULL;
+  }
+
+  ~bstr_t()
+  {
+    if (str_)
+      ::SysFreeString(str_);
+  }
+
+  void assign(BSTR val)
+  {
+    if (str_)
+      ::SysFreeString(str_);
+    str_ = val;
+  }
+
+  BSTR * operator&()
+  {
+    if (str_)
+      ::SysFreeString(str_);
+    str_ = NULL;
+    return &str_;
+  }
+
+  boost::iterator_range<wchar_t const *> get_range() const
+  {
+    return boost::iterator_range<wchar_t const *>(str_, str_ + ::SysStringLen(str_));
+  }
+
+private:
+  BSTR str_;
+};
+
+struct bstr_policy
+{
+  typedef boost::iterator_range<wchar_t const *> string_type;
+
+  static string_type get_string_range(bstr_t const & str)
+  {
+    return str.get_range();
+  }
+};
+
+typedef boost::intrusive_ptr<SVGPP_MSXML_NAMESPACE::IXMLDOMNode> node_ptr;
+typedef boost::intrusive_ptr<SVGPP_MSXML_NAMESPACE::IXMLDOMNamedNodeMap> attribute_map_ptr;
+typedef boost::intrusive_ptr<SVGPP_MSXML_NAMESPACE::IXMLDOMAttribute> attribute_ptr;
+
+class attribute_iterator: boost::noncopyable
+{
+public:
+  attribute_iterator(attribute_iterator && src)
+  {
+    attribute_map_.swap(src.attribute_map_);
+    current_attribute_.swap(src.current_attribute_);
+  }
+
+  attribute_iterator(attribute_map_ptr const & attribute_map)
+    : attribute_map_(attribute_map)
+  {
+    BOOST_ASSERT(attribute_map_);
+    advance();
+  }
+
+  void advance()
+  {
+    BOOST_ASSERT(attribute_map_);
+    if (!attribute_map_)
+      return;
+    current_attribute_.reset();
+    SVGPP_MSXML_NAMESPACE::IXMLDOMNode * node = NULL;
+    if (attribute_map_->nextNode(&node) == S_OK)
+    {
+      SVGPP_MSXML_NAMESPACE::IXMLDOMAttribute * attr = NULL;
+      HRESULT hr = node->QueryInterface(SVGPP_MSXML_NAMESPACE::IID_IXMLDOMAttribute, (void**)&attr);
+      node->Release();
+      BOOST_ASSERT(hr == S_OK);
+      if (hr == S_OK)
+        current_attribute_.swap(attribute_ptr(attr, false));
+    }
+  }
+
+  bool is_end() const
+  {
+    BOOST_ASSERT(attribute_map_);
+    return !attribute_map_ || !current_attribute_;
+  }
+
+  SVGPP_MSXML_NAMESPACE::IXMLDOMAttribute * operator->() const
+  {
+    return current_attribute_.get();
+  }
+
+  attribute_ptr const & operator*() const { return current_attribute_; }
+
+private:
+  attribute_map_ptr attribute_map_;
+  attribute_ptr current_attribute_;
+};
+
+}
+
+template<>
+struct xml_attribute_iterator_policy<msxml_detail::attribute_iterator>: 
+  msxml_detail::bstr_policy
+{
+  typedef msxml_detail::attribute_iterator iterator_type;
+  typedef msxml_detail::bstr_t attribute_name_type;
+  typedef msxml_detail::bstr_t attribute_value_type;
+  typedef msxml_detail::attribute_ptr saved_value_type;
 
   static const bool store_value = true; // Preferred way of storing attribute: value
 
   static void advance(iterator_type & xml_attribute)
   {
-    xml_attribute = xml_attribute->next_attribute();
+    xml_attribute.advance();
   }
 
-  static bool is_end(iterator_type xml_attribute)
+  static bool is_end(iterator_type const & xml_attribute)
   {
-    return xml_attribute == NULL;
+    return xml_attribute.is_end();
   }
 
-  static detail::namespace_id get_namespace(iterator_type xml_attribute)
+  static detail::namespace_id get_namespace(iterator_type const & xml_attribute)
   {
-    if (xml_attribute->namespace_uri_size() == 0)
+    attribute_name_type uri;
+    if (S_OK != xml_attribute->get_namespaceURI(&uri))
       return detail::namespace_id::svg;
-    boost::iterator_range<Ch const *> ns_uri(xml_attribute->namespace_uri(), 
-      xml_attribute->namespace_uri() + xml_attribute->namespace_uri_size());
-    if (boost::range::equal(detail::xml_namespace_uri<Ch>(), ns_uri))
+    string_type ns_uri = get_string_range(uri);
+    if (boost::range::equal(detail::xml_namespace_uri<wchar_t>(), ns_uri))
       return detail::namespace_id::xml;
-    else if (boost::range::equal(detail::xlink_namespace_uri<Ch>(), ns_uri))
+    else if (boost::range::equal(detail::xlink_namespace_uri<wchar_t>(), ns_uri))
       return detail::namespace_id::xlink;
-    return detail::namespace_id::other;
+    else
+      return detail::namespace_id::other;
   }
 
-  static attribute_name_type get_local_name(iterator_type xml_attribute)
+  static attribute_name_type get_local_name(iterator_type const & xml_attribute)
   {
-    return attribute_name_type(xml_attribute->local_name(), xml_attribute->local_name() + xml_attribute->local_name_size());
+    attribute_name_type str;
+    BOOST_VERIFY(S_OK == xml_attribute->get_baseName(&str));
+    return str;
   }
 
-  static attribute_value_type get_value(iterator_type xml_attribute)
+  static attribute_name_type get_value(iterator_type const & xml_attribute)
   {
-    return attribute_value_type(xml_attribute->value(), xml_attribute->value() + xml_attribute->value_size());
+    attribute_value_type str;
+    BOOST_VERIFY(S_OK == xml_attribute->get_text(&str));
+    return str;
+  }
+
+  static attribute_name_type get_value(saved_value_type const & xml_attribute)
+  {
+    attribute_value_type str;
+    BOOST_VERIFY(S_OK == xml_attribute->get_text(&str));
+    return str;
+  }
+
+  static saved_value_type save_value(iterator_type const & xml_attribute)
+  {
+    return *xml_attribute;
   }
 };
 
-template<class Ch>
-struct xml_attribute_iterator_policy<rapidxml_ns::xml_attribute<Ch> *>
-  : xml_attribute_iterator_policy<rapidxml_ns::xml_attribute<Ch> const *>
+template<>
+struct xml_element_iterator_policy<msxml_detail::node_ptr>:
+  msxml_detail::bstr_policy
 {
-  static void advance(typename rapidxml_ns::xml_attribute<Ch> *& xml_attribute)
-  {
-    xml_attribute = xml_attribute->next_attribute();
-  }
-};
+  typedef msxml_detail::node_ptr iterator_type;
+  typedef msxml_detail::bstr_t element_name_type;
+  typedef msxml_detail::bstr_t element_text_type;
+  typedef msxml_detail::attribute_iterator attribute_enumerator_type;
 
-template<class Ch>
-struct xml_element_iterator_policy<rapidxml_ns::xml_node<Ch> const *>
-{
-  typedef rapidxml_ns::xml_node<Ch> const * iterator_type;
-  typedef boost::iterator_range<Ch const *> element_name_type;
-  typedef Ch const * element_text_type;
-  typedef rapidxml_ns::xml_attribute<Ch> const * attribute_enumerator_type;
-
-  static void advance_element(iterator_type & xml_element)
+  static void advance_element(iterator_type & xml_node)
   {
-    xml_element = xml_element->next_sibling(); 
-    find_next(xml_element, false);
+    find_next<false, false>(xml_node);
   }
 
-  static void advance_element_or_text(iterator_type xml_element)
+  static void advance_element_or_text(iterator_type & xml_node)
   {
-    xml_element = xml_element->next_sibling(); 
-    find_next(xml_element, true);
+    find_next<false, true>(xml_node);
   }
 
-  static bool is_end(iterator_type xml_element)
+  static bool is_end(iterator_type const & xml_node)
   {
-    return xml_element == NULL;
+    return !xml_node;
   }
 
-  static bool is_text(iterator_type xml_element)
+  static bool is_text(iterator_type const & xml_node)
   {
-    return xml_element->types() != rapidxml_ns::node_element;
+    BOOST_ASSERT(xml_node);
+    SVGPP_MSXML_NAMESPACE::DOMNodeType type;
+    return xml_node && S_OK == xml_node->get_nodeType(&type) && type != 1 /*NODE_ELEMENT*/;
   }
 
-  static element_name_type get_local_name(iterator_type xml_element)
+  static element_name_type get_local_name(iterator_type const & xml_node)
   {
-    return element_name_type(xml_element->name(), xml_element->name() + xml_element->name_size());
+    element_name_type str;
+    BOOST_VERIFY(S_OK == xml_node->get_baseName(&str));
+    return str;
   }
 
-  static element_text_type get_text(iterator_type xml_element)
+  static element_text_type get_text(iterator_type const & xml_node)
   {
-    return element_text_type(xml_element->value(), xml_element->value() + xml_element->value_size());
+    element_text_type str;
+    BOOST_VERIFY(S_OK == xml_node->get_text(&str));
+    return str;
   }
 
-  static attribute_enumerator_type get_attributes(iterator_type xml_element)
+  static attribute_enumerator_type get_attributes(iterator_type const & xml_node)
   {
-    return xml_element->first_attribute();
+    SVGPP_MSXML_NAMESPACE::IXMLDOMNamedNodeMap * attributeMap = NULL;
+    if (S_OK == xml_node->get_attributes(&attributeMap))
+      return attribute_enumerator_type(msxml_detail::attribute_map_ptr(attributeMap, false));
+    else
+    {
+      BOOST_ASSERT(false);
+      return attribute_enumerator_type(msxml_detail::attribute_map_ptr());
+    }
   }
 
-  static iterator_type get_child_elements(iterator_type xml_element)
+  static iterator_type get_child_elements(iterator_type const & xml_node)
   {
-    iterator_type child_element = xml_element->first_node();
-    find_next(child_element, false);
-    return child_element;
+    SVGPP_MSXML_NAMESPACE::IXMLDOMNode * first_child = NULL;
+    if (S_OK == xml_node->get_firstChild(&first_child))
+    {
+      iterator_type out_it(first_child, false);
+      find_next<true, false>(out_it);
+      return out_it;
+    }
+    else
+      return iterator_type();
   }
 
-  static iterator_type get_child_elements_and_texts(iterator_type xml_element)
+  static iterator_type get_child_elements_and_texts(iterator_type const & xml_node, iterator_type & out_it)
   {
-    iterator_type child_element = xml_element->first_node();
-    find_next(child_element, true);
-    return child_element;
+    SVGPP_MSXML_NAMESPACE::IXMLDOMNode * first_child = NULL;
+    if (S_OK == xml_node->get_firstChild(&first_child))
+    {
+      iterator_type out_it(first_child, false);
+      find_next<true, true>(out_it);
+      return out_it;
+    }
+    else
+      return iterator_type();
   }
 
 private:
-  static void find_next(iterator_type & xml_element, bool texts_also)
+  template<bool CheckPassedNode, bool TextsAlso>
+  static void find_next(iterator_type & xml_node)
   {
-    // TODO: optimize namespace checking by saving pointer to last namespace_uri() known to be SVG
-    for(; xml_element; xml_element = xml_element->next_sibling())
+    if (!xml_node)
+      return;
+
+    bool first_step = true;
+    for(;;)
     {
-      switch(xml_element->type())
+      if (!CheckPassedNode || !first_step)
       {
-      case rapidxml_ns::node_element:
+        first_step = false;
+        IXMLDOMNode * nextSibling = NULL;
+        switch(xml_node->get_nextSibling(&nextSibling))
+        {
+        case S_OK:
+          xml_node.swap(iterator_type(nextSibling, false));
+          break;
+        default:
+          BOOST_ASSERT(false);
+        case S_FALSE:
+          xml_node.reset();
+          return;
+        }
+      }
+
+      SVGPP_MSXML_NAMESPACE::DOMNodeType type;
+      if (S_OK != xml_node->get_nodeType(&type))
       {
-        boost::iterator_range<Ch const *> ns_uri(xml_attribute->namespace_uri(), 
+        BOOST_ASSERT(false);
+        xml_node.reset();
+        return;
+      }
+
+      switch(type)
+      {
+      case 1: /*NODE_ELEMENT*/
+      {
+        /*TODO: boost::iterator_range<Ch const *> ns_uri(xml_attribute->namespace_uri(), 
           xml_attribute->namespace_uri() + xml_attribute->namespace_uri_size());
-        if (boost::range::equal(detail::svg_namespace_uri<Ch>(), ns_uri))
+        if (boost::range::equal(detail::svg_namespace_uri<Ch>(), ns_uri))*/
           return;
         break;
       }
-      case rapidxml_ns::node_data:
-      case rapidxml_ns::node_cdata:
-        if (texts_also)
+      case 3: /*NODE_TEXT*/
+      case 4: /*NODE_CDATA_SECTION*/
+        if (TextsAlso)
           return;
         break;
       }
@@ -148,10 +347,14 @@ private:
   }
 };
 
-template<class Ch>
-struct xml_element_iterator_policy<rapidxml_ns::xml_node<Ch> *>
-  : xml_element_iterator_policy<rapidxml_ns::xml_node<Ch> const *>
-{
-};
+template<>
+struct xml_element_iterator_policy<SVGPP_MSXML_NAMESPACE::IXMLDOMElement *>
+  : xml_element_iterator_policy<msxml_detail::node_ptr>
+{};
+
+template<>
+struct xml_element_iterator_policy<SVGPP_MSXML_NAMESPACE::IXMLDOMNode *>
+  : xml_element_iterator_policy<msxml_detail::node_ptr>
+{};
 
 }

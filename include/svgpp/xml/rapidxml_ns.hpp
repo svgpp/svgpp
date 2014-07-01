@@ -14,10 +14,17 @@ template<class Ch>
 struct xml_attribute_iterator_policy<rapidxml_ns::xml_attribute<Ch> const *>
 {
   typedef rapidxml_ns::xml_attribute<Ch> const * iterator_type;
-  typedef boost::iterator_range<Ch const *> attribute_name_type;
-  typedef boost::iterator_range<Ch const *> attribute_value_type;
+  typedef boost::iterator_range<Ch const *> string_type;
+  typedef string_type attribute_name_type;
+  typedef string_type attribute_value_type;
+  typedef string_type saved_value_type;
 
   static const bool store_value = true; // Preferred way of storing attribute: value
+
+  static string_type get_string_range(string_type const & str)
+  { 
+    return str;
+  }
 
   static void advance(iterator_type & xml_attribute)
   {
@@ -51,6 +58,11 @@ struct xml_attribute_iterator_policy<rapidxml_ns::xml_attribute<Ch> const *>
   {
     return attribute_value_type(xml_attribute->value(), xml_attribute->value() + xml_attribute->value_size());
   }
+
+  static saved_value_type save_value(iterator_type xml_attribute)
+  {
+    return attribute_value_type(xml_attribute->value(), xml_attribute->value() + xml_attribute->value_size());
+  }
 };
 
 template<class Ch>
@@ -67,20 +79,26 @@ template<class Ch>
 struct xml_element_iterator_policy<rapidxml_ns::xml_node<Ch> const *>
 {
   typedef rapidxml_ns::xml_node<Ch> const * iterator_type;
+  typedef boost::iterator_range<Ch const *> string_type;
   typedef boost::iterator_range<Ch const *> element_name_type;
   typedef Ch const * element_text_type;
   typedef rapidxml_ns::xml_attribute<Ch> const * attribute_enumerator_type;
 
+  static string_type get_string_range(string_type const & str)
+  { 
+    return str;
+  }
+
   static void advance_element(iterator_type & xml_element)
   {
     xml_element = xml_element->next_sibling(); 
-    find_next(xml_element, false);
+    find_next<false>(xml_element);
   }
 
-  static void advance_element_or_text(iterator_type xml_element)
+  static void advance_element_or_text(iterator_type & xml_element)
   {
     xml_element = xml_element->next_sibling(); 
-    find_next(xml_element, true);
+    find_next<true>(xml_element);
   }
 
   static bool is_end(iterator_type xml_element)
@@ -111,19 +129,20 @@ struct xml_element_iterator_policy<rapidxml_ns::xml_node<Ch> const *>
   static iterator_type get_child_elements(iterator_type xml_element)
   {
     iterator_type child_element = xml_element->first_node();
-    find_next(child_element, false);
+    find_next<false>(child_element);
     return child_element;
   }
 
   static iterator_type get_child_elements_and_texts(iterator_type xml_element)
   {
     iterator_type child_element = xml_element->first_node();
-    find_next(child_element, true);
+    find_next<true>(child_element);
     return child_element;
   }
 
 private:
-  static void find_next(iterator_type & xml_element, bool texts_also)
+  template<bool TextsAlso>
+  static void find_next(iterator_type & xml_element)
   {
     // TODO: optimize namespace checking by saving pointer to last namespace_uri() known to be SVG
     for(; xml_element; xml_element = xml_element->next_sibling())
@@ -140,7 +159,7 @@ private:
       }
       case rapidxml_ns::node_data:
       case rapidxml_ns::node_cdata:
-        if (texts_also)
+        if (TextsAlso)
           return;
         break;
       }

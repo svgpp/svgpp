@@ -67,13 +67,13 @@ public:
     : xml_document_(xml_document)
   {}
 
-  Gradient const * get(std::string const & id);
+  Gradient const * get(svg_string_t const & id);
 
 private:
-  typedef std::map<std::string, boost::optional<Gradient> > GradientMap;
+  typedef std::map<svg_string_t, boost::optional<Gradient> > GradientMap;
 
   XMLDocument & xml_document_;
   GradientMap gradients_;
 
-  void load_gradient(std::string const & id, boost::optional<Gradient> & out) const;
+  void load_gradient(svg_string_t const & id, boost::optional<Gradient> & out) const;
 };

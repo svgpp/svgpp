@@ -13,6 +13,7 @@
 #include <boost/mpl/at.hpp>
 #include <boost/mpl/map.hpp>
 #include <boost/mpl/if.hpp>
+#include <boost/mpl/inherit.hpp>
 #include <boost/mpl/empty_sequence.hpp>
 #include <boost/mpl/joint_view.hpp>
 #include <boost/mpl/push_back.hpp>
@@ -135,7 +136,7 @@ namespace traversal_detail
             }
 
             return context_.load_attribute(id, 
-              ValueSaver::get_value(found_attributes_.attribute_or_css_saved_values_[id]),
+              ValueSaver::get_css_value(found_attributes_.attribute_or_css_saved_values_[id]),
               tag::source::css());
           }
           else if (found_attributes_.attribute_found_.test(id))
@@ -143,8 +144,8 @@ namespace traversal_detail
             if (ClearFoundMark)
               found_attributes_.attribute_found_.reset(id);
 
-            return context_.load_attribute(id, 
-              ValueSaver::get_value(found_attributes_.attribute_or_css_saved_values_[id]),
+            ValueSaver::attribute_value value = ValueSaver::get_value(found_attributes_.attribute_or_css_saved_values_[id]);
+            return context_.load_attribute(id, ValueSaver::get_string_range(value),
               tag::source::attribute());
           }
         }
@@ -153,8 +154,9 @@ namespace traversal_detail
           if (ClearFoundMark)
             found_attributes_.attribute_found_.reset(id);
 
-          return context_.load_attribute(id, ValueSaver::get_value(
-            found_attributes_.attribute_saved_values_[id - detail::styling_attribute_count]),
+          ValueSaver::attribute_value value = ValueSaver::get_value(
+            found_attributes_.attribute_saved_values_[id - detail::styling_attribute_count]); 
+          return context_.load_attribute(id, ValueSaver::get_string_range(value),
             tag::source::attribute());
         }
         return true;
@@ -212,6 +214,59 @@ namespace traversal_detail
       Context & context_;
     };
   };
+
+  template<class XMLAttributesIterator, class XMLPolicy>
+  struct attribute_value_saver
+  {
+    typedef typename XMLPolicy::attribute_value_type attribute_value;
+    typedef typename XMLPolicy::saved_value_type attribute_saved_value;
+    typedef typename boost::mpl::if_<
+      boost::is_same<typename XMLPolicy::saved_value_type, typename XMLPolicy::string_type>,
+      typename XMLPolicy::string_type,
+      boost::mpl::inherit2<typename XMLPolicy::saved_value_type, typename XMLPolicy::string_type>
+    >::type attribute_or_css_saved_value;
+
+    // Store attribute value
+    static void save(XMLAttributesIterator const & xml_attributes_iterator,
+      attribute_saved_value & store)
+    {
+      store = XMLPolicy::save_value(xml_attributes_iterator);
+    }
+
+    // Store attribute value
+    static void save(XMLAttributesIterator const & xml_attributes_iterator,
+      attribute_or_css_saved_value & store)
+    {
+      static_cast<typename XMLPolicy::saved_value_type &>(store) = XMLPolicy::save_value(xml_attributes_iterator);
+    }
+
+    // Store 'style' attribute substring
+    static void save(typename XMLPolicy::string_type const & range,
+      attribute_or_css_saved_value & store)
+    {
+      static_cast<typename XMLPolicy::string_type &>(store) = range;
+    }
+
+    static attribute_value get_value(attribute_saved_value const & store)
+    {
+      return XMLPolicy::get_value(store);
+    }
+
+    static attribute_value get_value(attribute_or_css_saved_value const & store)
+    {
+      return XMLPolicy::get_value(static_cast<typename XMLPolicy::saved_value_type &>(store));
+    }
+
+    static typename XMLPolicy::string_type get_string_range(attribute_value const & value)
+    {
+      return XMLPolicy::get_string_range(value);
+    }
+
+    static typename XMLPolicy::string_type const & get_css_value(attribute_or_css_saved_value const & store)
+    {
+      return static_cast<typename XMLPolicy::string_type &>(store);
+    }
+  };
 } // namespace traversal_detail
 
 template<class AttributeTraversalPolicy, bool ParseStyleAttribute = true, SVGPP_TEMPLATE_ARGS_DEF>
@@ -229,31 +284,6 @@ struct attribute_traversal_prioritized
   typedef typename boost::parameter::value_type<args, tag::css_name_to_id_policy, 
     css_name_to_id_policy_default>::type css_name_to_id_policy;
 
-  template<class XMLAttributesIterator, class Policy = xml_attribute_iterator_policy<XMLAttributesIterator> >
-  struct attribute_value_saver
-  {
-    typedef typename Policy::attribute_value_type attribute_saved_value;
-    typedef typename Policy::attribute_value_type attribute_or_css_saved_value;
-    typedef typename Policy::attribute_value_type value_type;
-
-    static void save(XMLAttributesIterator const & xml_attributes_iterator,
-      attribute_saved_value & store)
-    {
-      store = Policy::get_value(xml_attributes_iterator);
-    }
-
-    static void save(typename Policy::attribute_value_type const & range,
-      attribute_or_css_saved_value & store)
-    {
-      store = range;
-    }
-
-    static typename Policy::attribute_value_type const & get_value(attribute_saved_value const & store)
-    {
-      return store;
-    }
-  };
-
   template<class XMLAttributesIterator, class Context>
   static bool load(XMLAttributesIterator xml_attributes_iterator, Context & context)
   {
@@ -263,7 +293,7 @@ struct attribute_traversal_prioritized
       xml_attribute_policy_param
     >::type xml_policy;
 
-    typedef attribute_value_saver<XMLAttributesIterator> value_saver;
+    typedef traversal_detail::attribute_value_saver<XMLAttributesIterator, xml_policy> value_saver;
     typedef traversal_detail::found_attributes<value_saver, ParseStyleAttribute> found_attributes;
     typedef typename boost::mpl::if_<
       boost::is_same<error_policy_param, detail::parameter_not_set_tag>,
@@ -280,11 +310,12 @@ struct attribute_traversal_prioritized
       if (ns == detail::namespace_id::other)
         continue;
       xml_policy::attribute_name_type attribute_name = xml_policy::get_local_name(xml_attributes_iterator);
-      detail::attribute_id id = detail::attribute_name_to_id(ns, attribute_name);
+      detail::attribute_id id = detail::attribute_name_to_id(ns, xml_policy::get_string_range(attribute_name));
       switch (id)
       {
       case detail::unknown_attribute_id:
-        if (!error_policy_t::unknown_attribute(context, xml_attributes_iterator, attribute_name, tag::source::attribute()))
+        if (!error_policy_t::unknown_attribute(context, xml_attributes_iterator, 
+          xml_policy::get_string_range(attribute_name), tag::source::attribute()))
           return false;
         break;
       case detail::attribute_id_style:
@@ -351,8 +382,9 @@ private:
     typename boost::enable_if_c<ParseStyleAttribute && (true || boost::is_void<XMLAttributesIterator>::value)>::type * = NULL)
   {
     style_value = XMLPolicy::get_value(xml_attributes_iterator);
-    typedef css_style_iterator<typename boost::range_iterator<typename XMLPolicy::attribute_value_type>::type> css_iterator;
-    for(css_iterator it(boost::begin(style_value), boost::end(style_value)); !it.eof(); ++it)
+    XMLPolicy::string_type style_string = XMLPolicy::get_string_range(style_value);
+    typedef css_style_iterator<typename boost::range_iterator<typename XMLPolicy::string_type>::type> css_iterator;
+    for(css_iterator it(boost::begin(style_string), boost::end(style_string)); !it.eof(); ++it)
     {
       detail::attribute_id style_id = css_name_to_id_policy::find(it->first);
       if (style_id == detail::unknown_attribute_id)

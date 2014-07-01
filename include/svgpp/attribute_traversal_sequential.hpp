@@ -53,11 +53,12 @@ public:
       if (ns == detail::namespace_id::other)
         continue;
       xml_policy::attribute_name_type attribute_name = xml_policy::get_local_name(xml_attributes_iterator);
-      detail::attribute_id id = detail::attribute_name_to_id(ns, attribute_name);
+      detail::attribute_id id = detail::attribute_name_to_id(ns, xml_policy::get_string_range(attribute_name));
       switch (id)
       {
       case detail::unknown_attribute_id:
-        if (!error_policy::unknown_attribute(context, xml_attributes_iterator, attribute_name, tag::source::attribute()))
+        if (!error_policy::unknown_attribute(context, xml_attributes_iterator, 
+          xml_policy::get_string_range(attribute_name), tag::source::attribute()))
           return false;
         break;
       case detail::attribute_id_style:
@@ -70,9 +71,12 @@ public:
         }
       }
       default:
-        if (!context.load_attribute(id, xml_policy::get_value(xml_attributes_iterator), tag::source::attribute()))
+      {
+        xml_policy::attribute_value_type value = xml_policy::get_value(xml_attributes_iterator);
+        if (!context.load_attribute(id, xml_policy::get_string_range(value), tag::source::attribute()))
           return false;
         required_check(id);
+      }
       }
     }
 
@@ -86,8 +90,9 @@ private:
     typename boost::enable_if_c<ParseStyleAttribute && (true || boost::is_void<XMLAttributesIterator>::value)>::type * = NULL)
   {
     typename XMLPolicy::attribute_value_type style_value = XMLPolicy::get_value(xml_attributes_iterator);
-    typedef css_style_iterator<typename boost::range_iterator<XMLPolicy::attribute_value_type>::type> css_iterator;
-    for(css_iterator it(boost::begin(style_value), boost::end(style_value)); !it.eof(); ++it)
+    XMLPolicy::string_type style_string = XMLPolicy::get_string_range(style_value);
+    typedef css_style_iterator<typename boost::range_iterator<XMLPolicy::string_type>::type> css_iterator;
+    for(css_iterator it(boost::begin(style_string), boost::end(style_string)); !it.eof(); ++it)
     {
       detail::attribute_id style_id = css_name_to_id_policy::find(it->first);
       if (style_id == detail::unknown_attribute_id)

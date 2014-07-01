@@ -16,7 +16,7 @@ set(AGG_SOURCES
 )
 source_group("AGG" FILES ${AGG_SOURCES})
 
-add_executable( svgpp_agg_render
+set(AGG_DEMO_SOURCES
   ${AGG_SOURCES}
   svgpp_agg_render.cpp 
   bmp_header.hpp
@@ -26,8 +26,20 @@ add_executable( svgpp_agg_render
   common.hpp
 )
 
+add_executable(svgpp_agg_render
+  ${AGG_DEMO_SOURCES}
+)
+
+add_executable(svgpp_agg_render_msxml
+  ${AGG_DEMO_SOURCES}
+)
+
+target_compile_definitions(svgpp_agg_render_msxml
+  PRIVATE USE_MSXML
+)
+
 if (MSVC)
-  set_target_properties(svgpp_agg_render PROPERTIES
+  set_target_properties(svgpp_agg_render svgpp_agg_render_msxml PROPERTIES
     COMPILE_FLAGS "/bigobj"
   )
 endif()
