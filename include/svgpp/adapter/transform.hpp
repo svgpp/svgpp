@@ -44,6 +44,8 @@ public:
   {
   }
 
+  Context & get_output_context() const { return context; }
+
   void on_exit_attribute() const
   {
   }
@@ -109,6 +111,8 @@ public:
     matrix[0] = 1; matrix[2] = 0; matrix[4] = 0;
     matrix[1] = 0; matrix[3] = 1; matrix[5] = 0;
   }
+
+  Context & get_output_context() const { return context; }
 
   void on_exit_attribute() const
   {
@@ -282,29 +286,41 @@ namespace detail
 template<
   class OutputContext, 
   class TransformPolicy, 
-  class LoadPolicy = context_policy<tag::load_transform_policy, OutputContext>,
+  class LoadTransformPolicy = context_policy<tag::load_transform_policy, OutputContext>,
   class Enable = void>
 struct transform_adapter_if_needed
 {
   typedef OutputContext type;
   typedef type & holder_type;
+  typedef LoadTransformPolicy load_transform_policy;
 
   void on_exit_attribute(type const &) {}
+
+  static OutputContext & get_original_context(holder_type & adapted_context)
+  {
+    return adapted_context;
+  }
 };
 
 template<
   class OutputContext, 
   class TransformPolicy, 
-  class LoadPolicy>
-struct transform_adapter_if_needed<OutputContext, TransformPolicy, LoadPolicy, 
+  class LoadTransformPolicy>
+struct transform_adapter_if_needed<OutputContext, TransformPolicy, LoadTransformPolicy, 
   typename boost::enable_if<need_transform_adapter<TransformPolicy> >::type>
 {
-  typedef transform_adapter<OutputContext, TransformPolicy, LoadPolicy> type;
+  typedef transform_adapter<OutputContext, TransformPolicy, LoadTransformPolicy> type;
   typedef type holder_type;
+  typedef policy::load_transform::forward_to_method<type> load_transform_policy;
 
   static void on_exit_attribute(type & adapter) 
   {
     adapter.on_exit_attribute();
+  }
+
+  static OutputContext & get_original_context(holder_type & adapted_context)
+  {
+    return adapted_context.get_output_context();
   }
 };
 

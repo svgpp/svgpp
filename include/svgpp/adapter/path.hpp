@@ -722,7 +722,7 @@ namespace detail
 
 template<
   class OutputContext, 
-  class PathPolicy = context_policy<tag::path_policy, OutputContext>, 
+  class PathPolicy   = context_policy<tag::path_policy, OutputContext>, 
   class Coordinate   = typename context_policy<tag::number_type, OutputContext>::type,
   class LoadPolicy   = context_policy<tag::load_path_policy, OutputContext>,
   class Enabled = void>
@@ -730,6 +730,7 @@ struct path_adapter_if_needed
 {
   typedef OutputContext type;
   typedef type & holder_type;
+  typedef LoadPolicy load_path_policy;
 
   static OutputContext & get_original_context(holder_type & adapted_context)
   {
@@ -747,6 +748,7 @@ struct path_adapter_if_needed<OutputContext, PathPolicy, Coordinate, LoadPolicy,
 {
   typedef path_adapter<OutputContext, PathPolicy, Coordinate, LoadPolicy> type;
   typedef type holder_type;
+  typedef policy::load_path::forward_to_method<type> load_path_policy;
 
   static OutputContext & get_original_context(holder_type & adapted_context)
   {
