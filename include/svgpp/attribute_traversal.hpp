@@ -17,12 +17,18 @@ template<class AttributeTraversalDocumentWidePolicy, class ElementTag>
 struct get_attribute_traversal_policy_for_element
 {
   static const bool css_hides_presentation_attribute = AttributeTraversalDocumentWidePolicy::css_hides_presentation_attribute;
-  typedef typename AttributeTraversalDocumentWidePolicy::get_priority_attributes_by_element
-    ::template apply<ElementTag>::type priority_attributes;
-  typedef typename AttributeTraversalDocumentWidePolicy::get_deferred_attributes_by_element
-    ::template apply<ElementTag>::type deferred_attributes;
-  typedef typename AttributeTraversalDocumentWidePolicy::get_required_attributes_by_element
-    ::template apply<ElementTag>::type required_attributes;
+  typedef typename boost::mpl::apply1<
+    typename AttributeTraversalDocumentWidePolicy::get_priority_attributes_by_element,
+    ElementTag
+  >::type priority_attributes;
+  typedef typename boost::mpl::apply1<
+    typename AttributeTraversalDocumentWidePolicy::get_deferred_attributes_by_element,
+    ElementTag
+  >::type deferred_attributes;
+  typedef typename boost::mpl::apply1<
+    typename AttributeTraversalDocumentWidePolicy::get_required_attributes_by_element,
+    ElementTag
+  >::type required_attributes;
 };
 
 }

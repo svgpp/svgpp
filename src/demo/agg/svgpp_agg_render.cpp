@@ -45,6 +45,7 @@
 class Canvas;
 class Path;
 class Use;
+class ReferencedSymbolOrSvg;
 
 typedef agg::pixfmt_rgba32 pixfmt_t;
 typedef agg::renderer_base<pixfmt_t> renderer_base_t;
@@ -181,7 +182,41 @@ struct child_context_factories
   {
     typedef svgpp::context_factory::on_stack<Canvas, Path> type;
   };
+
+  // For referenced by 'use' elements
+  template<>
+  struct apply<Use, svgpp::tag::element::svg, void>
+  {
+    typedef svgpp::context_factory::on_stack<Use, ReferencedSymbolOrSvg> type;
+  };
+
+  template<>
+  struct apply<Use, svgpp::tag::element::symbol, void>
+  {
+    typedef svgpp::context_factory::on_stack<Use, ReferencedSymbolOrSvg> type;
+  };
+
+  template<class ElementTag>
+  struct apply<Use, ElementTag, void>: apply<Canvas, ElementTag>
+  {};
+
+  template<class ElementTag>
+  struct apply<ReferencedSymbolOrSvg, ElementTag, void>: apply<Canvas, ElementTag>
+  {};
 };
+
+typedef boost::mpl::set<
+    svgpp::tag::element::svg,
+    svgpp::tag::element::g,
+    svgpp::tag::element::a,
+    svgpp::tag::element::use_,
+    svgpp::tag::element::path,
+    svgpp::tag::element::rect,
+    svgpp::tag::element::line,
+    svgpp::tag::element::circle,
+    svgpp::tag::element::ellipse,
+    svgpp::tag::element::polyline
+  > processed_elements;
 
 typedef boost::mpl::fold<
   boost::mpl::protect<
@@ -229,19 +264,8 @@ typedef boost::mpl::fold<
 typedef 
   svgpp::document_traversal<
     svgpp::context_factories<child_context_factories>,
-    svgpp::color_factory<color_factory>,
-    svgpp::processed_elements<boost::mpl::set<
-      svgpp::tag::element::svg,
-      svgpp::tag::element::g,
-      svgpp::tag::element::a,
-      svgpp::tag::element::use_,
-      svgpp::tag::element::path,
-      svgpp::tag::element::rect,
-      svgpp::tag::element::line,
-      svgpp::tag::element::circle,
-      svgpp::tag::element::ellipse,
-      svgpp::tag::element::polyline
-    > >,
+    svgpp::color_factory<color_factory_t>,
+    svgpp::processed_elements<processed_elements>,
     svgpp::processed_attributes<processed_attributes>,
     svgpp::basic_shapes_policy<basic_shapes_policy>,
     svgpp::path_policy<path_policy>
@@ -250,6 +274,9 @@ typedef
 class ImageBuffer: boost::noncopyable
 {
 public:
+  ImageBuffer()
+  {}
+
   ImageBuffer(int width, int height)
     : buffer_(width * height * pixfmt_t::pix_width)
     , rbuf_(&buffer_[0], width, height, width * pixfmt_t::pix_width)
@@ -259,6 +286,14 @@ public:
 
   pixfmt_t & pixfmt() { return pixfmt_; }
   renderer_base_t & renderer_base() { return renderer_base_; }
+  void set_size(int width, int height)
+  {
+    BOOST_ASSERT(buffer_.empty());
+    buffer_.resize(width * height * pixfmt_t::pix_width);
+    rbuf_.attach(&buffer_[0], width, height, width * pixfmt_t::pix_width);
+    pixfmt_.attach(rbuf_);
+    renderer_base_.attach(pixfmt_);
+  }
 
 private:
   std::vector<unsigned char> buffer_;
@@ -292,12 +327,14 @@ public:
   Canvas(Document & document, ImageBuffer & image_buffer)
     : document_(document)
     , parent_renderer_(boost::bind(&ImageBuffer::renderer_base, boost::ref(image_buffer)))
+    , image_buffer_(&image_buffer)
   {}
 
   Canvas(Canvas & parent)
     : Transformable(parent)
     , Stylable(parent)
     , document_(parent.document_)
+    , image_buffer_(NULL)
     , parent_renderer_(boost::bind(&Canvas::get_renderer, &parent))
   {}
 
@@ -307,8 +344,16 @@ public:
       parent_renderer_().blend_from(own_buffer_->pixfmt(), NULL, 0, 0, unsigned(style().opacity_ * 255));
   }
 
+  void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height)
+  {
+    if (image_buffer_) // If topmost SVG element
+      image_buffer_->set_size(viewport_width + 1.0, viewport_height + 1.0);
+    // TODO: set clipping
+  }
+
 private:
   Document & document_;
+  ImageBuffer * const image_buffer_; // Non-NULL only for topmost SVG element
   lazy_renderer_t parent_renderer_;
   std::auto_ptr<ImageBuffer> own_buffer_;
 
@@ -344,7 +389,13 @@ public:
     {
       Document::FollowRef lock(document(), element);
       transform().premultiply(agg::trans_affine_translation(x_, y_));
-      document_traversal_main::load_referenced_element<svgpp::traits::reusable_elements>(element, static_cast<Canvas&>(*this));
+      document_traversal_main::load_referenced_element<
+        svgpp::tag::element::use_,
+        svgpp::traits::reusable_elements,
+        svgpp::processed_elements<
+          boost::mpl::insert<processed_elements, svgpp::tag::element::symbol>::type 
+        >
+      >(element, *this);
     }
     else
       std::cerr << "Element referenced by 'use' not found\n";
@@ -367,9 +418,41 @@ public:
   void set(svgpp::tag::attribute::y, double val)
   { y_ = val; }
 
+  void set(svgpp::tag::attribute::width, double val)
+  { width_ = val; }
+
+  void set(svgpp::tag::attribute::height, double val)
+  { height_ = val; }
+
+  boost::optional<double> const & width() const { return width_; }
+  boost::optional<double> const & height() const { return height_; }
+
 private:
   svg_string_t fragment_id_;
   double x_, y_;
+  boost::optional<double> width_, height_;
+};
+
+class ReferencedSymbolOrSvg: 
+  public Canvas
+{
+public:
+  ReferencedSymbolOrSvg(Use & parent)
+    : Canvas(parent)
+    , parent_(parent)
+  {
+  }
+
+  void get_reference_viewport_size(double & width, double & height)
+  {
+    if (parent_.width())
+      width = *parent_.width();
+    if (parent_.height())
+      height = *parent_.height();
+  }
+
+private:
+  Use & parent_;
 };
 
 class Path: public Canvas
@@ -425,7 +508,7 @@ public:
 private:
   agg::path_storage path_storage_;
 
-  typedef boost::variant<svgpp::tag::value::none, agg::rgba8, Gradient const *> EffectivePaint;
+  typedef boost::variant<svgpp::tag::value::none, agg::rgba8, Gradient> EffectivePaint;
   template<class VertexSource>
   void paint_scanlines(EffectivePaint const & paint, double opacity, agg::rasterizer_scanline_aa<> & rasterizer,
     VertexSource & curved);
@@ -551,7 +634,7 @@ void render_scanlines_gradient(renderer_base_t & renderer,
   if (gradient_base.matrix_)
     tr *= agg::trans_affine(gradient_base.matrix_->data());
 
-  if (gradient_base.useObjectBoundingBox_)
+  /*if (gradient_base.useObjectBoundingBox_)
   {
     double min_x, min_y, max_x, max_y;
     agg::bounding_rect_single(curved, 0, &min_x, &min_y, &max_x, &max_y);
@@ -559,7 +642,7 @@ void render_scanlines_gradient(renderer_base_t & renderer,
       return;
     else
       tr *= agg::trans_affine(max_x - min_x, 0, 0, max_y - min_y, min_x, min_y);
-  }
+  }*/
 
   tr *= user_transform;
   tr.invert();
@@ -589,7 +672,7 @@ void Path::paint_scanlines(EffectivePaint const & paint, double opacity, agg::ra
   }
   else
   {
-    Gradient const & gradient = *boost::get<Gradient const *>(paint);
+    Gradient const & gradient = boost::get<Gradient const>(paint);
     if (LinearGradient const * linearGradient = boost::get<LinearGradient>(&gradient))
     {
       agg::gradient_x gradient_func;
@@ -689,7 +772,7 @@ Path::EffectivePaint Path::get_effective_paint(Paint const & paint) const
   SolidPaint const * solidPaint = nullptr;
   if (IRIPaint const * iri = boost::get<IRIPaint>(&paint))
   {
-    if (Gradient const * gradient = document().gradients_.get(iri->fragment_))
+    if (boost::optional<Gradient> const gradient = document().gradients_.get(iri->fragment_))
     {
       GradientBase_visitor gradientBase;
       boost::apply_visitor(gradientBase, *gradient);
@@ -697,13 +780,13 @@ Path::EffectivePaint Path::get_effective_paint(Paint const & paint) const
         return svgpp::tag::value::none();
       if (gradientBase.gradient_->stops_.size() == 1)
         return gradientBase.gradient_->stops_.front().color_;
-      if (LinearGradient const * linearGradient = boost::get<LinearGradient>(gradient))
+      if (LinearGradient const * linearGradient = boost::get<LinearGradient>(gradient.get_ptr()))
       {
         if (linearGradient->x1_ == linearGradient->x2_ && linearGradient->y1_ == linearGradient->y2_)
           // TODO: use also last step opacity 
           return gradientBase.gradient_->stops_.back().color_;
       }
-      return gradient;
+      return *gradient;
     }
     if (iri->fallback_)
       solidPaint = &*iri->fallback_;

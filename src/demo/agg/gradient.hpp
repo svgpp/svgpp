@@ -25,12 +25,10 @@ struct GradientBase
   enum SpreadMethod { spreadPad, spreadReflect, spreadRepeat };
 
   GradientBase()
-    : useObjectBoundingBox_(true)
-    , spreadMethod_(spreadPad)
+    : spreadMethod_(spreadPad)
   {}
 
   boost::optional<boost::array<double, 6> > matrix_;
-  bool useObjectBoundingBox_;
   SpreadMethod spreadMethod_;
   GradientStops stops_;
 };
@@ -67,13 +65,11 @@ public:
     : xml_document_(xml_document)
   {}
 
-  Gradient const * get(svg_string_t const & id);
+  boost::optional<Gradient> get(
+    svg_string_t const & id/*, 
+    length_factory_t const &, 
+    get_bounding_box_func_t const & get_bounding_box*/);
 
 private:
-  typedef std::map<svg_string_t, boost::optional<Gradient> > GradientMap;
-
   XMLDocument & xml_document_;
-  GradientMap gradients_;
-
-  void load_gradient(svg_string_t const & id, boost::optional<Gradient> & out) const;
 };

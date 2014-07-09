@@ -8,7 +8,22 @@ namespace
 
 class GradientBaseContext;
 
-typedef boost::optional<Gradient> GradientContext;
+class GradientContext
+{
+public:
+  /*GradientContext(
+    length_factory_t const & length_factory,
+    get_bounding_box_func_t const & get_bounding_box)
+    : length_factory_(length_factory)
+    , get_bounding_box_(get_bounding_box)
+  {}
+
+  length_factory_t const & length_factory_; 
+  get_bounding_box_func_t const & get_bounding_box_;*/
+  boost::optional<Gradient> gradient_;
+};
+
+struct after_gradientUnits_tag {};
 
 class GradientStopContext
 {
@@ -47,8 +62,10 @@ private:
 class GradientBaseContext
 {
 public:
-  GradientBaseContext(GradientBase & data)
+  GradientBaseContext(GradientBase & data, GradientContext const & gradientContext)
     : data_(data)
+    , gradientContext_(gradientContext)
+    , useObjectBoundingBox_(true)
   {}
 
   void add_stop(GradientStop stop)
@@ -68,10 +85,10 @@ public:
   }
 
   void set(svgpp::tag::attribute::gradientUnits, svgpp::tag::value::userSpaceOnUse)
-  { data_.useObjectBoundingBox_ = false; }
+  { useObjectBoundingBox_ = false; }
 
   void set(svgpp::tag::attribute::gradientUnits, svgpp::tag::value::objectBoundingBox)
-  { data_.useObjectBoundingBox_ = true; }
+  { useObjectBoundingBox_ = true; }
 
   void set(svgpp::tag::attribute::spreadMethod, svgpp::tag::value::pad)
   { data_.spreadMethod_ = GradientBase::spreadPad; }
@@ -82,9 +99,14 @@ public:
   void set(svgpp::tag::attribute::spreadMethod, svgpp::tag::value::repeat)
   { data_.spreadMethod_ = GradientBase::spreadRepeat; }
 
+  bool notify(after_gradientUnits_tag)
+  { return true; }
+
 protected:
   svg_string_t id_;
   GradientBase & data_;
+  GradientContext const & gradientContext_;
+  bool useObjectBoundingBox_;
 };
 
 void GradientStopContext::on_exit_element()
@@ -96,13 +118,13 @@ void GradientStopContext::on_exit_element()
 class LinearGradientContext: public GradientBaseContext
 {
 public:
-  LinearGradientContext(GradientContext & gradient)
-    : GradientBaseContext(data_)
-    , gradient_(gradient)
+  LinearGradientContext(GradientContext & gradientContext)
+    : GradientBaseContext(data_, gradientContext)
+    , gradientContext_(gradientContext)
   {}
 
   void on_exit_element()
-  { gradient_ = data_; }
+  { gradientContext_.gradient_ = data_; }
 
   using GradientBaseContext::set;
 
@@ -119,16 +141,16 @@ public:
   { data_.y2_ = val; }
 
 private:
-  GradientContext & gradient_;
+  GradientContext & gradientContext_;
   LinearGradient data_;
 };
 
 class RadialGradientContext: public GradientBaseContext
 {
 public:
-  RadialGradientContext(GradientContext & gradient)
-    : GradientBaseContext(data_)
-    , gradient_(gradient)
+  RadialGradientContext(GradientContext & gradientContext)
+    : GradientBaseContext(data_, gradientContext)
+    , gradientContext_(gradientContext)
     , fx_set_(false)
     , fy_set_(false)
   {}
@@ -139,7 +161,7 @@ public:
       data_.fx_ = data_.cx_;
     if (!fy_set_)
       data_.fy_ = data_.cy_;
-    gradient_ = data_; 
+    gradientContext_.gradient_ = data_; 
   }
 
   using GradientBaseContext::set;
@@ -160,7 +182,7 @@ public:
   { fy_set_ = true; data_.fy_ = val; }
 
 private:
-  GradientContext & gradient_;
+  GradientContext & gradientContext_;
   RadialGradient data_;
   bool fx_set_, fy_set_;
 };
@@ -191,25 +213,33 @@ struct gradient_context_factories
 
 }
 
-Gradient const * Gradients::get(svg_string_t const & id)
+struct attribute_traversal: svgpp::policy::attribute_traversal::default_policy
 {
-  std::pair<GradientMap::iterator, bool> ins = gradients_.insert(
-    GradientMap::value_type(id, boost::optional<Gradient>()));
-  if (ins.second)
-    load_gradient(id, ins.first->second);
-  return ins.first->second.get_ptr();
-}
+  typedef boost::mpl::if_<
+    boost::mpl::has_key<svgpp::traits::gradient_elements, boost::mpl::_1>,
+    boost::mpl::vector<
+      svgpp::tag::attribute::gradientUnits,
+      svgpp::notify_context<after_gradientUnits_tag>
+    >,
+    boost::mpl::empty_sequence
+  > get_priority_attributes_by_element;
+};
 
-void Gradients::load_gradient(svg_string_t const & id, boost::optional<Gradient> & out) const
+boost::optional<Gradient> Gradients::get(
+    svg_string_t const & id/*, 
+    length_factory_t const &, 
+    get_bounding_box_func_t const & get_bounding_box*/)
 {
   // TODO: inheritance via xlink::href
   if (XMLElement node = xml_document_.find_element_by_id(id))
   {
     try
     {
+      GradientContext gradient_context;
       svgpp::document_traversal<
         svgpp::context_factories<gradient_context_factories>,
-        svgpp::color_factory<color_factory>,
+        svgpp::color_factory<color_factory_t>,
+        svgpp::attribute_traversal_policy<attribute_traversal>,
         svgpp::processed_elements<
           boost::mpl::set<
             svgpp::tag::element::linearGradient,
@@ -236,11 +266,17 @@ void Gradients::load_gradient(svg_string_t const & id, boost::optional<Gradient>
             boost::mpl::pair<svgpp::tag::element::stop, svgpp::tag::attribute::stop_opacity>
           >
         >
-      >::load_referenced_element<svgpp::traits::gradient_elements>(node, out);
+      >::load_referenced_element<
+        void, // Doesn't matter
+        svgpp::traits::gradient_elements, 
+        svgpp::traits::gradient_elements
+      >(node, gradient_context);
+      return gradient_context.gradient_;
     } catch (std::exception const & e)
     {
       std::cerr << "Error loading paint \"" << std::string(id.begin(), id.end()) << "\": " << e.what() << "\n";
     }
   }
+  return boost::optional<Gradient>();
 }
 

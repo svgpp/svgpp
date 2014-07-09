@@ -8,6 +8,8 @@
 
 namespace
 {
+  struct after_viewport_attributes_tag {};
+
   class traversal_context
   {
   public:
@@ -37,9 +39,10 @@ namespace
   class traversal_context2: public traversal_context
   {
   public:
-    void on_viewport_attributes_loaded()
+    bool notify(after_viewport_attributes_tag)
     {
       log_ << "viewport_attributes_loaded\n";
+      return true;
     }
   };
 
@@ -50,23 +53,13 @@ namespace
 
 namespace
 {
-  struct after_viewport_attributes_op_tag
-  {
-    template<class Context>
-    static bool apply(Context & c)
-    {
-      c.on_viewport_attributes_loaded();
-      return true;
-    }
-  };
-
   struct traversal_policy: public svgpp::policy::attribute_traversal::default_policy
   {
     typedef boost::mpl::always<
       boost::mpl::joint_view<
           typename boost::mpl::joint_view<
             svgpp::traits::viewport_attributes, 
-            boost::mpl::single_view<svgpp::context_operation<after_viewport_attributes_op_tag> > 
+            boost::mpl::single_view<svgpp::notify_context<after_viewport_attributes_tag> > 
           >::type,
           svgpp::traits::font_selection_attributes
       >::type
@@ -93,7 +86,7 @@ TEST(AttributeTraversal, Prioritized)
     traversal_context2 sample_context;
     sample_context.load_attribute(attribute_id_y, boost::as_literal("12"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_x, boost::as_literal("11"), tag::source::attribute());
-    sample_context.on_viewport_attributes_loaded();
+    sample_context.notify(after_viewport_attributes_tag());
     sample_context.load_attribute(attribute_id_font_weight, boost::as_literal("fw value"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_baseline_shift, boost::as_literal("style value"), tag::source::css());
     sample_context.load_attribute(attribute_id_fill, boost::as_literal("fill value"), tag::source::css());
@@ -120,7 +113,7 @@ TEST(AttributeTraversal, Prioritized_Without_Style)
     traversal_context2 sample_context;
     sample_context.load_attribute(attribute_id_y, boost::as_literal("12"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_x, boost::as_literal("11"), tag::source::attribute());
-    sample_context.on_viewport_attributes_loaded();
+    sample_context.notify(after_viewport_attributes_tag());
     sample_context.load_attribute(attribute_id_font_weight, boost::as_literal("fw value"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_baseline_shift, boost::as_literal("attr value"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_style, boost::as_literal("baseline-shift:style value;fill: fill value ;"), tag::source::attribute());

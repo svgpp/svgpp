@@ -7,7 +7,7 @@ namespace svgpp
 {
 
 template<class Coordinate>
-struct calculate_viewport_transform
+struct calculate_viewbox_transform
 {
   template<class MeetOrSliceTag>
   static void calculate(

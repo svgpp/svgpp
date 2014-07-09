@@ -1,6 +1,6 @@
 #pragma once
 
-#include <svgpp/utility/calculate_viewport_transform.hpp>
+#include <svgpp/utility/calculate_viewbox_transform.hpp>
 #include <svgpp/context_policy_load_transform.hpp>
 #include <svgpp/context_policy_load_value.hpp>
 #include <boost/optional.hpp>
@@ -12,9 +12,138 @@
 namespace svgpp
 {
 
-template<class Length, class Coordinate, class LoadPolicy = void>
-class calculate_viewport_adapter: boost::noncopyable
+// Pairs of <referencing element tag, referenced element tag> combinations in which 
+// calculate_viewport_adapter needs to know type of referenced element
+typedef boost::mpl::set3<
+  boost::mpl::pair<tag::element::use_,  tag::element::svg>,
+  boost::mpl::pair<tag::element::image, tag::element::svg>,
+  boost::mpl::pair<tag::element::use_,  tag::element::symbol>
+> viewport_adapter_needs_to_know_referencing_element;
+
+namespace tag { namespace viewport_size_source
 {
+  struct use_own; // 'width' and 'height' attributes are set on element
+  struct use_reference; // Like 'symbol' element referenced by 'use'
+  struct reference_override_own; // Like 'svg' element referenced by 'use'
+}}
+
+template<
+  class ReferencingElementTag, // 'void' means that element is not referenced or
+                               // referencing element type doesn't matter (e.g. 'symbol' may be referenced only by 'use')
+                               // see viewport_adapter_needs_to_know_referencing_element
+  class ElementTag
+>
+struct get_viewport_size_source; // Shouldn't be called for anything other than 'svg' and 'symbol',
+                                 // referenced by 'use' or 'image'
+                                 // 'symbol' must only be used while referenced by 'use'
+
+template<>
+struct get_viewport_size_source<tag::element::use_, tag::element::svg>
+{
+  typedef tag::viewport_size_source::reference_override_own type;
+};
+
+template<>
+struct get_viewport_size_source<tag::element::image, tag::element::svg>
+{
+  typedef tag::viewport_size_source::use_reference type;
+};
+
+template<>
+struct get_viewport_size_source<void, tag::element::svg>
+{
+  typedef tag::viewport_size_source::use_own type;
+};
+
+template<>
+struct get_viewport_size_source<tag::element::use_, tag::element::symbol>
+{
+  typedef tag::viewport_size_source::use_reference type;
+};
+
+namespace detail
+{
+  template<class Length, class Coordinate, class ViewportSizeSourceTag>
+  class calculate_viewport_adapter_size_holder;
+
+  template<class Length, class Coordinate>
+  class calculate_viewport_adapter_size_holder<Length, Coordinate, tag::viewport_size_source::use_own>
+  {
+  public:
+    void set(tag::attribute::width,         Length const & val) { viewport_width_ = val; }
+    void set(tag::attribute::markerWidth,   Length const & val) { viewport_width_ = val; }
+    void set(tag::attribute::height,        Length const & val) { viewport_height_ = val; }
+    void set(tag::attribute::markerHeight,  Length const & val) { viewport_height_ = val; }
+
+  protected:
+    template<class LoadPolicy, class Context, class LengthToUserCoordinatesConverter>
+    void get_viewport_size(Context & context, LengthToUserCoordinatesConverter const & converter,
+      Coordinate & viewport_width, Coordinate & viewport_height) const
+    {
+      viewport_width = converter.length_to_user_coordinate(
+        viewport_width_
+          ? *viewport_width_
+          : converter.create_length(100, tag::length_units::percent(), tag::width_length()),
+        tag::width_length());
+      viewport_height = converter.length_to_user_coordinate(
+        viewport_height_
+          ? *viewport_height_
+          : converter.create_length(100, tag::length_units::percent(), tag::height_length()),
+        tag::height_length());
+    }
+
+  private:
+    boost::optional<Length> viewport_width_, viewport_height_;
+  };
+
+  template<class Length, class Coordinate>
+  class calculate_viewport_adapter_size_holder<Length, Coordinate, tag::viewport_size_source::use_reference>
+  {
+  protected:
+    template<class LoadPolicy, class Context, class LengthToUserCoordinatesConverter>
+    void get_viewport_size(Context & context, LengthToUserCoordinatesConverter const & converter,
+      Coordinate & viewport_width, Coordinate & viewport_height) const
+    {
+      // Init with defaults first
+      viewport_width = converter.length_to_user_coordinate(
+        converter.create_length(100, tag::length_units::percent(), tag::width_length()),
+        tag::width_length());
+      viewport_height = converter.length_to_user_coordinate(
+        converter.create_length(100, tag::length_units::percent(), tag::height_length()),
+        tag::height_length());
+
+      LoadPolicy::get_reference_viewport_size(context, viewport_width, viewport_height);
+    }
+
+    struct some_dummy_type;
+    void set(some_dummy_type); // The only purpose of this declaration is to make
+                               // "use base_type::set;" possible in inherited type
+  };
+
+  template<class Length, class Coordinate>
+  class calculate_viewport_adapter_size_holder<Length, Coordinate, tag::viewport_size_source::reference_override_own>
+    : public calculate_viewport_adapter_size_holder<Length, Coordinate, tag::viewport_size_source::use_own>
+  {
+  protected:
+    template<class LoadPolicy, class Context, class LengthToUserCoordinatesConverter>
+    void get_viewport_size(Context & context, LengthToUserCoordinatesConverter const & converter,
+      Coordinate & viewport_width, Coordinate & viewport_height) const
+    {
+      calculate_viewport_adapter_size_holder<Length, Coordinate, tag::viewport_size_source::use_own>
+        ::get_viewport_size<LoadPolicy>(context, converter, viewport_width, viewport_height);
+      // get_reference_viewport_size must only set values which was specified for referenced element
+      // and keep values from current element if referenced element lacks them
+      LoadPolicy::get_reference_viewport_size(context, viewport_width, viewport_height);
+    }
+  };
+}
+
+template<class Length, class Coordinate, class ViewportSizeSourceTag>
+class calculate_viewport_adapter: 
+  public detail::calculate_viewport_adapter_size_holder<Length, Coordinate, ViewportSizeSourceTag>,
+  boost::noncopyable
+{
+  typedef detail::calculate_viewport_adapter_size_holder<Length, Coordinate, ViewportSizeSourceTag> base_type;
   typedef boost::tuple<Coordinate, Coordinate, Coordinate, Coordinate> viewbox_type; // x, y, width, height
 
 public:
@@ -28,34 +157,23 @@ public:
   bool on_exit_attributes(Context & context, LengthToUserCoordinatesConverter const & converter) const
   {
     return on_exit_attributesT<
+      context_policy<tag::load_value_policy, Context>,
       context_policy<tag::error_policy, Context>
     >(context, converter);
   }
 
-  template<class ErrorPolicy, class Context, class LengthToUserCoordinatesConverter>
+  template<class LoadPolicy, class ErrorPolicy, class Context, class LengthToUserCoordinatesConverter>
   bool on_exit_attributesT(Context & context, LengthToUserCoordinatesConverter const & converter) const
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<LoadPolicy, void>,
-      context_policy<tag::load_value_policy, Context>,
-      LoadPolicy>::type load_policy;
-
     Coordinate viewport_x = converter.length_to_user_coordinate(
       viewport_x_ ? *viewport_x_ : converter.create_length(0, tag::length_units::none()),
       tag::width_length());
     Coordinate viewport_y = converter.length_to_user_coordinate(
       viewport_y_ ? *viewport_y_ : converter.create_length(0, tag::length_units::none()),
       tag::height_length());
-    Coordinate viewport_width = converter.length_to_user_coordinate(
-      viewport_width_
-        ? *viewport_width_
-        : converter.create_length(100, tag::length_units::percent(), tag::width_length()),
-      tag::width_length());
-    Coordinate viewport_height = converter.length_to_user_coordinate(
-      viewport_height_
-        ? *viewport_height_
-        : converter.create_length(100, tag::length_units::percent(), tag::height_length()),
-      tag::height_length());
+
+    Coordinate viewport_width = 0, viewport_height = 0;
+    base_type::get_viewport_size<LoadPolicy>(context, converter, viewport_width, viewport_height);
 
     if (viewport_width == 0 || viewport_height == 0)
       // TODO: disable rendering
@@ -65,6 +183,8 @@ public:
       return ErrorPolicy::negative_value(context, tag::attribute::width());
     if (viewport_height < 0)
       return ErrorPolicy::negative_value(context, tag::attribute::height());
+
+    LoadPolicy::set_viewport(context, viewport_x, viewport_y, viewport_width, viewport_height);
 
     if (viewbox_)
     {
@@ -80,18 +200,16 @@ public:
           viewport_x, viewport_y, viewport_width, viewport_height,
           translate_x, translate_y, scale_x, scale_y), 
         align_, meetOrSlice_);
-      // TODO: Pass also new viewport size to use it in percentage lengths
-      load_policy::set_viewport_transform(context, translate_x, translate_y, scale_x, scale_y, defer_);
+      LoadPolicy::set_viewport_transform(context, translate_x, translate_y, scale_x, scale_y, defer_);
     }
     else
-      load_policy::set_viewport_transform(context, viewport_x, viewport_y);
+      LoadPolicy::set_viewport_transform(context, viewport_x, viewport_y);
     return true;
   }
 
-  void set(tag::attribute::x,      Length const & val) { viewport_x_ = val; }
-  void set(tag::attribute::y,      Length const & val) { viewport_y_ = val; }
-  void set(tag::attribute::width,  Length const & val) { viewport_width_ = val; }
-  void set(tag::attribute::height, Length const & val) { viewport_height_ = val; }
+  using base_type::set;
+  void set(tag::attribute::x,             Length const & val) { viewport_x_ = val; }
+  void set(tag::attribute::y,             Length const & val) { viewport_y_ = val; }
   void set(tag::attribute::viewBox, Coordinate x, Coordinate y, Coordinate w, Coordinate h) 
   {
     viewbox_ = viewbox_type(x, y, w, h);
@@ -112,7 +230,7 @@ public:
   }
 
 private:
-  boost::optional<Length> viewport_x_, viewport_y_, viewport_width_, viewport_height_;
+  boost::optional<Length> viewport_x_, viewport_y_;
   boost::optional<viewbox_type> viewbox_;
   bool defer_;
   boost::variant<
@@ -152,7 +270,7 @@ private:
     template<class AlignTag, class MeetOrSliceTag>
     void operator()(const AlignTag & align_tag, const MeetOrSliceTag & meetOrSlice_tag) const
     {
-      calculate_viewport_transform<Coordinate>::calculate(
+      calculate_viewbox_transform<Coordinate>::calculate(
         viewport_x_, viewport_y_, viewport_width_, viewport_height_,
         viewbox_.get<0>(), viewbox_.get<1>(), viewbox_.get<2>(), viewbox_.get<3>(),
         align_tag,
@@ -167,7 +285,7 @@ private:
   };
 };
 
-template<class LoadPolicy = void>
+template<class LoadTransformPolicy = void, class LoadValuePolicy = void>
 struct viewport_transform_adapter
 {
   template<class Context, class Coordinate>
@@ -175,9 +293,10 @@ struct viewport_transform_adapter
     Coordinate scale_x, Coordinate scale_y, bool)
   {
     typedef typename boost::mpl::if_<
-      boost::is_same<LoadPolicy, void>,
+      boost::is_same<LoadTransformPolicy, void>,
       context_policy<tag::load_transform_policy, Context>,
-      LoadPolicy>::type load_policy;
+      LoadTransformPolicy
+    >::type load_policy;
 
     load_policy::append_transform_translate(context, translate_x, translate_y);
     load_policy::append_transform_scale(context, scale_x, scale_y);
@@ -187,11 +306,37 @@ struct viewport_transform_adapter
   static void set_viewport_transform(Context & context, Coordinate translate_x, Coordinate translate_y)
   {
     typedef typename boost::mpl::if_<
-      boost::is_same<LoadPolicy, void>,
+      boost::is_same<LoadTransformPolicy, void>,
       context_policy<tag::load_transform_policy, Context>,
-      LoadPolicy>::type load_policy;
+      LoadTransformPolicy
+    >::type load_policy;
 
     load_policy::append_transform_translate(context, translate_x, translate_y);
+  }
+
+  template<class Context, class Coordinate>
+  static void set_viewport(Context & context, Coordinate viewport_x, Coordinate viewport_y, 
+    Coordinate viewport_width, Coordinate viewport_height)
+  {
+    typedef typename boost::mpl::if_<
+      boost::is_same<LoadValuePolicy, void>,
+      context_policy<tag::load_value_policy, Context>,
+      LoadValuePolicy
+    >::type load_policy;
+
+    load_policy::set_viewport(context, viewport_x, viewport_y, viewport_width, viewport_height);
+  }
+
+  template<class Context, class Coordinate>
+  static void get_reference_viewport_size(Context & context, Coordinate & viewport_width, Coordinate & viewport_height) 
+  {
+    typedef typename boost::mpl::if_<
+      boost::is_same<LoadValuePolicy, void>,
+      context_policy<tag::load_value_policy, Context>,
+      LoadValuePolicy
+    >::type load_policy;
+
+    load_policy::get_reference_viewport_size(context, viewport_width, viewport_height);
   }
 
 private:

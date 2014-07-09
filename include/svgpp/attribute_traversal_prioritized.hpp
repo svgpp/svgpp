@@ -24,8 +24,8 @@
 namespace svgpp
 {
 
-template<class Op>
-struct context_operation;
+template<class EventTag>
+struct notify_context;
 
 namespace traversal_detail
 {
@@ -48,16 +48,15 @@ namespace traversal_detail
     }
   };
 
-  template<class Prev, class Op>
-  struct priority_load_op<Prev, context_operation<Op> >
+  template<class Prev, class EventTag>
+  struct priority_load_op<Prev, notify_context<EventTag> >
   {
     template<class Context, class AttributeLoadFunc>
     static bool execute(Context & context, AttributeLoadFunc & load_func)
     {
       if (!Prev::execute(context, load_func))
         return false;
-      Op::apply(context);
-      return true;
+      return context.notify(EventTag());
     }
   };
 
@@ -215,16 +214,54 @@ namespace traversal_detail
     };
   };
 
+  template<class XMLAttributesIterator, class XMLPolicy, class Enable = void>
+  struct attribute_value_saver;
+
   template<class XMLAttributesIterator, class XMLPolicy>
-  struct attribute_value_saver
+  struct attribute_value_saver<XMLAttributesIterator, XMLPolicy,
+    typename boost::enable_if<boost::is_same<typename XMLPolicy::saved_value_type, typename XMLPolicy::string_type> >::type>
+  {
+    typedef typename XMLPolicy::string_type attribute_value;
+    typedef typename XMLPolicy::string_type attribute_saved_value;
+    typedef typename XMLPolicy::string_type attribute_or_css_saved_value;
+
+    // Store attribute value
+    static void save(XMLAttributesIterator const & xml_attributes_iterator,
+      attribute_saved_value & store)
+    {
+      store = XMLPolicy::save_value(xml_attributes_iterator);
+    }
+
+    // Store 'style' attribute substring
+    static void save(typename XMLPolicy::string_type const & range,
+      attribute_or_css_saved_value & store)
+    {
+      store = range;
+    }
+
+    static attribute_value get_value(attribute_saved_value const & store)
+    {
+      return store;
+    }
+
+    static typename XMLPolicy::string_type get_string_range(attribute_value const & value)
+    {
+      return value;
+    }
+
+    static typename XMLPolicy::string_type const & get_css_value(attribute_or_css_saved_value const & store)
+    {
+      return store;
+    }
+  };
+
+  template<class XMLAttributesIterator, class XMLPolicy>
+  struct attribute_value_saver<XMLAttributesIterator, XMLPolicy,
+    typename boost::disable_if<boost::is_same<typename XMLPolicy::saved_value_type, typename XMLPolicy::string_type> >::type>
   {
     typedef typename XMLPolicy::attribute_value_type attribute_value;
     typedef typename XMLPolicy::saved_value_type attribute_saved_value;
-    typedef typename boost::mpl::if_<
-      boost::is_same<typename XMLPolicy::saved_value_type, typename XMLPolicy::string_type>,
-      typename XMLPolicy::string_type,
-      boost::mpl::inherit2<typename XMLPolicy::saved_value_type, typename XMLPolicy::string_type>
-    >::type attribute_or_css_saved_value;
+    typedef std::pair<typename XMLPolicy::saved_value_type, typename XMLPolicy::string_type> attribute_or_css_saved_value;
 
     // Store attribute value
     static void save(XMLAttributesIterator const & xml_attributes_iterator,
@@ -237,14 +274,14 @@ namespace traversal_detail
     static void save(XMLAttributesIterator const & xml_attributes_iterator,
       attribute_or_css_saved_value & store)
     {
-      static_cast<typename XMLPolicy::saved_value_type &>(store) = XMLPolicy::save_value(xml_attributes_iterator);
+      store.first = XMLPolicy::save_value(xml_attributes_iterator);
     }
 
     // Store 'style' attribute substring
     static void save(typename XMLPolicy::string_type const & range,
       attribute_or_css_saved_value & store)
     {
-      static_cast<typename XMLPolicy::string_type &>(store) = range;
+      store.second = range;
     }
 
     static attribute_value get_value(attribute_saved_value const & store)
@@ -254,7 +291,7 @@ namespace traversal_detail
 
     static attribute_value get_value(attribute_or_css_saved_value const & store)
     {
-      return XMLPolicy::get_value(static_cast<typename XMLPolicy::saved_value_type &>(store));
+      return XMLPolicy::get_value(store.first);
     }
 
     static typename XMLPolicy::string_type get_string_range(attribute_value const & value)
@@ -264,7 +301,7 @@ namespace traversal_detail
 
     static typename XMLPolicy::string_type const & get_css_value(attribute_or_css_saved_value const & store)
     {
-      return static_cast<typename XMLPolicy::string_type &>(store);
+      return store.second;
     }
   };
 } // namespace traversal_detail

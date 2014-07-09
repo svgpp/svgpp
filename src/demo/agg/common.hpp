@@ -2,6 +2,7 @@
 
 #include <agg_color_rgba.h>
 #include <svgpp/integer_color_factory.hpp>
+#include <svgpp/unitless_length_factory.hpp>
 #ifdef USE_MSXML
 # define NOMINMAX
 # include <MsXml2.h>
@@ -11,6 +12,8 @@
 # include <rapidxml_ns/rapidxml_ns.hpp>
 # include <svgpp/xml/rapidxml_ns.hpp>
 #endif
+#include <boost/function.hpp>
+#include <boost/tuple/tuple.hpp>
 #include <map>
 
 struct agg_rgba8_color_factory
@@ -23,7 +26,10 @@ struct agg_rgba8_color_factory
   }
 };
 
-typedef svgpp::color_factory_percentage_adapter<agg_rgba8_color_factory> color_factory;
+typedef svgpp::color_factory_percentage_adapter<agg_rgba8_color_factory> color_factory_t;
+typedef svgpp::unitless_length_factory<> length_factory_t;
+typedef boost::tuple<double, double, double, double> bounding_box_t;
+typedef boost::function<bounding_box_t()> get_bounding_box_func_t;
 
 #ifdef USE_MSXML
 typedef boost::intrusive_ptr<IXMLDOMNode> XMLElement;
