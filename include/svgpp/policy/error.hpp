@@ -1,6 +1,6 @@
 #pragma once
 
-#include <boost/exception/detail/attribute_noreturn.hpp>
+#include <boost/exception/all.hpp>
 #include <boost/format.hpp>
 #include <boost/range/iterator.hpp>
 #include <svgpp/definitions.hpp>
@@ -10,33 +10,21 @@
 namespace svgpp
 {
   
-template<class XMLElement>
-class xml_element_error: public std::exception
+namespace tag { namespace error_info
+{
+  struct xml_element;
+  struct xml_attribute;
+}}
+
+class unknown_element_error: public virtual boost::exception, public virtual std::exception
 {
 public:
-  xml_element_error(XMLElement const & element)
-    : element_(element)
-  {}
-
-  XMLElement const & element() const // NB: returned reference may be invalid at the catch scope - it depends on XML layer
-    { return element_; }
-
-private:
-  XMLElement const & element_;
-};
-
-template<class XMLElement>
-class unknown_element_error: public xml_element_error<XMLElement>
-{
-public:
-  unknown_element_error(XMLElement const & element)
-    : xml_element_error(element)
+  unknown_element_error()
   {}
   
   template<class Name>
-  unknown_element_error(XMLElement const & element, Name const & name)
-    : xml_element_error(element)
-    , message_((boost::format("Unknown SVG element: \"%s\"") % std::string(boost::begin(name), boost::end(name))).str())
+  unknown_element_error(Name const & name)
+    : message_((boost::format("Unknown SVG element: \"%s\"") % std::string(boost::begin(name), boost::end(name))).str())
   {}
 
   virtual const char * what() const
@@ -48,47 +36,24 @@ private:
   std::string const message_;
 };
 
-template<class XMLElement>
-class unexpected_element_error: public xml_element_error<XMLElement>
+class unexpected_element_error: public virtual boost::exception, public virtual std::exception
 {
 public:
-  unexpected_element_error(XMLElement const & element)
-    : xml_element_error(element)
-  {}
-  
   virtual const char * what() const
   {
     return "Unexpected SVG element";
   }
 };
 
-template<class XMLAttribute>
-class xml_attribute_error: public std::exception
+class unknown_attribute_error: public virtual boost::exception, public virtual std::exception
 {
 public:
-  xml_attribute_error(XMLAttribute const & attribute)
-    : attribute_(attribute)
-  {}
-
-  XMLAttribute const & attribute() const // NB: returned reference may be invalid - it depends on XML layer
-    { return attribute_; }
-
-private:
-  XMLAttribute const & attribute_;
-};
-
-template<class XMLAttribute>
-class unknown_attribute_error: public xml_attribute_error<XMLAttribute>
-{
-public:
-  unknown_attribute_error(XMLAttribute const & attribute)
-    : xml_attribute_error(attribute)
+  unknown_attribute_error()
   {}
   
   template<class Name>
-  unknown_attribute_error(XMLAttribute const & attribute, Name const & name)
-    : xml_attribute_error(attribute)
-    , message_((boost::format("Unknown SVG attribute: \"%s\"") % std::string(boost::begin(name), boost::end(name))).str())
+  unknown_attribute_error(Name const & name)
+    : message_((boost::format("Unknown SVG attribute: \"%s\"") % std::string(boost::begin(name), boost::end(name))).str())
   {}
 
   virtual const char * what() const
@@ -100,18 +65,15 @@ private:
   std::string const message_;
 };
 
-template<class XMLAttribute>
-class unknown_css_property_error: public xml_attribute_error<XMLAttribute>
+class unknown_css_property_error: public virtual boost::exception, public virtual std::exception
 {
 public:
-  unknown_css_property_error(XMLAttribute const & attribute)
-    : xml_attribute_error(attribute)
+  unknown_css_property_error()
   {}
   
   template<class Name>
-  unknown_css_property_error(XMLAttribute const & attribute, Name const & name)
-    : xml_attribute_error(attribute)
-    , message_((boost::format("Unknown CSS property: \"%s\"") % std::string(boost::begin(name), boost::end(name))).str())
+  unknown_css_property_error(Name const & name)
+    : message_((boost::format("Unknown CSS property: \"%s\"") % std::string(boost::begin(name), boost::end(name))).str())
   {}
 
   virtual const char * what() const
@@ -124,7 +86,7 @@ private:
 };
 
 // TODO: add information about XML element
-class required_attribute_not_found_error: public std::exception
+class required_attribute_not_found_error: public virtual boost::exception, public virtual std::exception
 {
 public:
   required_attribute_not_found_error(const char * name)
@@ -140,7 +102,7 @@ private:
   std::string const message_;
 };
 
-class negative_value_error: public std::exception
+class negative_value_error: public virtual boost::exception, public virtual std::exception
 {
 public:
   negative_value_error(const char * name)
@@ -174,7 +136,7 @@ namespace detail
 }
 
 template<class Char>
-class invalid_value_error: public std::exception
+class invalid_value_error: public virtual boost::exception, public virtual std::exception
 {
 public:
   typedef std::basic_string<Char> value_type;
@@ -218,7 +180,7 @@ struct raise_exception
     XMLElement const & element, ElementName const & name,
     typename boost::enable_if<typename detail::is_char_range<ElementName>::type>::type * = NULL)
   {
-    throw unknown_element_error<XMLElement>(element, name);
+    throw unknown_element_error(name) << boost::error_info<tag::error_info::xml_element, XMLElement const &>(element);
   }
 
   template<class XMLElement, class ElementName>
@@ -226,14 +188,7 @@ struct raise_exception
     XMLElement const & element, ElementName const &,
     typename boost::disable_if<typename detail::is_char_range<ElementName>::type>::type * = NULL)
   {
-    throw unknown_element_error<XMLElement>(element);
-  }
-
-  template<class XMLElement>
-  BOOST_ATTRIBUTE_NORETURN static bool element_cant_be_child(Context const &, 
-    XMLElement const &)
-  {
-    throw std::runtime_error("Unknown SVG element");
+    throw unknown_element_error() << boost::error_info<tag::error_info::xml_element, XMLElement const &>(element);
   }
 
   template<class XMLAttributesIterator, class AttributeName>
@@ -243,7 +198,8 @@ struct raise_exception
     tag::source::attribute,
     typename boost::enable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
-    throw unknown_attribute_error<XMLAttributesIterator>(attribute, name);
+    throw unknown_attribute_error(name) 
+      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const &>(attribute);
   }
 
   template<class XMLAttributesIterator, class AttributeName>
@@ -253,7 +209,8 @@ struct raise_exception
     tag::source::attribute,
     typename boost::disable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
-    throw unknown_attribute_error<XMLAttributesIterator>(attribute);
+    throw unknown_attribute_error() 
+      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const &>(attribute);
   }
 
   template<class XMLAttributesIterator, class AttributeName>
@@ -263,7 +220,8 @@ struct raise_exception
     tag::source::css,
     typename boost::enable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
-    throw unknown_css_property_error<XMLAttributesIterator>(attribute, name);
+    throw unknown_css_property_error(name) 
+      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const &>(attribute);
   }
 
   template<class XMLAttributesIterator, class AttributeName>
@@ -273,7 +231,8 @@ struct raise_exception
     tag::source::css,
     typename boost::disable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
-    throw unknown_css_property_error<XMLAttributesIterator>(attribute);
+    throw unknown_css_property_error() 
+      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const &>(attribute);
   }
 
   template<class AttributeTag>
@@ -299,7 +258,8 @@ struct raise_exception
   BOOST_CONSTEXPR static bool unexpected_element(Context const &, 
     XMLElement const & element)
   {
-    throw unexpected_element_error<XMLElement>(element);;
+    throw unexpected_element_error() 
+      << boost::error_info<tag::error_info::xml_element, XMLElement const &>(element);
   }
 
   template<class AttributeTag>
