@@ -24,12 +24,20 @@ struct value_parser<tag::type::path_data, SVGPP_TEMPLATE_ARGS_PASS>
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
 
     typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::path_policy>
+      boost::parameter::optional<tag::path_policy>,
+      boost::parameter::optional<tag::load_path_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename boost::parameter::value_type<args2_t, tag::path_policy, 
       context_policy<tag::path_policy, Context> >::type path_policy;
-    typedef detail::path_adapter_if_needed<Context, path_policy, coordinate_t> adapted_context_type; 
-    typedef path_data_grammar<iterator_t, typename adapted_context_type::type, coordinate_t> path_data_grammar;
+    typedef typename boost::parameter::value_type<args2_t, tag::load_path_policy, 
+      context_policy<tag::load_path_policy, Context> >::type load_path_policy;
+    typedef detail::path_adapter_if_needed<Context, path_policy, coordinate_t, load_path_policy> adapted_context_type; 
+    typedef path_data_grammar<
+      iterator_t, 
+      typename adapted_context_type::type, 
+      coordinate_t,
+      typename adapted_context_type::load_path_policy
+    > path_data_grammar;
 
     typename adapted_context_type::holder_type adapted_context(context);
     SVGPP_STATIC_IF_SAFE const path_data_grammar grammar;

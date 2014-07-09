@@ -80,9 +80,6 @@ struct ellipse_to_path_adapter
     load_policy::path_close_subpath(context);
     load_policy::path_exit(context);
   }
-
-private:
-  ellipse_to_path_adapter();
 };
 
 }

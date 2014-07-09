@@ -67,9 +67,6 @@ struct line_to_path_adapter
     load_policy::path_line_to(context, x2, y2, tag::absolute_coordinate());
     load_policy::path_exit(context);
   }
-
-private:
-  line_to_path_adapter();
 };
 
 }

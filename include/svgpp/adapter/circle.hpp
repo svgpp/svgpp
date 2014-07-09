@@ -71,9 +71,6 @@ struct circle_to_path_adapter
     load_policy::path_close_subpath(context);
     load_policy::path_exit(context);
   }
-
-private:
-  circle_to_path_adapter();
 };
 
 }

@@ -166,7 +166,7 @@ public:
   }
 };
 
-template<class ElementTag, class Length, class Coordinate, class PathPolicy>
+template<class ElementTag, class Length, class Coordinate, class PathPolicy, class LoadPathPolicy>
 class convert_basic_shape_to_path_state
 {
   typedef typename collect_basic_shape_attributes_adapter<ElementTag, Length>::type collector_type;
@@ -178,23 +178,23 @@ public:
   template<class ErrorPolicy, class Context, class LengthFactory>
   bool on_exit_attributes(Context & context, LengthFactory const & length_factory)
   {
-    typedef path_adapter_if_needed<Context, PathPolicy, Coordinate> adapted_context_type; 
+    typedef path_adapter_if_needed<Context, PathPolicy, Coordinate, LoadPathPolicy> adapted_context_type; 
     typename adapted_context_type::holder_type adapted_context(context);
 
     return collector_.template on_exit_attributesT<
       delegate_error_policy<ErrorPolicy, adapted_context_type>, 
-      typename basic_shape_to_path_adapter<ElementTag>::type
+      typename basic_shape_to_path_adapter<ElementTag, typename adapted_context_type::load_path_policy>::type
     >(adapted_context, length_factory);
   }
 };
 
-template<class Length, class Coordinate, class PathPolicy, bool OnlyRoundedRect>
+template<class Length, class Coordinate, class PathPolicy, class LoadPathPolicy, bool OnlyRoundedRect>
 class convert_rect_to_path_state: 
-  public convert_basic_shape_to_path_state<tag::element::rect, Length, Coordinate, PathPolicy>
+  public convert_basic_shape_to_path_state<tag::element::rect, Length, Coordinate, PathPolicy, LoadPathPolicy>
 {};
 
-template<class Length, class Coordinate, class PathPolicy>
-class convert_rect_to_path_state<Length, Coordinate, PathPolicy, true>
+template<class Length, class Coordinate, class PathPolicy, class LoadPathPolicy>
+class convert_rect_to_path_state<Length, Coordinate, PathPolicy, LoadPathPolicy, true>
 {
   typedef collect_rect_attributes_adapter<Length> collector_type;
   collector_type collector_;
@@ -205,7 +205,7 @@ public:
   template<class ErrorPolicy, class Context, class LengthFactory>
   bool on_exit_attributes(Context & context, LengthFactory const & length_factory)
   {
-    typedef path_adapter_if_needed<Context, PathPolicy, Coordinate> path_context_t; 
+    typedef path_adapter_if_needed<Context, PathPolicy, Coordinate, LoadPathPolicy> path_context_t; 
     typedef rounded_rect_to_path_adapter<typename path_context_t::type, Context> adapted_context_t;
 
     typename path_context_t::holder_type path_context(context);
@@ -294,6 +294,7 @@ protected:
     , boost::parameter::optional<dispatcher_detail::tag::length_factory_holder>
     , boost::parameter::optional<tag::basic_shapes_policy>
     , boost::parameter::optional<tag::path_policy>
+    , boost::parameter::optional<tag::load_path_policy>
     , boost::parameter::optional<tag::transform_policy>
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
   typedef typename boost::parameter::value_type<args, tag::ignored_attributes, 
@@ -319,6 +320,8 @@ public:
     context_policy<tag::basic_shapes_policy, Context> >::type basic_shapes_policy;
   typedef typename boost::parameter::value_type<args, tag::path_policy, 
     context_policy<tag::path_policy, Context> >::type path_policy;
+  typedef typename boost::parameter::value_type<args, tag::load_path_policy, 
+    context_policy<tag::load_path_policy, Context> >::type load_path_policy;
   typedef typename boost::parameter::value_type<args, tag::error_policy, 
     detail::parameter_not_set_tag>::type error_policy_param;
 
@@ -587,13 +590,15 @@ class basic_shape_attribute_dispatcher:
           length_type, 
           typename base_type::coordinate_type, 
           typename base_type::path_policy, 
+          typename base_type::load_path_policy, 
           base_type::basic_shapes_policy::convert_only_rounded_rect_to_path
         >, 
         convert_basic_shape_to_path_state<
           ElementTag,
           length_type, 
           typename base_type::coordinate_type, 
-          typename base_type::path_policy
+          typename base_type::path_policy,
+          typename base_type::load_path_policy
         >
       >::type
     >,

@@ -720,55 +720,15 @@ public:
 namespace detail
 {
 
-template<
-  class OutputContext, 
-  class PathPolicy   = context_policy<tag::path_policy, OutputContext>, 
-  class Coordinate   = typename context_policy<tag::number_type, OutputContext>::type,
-  class LoadPolicy   = context_policy<tag::load_path_policy, OutputContext>,
-  class Enabled = void>
-struct path_adapter_if_needed
-{
-  typedef OutputContext type;
-  typedef type & holder_type;
-  typedef LoadPolicy load_path_policy;
-
-  static OutputContext & get_original_context(holder_type & adapted_context)
-  {
-    return adapted_context;
-  }
-};
-
-template<
-  class OutputContext, 
-  class PathPolicy, 
-  class Coordinate,
-  class LoadPolicy>
-struct path_adapter_if_needed<OutputContext, PathPolicy, Coordinate, LoadPolicy, 
-  typename boost::enable_if<need_path_adapter<PathPolicy> >::type>
-{
-  typedef path_adapter<OutputContext, PathPolicy, Coordinate, LoadPolicy> type;
-  typedef type holder_type;
-  typedef policy::load_path::forward_to_method<type> load_path_policy;
-
-  static OutputContext & get_original_context(holder_type & adapted_context)
-  {
-    return adapted_context.get_output_context();
-  }
-};
-
-}
-
-// This specialization was created just to pass PathPolicy as an template argument to
+// This class created just to pass PathPolicy as an template argument to
 // path_adapter methods so that boost::enable_if can be used
 template<
-  class OutputContext, 
+  class Adapter, 
   class PathPolicy, 
-  class Coordinate,
-  class LoadPolicy>
-struct context_policy<tag::load_path_policy, path_adapter<OutputContext, PathPolicy, Coordinate, LoadPolicy>, void>
+  class Coordinate
+>
+struct path_adapter_load_path_policy
 {
-  typedef path_adapter<OutputContext, PathPolicy, Coordinate, LoadPolicy> Adapter;
-
   template<class AbsoluteOrRelative>
   static void path_move_to(Adapter & context, Coordinate x, Coordinate y, AbsoluteOrRelative absoluteOrRelative)
   { 
@@ -842,5 +802,43 @@ struct context_policy<tag::load_path_policy, path_adapter<OutputContext, PathPol
     context.template path_exit<PathPolicy>(); 
   }
 };
+
+template<
+  class OutputContext, 
+  class PathPolicy   = context_policy<tag::path_policy, OutputContext>, 
+  class Coordinate   = typename context_policy<tag::number_type, OutputContext>::type,
+  class LoadPolicy   = context_policy<tag::load_path_policy, OutputContext>,
+  class Enabled = void>
+struct path_adapter_if_needed
+{
+  typedef OutputContext type;
+  typedef type & holder_type;
+  typedef LoadPolicy load_path_policy;
+
+  static OutputContext & get_original_context(holder_type & adapted_context)
+  {
+    return adapted_context;
+  }
+};
+
+template<
+  class OutputContext, 
+  class PathPolicy, 
+  class Coordinate,
+  class LoadPolicy>
+struct path_adapter_if_needed<OutputContext, PathPolicy, Coordinate, LoadPolicy, 
+  typename boost::enable_if<need_path_adapter<PathPolicy> >::type>
+{
+  typedef path_adapter<OutputContext, PathPolicy, Coordinate, LoadPolicy> type;
+  typedef type holder_type;
+  typedef detail::path_adapter_load_path_policy<type, PathPolicy, Coordinate> load_path_policy;
+
+  static OutputContext & get_original_context(holder_type & adapted_context)
+  {
+    return adapted_context.get_output_context();
+  }
+};
+
+}
 
 }
