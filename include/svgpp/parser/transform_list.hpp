@@ -24,9 +24,9 @@ struct value_parser<tag::type::transform_list, SVGPP_TEMPLATE_ARGS_PASS>
       boost::parameter::optional<tag::load_transform_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2;
     typedef typename boost::parameter::value_type<args2, tag::transform_policy, 
-      context_policy<tag::transform_policy, Context> >::type transform_policy;
+      typename policy::transform::by_context<Context>::type>::type transform_policy;
     typedef typename boost::parameter::value_type<args2, tag::load_transform_policy, 
-      context_policy<tag::load_transform_policy, Context> >::type load_transform_policy;
+      policy::load_transform::default_policy<Context> >::type load_transform_policy;
     typedef detail::transform_adapter_if_needed<Context, transform_policy, load_transform_policy> adapted_context_t; 
     typedef transform_grammar<
       iterator_t, 
@@ -47,7 +47,7 @@ struct value_parser<tag::type::transform_list, SVGPP_TEMPLATE_ARGS_PASS>
     }
     else
     {
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
   }
 };

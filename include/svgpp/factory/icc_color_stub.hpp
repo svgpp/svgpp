@@ -2,15 +2,17 @@
 
 #include <boost/range/iterator_range.hpp>
 
-namespace svgpp
-{
+namespace svgpp { 
 
 namespace tag
 {
   struct skip_icc_color {};
 }
+  
+namespace factory { namespace icc_color
+{
 
-struct skip_icc_color_factory
+struct stub
 {
   typedef double component_type;
   typedef tag::skip_icc_color icc_color_type;
@@ -24,4 +26,4 @@ struct skip_icc_color_factory
   static icc_color_type create_icc_color(builder_type const &) { return icc_color_type(); }
 };
 
-}
+}}}

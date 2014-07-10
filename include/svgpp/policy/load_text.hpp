@@ -15,4 +15,8 @@ struct forward_to_method
   }
 };
 
+template<class Context>
+struct default_policy: forward_to_method<Context>
+{};
+
 }}}

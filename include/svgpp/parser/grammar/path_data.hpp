@@ -2,9 +2,9 @@
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
-#include <svgpp/parser/detail/common.hpp>
 #include <svgpp/definitions.hpp>
-#include <svgpp/context_policy.hpp>
+#include <svgpp/parser/detail/common.hpp>
+#include <svgpp/policy/load_path.hpp>
 
 namespace svgpp 
 { 
@@ -14,8 +14,9 @@ namespace qi = boost::spirit::qi;
 template <
   class Iterator, 
   class Context, 
-  class Coordinate = typename context_policy<tag::number_type, Context>::type,
-  class LoadPolicy = context_policy<tag::load_path_policy, Context> >
+  class Coordinate = typename number_type_by_context<Context>::type,
+  class LoadPolicy = policy::load_path::default_policy<Context> 
+>
 class path_data_grammar: public qi::grammar<Iterator, void (Context &), detail::character_encoding_namespace::space_type>
 {
   typedef path_data_grammar<Iterator, Context, Coordinate, LoadPolicy> this_type;

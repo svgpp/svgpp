@@ -1,10 +1,6 @@
 #pragma once
 
 #include <svgpp/definitions.hpp>
-#include <svgpp/traits/attribute_groups.hpp>
-#include <svgpp/traits/attribute_type.hpp>
-#include <svgpp/traits/attribute_without_parser.hpp>
-#include <svgpp/unitless_length_factory.hpp>
 #include <svgpp/adapter/list_of_points.hpp>
 #include <svgpp/adapter/basic_shapes.hpp>
 #include <svgpp/adapter/viewport.hpp>
@@ -13,7 +9,11 @@
 #include <svgpp/detail/attribute_id_to_tag.hpp>
 #include <svgpp/detail/delegate_error_policy.hpp>
 #include <svgpp/detail/delegate_load_value_policy.hpp>
+#include <svgpp/factory/length.hpp>
 #include <svgpp/parser/value_parser.hpp>
+#include <svgpp/traits/attribute_groups.hpp>
+#include <svgpp/traits/attribute_type.hpp>
+#include <svgpp/traits/attribute_without_parser.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/fusion/include/as_vector.hpp>
 #include <boost/fusion/include/at_key.hpp>
@@ -36,27 +36,20 @@ BOOST_PARAMETER_TEMPLATE_KEYWORD(length_factory)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(ignored_attributes)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(processed_attributes)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(passthrough_attributes)
+BOOST_PARAMETER_TEMPLATE_KEYWORD(load_value_policy)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(basic_shapes_policy)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(referencing_element)
 
-template<class Context>
-struct context_policy<tag::basic_shapes_policy, Context, void>
+namespace policy { namespace basic_shapes
 {
-  static const bool convert_rect_to_path = false;
-  static const bool viewport_as_transform = false; // TODO: reorganize basic_shapes_policy
-  static const bool calculate_viewport = false;
-  static const bool collect_rect_shape_attributes = false;
-};
-
-template<class Context>
-struct context_policy<tag::ignored_attributes, Context, void>: boost::mpl::set0<>
-{
-};
-
-template<class Context>
-struct context_policy<tag::processed_attributes, Context, void>: boost::mpl::set0<>
-{
-};
+  struct default_policy
+  {
+    static const bool convert_rect_to_path = false;
+    static const bool viewport_as_transform = false; // TODO: reorganize basic_shapes_policy
+    static const bool calculate_viewport = false;
+    static const bool collect_rect_shape_attributes = false;
+  };
+}}
 
 namespace dispatcher_detail
 {
@@ -73,7 +66,7 @@ namespace dispatcher_detail
       boost::parameter::optional<::svgpp::tag::basic_shapes_policy>
     >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
     typedef typename boost::parameter::value_type<args, ::svgpp::tag::basic_shapes_policy, 
-      context_policy<::svgpp::tag::basic_shapes_policy, Context> >::type basic_shapes_policy;
+      policy::basic_shapes::default_policy>::type basic_shapes_policy;
 
   public:
     typedef typename boost::mpl::if_c<
@@ -161,7 +154,7 @@ public:
   {
     return collector_.template on_exit_attributesT<
       ErrorPolicy, 
-      context_policy<tag::load_value_policy, Context> 
+      policy::load_value::default_policy<Context> 
     >(context, length_factory);
   }
 };
@@ -213,7 +206,7 @@ public:
 
     return collector_.template on_exit_attributesT<
       delegate_error_policy<ErrorPolicy, adapted_context_type>, 
-      context_policy<tag::load_value_policy, Context> 
+      policy::load_value::default_policy<Context> 
     >(adapted_context, length_factory);
   }
 };
@@ -233,7 +226,7 @@ public:
     if (!base_type::on_exit_attributesT<
       viewport_transform_adapter<
         adapted_context_type::load_transform_policy, 
-        detail::delegate_load_value_policy<context_policy<tag::load_value_policy, Context>, adapted_context_type> 
+        detail::delegate_load_value_policy<policy::load_value::default_policy<Context>, adapted_context_type> 
       >, 
       detail::delegate_error_policy<ErrorPolicy, adapted_context_type>
     >(adapted_context, length_factory))
@@ -295,35 +288,32 @@ protected:
     , boost::parameter::optional<tag::basic_shapes_policy>
     , boost::parameter::optional<tag::path_policy>
     , boost::parameter::optional<tag::load_path_policy>
-    , boost::parameter::optional<tag::transform_policy>
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
   typedef typename boost::parameter::value_type<args, tag::ignored_attributes, 
-    context_policy<tag::ignored_attributes, Context> >::type ignored_attributes;
+    boost::mpl::set0<> >::type ignored_attributes;
   typedef typename boost::parameter::value_type<args, tag::processed_attributes, 
-    context_policy<tag::processed_attributes, Context> >::type processed_attributes;
+    boost::mpl::set0<> >::type processed_attributes;
 
   BOOST_STATIC_ASSERT_MSG(boost::mpl::empty<ignored_attributes>::value 
     || boost::mpl::empty<processed_attributes>::value, 
     "Only one of ignored_attributes and processed_attributes may be non-empty");
 
   typedef typename boost::parameter::value_type<args, tag::length_factory, 
-    unitless_length_factory<> >::type length_factory_type;
+    factory::length::default_factory>::type length_factory_type;
   typedef typename boost::parameter::value_type<args, dispatcher_detail::tag::length_factory_holder, 
     length_factory_type>::type length_factory_holder; // Can be reference
 
 public:
   typedef typename boost::parameter::value_type<args, tag::number_type, 
-    typename context_policy<tag::number_type, Context>::type >::type coordinate_type;
+    typename number_type_by_context<Context>::type>::type coordinate_type;
   typedef typename boost::parameter::value_type<args, tag::passthrough_attributes, 
     boost::mpl::set0<> >::type passthrough_attributes;
   typedef typename boost::parameter::value_type<args, tag::basic_shapes_policy, 
-    context_policy<tag::basic_shapes_policy, Context> >::type basic_shapes_policy;
+    policy::basic_shapes::default_policy>::type basic_shapes_policy;
   typedef typename boost::parameter::value_type<args, tag::path_policy, 
-    context_policy<tag::path_policy, Context> >::type path_policy;
+    typename policy::path::by_context<Context>::type>::type path_policy;
   typedef typename boost::parameter::value_type<args, tag::load_path_policy, 
-    context_policy<tag::load_path_policy, Context> >::type load_path_policy;
-  typedef typename boost::parameter::value_type<args, tag::error_policy, 
-    detail::parameter_not_set_tag>::type error_policy_param;
+    policy::load_path::default_policy<Context> >::type load_path_policy;
 
   typedef typename
     boost::mpl::if_<
@@ -402,7 +392,7 @@ public:
       traits::attribute_without_parser<AttributeTag>::value
       || boost::mpl::has_key<passthrough_attributes, AttributeTag>::value>::type * = 0)
   {
-    context_policy<tag::load_value_policy, Context>::set(context_, tag, attribute_value, property_source);
+    policy::load_value::default_policy<Context>::set(context_, tag, attribute_value, property_source);
     return true;
   }
 
@@ -489,11 +479,8 @@ public:
       return true;
 
     viewport_attributes_applied_ = true;
-    typedef typename boost::mpl::if_<
-      boost::is_same<error_policy_param, detail::parameter_not_set_tag>,
-      context_policy<tag::error_policy, Context>,
-      error_policy_param
-    >::type error_policy_t;
+    typedef typename boost::parameter::value_type<args, tag::error_policy, 
+      policy::error::default_policy<Context> >::type error_policy_t;
 
     detail::on_exit_attributes_functor<Context, typename base_type::length_factory_type, error_policy_t> 
       fn(this->context_, this->length_factory_);
@@ -508,9 +495,9 @@ private:
     boost::parameter::optional<tag::referencing_element>
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
   typedef typename boost::parameter::value_type<args, tag::transform_policy, 
-    context_policy<tag::transform_policy, Context> >::type transform_policy;
+    typename policy::transform::by_context<Context>::type>::type transform_policy;
   typedef typename boost::parameter::value_type<args, tag::load_transform_policy, 
-    context_policy<tag::load_transform_policy, Context> >::type load_transform_policy;
+    policy::load_transform::default_policy<Context> >::type load_transform_policy;
   typedef typename boost::parameter::value_type<args, tag::referencing_element, 
     void>::type referencing_element;
   
@@ -624,11 +611,8 @@ public:
 
   bool on_exit_attributes()
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<error_policy_param, parameter_not_set_tag>,
-      context_policy<tag::error_policy, Context>,
-      error_policy_param
-    >::type error_policy_t;
+    typedef typename boost::parameter::value_type<args, tag::error_policy, 
+      policy::error::default_policy<Context> >::type error_policy_t;
 
     on_exit_attributes_functor<Context, typename base_type::length_factory_type, error_policy_t> 
       fn(this->context_, this->length_factory_);

@@ -1,14 +1,14 @@
 #pragma once
 
 #include <svgpp/config.hpp>
+#include <svgpp/factory/color.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
 #include <svgpp/parser/detail/pass_iri_value.hpp>
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
 #include <svgpp/parser/grammar/color_optional_icc_color.hpp>
 #include <svgpp/parser/grammar/iri.hpp>
-#include <svgpp/context_policy_color_factory.hpp>
-#include <svgpp/context_policy_load_value.hpp>
-#include <svgpp/context_policy_iri.hpp>
+#include <svgpp/policy/iri.hpp>
+#include <svgpp/policy/load_value.hpp>
 
 namespace svgpp
 {
@@ -31,11 +31,11 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
       boost::parameter::optional<tag::iri_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename boost::parameter::value_type<args2_t, tag::color_factory, 
-      context_policy<tag::color_factory, Context> >::type color_factory_t;
+      typename factory::color::by_context<Context>::type>::type color_factory_t;
     typedef typename boost::parameter::value_type<args2_t, tag::icc_color_factory, 
-      context_policy<tag::icc_color_factory, Context> >::type icc_color_factory_t;
+      typename factory::icc_color::by_context<Context>::type>::type icc_color_factory_t;
     typedef typename boost::parameter::value_type<args2_t, tag::iri_policy, 
-      context_policy<tag::iri_policy, Context> >::type iri_policy_t;
+      typename policy::iri::by_context<Context>::type>::type iri_policy_t;
 
     SVGPP_STATIC_IF_SAFE const color_optional_icc_color_grammar<
       PropertySource, iterator_t, color_factory_t, icc_color_factory_t> color_optional_icc_color;
@@ -63,7 +63,7 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (qi::parse(it, end, rule) && it == end)
     {
-      typedef context_policy<tag::load_value_policy, Context> load_value_policy_t;
+      typedef policy::load_value::default_policy<Context> load_value_policy_t;
       typedef detail::load_value_with_iri_policy<load_value_policy_t, iri_policy_t>::type 
         load_value_with_iri_policy_t;
 
@@ -110,7 +110,7 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
     else
     {
       typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
   }
 };

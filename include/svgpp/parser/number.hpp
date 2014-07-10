@@ -22,7 +22,7 @@ struct value_parser<tag::type::number, SVGPP_TEMPLATE_ARGS_PASS>
     namespace qi = boost::spirit::qi;
 
     typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-    typedef typename args_t::get_number_type::template apply<Context>::type coordinate_t;
+    typedef typename args_t::template get_number_type<Context>::type coordinate_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
 
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
@@ -30,12 +30,12 @@ struct value_parser<tag::type::number, SVGPP_TEMPLATE_ARGS_PASS>
     coordinate_t value;
     if (qi::parse(it, end, number, value) && it == end)
     {
-      context_policy<tag::load_value_policy, Context>::set(context, tag, value);
+      policy::load_value::default_policy<Context>::set(context, tag, value);
       return true;
     }
     else
     {
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
   }
 };
@@ -50,7 +50,7 @@ struct value_parser<tag::type::list_of<tag::type::number>, SVGPP_TEMPLATE_ARGS_P
     namespace qi = boost::spirit::qi;
 
     typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-    typedef typename args_t::get_number_type::template apply<Context>::type coordinate_t;
+    typedef typename args_t::template get_number_type<Context>::type coordinate_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     typedef qi::real_parser<coordinate_t, detail::number_policies<coordinate_t, PropertySource> > grammar_t;
     typedef detail::comma_wsp_rule_no_skip<iterator_t> separator_t;
@@ -63,12 +63,12 @@ struct value_parser<tag::type::list_of<tag::type::number>, SVGPP_TEMPLATE_ARGS_P
       boost::begin(attribute_value), boost::end(attribute_value), 
       number_grammar, separator_grammar);
 
-    context_policy<tag::load_value_policy, Context>::set(context, tag, 
+    policy::load_value::default_policy<Context>::set(context, tag, 
       boost::make_iterator_range(output_iterator_t(parse_list), output_iterator_t()));
     if (parse_list.error())
     {
       typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
     else
       return true;
@@ -87,7 +87,7 @@ struct value_parser<tag::type::number_optional_number, SVGPP_TEMPLATE_ARGS_PASS>
     using qi::_1;
 
     typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-    typedef typename args_t::get_number_type::template apply<Context>::type coordinate_t;
+    typedef typename args_t::template get_number_type<Context>::type coordinate_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
 
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
@@ -104,14 +104,14 @@ struct value_parser<tag::type::number_optional_number, SVGPP_TEMPLATE_ARGS_PASS>
       ) && it == end)
     {
       if (two_values)
-        context_policy<tag::load_value_policy, Context>::set(context, tag, value1, value2);
+        policy::load_value::default_policy<Context>::set(context, tag, value1, value2);
       else
-        context_policy<tag::load_value_policy, Context>::set(context, tag, value1);
+        policy::load_value::default_policy<Context>::set(context, tag, value1);
       return true;
     }
     else
     {
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
   }
 };

@@ -27,13 +27,13 @@ struct value_parser<tag::type::percentage_or_length, SVGPP_TEMPLATE_ARGS_PASS>
     if (boost::spirit::qi::parse(it, end, length_grammar(boost::phoenix::ref(length_factory)), value) 
       && it == end)
     {
-      context_policy<tag::load_value_policy, Context>::set(context, tag, value);
+      policy::load_value::default_policy<Context>::set(context, tag, value);
       return true;
     }
     else
     {
       typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
   }
 };

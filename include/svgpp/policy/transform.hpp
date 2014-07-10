@@ -1,5 +1,7 @@
 #pragma once
 
+#include <svgpp/number_type.hpp>
+
 namespace svgpp { namespace policy { namespace transform
 {
 
@@ -28,5 +30,11 @@ struct matrix
 template<class Number>
 struct default_policy: matrix<Number>
 {};
+
+template<class Context>
+struct by_context
+{
+  typedef default_policy<typename number_type_by_context<Context>::type> type;
+};
 
 }}}

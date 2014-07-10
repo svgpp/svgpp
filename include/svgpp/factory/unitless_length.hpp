@@ -5,23 +5,23 @@
 #include <boost/mpl/has_key.hpp>
 #include <cmath>
 
-namespace svgpp
+namespace svgpp { namespace factory { namespace length
 {
 
 template<class LengthType = double, class NumberType = double, class ReferenceAbsoluteUnits = tag::length_units::mm>
-class unitless_length_factory_absolute
+class unitless_absolute
 {
 public:
   typedef LengthType length_type;
   typedef NumberType number_type;
 
-  unitless_length_factory_absolute()
+  unitless_absolute()
   {
     // Set 96 PPI as reasonable default
     set_absolute_units_coefficient(96, tag::length_units::in());
   }
 
-  unitless_length_factory_absolute(number_type reference_to_output_coeff)
+  unitless_absolute(number_type reference_to_output_coeff)
     : reference_to_output_coeff_(reference_to_output_coeff)
   {}
 
@@ -54,10 +54,10 @@ private:
 };
 
 template<class LengthType = double, class NumberType = double>
-class unitless_length_factory_viewport
+class unitless_viewport
 {
 public:
-  unitless_length_factory_viewport(LengthType viewportWidth = 500, LengthType viewportHeight = 500)
+  unitless_viewport(LengthType viewportWidth = 500, LengthType viewportHeight = 500)
   {
     set_viewport_size(viewportWidth, viewportHeight);
   }
@@ -90,10 +90,10 @@ private:
 };
 
 template<class LengthType = double, class NumberType = double>
-class unitless_length_factory_user_units
+class unitless_user_units
 {
 public:
-  unitless_length_factory_user_units(NumberType user_units_coefficient = 1)
+  unitless_user_units(NumberType user_units_coefficient = 1)
     : user_units_coefficient_(user_units_coefficient)
   {}
 
@@ -115,17 +115,17 @@ private:
 };
 
 template<class LengthType = double, class NumberType = double, class ReferenceAbsoluteUnits = tag::length_units::mm>
-class unitless_length_factory:
-  public unitless_length_factory_absolute<LengthType, NumberType, ReferenceAbsoluteUnits>,
-  public unitless_length_factory_viewport<LengthType, NumberType>,
-  public unitless_length_factory_user_units<LengthType, NumberType>
+class unitless:
+  public unitless_absolute<LengthType, NumberType, ReferenceAbsoluteUnits>,
+  public unitless_viewport<LengthType, NumberType>,
+  public unitless_user_units<LengthType, NumberType>
 {
 public:
-  using unitless_length_factory_absolute<LengthType, NumberType, ReferenceAbsoluteUnits>::create_length;
-  using unitless_length_factory_viewport<LengthType, NumberType>::create_length;
-  using unitless_length_factory_user_units<LengthType, NumberType>::create_length;
+  using unitless_absolute<LengthType, NumberType, ReferenceAbsoluteUnits>::create_length;
+  using unitless_viewport<LengthType, NumberType>::create_length;
+  using unitless_user_units<LengthType, NumberType>::create_length;
 
-  unitless_length_factory()
+  unitless()
     : em_coefficient_(10)
     , ex_coefficient_(10)
   {}
@@ -186,4 +186,4 @@ private:
   NumberType em_coefficient_, ex_coefficient_;
 };
 
-}
+}}}

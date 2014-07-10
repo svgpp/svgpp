@@ -2,11 +2,11 @@
 
 #include <svgpp/template_parameters.hpp>
 #include <svgpp/attribute_traversal_common.hpp>
-#include <svgpp/context_policy.hpp>
 #include <svgpp/detail/attribute_name_to_id.hpp>
 #include <svgpp/detail/required_attributes_check.hpp>
 #include <svgpp/xml_policy_fwd.hpp>
 #include <svgpp/parser/css_style_iterator.hpp>
+#include <svgpp/policy/error.hpp>
 #include <svgpp/detail/names_dictionary.hpp>
 #include <boost/mpl/if.hpp>
 
@@ -24,8 +24,6 @@ private:
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
   typedef typename boost::parameter::value_type<args, tag::xml_attribute_iterator_policy, 
     detail::parameter_not_set_tag >::type xml_attribute_policy_param;
-  typedef typename boost::parameter::value_type<args, tag::error_policy, 
-    detail::parameter_not_set_tag>::type error_policy_param;
   typedef typename boost::parameter::value_type<args, tag::css_name_to_id_policy, 
     css_name_to_id_policy_default>::type css_name_to_id_policy;
 
@@ -39,11 +37,8 @@ public:
       xml_attribute_policy_param
     >::type xml_policy;
 
-    typedef typename boost::mpl::if_<
-      boost::is_same<error_policy_param, detail::parameter_not_set_tag>,
-      context_policy<tag::error_policy, Context>,
-      error_policy_param
-    >::type error_policy;
+    typedef typename boost::parameter::value_type<args, tag::error_policy, 
+      policy::error::default_policy<Context> >::type error_policy;
 
     detail::required_attributes_check<RequiredAttributes> required_check;
     for(; !xml_policy::is_end(xml_attributes_iterator); 

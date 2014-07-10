@@ -1,10 +1,10 @@
 #pragma once
 
-namespace svgpp
+namespace svgpp { namespace factory { namespace color
 {
 
 template<class BaseFactory>
-struct color_factory_percentage_adapter: BaseFactory
+struct percentage_adapter: BaseFactory
 {
   static unsigned char cast_percent(unsigned char c)
   {
@@ -19,7 +19,7 @@ struct color_factory_percentage_adapter: BaseFactory
   }
 };
 
-struct rgb8_color_policy
+struct rgb8_policy
 {
   static const int preset_bits = 0;
   static const int r_offset = 16;
@@ -29,9 +29,9 @@ struct rgb8_color_policy
 
 template<
   class Value = int, 
-  class Policy = rgb8_color_policy
+  class Policy = rgb8_policy
 >
-struct integer_color_factory_base
+struct integer_base
 {
   typedef Value color_type;
 
@@ -46,10 +46,10 @@ struct integer_color_factory_base
 
 template<
   class Value = int, 
-  class Policy = rgb8_color_policy
+  class Policy = rgb8_policy
 >
-struct integer_color_factory: 
-  color_factory_percentage_adapter<integer_color_factory_base<Value, Policy> >
+struct integer: 
+  percentage_adapter<integer_base<Value, Policy> >
 {};
 
-}
+}}}

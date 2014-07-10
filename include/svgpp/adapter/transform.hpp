@@ -5,20 +5,17 @@
 #include <boost/noncopyable.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <boost/mpl/if.hpp>
+#include <boost/parameter.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
+#include <svgpp/policy/load_transform.hpp>
 #include <svgpp/policy/transform.hpp>
-#include <svgpp/context_policy_load_transform.hpp>
 
 namespace svgpp
 {
 
 BOOST_PARAMETER_TEMPLATE_KEYWORD(transform_policy)
-
-template<class Context>
-struct context_policy<tag::transform_policy, Context, void>: policy::transform::default_policy<double> // TODO: use some other Number type
-{
-};
+BOOST_PARAMETER_TEMPLATE_KEYWORD(load_transform_policy)
 
 template<class TransformPolicy>
 struct need_transform_adapter: 
@@ -210,8 +207,8 @@ struct transform_adapter_base
 
 template<
   class Context, 
-  class TransformPolicy = context_policy<tag::transform_policy, Context>,
-  class LoadPolicy = context_policy<tag::load_transform_policy, Context>,
+  class TransformPolicy = typename policy::transform::by_context<Context>::type,
+  class LoadPolicy = policy::load_transform::default_policy<Context>,
   class Enable = void>
 class transform_adapter;
 
@@ -286,7 +283,7 @@ namespace detail
 template<
   class OutputContext, 
   class TransformPolicy, 
-  class LoadTransformPolicy = context_policy<tag::load_transform_policy, OutputContext>,
+  class LoadTransformPolicy = policy::load_transform::default_policy<OutputContext>,
   class Enable = void>
 struct transform_adapter_if_needed
 {

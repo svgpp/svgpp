@@ -15,7 +15,8 @@ template <
   class PropertySource, 
   class Iterator, 
   class AngleFactory, 
-  class Number = double>
+  class Number = double
+>
 class angle_grammar;
 
 template <class Iterator, class AngleFactory, class Number>

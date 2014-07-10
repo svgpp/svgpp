@@ -2,11 +2,11 @@
 
 #include <svgpp/traits/angle_units.hpp>
 
-namespace svgpp
+namespace svgpp { namespace factory { namespace angle 
 {
 
 template<class Angle = double, class ReferenceAngleUnits = tag::angle_units::deg>
-struct unitless_angle_factory
+struct unitless
 {
   typedef Angle angle_type;
 
@@ -23,4 +23,4 @@ struct unitless_angle_factory
   }
 };
 
-}
+}}}

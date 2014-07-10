@@ -1,8 +1,8 @@
 #pragma once
 
-#include <svgpp/context_policy_load_path.hpp>
-#include <svgpp/context_policy_load_value.hpp>
 #include <svgpp/definitions.hpp>
+#include <svgpp/policy/load_path.hpp>
+#include <svgpp/policy/load_value.hpp>
 #include <boost/optional.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/mpl/set.hpp>
@@ -21,7 +21,7 @@ public:
   template<class Context, class LengthToUserCoordinatesConverter>
   void on_exit_attributes(Context & context, LengthToUserCoordinatesConverter const & converter) const
   {
-    on_exit_attributesT<context_policy<tag::load_value_policy, Context> >(context, converter);
+    on_exit_attributesT<policy::load_value::default_policy<Context> >(context, converter);
   }
 
   template<class ErrorPolicy, class LoadPolicy, class Context, class LengthToUserCoordinatesConverter>
@@ -61,7 +61,7 @@ struct circle_to_path_adapter
   {
     typedef typename boost::mpl::if_<
       boost::is_same<LoadPathPolicy, void>,
-      context_policy<tag::load_path_policy, Context>,
+      policy::load_path::default_policy<Context>,
       LoadPathPolicy
     >::type load_policy;
 

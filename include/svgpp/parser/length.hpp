@@ -32,13 +32,13 @@ struct value_parser<tag::type::length, SVGPP_TEMPLATE_ARGS_PASS>
     if (boost::spirit::qi::parse(it, end, length_grammar(boost::phoenix::ref(length_factory)), value) 
       && it == end)
     {
-      context_policy<tag::load_value_policy, Context>::set(context, tag, value);
+      policy::load_value::default_policy<Context>::set(context, tag, value);
       return true;
     }
     else
     {
       typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
   }
 };
@@ -81,12 +81,12 @@ protected:
       length_rule,
       separator_grammar);
 
-    context_policy<tag::load_value_policy, Context>::set(context, tag, 
+    policy::load_value::default_policy<Context>::set(context, tag, 
       boost::make_iterator_range(output_iterator_t(parse_list), output_iterator_t()));
     if (parse_list.error())
     {
       typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
     else
       return true;

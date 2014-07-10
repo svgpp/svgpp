@@ -8,7 +8,6 @@
 #include <svgpp/traits/attribute_groups.hpp>
 #include <svgpp/attribute_traversal_common.hpp>
 #include <svgpp/template_parameters.hpp>
-#include <svgpp/context_policy.hpp>
 #include <bitset>
 #include <boost/mpl/at.hpp>
 #include <boost/mpl/map.hpp>
@@ -316,8 +315,6 @@ struct attribute_traversal_prioritized
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
   typedef typename boost::parameter::value_type<args, tag::xml_attribute_iterator_policy, 
     detail::parameter_not_set_tag >::type xml_attribute_policy_param;
-  typedef typename boost::parameter::value_type<args, tag::error_policy, 
-    detail::parameter_not_set_tag>::type error_policy_param;
   typedef typename boost::parameter::value_type<args, tag::css_name_to_id_policy, 
     css_name_to_id_policy_default>::type css_name_to_id_policy;
 
@@ -332,11 +329,8 @@ struct attribute_traversal_prioritized
 
     typedef traversal_detail::attribute_value_saver<XMLAttributesIterator, xml_policy> value_saver;
     typedef traversal_detail::found_attributes<value_saver, ParseStyleAttribute> found_attributes;
-    typedef typename boost::mpl::if_<
-      boost::is_same<error_policy_param, detail::parameter_not_set_tag>,
-      context_policy<tag::error_policy, Context>,
-      error_policy_param
-    >::type error_policy_t;
+    typedef typename boost::parameter::value_type<args, tag::error_policy, 
+      policy::error::default_policy<Context> >::type error_policy_t;
 
     detail::required_attributes_check<typename AttributeTraversalPolicy::required_attributes> required_check;
     found_attributes found;

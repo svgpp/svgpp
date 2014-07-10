@@ -1,8 +1,8 @@
 #pragma once
 
 #include <svgpp/adapter/path.hpp>
-#include <svgpp/context_policy_load_path.hpp>
-#include <svgpp/context_policy_load_value.hpp>
+#include <svgpp/policy/load_path.hpp>
+#include <svgpp/policy/load_value.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/optional.hpp>
 #include <boost/noncopyable.hpp>
@@ -29,7 +29,7 @@ public:
   template<class Context, class LengthToUserCoordinatesConverter>
   void on_exit_attributes(Context & context, LengthToUserCoordinatesConverter const & converter) const
   {
-    on_exit_attributesT<context_policy<tag::load_value_policy, Context> >(context, converter);
+    on_exit_attributesT<policy::load_value::default_policy<Context> >(context, converter);
   }
 
   template<class ErrorPolicy, class LoadPolicy, class Context, class LengthToUserCoordinatesConverter>
@@ -114,7 +114,7 @@ struct rect_to_path_adapter
   {
     typedef typename boost::mpl::if_<
       boost::is_same<LoadPathPolicy, void>,
-      context_policy<tag::load_path_policy, Context>,
+      policy::load_path::default_policy<Context>,
       LoadPathPolicy
     >::type load_policy;
 
@@ -159,7 +159,7 @@ public:
     {
       typedef typename boost::mpl::if_<
         boost::is_same<LoadValuePolicy, void>,
-        context_policy<tag::load_value_policy, OutputRectContext>,
+        policy::load_value::default_policy<OutputRectContext>,
         LoadValuePolicy
       >::type load_value_policy;
 
@@ -169,7 +169,7 @@ public:
     {
       typedef typename boost::mpl::if_<
         boost::is_same<LoadPathPolicy, void>,
-        context_policy<tag::load_path_policy, OutputPathContext>,
+        policy::load_path::default_policy<OutputPathContext>,
         LoadPathPolicy
       >::type load_path_policy;
 

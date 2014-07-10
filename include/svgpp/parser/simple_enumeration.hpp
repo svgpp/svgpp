@@ -3,7 +3,7 @@
 #include <svgpp/detail/literal_values_dictionary.hpp>
 #include <svgpp/traits/simple_enumeration_values.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
-#include <svgpp/context_policy_load_value.hpp>
+#include <svgpp/policy/load_value.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/identity.hpp>
 #include <boost/mpl/pair.hpp>
@@ -32,7 +32,7 @@ struct simple_enumeration_type_visitor: boost::noncopyable
     if (!found_ && boost::algorithm::equals(range_, Dictionary::template get_name<T>(), 
       typename boost::mpl::if_c<CaseSensitive, boost::algorithm::is_equal, boost::algorithm::is_iequal>::type()))
     {
-      context_policy<tag::load_value_policy, Context>::set(context_, AttributeTag(), value_tag);
+      policy::load_value::default_policy<Context>::set(context_, AttributeTag(), value_tag);
       found_ = true;
     }
   }

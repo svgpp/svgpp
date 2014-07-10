@@ -1,11 +1,11 @@
 #pragma once
 
 #include <svgpp/config.hpp>
-#include <svgpp/context_policy_load_value.hpp>
 #include <svgpp/definitions.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
 #include <svgpp/parser/detail/common.hpp>
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
+#include <svgpp/policy/load_value.hpp>
 #include <boost/mpl/pair.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
@@ -18,13 +18,13 @@ namespace detail
   template<class AttributeTag, class Context, class ValueType>
   inline void call_set_value(Context & context, ValueType const & value)
   {
-    context_policy<tag::load_value_policy, Context>::set(context, AttributeTag(), value);
+    policy::load_value::default_policy<Context>::set(context, AttributeTag(), value);
   }
 
   template<class AttributeTag, class Context, class ValueType>
   inline void call_set_value_def(Context & context)
   {
-    context_policy<tag::load_value_policy, Context>::set(context, AttributeTag(), ValueType());
+    policy::load_value::default_policy<Context>::set(context, AttributeTag(), ValueType());
   }
 }
 
@@ -40,7 +40,7 @@ struct value_parser<tag::attribute::viewBox, SVGPP_TEMPLATE_ARGS_PASS>
     using qi::_1;
 
     typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-    typedef typename args_t::get_number_type::template apply<Context>::type coordinate_t;
+    typedef typename args_t::template get_number_type<Context>::type coordinate_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
 
@@ -53,12 +53,12 @@ struct value_parser<tag::attribute::viewBox, SVGPP_TEMPLATE_ARGS_PASS>
       number[ref(w) = _1] >> qi::no_skip[comma_wsp] >>
       number[ref(h) = _1]) && it == end)
     {
-      context_policy<tag::load_value_policy, Context>::set(context, tag, x, y, w, h);
+      policy::load_value::default_policy<Context>::set(context, tag, x, y, w, h);
       return true;
     }
     else
     {
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
   }
 };
@@ -75,7 +75,7 @@ struct value_parser<tag::attribute::bbox, SVGPP_TEMPLATE_ARGS_PASS>
     using qi::_1;
 
     typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-    typedef typename args_t::get_number_type::template apply<Context>::type coordinate_t;
+    typedef typename args_t::template get_number_type<Context>::type coordinate_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
 
@@ -87,12 +87,12 @@ struct value_parser<tag::attribute::bbox, SVGPP_TEMPLATE_ARGS_PASS>
       number[ref(hi_x) = _1] >> qi::lit(',') >>
       number[ref(hi_y) = _1]) && it == end)
     {
-      context_policy<tag::load_value_policy, Context>::set(context, tag, lo_x, lo_y, hi_x, hi_y);
+      policy::load_value::default_policy<Context>::set(context, tag, lo_x, lo_y, hi_x, hi_y);
       return true;
     }
     else
     {
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, attribute_value);
     }
   }
 };
@@ -139,7 +139,7 @@ struct value_parser<tag::attribute::preserveAspectRatio, SVGPP_TEMPLATE_ARGS_PAS
       return true;
     else
     {
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
   }
 
@@ -149,17 +149,17 @@ struct value_parser<tag::attribute::preserveAspectRatio, SVGPP_TEMPLATE_ARGS_PAS
     switch (align)
     {
     case 1:
-      context_policy<tag::load_value_policy, Context>::set(context, 
+      policy::load_value::default_policy<Context>::set(context, 
         tag::attribute::preserveAspectRatio(), 
         defer, tag::value::none());
       break;
 #define SVGPP_CASE(value_tag) \
       if (slice) \
-        context_policy<tag::load_value_policy, Context>::set(context, \
+        policy::load_value::default_policy<Context>::set(context, \
           tag::attribute::preserveAspectRatio(), \
           defer, tag::value::value_tag(), tag::value::slice()); \
       else \
-        context_policy<tag::load_value_policy, Context>::set(context, \
+        policy::load_value::default_policy<Context>::set(context, \
           tag::attribute::preserveAspectRatio(), \
           defer, tag::value::value_tag(), tag::value::meet()); \
       break;
@@ -190,7 +190,7 @@ struct value_parser<boost::mpl::pair<tag::element::stop, tag::attribute::offset>
     using qi::_1;
 
     typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-    typedef typename args_t::get_number_type::template apply<Context>::type coordinate_t;
+    typedef typename args_t::template get_number_type<Context>::type coordinate_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
 
@@ -199,12 +199,12 @@ struct value_parser<boost::mpl::pair<tag::element::stop, tag::attribute::offset>
     bool percentage = false;
     if (qi::parse(it, end, number[ref(value) = _1] >> -(qi::lit('%')[ref(percentage) = true])) && it == end)
     {
-      context_policy<tag::load_value_policy, Context>::set(context, tag, percentage ? value : value / 100);
+      policy::load_value::default_policy<Context>::set(context, tag, percentage ? value : value / 100);
       return true;
     }
     else
     {
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
   }
 };

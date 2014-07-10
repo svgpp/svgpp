@@ -3,8 +3,9 @@
 #include <svgpp/attribute_traversal.hpp>
 #include <svgpp/attribute_dispatcher.hpp>
 #include <svgpp/template_parameters.hpp>
-#include <svgpp/context_policy_load_text.hpp>
 #include <svgpp/detail/element_id_to_tag.hpp>
+#include <svgpp/policy/document_traversal_control.hpp>
+#include <svgpp/policy/load_text.hpp>
 #include <svgpp/traits/child_element_types.hpp>
 #include <svgpp/traits/element_with_text_content.hpp>
 #include <boost/utility/enable_if.hpp>
@@ -108,8 +109,10 @@ struct default_context_factories
 
 BOOST_PARAMETER_TEMPLATE_KEYWORD(context_factories)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(xml_element_policy)
+BOOST_PARAMETER_TEMPLATE_KEYWORD(load_text_policy)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(ignored_elements)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(processed_elements)
+BOOST_PARAMETER_TEMPLATE_KEYWORD(document_traversal_control_policy)
 
 template<SVGPP_TEMPLATE_ARGS_DEF>
 class document_traversal
@@ -123,21 +126,20 @@ protected:
     , boost::parameter::optional<tag::length_factory>
     , boost::parameter::optional<tag::ignored_elements, boost::mpl::is_sequence<boost::mpl::_> >
     , boost::parameter::optional<tag::processed_elements, boost::mpl::is_sequence<boost::mpl::_> >
+    , boost::parameter::optional<tag::document_traversal_control_policy>
   >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
   typedef typename boost::parameter::value_type<args, tag::context_factories, 
     default_context_factories>::type context_factories;
   typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
     detail::parameter_not_set_tag>::type xml_element_policy_param;
-  typedef typename boost::parameter::value_type<args, tag::load_text_policy, 
-    detail::parameter_not_set_tag>::type load_text_policy_param;
   typedef typename boost::parameter::value_type<args, tag::ignored_elements, 
     boost::mpl::empty_sequence>::type ignored_elements;
   typedef typename boost::parameter::value_type<args, tag::processed_elements, 
     boost::mpl::empty_sequence>::type processed_elements;
-  typedef typename boost::parameter::value_type<args, tag::error_policy, 
-    detail::parameter_not_set_tag>::type error_policy_param;
   typedef typename boost::parameter::value_type<args, tag::length_factory, 
-    unitless_length_factory<> >::type length_factory_type;
+    factory::length::default_factory>::type length_factory_type;
+  typedef typename boost::parameter::value_type<args, tag::document_traversal_control_policy, 
+    policy::document_traversal_control::stub>::type traversal_control_policy;
 
   BOOST_STATIC_ASSERT_MSG(boost::mpl::empty<ignored_elements>::value 
     || boost::mpl::empty<processed_elements>::value, "Only one of ignored_elements and processed_elements may be non-empty");
@@ -170,7 +172,8 @@ public:
     state_holder state_copy = state_holder())
   {
     return load_attributes<ReferencingElement>(xml_element, context, element_tag, state_copy)
-      && load_element_content<ExpectedChildElements>(xml_element, context, element_tag, state_copy);
+      && (!traversal_control_policy::proceed_to_element_content(context)
+        || load_element_content<ExpectedChildElements>(xml_element, context, element_tag, state_copy));
   }
 
   template<class ReferencingElement, class XMLElement, class Context, class ElementTag>
@@ -245,11 +248,8 @@ public:
       xml_element_iterator_policy<XMLElement>,
       xml_element_policy_param
     >::type xml_policy_t;
-    typedef typename boost::mpl::if_<
-      boost::is_same<error_policy_param, detail::parameter_not_set_tag>,
-      context_policy<tag::error_policy, Context>,
-      error_policy_param
-    >::type error_policy;
+    typedef typename boost::parameter::value_type<args, tag::error_policy, 
+      policy::error::default_policy<Context> >::type error_policy;
 
     for(typename xml_policy_t::iterator_type xml_child_element = xml_policy_t::get_child_elements(xml_element); 
       !xml_policy_t::is_end(xml_child_element); xml_policy_t::advance_element(xml_child_element))
@@ -257,6 +257,8 @@ public:
       if (!load_child_xml_element<ExpectedChildElements, is_element_processed, void>(
           xml_child_element, context, element_tag, state))
         return false;
+      if (!traversal_control_policy::proceed_to_next_child(context))
+        break;
     }
     return true;
   }
@@ -271,23 +273,22 @@ public:
       xml_element_iterator_policy<XMLElement>,
       xml_element_policy_param
     >::type xml_policy_t;
-    typedef typename boost::mpl::if_<
-      boost::is_same<load_text_policy_param, detail::parameter_not_set_tag>,
-      context_policy<tag::load_text_policy, Context>,
-      load_text_policy_param
-    >::type load_text_policy;
+    typedef typename boost::parameter::value_type<args, tag::load_text_policy, 
+      policy::load_text::default_policy<Context> >::type load_text_policy;
     
     for(typename xml_policy_t::iterator_type xml_child_element = xml_policy_t::get_child_elements_and_texts(xml_element); 
       !xml_policy_t::is_end(xml_child_element); xml_policy_t::advance_element_or_text(xml_child_element))
     {
       if (xml_policy_t::is_text(xml_child_element))
-        load_text_policy::set_text(xml_policy_t::get_text(xml_child_element));
+        load_text_policy::set_text(context, xml_policy_t::get_text(xml_child_element));
       else
       {
         if (!load_child_xml_element<ExpectedChildElements, is_element_processed, false>(
             xml_child_element, context, element_tag, state))
           return false;
       }
+      if (!traversal_control_policy::proceed_to_next_child(context))
+        break;
     }
     return true;
   }
@@ -419,11 +420,8 @@ protected:
       xml_element_iterator_policy<XMLElement>,
       xml_element_policy_param
     >::type xml_policy_t;
-    typedef typename boost::mpl::if_<
-      boost::is_same<error_policy_param, detail::parameter_not_set_tag>,
-      context_policy<tag::error_policy, Context>,
-      error_policy_param
-    >::type error_policy;
+    typedef typename boost::parameter::value_type<args, tag::error_policy, 
+      policy::error::default_policy<Context> >::type error_policy;
 
     xml_policy_t::element_name_type element_name = xml_policy_t::get_local_name(xml_element);
     detail::element_type_id element_type_id = detail::element_name_to_id_dictionary::find(

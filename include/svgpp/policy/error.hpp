@@ -269,4 +269,8 @@ struct raise_exception
   }
 };
 
+template<class Context>
+struct default_policy: raise_exception<Context>
+{};
+
 }}}

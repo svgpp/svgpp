@@ -1,9 +1,11 @@
 #pragma once
 
+#include <svgpp/policy/error.hpp>
+#include <svgpp/policy/load_transform.hpp>
+#include <svgpp/policy/load_value.hpp>
 #include <svgpp/utility/calculate_viewbox_transform.hpp>
-#include <svgpp/context_policy_load_transform.hpp>
-#include <svgpp/context_policy_load_value.hpp>
 #include <boost/optional.hpp>
+#include <boost/mpl/set.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -157,8 +159,8 @@ public:
   bool on_exit_attributes(Context & context, LengthToUserCoordinatesConverter const & converter) const
   {
     return on_exit_attributesT<
-      context_policy<tag::load_value_policy, Context>,
-      context_policy<tag::error_policy, Context>
+      policy::load_value::default_policy<Context>,
+      policy::error::default_policy<Context>
     >(context, converter);
   }
 
@@ -294,7 +296,7 @@ struct viewport_transform_adapter
   {
     typedef typename boost::mpl::if_<
       boost::is_same<LoadTransformPolicy, void>,
-      context_policy<tag::load_transform_policy, Context>,
+      policy::load_transform::default_policy<Context>,
       LoadTransformPolicy
     >::type load_policy;
 
@@ -307,7 +309,7 @@ struct viewport_transform_adapter
   {
     typedef typename boost::mpl::if_<
       boost::is_same<LoadTransformPolicy, void>,
-      context_policy<tag::load_transform_policy, Context>,
+      policy::load_transform::default_policy<Context>,
       LoadTransformPolicy
     >::type load_policy;
 
@@ -320,7 +322,7 @@ struct viewport_transform_adapter
   {
     typedef typename boost::mpl::if_<
       boost::is_same<LoadValuePolicy, void>,
-      context_policy<tag::load_value_policy, Context>,
+      policy::load_value::default_policy<Context>,
       LoadValuePolicy
     >::type load_policy;
 
@@ -332,7 +334,7 @@ struct viewport_transform_adapter
   {
     typedef typename boost::mpl::if_<
       boost::is_same<LoadValuePolicy, void>,
-      context_policy<tag::load_value_policy, Context>,
+      policy::load_value::default_policy<Context>,
       LoadValuePolicy
     >::type load_policy;
 

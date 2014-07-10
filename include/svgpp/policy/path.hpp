@@ -39,4 +39,10 @@ struct minimal
 
 typedef no_shorthands default_policy;
 
+template<class Context>
+struct by_context
+{
+  typedef default_policy type;
+};
+
 }}}

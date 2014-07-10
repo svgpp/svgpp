@@ -4,7 +4,7 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <svgpp/parser/detail/common.hpp>
-#include <svgpp/context_policy_load_transform.hpp>
+#include <svgpp/policy/load_transform.hpp>
 
 namespace svgpp 
 { 
@@ -15,7 +15,7 @@ template <
   class Iterator, 
   class Context, 
   class Number = double, 
-  class LoadPolicy = context_policy<tag::load_transform_policy, Context> >
+  class LoadPolicy = policy::load_transform::default_policy<Context> >
 class transform_grammar: public qi::grammar<Iterator, void (Context &), detail::character_encoding_namespace::space_type>
 {
   typedef transform_grammar<Iterator, Context, Number, LoadPolicy> this_type;

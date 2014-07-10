@@ -20,7 +20,7 @@ struct value_parser<tag::type::path_data, SVGPP_TEMPLATE_ARGS_PASS>
     namespace qi = boost::spirit::qi;
 
     typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-    typedef typename args_t::get_number_type::template apply<Context>::type coordinate_t;
+    typedef typename args_t::template get_number_type<Context>::type coordinate_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
 
     typedef typename boost::parameter::parameters<
@@ -28,9 +28,9 @@ struct value_parser<tag::type::path_data, SVGPP_TEMPLATE_ARGS_PASS>
       boost::parameter::optional<tag::load_path_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename boost::parameter::value_type<args2_t, tag::path_policy, 
-      context_policy<tag::path_policy, Context> >::type path_policy;
+      typename policy::path::by_context<Context>::type>::type path_policy;
     typedef typename boost::parameter::value_type<args2_t, tag::load_path_policy, 
-      context_policy<tag::load_path_policy, Context> >::type load_path_policy;
+      policy::load_path::default_policy<Context> >::type load_path_policy;
     typedef detail::path_adapter_if_needed<Context, path_policy, coordinate_t, load_path_policy> adapted_context_type; 
     typedef path_data_grammar<
       iterator_t, 
@@ -49,7 +49,7 @@ struct value_parser<tag::type::path_data, SVGPP_TEMPLATE_ARGS_PASS>
     }
     else
     {
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
   }
 };

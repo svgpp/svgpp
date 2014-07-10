@@ -1,8 +1,9 @@
 #pragma once
 
-#include <svgpp/context_policy_load_path.hpp>
-#include <svgpp/context_policy_load_value.hpp>
 #include <svgpp/definitions.hpp>
+#include <svgpp/policy/error.hpp>
+#include <svgpp/policy/load_path.hpp>
+#include <svgpp/policy/load_value.hpp>
 #include <boost/optional.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/mpl/set.hpp>
@@ -22,8 +23,8 @@ public:
   bool on_exit_attributes(Context & context, LengthToUserCoordinatesConverter const & converter) const
   {
     return on_exit_attributesT<
-      context_policy<tag::error_policy, Context>,
-      context_policy<tag::load_value_policy, Context> 
+      policy::error::default_policy<Context>,
+      policy::load_value::default_policy<Context> 
     >(context, converter);
   }
 
@@ -70,7 +71,7 @@ struct ellipse_to_path_adapter
   {
     typedef typename boost::mpl::if_<
       boost::is_same<LoadPathPolicy, void>,
-      context_policy<tag::load_path_policy, Context>,
+      policy::load_path::default_policy<Context>,
       LoadPathPolicy
     >::type load_policy;
 

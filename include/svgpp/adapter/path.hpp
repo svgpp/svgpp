@@ -7,7 +7,7 @@
 #include <boost/type_traits/is_floating_point.hpp>
 #include <svgpp/policy/path.hpp>
 #include <svgpp/definitions.hpp>
-#include <svgpp/context_policy_load_path.hpp>
+#include <svgpp/policy/load_path.hpp>
 #include <svgpp/utility/arc_endpoint_to_center.hpp>
 #include <svgpp/utility/arc_to_bezier.hpp>
 
@@ -15,10 +15,7 @@ namespace svgpp
 {
 
 BOOST_PARAMETER_TEMPLATE_KEYWORD(path_policy)
-
-template<class Context>
-struct context_policy<tag::path_policy, Context, void>: policy::path::default_policy
-{};
+BOOST_PARAMETER_TEMPLATE_KEYWORD(load_path_policy)
 
 template<class PathPolicy>
 struct need_path_adapter: boost::mpl::bool_<
@@ -115,9 +112,9 @@ namespace detail
 
 template<
   class OutputContext, 
-  class PathPolicy = context_policy<tag::path_policy, OutputContext>, 
-  class Coordinate = typename context_policy<tag::number_type, OutputContext>::type,
-  class LoadPolicy = context_policy<tag::load_path_policy, OutputContext> >
+  class PathPolicy = typename policy::path::by_context<OutputContext>::type, 
+  class Coordinate = typename number_type_by_context<OutputContext>::type,
+  class LoadPolicy = policy::load_path::default_policy<OutputContext> >
 class path_adapter: 
   boost::noncopyable,
   private boost::mpl::if_c<PathPolicy::no_cubic_bezier_shorthand, 
@@ -805,9 +802,9 @@ struct path_adapter_load_path_policy
 
 template<
   class OutputContext, 
-  class PathPolicy   = context_policy<tag::path_policy, OutputContext>, 
-  class Coordinate   = typename context_policy<tag::number_type, OutputContext>::type,
-  class LoadPolicy   = context_policy<tag::load_path_policy, OutputContext>,
+  class PathPolicy   = typename policy::path::by_context<OutputContext>::type,
+  class Coordinate   = typename number_type::by_context<OutputContext>::type,
+  class LoadPolicy   = policy::load_path::default_policy<OutputContext>,
   class Enabled = void>
 struct path_adapter_if_needed
 {

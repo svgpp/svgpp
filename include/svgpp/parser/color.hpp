@@ -1,14 +1,17 @@
 #pragma once
 
+#include <svgpp/factory/color.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
 #include <svgpp/parser/grammar/color.hpp>
 #include <svgpp/parser/grammar/color_optional_icc_color.hpp>
-#include <svgpp/context_policy_color_factory.hpp>
-#include <svgpp/context_policy_load_value.hpp>
+#include <svgpp/policy/load_value.hpp>
 
 namespace svgpp
 {
+
+BOOST_PARAMETER_TEMPLATE_KEYWORD(color_factory)
+BOOST_PARAMETER_TEMPLATE_KEYWORD(icc_color_factory)
 
 template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::type::color, SVGPP_TEMPLATE_ARGS_PASS>
@@ -24,20 +27,20 @@ struct value_parser<tag::type::color, SVGPP_TEMPLATE_ARGS_PASS>
       boost::parameter::optional<tag::color_factory>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename boost::parameter::value_type<args2_t, tag::color_factory, 
-      context_policy<tag::color_factory, Context> >::type color_factory_t;
+      typename factory::color::by_context<Context>::type>::type color_factory_t;
 
     SVGPP_STATIC_IF_SAFE const color_grammar<iterator_t, color_factory_t> color_rule;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     typename color_factory_t::color_type color;
     if (qi::parse(it, end, color_rule, color) && it == end)
     {
-      context_policy<tag::load_value_policy, Context>::set(context, tag, color);
+      policy::load_value::default_policy<Context>::set(context, tag, color);
       return true;
     }
     else
     {
       typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
   }
 };
@@ -57,9 +60,9 @@ struct value_parser<tag::type::color_optional_icc_color, SVGPP_TEMPLATE_ARGS_PAS
       boost::parameter::optional<tag::icc_color_factory>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename boost::parameter::value_type<args2_t, tag::color_factory, 
-      context_policy<tag::color_factory, Context> >::type color_factory_t;
+      typename factory::color::by_context<Context>::type>::type color_factory_t;
     typedef typename boost::parameter::value_type<args2_t, tag::icc_color_factory, 
-      context_policy<tag::icc_color_factory, Context> >::type icc_color_factory_t;
+      typename factory::icc_color::by_context<Context>::type>::type icc_color_factory_t;
 
     SVGPP_STATIC_IF_SAFE const color_optional_icc_color_grammar<
       PropertySource, iterator_t, color_factory_t, icc_color_factory_t> color_rule;
@@ -68,15 +71,15 @@ struct value_parser<tag::type::color_optional_icc_color, SVGPP_TEMPLATE_ARGS_PAS
     if (qi::parse(it, end, color_rule, color) && it == end)
     {
       if (color.get<1>())
-        context_policy<tag::load_value_policy, Context>::set(context, tag, color.get<0>(), *color.get<1>());
+        policy::load_value::default_policy<Context>::set(context, tag, color.get<0>(), *color.get<1>());
       else
-        context_policy<tag::load_value_policy, Context>::set(context, tag, color.get<0>());
+        policy::load_value::default_policy<Context>::set(context, tag, color.get<0>());
       return true;
     }
     else
     {
       typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-      return args_t::get_error_policy::template apply<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
     }
   }
 };
