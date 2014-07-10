@@ -801,38 +801,40 @@ struct path_adapter_load_path_policy
 };
 
 template<
-  class OutputContext, 
-  class PathPolicy   = typename policy::path::by_context<OutputContext>::type,
-  class Coordinate   = typename number_type::by_context<OutputContext>::type,
-  class LoadPolicy   = policy::load_path::default_policy<OutputContext>,
-  class Enabled = void>
+  class OriginalContext, 
+  class PathPolicy      = typename policy::path::by_context<OutputContext>::type,
+  class Coordinate      = typename number_type::by_context<OutputContext>::type,
+  class LoadPathPolicy  = policy::load_path::default_policy<OutputContext>,
+  class Enabled         = void
+>
 struct path_adapter_if_needed
 {
-  typedef OutputContext type;
+  typedef typename LoadPathPolicy::context_type type;
   typedef type & holder_type;
-  typedef LoadPolicy load_path_policy;
+  typedef LoadPathPolicy load_path_policy;
 
-  static OutputContext & get_original_context(holder_type & adapted_context)
+  static OriginalContext & get_original_context(holder_type & adapted_context)
   {
     return adapted_context;
   }
 };
 
 template<
-  class OutputContext, 
+  class OriginalContext, 
   class PathPolicy, 
   class Coordinate,
-  class LoadPolicy>
-struct path_adapter_if_needed<OutputContext, PathPolicy, Coordinate, LoadPolicy, 
+  class LoadPathPolicy
+>
+struct path_adapter_if_needed<OriginalContext, PathPolicy, Coordinate, LoadPathPolicy, 
   typename boost::enable_if<need_path_adapter<PathPolicy> >::type>
 {
-  typedef path_adapter<OutputContext, PathPolicy, Coordinate, LoadPolicy> type;
+  typedef path_adapter<typename LoadPathPolicy::context_type, PathPolicy, Coordinate, LoadPathPolicy> type;
   typedef type holder_type;
   typedef detail::path_adapter_load_path_policy<type, PathPolicy, Coordinate> load_path_policy;
 
-  static OutputContext & get_original_context(holder_type & adapted_context)
+  static OriginalContext & get_original_context(holder_type & adapted_context)
   {
-    return adapted_context.get_output_context();
+    return static_cast<OriginalContext &>(adapted_context.get_output_context());
   }
 };
 

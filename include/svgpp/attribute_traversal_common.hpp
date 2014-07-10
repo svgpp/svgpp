@@ -30,11 +30,11 @@ struct css_name_to_id_policy_case_sensitive
 
 namespace detail
 {
-  template<class ErrorPolicy, class Context>
+  template<class ErrorPolicy>
   class missing_attribute_visitor: boost::noncopyable
   {
   public:
-    missing_attribute_visitor(Context & context)
+    missing_attribute_visitor(typename ErrorPolicy::context_type & context)
       : context_(context)
     {
     }
@@ -46,7 +46,7 @@ namespace detail
     }
 
   private:
-    Context & context_;
+    typename ErrorPolicy::context_type & context_;
   };
 }
 

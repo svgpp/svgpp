@@ -8,6 +8,8 @@ namespace svgpp { namespace policy { namespace load_path
 template<class Context, class GetObject = detail::same_object_func<Context> >
 struct forward_to_method
 {
+  typedef Context context_type;
+
   template<class Coordinate, class AbsoluteOrRelative>
   static void path_move_to(Context & context, Coordinate x, Coordinate y, AbsoluteOrRelative absoluteOrRelative)
   { 

@@ -281,32 +281,34 @@ namespace detail
 {
 
 template<
-  class OutputContext, 
+  class OriginalContext, 
   class TransformPolicy, 
-  class LoadTransformPolicy = policy::load_transform::default_policy<OutputContext>,
-  class Enable = void>
+  class LoadTransformPolicy = policy::load_transform::default_policy<OriginalContext>,
+  class Enable = void
+>
 struct transform_adapter_if_needed
 {
-  typedef OutputContext type;
-  typedef type & holder_type;
+  typedef typename LoadTransformPolicy::context_type type; // May be parent class of OriginalContext
+  typedef OriginalContext & holder_type;
   typedef LoadTransformPolicy load_transform_policy;
 
   void on_exit_attribute(type const &) {}
 
-  static OutputContext & get_original_context(holder_type & adapted_context)
+  static OriginalContext & get_original_context(holder_type & adapted_context)
   {
     return adapted_context;
   }
 };
 
 template<
-  class OutputContext, 
+  class OriginalContext, 
   class TransformPolicy, 
-  class LoadTransformPolicy>
-struct transform_adapter_if_needed<OutputContext, TransformPolicy, LoadTransformPolicy, 
+  class LoadTransformPolicy
+>
+struct transform_adapter_if_needed<OriginalContext, TransformPolicy, LoadTransformPolicy, 
   typename boost::enable_if<need_transform_adapter<TransformPolicy> >::type>
 {
-  typedef transform_adapter<OutputContext, TransformPolicy, LoadTransformPolicy> type;
+  typedef transform_adapter<typename LoadTransformPolicy::context_type, TransformPolicy, LoadTransformPolicy> type;
   typedef type holder_type;
   typedef policy::load_transform::forward_to_method<type> load_transform_policy;
 
@@ -315,12 +317,12 @@ struct transform_adapter_if_needed<OutputContext, TransformPolicy, LoadTransform
     adapter.on_exit_attribute();
   }
 
-  static OutputContext & get_original_context(holder_type & adapted_context)
+  static OriginalContext & get_original_context(holder_type & adapted_context)
   {
-    return adapted_context.get_output_context();
+    return static_cast<OriginalContext &>(adapted_context.get_output_context()); // May be downcast
   }
 };
 
-}
+} // namespace detail
 
 }

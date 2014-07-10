@@ -28,8 +28,8 @@ private:
     css_name_to_id_policy_default>::type css_name_to_id_policy;
 
 public:
-  template<class XMLAttributesIterator, class Context>
-  static bool load(XMLAttributesIterator xml_attributes_iterator, Context & context)
+  template<class XMLAttributesIterator, class Dispatcher>
+  static bool load(XMLAttributesIterator xml_attributes_iterator, Dispatcher & dispatcher)
   {
     typedef typename boost::mpl::if_<
       boost::is_same<xml_attribute_policy_param, detail::parameter_not_set_tag>,
@@ -38,7 +38,7 @@ public:
     >::type xml_policy;
 
     typedef typename boost::parameter::value_type<args, tag::error_policy, 
-      policy::error::default_policy<Context> >::type error_policy;
+      policy::error::default_policy<typename Dispatcher::context_type> >::type error_policy;
 
     detail::required_attributes_check<RequiredAttributes> required_check;
     for(; !xml_policy::is_end(xml_attributes_iterator); 
@@ -52,7 +52,7 @@ public:
       switch (id)
       {
       case detail::unknown_attribute_id:
-        if (!error_policy::unknown_attribute(context, xml_attributes_iterator, 
+        if (!error_policy::unknown_attribute(dispatcher.context(), xml_attributes_iterator, 
           xml_policy::get_string_range(attribute_name), tag::source::attribute()))
           return false;
         break;
@@ -60,7 +60,7 @@ public:
       {
         if (ParseStyleAttribute)
         {
-          if (!load_style<xml_policy, error_policy>(xml_attributes_iterator, context))
+          if (!load_style<xml_policy, error_policy>(xml_attributes_iterator, dispatcher))
             return false;
           break;
         }
@@ -68,20 +68,20 @@ public:
       default:
       {
         xml_policy::attribute_value_type value = xml_policy::get_value(xml_attributes_iterator);
-        if (!context.load_attribute(id, xml_policy::get_string_range(value), tag::source::attribute()))
+        if (!dispatcher.load_attribute(id, xml_policy::get_string_range(value), tag::source::attribute()))
           return false;
         required_check(id);
       }
       }
     }
 
-    detail::missing_attribute_visitor<error_policy, Context> visitor(context);
+    detail::missing_attribute_visitor<error_policy> visitor(dispatcher.context());
     return required_check.visit_missing(visitor);
   }
 
 private:
-  template<class XMLPolicy, class ErrorPolicy, class XMLAttributesIterator, class Context>
-  static bool load_style(XMLAttributesIterator const & xml_attributes_iterator, Context & context,
+  template<class XMLPolicy, class ErrorPolicy, class XMLAttributesIterator, class Dispatcher>
+  static bool load_style(XMLAttributesIterator const & xml_attributes_iterator, Dispatcher & dispatcher,
     typename boost::enable_if_c<ParseStyleAttribute && (true || boost::is_void<XMLAttributesIterator>::value)>::type * = NULL)
   {
     typename XMLPolicy::attribute_value_type style_value = XMLPolicy::get_value(xml_attributes_iterator);
@@ -92,18 +92,18 @@ private:
       detail::attribute_id style_id = css_name_to_id_policy::find(it->first);
       if (style_id == detail::unknown_attribute_id)
       {
-        if (!ErrorPolicy::unknown_attribute(context, xml_attributes_iterator, it->first, tag::source::css()))
+        if (!ErrorPolicy::unknown_attribute(dispatcher.context(), xml_attributes_iterator, it->first, tag::source::css()))
           return false;
       }
       else
-        if (!context.load_attribute(style_id, it->second, tag::source::css()))
+        if (!dispatcher.load_attribute(style_id, it->second, tag::source::css()))
           return false;
     }
     return true;
   }
 
-  template<class XMLPolicy, class ErrorPolicy, class XMLAttributesIterator, class Context>
-  static bool load_style(XMLAttributesIterator const &, Context &,
+  template<class XMLPolicy, class ErrorPolicy, class XMLAttributesIterator, class Dispatcher>
+  static bool load_style(XMLAttributesIterator const &, Dispatcher &,
     typename boost::disable_if_c<ParseStyleAttribute && (true || boost::is_void<XMLAttributesIterator>::value)>::type * = NULL)
   { 
     BOOST_ASSERT(false); // Must not be called

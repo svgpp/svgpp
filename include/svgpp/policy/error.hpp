@@ -175,6 +175,8 @@ namespace policy { namespace error
 template<class Context>
 struct raise_exception
 {
+  typedef Context context_type;
+
   template<class XMLElement, class ElementName>
   BOOST_ATTRIBUTE_NORETURN static bool unknown_element(Context const &, 
     XMLElement const & element, ElementName const & name,

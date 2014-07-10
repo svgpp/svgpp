@@ -9,6 +9,8 @@ namespace svgpp { namespace policy { namespace load_transform
 template<class Context, class GetObject = detail::same_object_func<Context> >
 struct forward_to_method
 {
+  typedef Context context_type; // May be used to reduce number of instantiations
+
   template<class Number>
   static void set_transform_matrix(Context & context, const boost::array<Number, 6> & matrix)
   {

@@ -274,6 +274,7 @@ template<class ElementTag, class Context, SVGPP_TEMPLATE_ARGS>
 class attribute_dispatcher_base
 {
 public:
+  typedef Context context_type;
   typedef ElementTag element_tag;
   typedef attribute_dispatcher<ElementTag, Context, SVGPP_TEMPLATE_ARGS_PASS> actual_type; // TODO: review
 
@@ -342,6 +343,11 @@ public:
   typename length_factory_type & length_factory() 
   { 
     return length_factory_; 
+  }
+
+  Context & context()
+  {
+    return context_;
   }
 
   bool on_exit_attributes()
