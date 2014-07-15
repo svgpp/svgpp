@@ -13,6 +13,14 @@ namespace
   class traversal_context
   {
   public:
+    struct context_type {};
+
+    context_type & context() 
+    { 
+      static context_type instance;
+      return instance;
+    }
+
     bool load_attribute(svgpp::detail::attribute_id id, boost::iterator_range<char const *> const & value, 
       svgpp::tag::source::css)
     {

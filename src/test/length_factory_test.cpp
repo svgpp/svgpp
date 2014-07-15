@@ -1,10 +1,10 @@
-#include <svgpp/unitless_length_factory.hpp>
+#include <svgpp/factory/unitless_length.hpp>
 
 #include <gtest/gtest.h>
 
 TEST(LengthFactory, base)
 {
-  svgpp::unitless_length_factory_absolute<double, double, svgpp::tag::length_units::in> factory;
+  svgpp::factory::length::unitless_absolute<double, double, svgpp::tag::length_units::in> factory;
   factory.set_absolute_units_coefficient(90, svgpp::tag::length_units::in()); // 90 dpi
   EXPECT_NEAR(1.25, factory.create_length(1, svgpp::tag::length_units::pt()), 1e-8);
   EXPECT_NEAR(3.75, factory.create_length(3, svgpp::tag::length_units::pt()), 1e-8);
@@ -16,7 +16,7 @@ TEST(LengthFactory, base)
 
 TEST(LengthFactory, full)
 {
-  svgpp::unitless_length_factory<> factory;
+  svgpp::factory::length::unitless<> factory;
   factory.set_absolute_units_coefficient(90, svgpp::tag::length_units::in()); // 90 dpi
   factory.set_viewport_size(250, 120);
   EXPECT_NEAR(1.25, factory.create_length(1, svgpp::tag::length_units::pt()), 1e-8);

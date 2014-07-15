@@ -1,12 +1,9 @@
 #pragma once
 
 #include <svgpp/definitions.hpp>
-#include <svgpp/policy/load_path.hpp>
-#include <svgpp/policy/load_value.hpp>
 #include <boost/optional.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/mpl/set.hpp>
-#include <stdexcept>
 
 namespace svgpp
 {
@@ -18,16 +15,16 @@ template<class Length>
 class collect_circle_attributes_adapter: boost::noncopyable
 {
 public:
-  template<class Context, class LengthToUserCoordinatesConverter>
-  void on_exit_attributes(Context & context, LengthToUserCoordinatesConverter const & converter) const
+  template<class Context>
+  bool on_exit_attributes(Context & context) const
   {
-    on_exit_attributesT<policy::load_value::default_policy<Context> >(context, converter);
-  }
+    typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
+    typedef typename length_policy_context::policy length_policy_t;
 
-  template<class ErrorPolicy, class LoadPolicy, class Context, class LengthToUserCoordinatesConverter>
-  bool on_exit_attributesT(Context & context, LengthToUserCoordinatesConverter const & converter) const
-  {
-    typename LengthToUserCoordinatesConverter::coordinate_type
+    typename length_policy_t::length_factory_type & converter 
+      = length_policy_t::length_factory(length_policy_context::get(context));
+
+    typename length_policy_t::length_factory_type::coordinate_type
       cx = 0, cy = 0, r = 0;
     if (cx_)
       cx = converter.length_to_user_coordinate(*cx_, tag::width_length());
@@ -37,10 +34,15 @@ public:
     {
       r = converter.length_to_user_coordinate(*r_, tag::not_width_nor_height_length());
       if (r < 0)
-        return ErrorPolicy::negative_value(context, tag::attribute::r());
+      {
+        typedef typename detail::unwrap_context<Context, tag::error_policy> error_policy;
+        return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::r());
+      }
+        
       if (r == 0)
         return true;
-      LoadPolicy::set_circle(context, cx, cy, r);
+      typedef typename detail::unwrap_context<Context, tag::load_value_policy> load_value;
+      load_value::policy::set_circle(load_value::get(context), cx, cy, r);
     }
     return true;
   }
@@ -53,23 +55,19 @@ private:
   boost::optional<Length> cx_, cy_, r_;
 };
 
-template<class LoadPathPolicy = void>
 struct circle_to_path_adapter
 {
   template<class Context, class Coordinate>
   static void set_circle(Context & context, Coordinate cx, Coordinate cy, Coordinate r)
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<LoadPathPolicy, void>,
-      policy::load_path::default_policy<Context>,
-      LoadPathPolicy
-    >::type load_policy;
+    typedef typename detail::unwrap_context<Context, tag::load_path_policy> load_path;
 
-    load_policy::path_move_to(context, cx + r, cy, tag::absolute_coordinate());
-    load_policy::path_elliptical_arc_to(context, r, r, 0, false, true, cx - r, cy, tag::absolute_coordinate());
-    load_policy::path_elliptical_arc_to(context, r, r, 0, false, true, cx + r, cy, tag::absolute_coordinate());
-    load_policy::path_close_subpath(context);
-    load_policy::path_exit(context);
+    load_path::type & path_context = load_path::get(context);
+    load_path::policy::path_move_to(path_context, cx + r, cy, tag::absolute_coordinate());
+    load_path::policy::path_elliptical_arc_to(path_context, r, r, 0, false, true, cx - r, cy, tag::absolute_coordinate());
+    load_path::policy::path_elliptical_arc_to(path_context, r, r, 0, false, true, cx + r, cy, tag::absolute_coordinate());
+    load_path::policy::path_close_subpath(path_context);
+    load_path::policy::path_exit(path_context);
   }
 };
 

@@ -7,15 +7,13 @@
 #include <boost/type_traits/is_floating_point.hpp>
 #include <svgpp/policy/path.hpp>
 #include <svgpp/definitions.hpp>
+#include <svgpp/detail/adapt_context.hpp>
 #include <svgpp/policy/load_path.hpp>
 #include <svgpp/utility/arc_endpoint_to_center.hpp>
 #include <svgpp/utility/arc_to_bezier.hpp>
 
 namespace svgpp
 {
-
-BOOST_PARAMETER_TEMPLATE_KEYWORD(path_policy)
-BOOST_PARAMETER_TEMPLATE_KEYWORD(load_path_policy)
 
 template<class PathPolicy>
 struct need_path_adapter: boost::mpl::bool_<
@@ -800,41 +798,48 @@ struct path_adapter_load_path_policy
   }
 };
 
-template<
-  class OriginalContext, 
-  class PathPolicy      = typename policy::path::by_context<OutputContext>::type,
-  class Coordinate      = typename number_type::by_context<OutputContext>::type,
-  class LoadPathPolicy  = policy::load_path::default_policy<OutputContext>,
-  class Enabled         = void
->
+template<class OriginalContext, class Enabled = void>
 struct path_adapter_if_needed
 {
-  typedef typename LoadPathPolicy::context_type type;
-  typedef type & holder_type;
-  typedef LoadPathPolicy load_path_policy;
-
-  static OriginalContext & get_original_context(holder_type & adapted_context)
+private:
+  struct adapter_stub
   {
-    return adapted_context;
+    template<class Context> adapter_stub(Context const &) {}
+  };
+
+public:
+  typedef adapter_stub adapter_type;
+  typedef OriginalContext & adapted_context;
+  typedef typename detail::unwrap_context<OriginalContext, tag::load_path_policy>::policy adapter_load_path_policy;
+
+  static OriginalContext & adapt_context(OriginalContext & context, adapter_stub &)
+  {
+    return context;
   }
 };
 
-template<
-  class OriginalContext, 
-  class PathPolicy, 
-  class Coordinate,
-  class LoadPathPolicy
->
-struct path_adapter_if_needed<OriginalContext, PathPolicy, Coordinate, LoadPathPolicy, 
-  typename boost::enable_if<need_path_adapter<PathPolicy> >::type>
+template<class OriginalContext>
+struct path_adapter_if_needed<OriginalContext, 
+  typename boost::enable_if<need_path_adapter<typename detail::unwrap_context<OriginalContext, tag::path_policy>::policy> >::type>
 {
-  typedef path_adapter<typename LoadPathPolicy::context_type, PathPolicy, Coordinate, LoadPathPolicy> type;
-  typedef type holder_type;
-  typedef detail::path_adapter_load_path_policy<type, PathPolicy, Coordinate> load_path_policy;
+private:
+  typedef typename detail::unwrap_context<OriginalContext, tag::path_policy>::policy path_policy;
+  typedef typename detail::unwrap_context<OriginalContext, tag::load_path_policy>::policy load_path_policy;
+  typedef typename detail::unwrap_context<OriginalContext, tag::number_type>::policy number_type;
 
-  static OriginalContext & get_original_context(holder_type & adapted_context)
+public:
+  typedef path_adapter<typename load_path_policy::context_type, path_policy, number_type, load_path_policy> adapter_type;
+  typedef path_adapter_load_path_policy<adapter_type, path_policy, number_type> adapter_load_path_policy;
+  typedef adapted_context_wrapper<
+    OriginalContext, 
+    adapter_type, 
+    tag::load_path_policy, 
+    adapter_load_path_policy
+  > adapted_context;
+
+  static adapted_context adapt_context(OriginalContext & context, adapter_type & adapter)
   {
-    return static_cast<OriginalContext &>(adapted_context.get_output_context());
+    return adapted_context(context, adapter);
   }
 };
 

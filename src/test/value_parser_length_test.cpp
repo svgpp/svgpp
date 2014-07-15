@@ -55,7 +55,7 @@ typedef boost::variant<
 
 typedef std::pair<double, length_units> length_t;
 
-struct length_factory
+struct length_factory_t
 {
   typedef double number_type;
   typedef length_t length_type;
@@ -72,10 +72,23 @@ struct length_factory
   }
 };
 
+struct length_policy
+{
+  typedef length_factory_t const length_factory_type;
+
+  template<class Context>
+  static length_factory_type & length_factory(Context const & context)
+  {
+    static const length_factory_t instance;
+    return instance;
+  }
+};
+
 typedef std::pair<const char *, std::vector<length_t> > valid_case_t;
 
 valid_case_t valid_tests[] = {
   valid_case_t("1 2", list_of(length_t(1, none()))(length_t(2, none())) ),
+  valid_case_t("4em 5.0ex", list_of(length_t(4, em()))(length_t(5, ex())) ),
   valid_case_t("1e-9px, 2e+10pt", list_of(length_t(1e-9, px()))(length_t(2e10, pt())) ),
   valid_case_t(".59px , 21.0cm", list_of(length_t(.59, px()))(length_t(21, cm())) ),
   valid_case_t("-56px -77pt", list_of(length_t(-56, px()))(length_t(-77, pt())) ),
@@ -126,8 +139,11 @@ struct test_context
 TEST_P(list_of_lengths_valid, t1)
 {
   test_context context;
-  svgpp::value_parser<svgpp::tag::type::list_of<svgpp::tag::type::length> >::parse(svgpp::tag::attribute::by(), 
-    context, std::string(GetParam().first), svgpp::tag::source::attribute(), length_factory());
+  svgpp::value_parser<
+    svgpp::tag::type::list_of<svgpp::tag::type::length>,
+    svgpp::length_policy<length_policy>
+  >::parse(svgpp::tag::attribute::by(), 
+    context, std::string(GetParam().first), svgpp::tag::source::attribute());
   EXPECT_TRUE(context.values_ == GetParam().second);
 }
 

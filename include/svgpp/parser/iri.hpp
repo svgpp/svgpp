@@ -5,12 +5,9 @@
 #include <svgpp/parser/detail/pass_iri_value.hpp>
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
 #include <svgpp/parser/grammar/iri.hpp>
-#include <svgpp/policy/iri.hpp>
 
 namespace svgpp
 {
-
-BOOST_PARAMETER_TEMPLATE_KEYWORD(iri_policy)
 
 namespace detail
 {
@@ -22,11 +19,11 @@ struct iri_value_parser
   static bool parse(AttributeTag tag, Context & context, 
     AttributeValue const & attribute_value, PropertySource property_source)
   {
+    typedef value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::parameter::parameters<
       boost::parameter::optional<tag::iri_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
-    typedef typename boost::parameter::value_type<args2_t, tag::iri_policy, 
-      typename policy::iri::by_context<Context>::type>::type iri_policy_t;
+    typedef typename detail::unwrap_context<Context, tag::iri_policy>::bind<args2_t>::type iri_policy_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
 
     SVGPP_STATIC_IF_SAFE GetGrammarMetafunction::apply<iterator_t>::type iri_rule;
@@ -35,16 +32,15 @@ struct iri_value_parser
     if (qi::parse(it, end, iri_rule, iri) && it == end)
     {
       typedef load_value_with_iri_policy<
-        policy::load_value::default_policy<Context>, 
+        args_t::load_value_policy, 
         iri_policy_t
       >::type load_value_policy_t;
-      load_value_policy_t::set(context, tag, iri);
+      load_value_policy_t::set(args_t::load_value_context::get(context), tag, iri);
       return true;
     }
     else
     {
-      typedef value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::error_policy::parse_failed(args_t::error_policy_context::get(context), tag, attribute_value);
     }
   }
 };

@@ -6,9 +6,8 @@
 #include <svgpp/adapter/viewport.hpp>
 #include <svgpp/adapter/transform.hpp>
 #include <svgpp/adapter/path.hpp>
+#include <svgpp/detail/adapt_context.hpp>
 #include <svgpp/detail/attribute_id_to_tag.hpp>
-#include <svgpp/detail/delegate_error_policy.hpp>
-#include <svgpp/detail/delegate_load_value_policy.hpp>
 #include <svgpp/factory/length.hpp>
 #include <svgpp/parser/value_parser.hpp>
 #include <svgpp/traits/attribute_groups.hpp>
@@ -25,7 +24,6 @@
 #include <boost/mpl/single_view.hpp>
 #include <boost/mpl/void.hpp>
 #include <boost/type_traits.hpp>
-#include <boost/tti/has_type.hpp>
 #include <boost/parameter.hpp>
 #include <boost/preprocessor.hpp>
 
@@ -36,7 +34,6 @@ BOOST_PARAMETER_TEMPLATE_KEYWORD(length_factory)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(ignored_attributes)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(processed_attributes)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(passthrough_attributes)
-BOOST_PARAMETER_TEMPLATE_KEYWORD(load_value_policy)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(basic_shapes_policy)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(referencing_element)
 
@@ -53,8 +50,6 @@ namespace policy { namespace basic_shapes
 
 namespace dispatcher_detail
 {
-  BOOST_PARAMETER_TEMPLATE_KEYWORD(length_factory_holder)
-
   // To reduce number of instantiations referencing_element_if_needed::type returns ReferencingElementTag
   // only when it matters and 'void' otherwise
   template<class ReferencingElementTag, class ElementTag, class Context, SVGPP_TEMPLATE_ARGS>
@@ -83,27 +78,6 @@ namespace dispatcher_detail
 
 namespace detail
 {
-  BOOST_TTI_TRAIT_HAS_TYPE(parser_requires_length_factory, requires_length_factory)
-
-template<class ValueParser, class AttributeTag, class Context, class ValueRange, class PropertySource, class LengthFactory>
-inline bool call_value_parser(
-  AttributeTag tag, Context & context, ValueRange const & attribute_value, 
-  PropertySource property_source,
-  LengthFactory const & length_factory,
-  typename boost::enable_if<parser_requires_length_factory<ValueParser> >::type * = 0)
-{
-  return ValueParser::parse(tag, context, attribute_value, property_source, length_factory);
-}
-
-template<class ValueParser, class AttributeTag, class Context, class ValueRange, class PropertySource, class LengthFactory>
-inline bool call_value_parser(
-  AttributeTag tag, Context & context, ValueRange const & attribute_value, 
-  PropertySource property_source,
-  LengthFactory const &,
-  typename boost::disable_if<parser_requires_length_factory<ValueParser> >::type * = 0)
-{
-  return ValueParser::parse(tag, context, attribute_value, property_source);
-}
 
 template<class Loader, class AttributeValue, class PropertySource>
 class load_attribute_functor: boost::noncopyable
@@ -113,14 +87,12 @@ public:
     : loader_(loader)
     , attributeValue_(attributeValue)
     , result_(true)
-  {
-  }
+  {}
 
   template<class AttributeTag>
   typename boost::disable_if<typename boost::mpl::apply<typename Loader::is_attribute_processed, AttributeTag>::type>::type
   operator()(AttributeTag) const
-  {
-  }
+  {}
 
   template<class AttributeTag>
   typename boost::enable_if<typename boost::mpl::apply<typename Loader::is_attribute_processed, AttributeTag>::type>::type
@@ -149,13 +121,10 @@ class collect_basic_shape_attributes_state
 public:
   collector_type & get_own_context() { return collector_; }
 
-  template<class ErrorPolicy, class Context, class LengthFactory>
-  bool on_exit_attributes(Context & context, LengthFactory const & length_factory)
+  template<class Context>
+  bool on_exit_attributes(Context & context)
   {
-    return collector_.template on_exit_attributesT<
-      ErrorPolicy, 
-      policy::load_value::default_policy<Context> 
-    >(context, length_factory);
+    return collector_.on_exit_attributes(context);
   }
 };
 
@@ -168,16 +137,16 @@ class convert_basic_shape_to_path_state
 public:
   collector_type & get_own_context() { return collector_; }
 
-  template<class ErrorPolicy, class Context, class LengthFactory>
-  bool on_exit_attributes(Context & context, LengthFactory const & length_factory)
+  template<class Context>
+  bool on_exit_attributes(Context & context)
   {
-    typedef path_adapter_if_needed<Context, PathPolicy, Coordinate, LoadPathPolicy> adapted_context_type; 
-    typename adapted_context_type::holder_type adapted_context(context);
+    typedef path_adapter_if_needed<Context> path_adapter_t; 
+    typename path_adapter_t::adapter_type path_adapter(detail::unwrap_context<Context, tag::load_path_policy>::get(context));
 
-    return collector_.template on_exit_attributesT<
-      delegate_error_policy<ErrorPolicy, adapted_context_type>, 
-      typename basic_shape_to_path_adapter<ElementTag, typename adapted_context_type::load_path_policy>::type
-    >(adapted_context, length_factory);
+    return collector_.on_exit_attributes(
+      detail::adapt_context_load_value2<
+        typename basic_shape_to_path_adapter<ElementTag>::type
+      >(context, path_adapter_t::adapt_context(context, path_adapter)));
   }
 };
 
@@ -195,9 +164,20 @@ class convert_rect_to_path_state<Length, Coordinate, PathPolicy, LoadPathPolicy,
 public:
   collector_type & get_own_context() { return collector_; }
 
-  template<class ErrorPolicy, class Context, class LengthFactory>
-  bool on_exit_attributes(Context & context, LengthFactory const & length_factory)
+  template<class Context>
+  bool on_exit_attributes(Context & context)
   {
+    typedef typename detail::unwrap_context<Context, tag::load_path_policy> load_path_context;
+
+    typedef path_adapter_if_needed<Context> path_adapter_t; 
+    typename path_adapter_t::adapter_type path_adapter(context);
+
+    return collector_.on_exit_attributes(
+      detail::adapt_context_policy<
+        tag::load_value_policy, 
+        typename basic_shape_to_path_adapter<ElementTag, typename adapted_context_type::load_path_policy>::type
+      >(adapted_context_type::adapt_context(context, path_adapter)));
+
     typedef path_adapter_if_needed<Context, PathPolicy, Coordinate, LoadPathPolicy> path_context_t; 
     typedef rounded_rect_to_path_adapter<typename path_context_t::type, Context> adapted_context_t;
 
@@ -217,40 +197,43 @@ class viewport_transform_state:
 {
   typedef ViewportAdapter base_type;
 public:
-  template<class ErrorPolicy, class Context, class LengthFactory>
-  bool on_exit_attributes(Context & context, LengthFactory const & length_factory)
+  template<class Context>
+  bool on_exit_attributes(Context & context)
   {
-    typedef transform_adapter_if_needed<Context, TransformPolicy, LoadTransformPolicy> adapted_context_type; 
-    typename adapted_context_type::holder_type adapted_context(context);
+    typedef transform_adapter_if_needed<Context> transform_adapter_t; 
+    typename transform_adapter_t::adapter_type transform_adapter(
+      detail::unwrap_context<Context, tag::load_transform_policy>::get(context));
 
-    if (!base_type::on_exit_attributesT<
-      viewport_transform_adapter<
-        adapted_context_type::load_transform_policy, 
-        detail::delegate_load_value_policy<policy::load_value::default_policy<Context>, adapted_context_type> 
-      >, 
-      detail::delegate_error_policy<ErrorPolicy, adapted_context_type>
-    >(adapted_context, length_factory))
+    if (!base_type::on_exit_attributes(
+      detail::adapt_context_load_value2<viewport_transform_adapter>(
+        context, 
+        transform_adapter_t::adapt_context(context, transform_adapter))))
       return false;
-    adapted_context_type::on_exit_attribute(adapted_context);
+    transform_adapter_t::on_exit_attribute(transform_adapter);
     return true;
   }
 };
 
-template<class Context, class LengthFactory, class ErrorPolicy>
+template<class Context, SVGPP_TEMPLATE_ARGS>
 class on_exit_attributes_functor: boost::noncopyable
 {
 public:
-  on_exit_attributes_functor(Context & context, LengthFactory & length_factory)
+  on_exit_attributes_functor(Context & context)
     : context_(context)
-    , length_factory_(length_factory)
     , result_(true)
-  {
-  }
+  {}
 
   template<typename T>
   void operator()(T & state) const
   {
-    result_ = state.on_exit_attributes<ErrorPolicy>(context_, length_factory_) && result_;
+    typedef typename boost::parameter::parameters<
+      boost::parameter::optional<tag::load_value_policy>,
+      boost::parameter::optional<tag::error_policy>,
+      boost::parameter::optional<tag::length_policy>
+    >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args_t;
+
+    result_ = state.on_exit_attributes(detail::bind_context_parameters<args_t>(context_)) 
+      && result_;
   }
 
   bool succeeded() const 
@@ -260,7 +243,6 @@ public:
 
 private:
   Context & context_;
-  LengthFactory & length_factory_;
   mutable bool result_; // boost::fusion::for_each doesn't permit non-const functor
 };
 
@@ -285,7 +267,6 @@ protected:
     , boost::parameter::optional<tag::processed_attributes, boost::mpl::is_sequence<boost::mpl::_> >
     , boost::parameter::optional<tag::passthrough_attributes, boost::mpl::is_sequence<boost::mpl::_> >
     , boost::parameter::optional<tag::length_factory>
-    , boost::parameter::optional<dispatcher_detail::tag::length_factory_holder>
     , boost::parameter::optional<tag::basic_shapes_policy>
     , boost::parameter::optional<tag::path_policy>
     , boost::parameter::optional<tag::load_path_policy>
@@ -301,9 +282,7 @@ protected:
 
   typedef typename boost::parameter::value_type<args, tag::length_factory, 
     factory::length::default_factory>::type length_factory_type;
-  typedef typename boost::parameter::value_type<args, dispatcher_detail::tag::length_factory_holder, 
-    length_factory_type>::type length_factory_holder; // Can be reference
-
+  
 public:
   typedef typename boost::parameter::value_type<args, tag::number_type, 
     typename number_type_by_context<Context>::type>::type coordinate_type;
@@ -334,16 +313,6 @@ public:
   attribute_dispatcher_base(Context & context)
     : context_(context)
   {}
-
-  attribute_dispatcher_base(Context & context, length_factory_type & length_factory)
-    : context_(context)
-    , length_factory_(length_factory)
-  {}
-
-  typename length_factory_type & length_factory() 
-  { 
-    return length_factory_; 
-  }
 
   Context & context()
   {
@@ -384,10 +353,10 @@ public:
       traits::attribute_without_parser<AttributeTag>::value
       || boost::mpl::has_key<passthrough_attributes, AttributeTag>::value>::type * = 0)
   {
-    return detail::call_value_parser<value_parser<typename traits::attribute_type<ElementTag, AttributeTag>::type, 
-        SVGPP_TEMPLATE_ARGS_PASS> >(attribute_tag, context_, 
+    return value_parser<typename traits::attribute_type<ElementTag, AttributeTag>::type, 
+        SVGPP_TEMPLATE_ARGS_PASS>::parse(attribute_tag, context_, 
       attribute_value, 
-      property_source, length_factory_);
+      property_source);
   }
 
   template<class AttributeTag, class AttributeValue, class PropertySource>
@@ -411,7 +380,6 @@ public:
 
 protected:
   Context & context_;
-  length_factory_holder length_factory_;
 };
 
 template<class ElementTag, class Context, SVGPP_TEMPLATE_ARGS>
@@ -423,10 +391,6 @@ class attribute_dispatcher:
 public:
   attribute_dispatcher(Context & context)
     : base_type(context)
-  {}
-
-  attribute_dispatcher(Context & context, typename base_type::length_factory_type & length_factory)
-    : base_type(context, length_factory)
   {}
 };
 
@@ -450,11 +414,6 @@ public:
     , viewport_attributes_applied_(false)
   {}
 
-  viewport_attribute_dispatcher(Context & context, typename base_type::length_factory_type & length_factory)
-    : base_type(context, length_factory)
-    , viewport_attributes_applied_(false)
-  {}
-
   using base_type::load_attribute_value; 
 
   template<class AttributeTag, class AttributeValue>
@@ -465,11 +424,11 @@ public:
                        tag::source::attribute property_source)
   {
     BOOST_ASSERT(!viewport_attributes_applied_);
-    return detail::call_value_parser<value_parser<typename traits::attribute_type<ElementTag, AttributeTag>::type, 
-        SVGPP_TEMPLATE_ARGS_PASS> >(
+    return value_parser<typename traits::attribute_type<ElementTag, AttributeTag>::type, 
+        SVGPP_TEMPLATE_ARGS_PASS>::parse(
       attribute_tag, 
-      boost::fusion::at_c<0>(states_), // TODO: change 0 for some meaningful value
-      attribute_value, property_source, this->length_factory_);
+      detail::adapt_context_load_value(context_, boost::fusion::at_c<0>(states_)), // TODO: change 0 for some meaningful value
+      attribute_value, property_source);
   }
 
   using base_type::notify;
@@ -485,11 +444,8 @@ public:
       return true;
 
     viewport_attributes_applied_ = true;
-    typedef typename boost::parameter::value_type<args, tag::error_policy, 
-      policy::error::default_policy<Context> >::type error_policy_t;
 
-    detail::on_exit_attributes_functor<Context, typename base_type::length_factory_type, error_policy_t> 
-      fn(this->context_, this->length_factory_);
+    detail::on_exit_attributes_functor<Context, SVGPP_TEMPLATE_ARGS_PASS> fn(this->context_);
     boost::fusion::for_each(states_, fn);
     return fn.succeeded();
   }
@@ -543,10 +499,6 @@ public:
   attribute_dispatcher(Context & context)
     : base_type(context)
   {}
-
-  attribute_dispatcher(Context & context, typename base_type::length_factory_type & length_factory)
-    : base_type(context, length_factory)
-  {}
 };
 
 template<class Context, SVGPP_TEMPLATE_ARGS>
@@ -558,10 +510,6 @@ class attribute_dispatcher<tag::element::symbol, Context, SVGPP_TEMPLATE_ARGS_PA
 public:
   attribute_dispatcher(Context & context)
     : base_type(context)
-  {}
-
-  attribute_dispatcher(Context & context, typename base_type::length_factory_type & length_factory)
-    : base_type(context, length_factory)
   {}
 };
 
@@ -611,17 +559,9 @@ public:
   {
   }
 
-  basic_shape_attribute_dispatcher(Context & context, typename base_type::length_factory_type & length_factory)
-    : base_type(context, length_factory)
-  {}
-
   bool on_exit_attributes()
   {
-    typedef typename boost::parameter::value_type<args, tag::error_policy, 
-      policy::error::default_policy<Context> >::type error_policy_t;
-
-    on_exit_attributes_functor<Context, typename base_type::length_factory_type, error_policy_t> 
-      fn(this->context_, this->length_factory_);
+    on_exit_attributes_functor<Context, SVGPP_TEMPLATE_ARGS_PASS> fn(this->context_);
     boost::fusion::for_each(states_, fn);
     return fn.succeeded();
   }
@@ -636,16 +576,15 @@ public:
                        AttributeValue const & attribute_value, 
                        tag::source::attribute property_source)
   {
-    return call_value_parser<
+    return 
       value_parser<
         typename traits::attribute_type<ElementTag, AttributeTag>::type, 
         SVGPP_TEMPLATE_ARGS_PASS
-      > 
-    >(
-      attribute_tag, 
-      //boost::fusion::at_key<collect_attributes_adapter>(states_), 
-      boost::fusion::at_c<0>(states_).get_own_context(), // TODO: change 0 for some meaningful value
-      attribute_value, property_source, this->length_factory_);
+      >::parse(
+        attribute_tag, 
+        //boost::fusion::at_key<collect_attributes_adapter>(states_), 
+        detail::adapt_context_load_value(context_, boost::fusion::at_c<0>(states_).get_own_context()), // TODO: change 0 for some meaningful value
+        attribute_value, property_source);
   }
 };
 
@@ -661,10 +600,6 @@ public:
   attribute_dispatcher(Context & context)
     : base_type(context)
   {}
-
-  attribute_dispatcher(Context & context, typename base_type::length_factory_type & length_factory)
-    : base_type(context, length_factory)
-  {}
 };
 
 template<class Context, SVGPP_TEMPLATE_ARGS>
@@ -676,10 +611,6 @@ class attribute_dispatcher<tag::element::circle, Context, SVGPP_TEMPLATE_ARGS_PA
 public:
   attribute_dispatcher(Context & context)
     : base_type(context)
-  {}
-
-  attribute_dispatcher(Context & context, typename base_type::length_factory_type & length_factory)
-    : base_type(context, length_factory)
   {}
 };
 
@@ -693,10 +624,6 @@ public:
   attribute_dispatcher(Context & context)
     : base_type(context)
   {}
-
-  attribute_dispatcher(Context & context, typename base_type::length_factory_type & length_factory)
-    : base_type(context, length_factory)
-  {}
 };
 
 template<class Context, SVGPP_TEMPLATE_ARGS>
@@ -709,13 +636,9 @@ public:
   attribute_dispatcher(Context & context)
     : base_type(context)
   {}
-
-  attribute_dispatcher(Context & context, typename base_type::length_factory_type & length_factory)
-    : base_type(context, length_factory)
-  {}
 };
 
-template<class Context, SVGPP_TEMPLATE_ARGS>
+/*template<class Context, SVGPP_TEMPLATE_ARGS>
 class attribute_dispatcher<tag::element::polyline, Context, SVGPP_TEMPLATE_ARGS_PASS>:
   public attribute_dispatcher_base<tag::element::polyline, Context, SVGPP_TEMPLATE_ARGS_PASS>
 {
@@ -727,25 +650,22 @@ public:
   {
   }
 
-  attribute_dispatcher(Context & context, typename base_type::length_factory_type & length_factory)
-    : base_type(context, length_factory)
-  {}
-
   using base_type::load_attribute_value; 
 
   template<class AttributeValue>
   typename boost::enable_if_c<
-    !boost::is_same<AttributeValue, void>::value // Just to make type dependend on template parameter
+    !boost::is_same<AttributeValue, void>::value // Just to make type dependent on template parameter
     && base_type::basic_shapes_policy::polyline_as_path, bool>::type
   load_attribute_value(tag::attribute::points attribute_tag, AttributeValue const & attribute_value, 
                        tag::source::attribute property_source)
   {
     list_of_points_to_path_adapter<Context> adapter(this->context_);
-    return detail::call_value_parser<value_parser<traits::attribute_type<tag::element::polyline, tag::attribute::points>::type, 
-        SVGPP_TEMPLATE_ARGS_PASS> >(
-      attribute_tag, adapter,
-      attribute_value, property_source, this->length_factory_);
+    return value_parser<traits::attribute_type<tag::element::polyline, tag::attribute::points>::type, 
+        SVGPP_TEMPLATE_ARGS_PASS>::parse(
+      attribute_tag, 
+      detail::adapt_context<tag::l>(adapter),
+      attribute_value, property_source);
   }
-};
+};*/
 
 }

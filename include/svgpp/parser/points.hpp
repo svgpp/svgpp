@@ -18,9 +18,9 @@ struct value_parser<tag::attribute::points, SVGPP_TEMPLATE_ARGS_PASS>
   {
     namespace qi = boost::spirit::qi;
 
-    typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
+    typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
-    typedef typename args_t::template get_number_type<Context>::type coordinate_t;
+    typedef typename args_t::number_type coordinate_t;
     typedef list_of_points_grammar<iterator_t, Context, coordinate_t> grammar_t;
       
     SVGPP_STATIC_IF_SAFE const grammar_t grammar;
@@ -32,7 +32,7 @@ struct value_parser<tag::attribute::points, SVGPP_TEMPLATE_ARGS_PASS>
     }
     else
     {
-      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::error_policy::parse_failed(args_t::error_policy_context::get(context), tag, attribute_value);
     }
   }
 };

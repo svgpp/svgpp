@@ -3,6 +3,7 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <svgpp/definitions.hpp>
+#include <svgpp/number_type.hpp>
 #include <svgpp/parser/detail/common.hpp>
 #include <svgpp/policy/load_path.hpp>
 

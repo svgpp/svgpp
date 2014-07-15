@@ -25,17 +25,15 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
     using detail::character_encoding_namespace::space;
 
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
+    typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::parameter::parameters<
       boost::parameter::optional<tag::color_factory>,
       boost::parameter::optional<tag::icc_color_factory>,
       boost::parameter::optional<tag::iri_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
-    typedef typename boost::parameter::value_type<args2_t, tag::color_factory, 
-      typename factory::color::by_context<Context>::type>::type color_factory_t;
-    typedef typename boost::parameter::value_type<args2_t, tag::icc_color_factory, 
-      typename factory::icc_color::by_context<Context>::type>::type icc_color_factory_t;
-    typedef typename boost::parameter::value_type<args2_t, tag::iri_policy, 
-      typename policy::iri::by_context<Context>::type>::type iri_policy_t;
+    typedef typename detail::unwrap_context<Context, tag::color_factory>::bind<args2_t>::type color_factory_t;
+    typedef typename detail::unwrap_context<Context, tag::icc_color_factory>::bind<args2_t>::type icc_color_factory_t;
+    typedef typename detail::unwrap_context<Context, tag::iri_policy>::bind<args2_t>::type iri_policy_t;
 
     SVGPP_STATIC_IF_SAFE const color_optional_icc_color_grammar<
       PropertySource, iterator_t, color_factory_t, icc_color_factory_t> color_optional_icc_color;
@@ -63,44 +61,45 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (qi::parse(it, end, rule) && it == end)
     {
-      typedef policy::load_value::default_policy<Context> load_value_policy_t;
+      typedef args_t::load_value_policy load_value_policy_t;
+      args_t::load_value_context::type & load_value_context = args_t::load_value_context::get(context);
       typedef detail::load_value_with_iri_policy<load_value_policy_t, iri_policy_t>::type 
         load_value_with_iri_policy_t;
 
       switch (main_option)
       {
       case opt_none:
-        load_value_policy_t::set(context, tag, tag::value::none());
+        load_value_policy_t::set(load_value_context, tag, tag::value::none());
         break;
       case opt_currentColor:
-        load_value_policy_t::set(context, tag, tag::value::currentColor());
+        load_value_policy_t::set(load_value_context, tag, tag::value::currentColor());
         break;
       case opt_inherit:
-        load_value_policy_t::set(context, tag, tag::value::inherit());
+        load_value_policy_t::set(load_value_context, tag, tag::value::inherit());
         break;
       case opt_color:
         if (color.get<1>())
-          load_value_policy_t::set(context, tag, color.get<0>(), *color.get<1>());
+          load_value_policy_t::set(load_value_context, tag, color.get<0>(), *color.get<1>());
         else
-          load_value_policy_t::set(context, tag, color.get<0>());
+          load_value_policy_t::set(load_value_context, tag, color.get<0>());
         break;
       case opt_funciri:
         switch (funciri_suboption)
         {
         case opt_not_set:
-          load_value_with_iri_policy_t::set(context, tag, iri);
+          load_value_with_iri_policy_t::set(load_value_context, tag, iri);
           break;
         case opt_none:
-          load_value_with_iri_policy_t::set(context, tag, iri, tag::value::none());
+          load_value_with_iri_policy_t::set(load_value_context, tag, iri, tag::value::none());
           break;
         case opt_currentColor:
-          load_value_with_iri_policy_t::set(context, tag, iri, tag::value::currentColor());
+          load_value_with_iri_policy_t::set(load_value_context, tag, iri, tag::value::currentColor());
           break;
         case opt_color:
           if (color.get<1>())
-            load_value_with_iri_policy_t::set(context, tag, iri, color.get<0>(), *color.get<1>());
+            load_value_with_iri_policy_t::set(load_value_context, tag, iri, color.get<0>(), *color.get<1>());
           else
-            load_value_with_iri_policy_t::set(context, tag, iri, color.get<0>());
+            load_value_with_iri_policy_t::set(load_value_context, tag, iri, color.get<0>());
           break;
         }
         break;
@@ -109,8 +108,7 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
     }
     else
     {
-      typedef detail::value_parser_parameters<SVGPP_TEMPLATE_ARGS_PASS> args_t;
-      return args_t::template get_error_policy<Context>::type::parse_failed(context, tag, attribute_value);
+      return args_t::error_policy::parse_failed(args_t::error_policy_context::get(context), tag, attribute_value);
     }
   }
 };

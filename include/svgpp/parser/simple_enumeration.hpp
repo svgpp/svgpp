@@ -3,7 +3,6 @@
 #include <svgpp/detail/literal_values_dictionary.hpp>
 #include <svgpp/traits/simple_enumeration_values.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
-#include <svgpp/policy/load_value.hpp>
 #include <boost/mpl/for_each.hpp>
 #include <boost/mpl/identity.hpp>
 #include <boost/mpl/pair.hpp>
@@ -17,7 +16,14 @@ namespace svgpp
 namespace detail
 {
 
-template<class Dictionary, class AttributeTag, class Context, class ValueRange, bool CaseSensitive>
+template<
+  class Dictionary, 
+  class AttributeTag, 
+  class Context, 
+  class LoadValuePolicy, 
+  class ValueRange, 
+  bool CaseSensitive
+>
 struct simple_enumeration_type_visitor: boost::noncopyable
 {
   simple_enumeration_type_visitor(Context & context, ValueRange const & range)
@@ -32,7 +38,7 @@ struct simple_enumeration_type_visitor: boost::noncopyable
     if (!found_ && boost::algorithm::equals(range_, Dictionary::template get_name<T>(), 
       typename boost::mpl::if_c<CaseSensitive, boost::algorithm::is_equal, boost::algorithm::is_iequal>::type()))
     {
-      policy::load_value::default_policy<Context>::set(context_, AttributeTag(), value_tag);
+      LoadValuePolicy::set(context_, AttributeTag(), value_tag);
       found_ = true;
     }
   }
@@ -48,22 +54,26 @@ private:
   bool found_;
 };
 
-template<class EnumerationIdMetafunction>
+template<class EnumerationIdMetafunction, SVGPP_TEMPLATE_ARGS>
 struct simple_enumeration_parser
 {
   template<class AttributeTag, class Context, class ValueRange, class PropertySource>
   static bool parse(AttributeTag, Context & context, 
     ValueRange const & attribute_value, PropertySource)
   {
+    typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::mpl::apply1<EnumerationIdMetafunction, AttributeTag>::type type_id_t;
     typedef literal_values_dictionary<typename boost::range_value<ValueRange>::type> dictionary_t;
     typedef typename traits::simple_enumeration_values<type_id_t>::type tag_list;
 
     simple_enumeration_type_visitor<
-      dictionary_t, AttributeTag, Context, ValueRange,
+      dictionary_t, 
+      AttributeTag, 
+      args_t::load_value_context::type, 
+      args_t::load_value_policy,
+      ValueRange,
       boost::is_same<PropertySource, tag::source::attribute>::value
-    > fn(
-      context, attribute_value);
+    > fn(args_t::load_value_context::get(context), attribute_value);
     boost::mpl::for_each<tag_list>(boost::ref(fn));
     return fn.found();
   }
@@ -73,7 +83,7 @@ struct simple_enumeration_parser
 
 template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::type::simple_enumeration, SVGPP_TEMPLATE_ARGS_PASS>
-  : detail::simple_enumeration_parser<boost::mpl::quote1<boost::mpl::identity> >
+  : detail::simple_enumeration_parser<boost::mpl::quote1<boost::mpl::identity>, SVGPP_TEMPLATE_ARGS_PASS>
 {
   // TODO: error handling
 };
@@ -81,14 +91,14 @@ struct value_parser<tag::type::simple_enumeration, SVGPP_TEMPLATE_ARGS_PASS>
 template<class ElementTag, SVGPP_TEMPLATE_ARGS>
 struct value_parser<boost::mpl::pair<ElementTag, tag::attribute::operator_>, SVGPP_TEMPLATE_ARGS_PASS>
   : detail::simple_enumeration_parser<boost::mpl::bind2<boost::mpl::quote2<boost::mpl::pair>, 
-    ElementTag, boost::mpl::placeholders::_1> >
+    ElementTag, boost::mpl::placeholders::_1>, SVGPP_TEMPLATE_ARGS_PASS>
 {
 };
 
 template<class ElementTag, SVGPP_TEMPLATE_ARGS>
 struct value_parser<boost::mpl::pair<ElementTag, tag::attribute::type>, SVGPP_TEMPLATE_ARGS_PASS>
   : detail::simple_enumeration_parser<boost::mpl::bind2<boost::mpl::quote2<boost::mpl::pair>, 
-    ElementTag, boost::mpl::placeholders::_1> >
+    ElementTag, boost::mpl::placeholders::_1>, SVGPP_TEMPLATE_ARGS_PASS>
 {
 };
 

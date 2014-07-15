@@ -50,9 +50,12 @@ struct NoninheritedStyle
 {
   NoninheritedStyle()
     : opacity_(1.0)
+    , display_(true)
   {}
 
   double opacity_;
+  bool display_;
+  boost::optional<svg_string_t> mask_fragment_;
 };
 
 struct Style: 
@@ -146,6 +149,16 @@ public:
   using stroke_paint::set;
   using fill_paint::set;
 
+  void set(svgpp::tag::attribute::display, svgpp::tag::value::none)
+  { style().display_ = false; }
+
+  void set(svgpp::tag::attribute::display, svgpp::tag::value::inherit)
+  { style().display_ = parentStyle_.display_; }
+
+  template<class ValueTag>
+  void set(svgpp::tag::attribute::display, ValueTag)
+  { style().display_ = true; }
+
   void set(svgpp::tag::attribute::color, agg::rgba8 val)
   { style().color_ = val; }
 
@@ -202,6 +215,20 @@ public:
 
   void set(svgpp::tag::attribute::stroke_dashoffset, double val)
   { style().stroke_dashoffset_ = val; }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::mask, IRI const &)
+  { throw std::runtime_error("Non-local references aren't supported"); }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::mask, svgpp::tag::iri_fragment, IRI const & fragment)
+  { style().mask_fragment_ = svg_string_t(boost::begin(fragment), boost::end(fragment)); }
+
+  void set(svgpp::tag::attribute::mask, svgpp::tag::value::none val)
+  { style().mask_fragment_.reset(); }
+
+  void set(svgpp::tag::attribute::mask, svgpp::tag::value::inherit val)
+  { style().mask_fragment_ = parentStyle_.mask_fragment_; }
 
   Style & style() { return style_; }
   Style const & style() const { return style_; }

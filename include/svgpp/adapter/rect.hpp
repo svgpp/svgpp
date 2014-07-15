@@ -1,12 +1,9 @@
 #pragma once
 
 #include <svgpp/adapter/path.hpp>
-#include <svgpp/policy/load_path.hpp>
-#include <svgpp/policy/load_value.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/optional.hpp>
 #include <boost/noncopyable.hpp>
-#include <stdexcept>
 
 namespace svgpp
 {
@@ -26,16 +23,17 @@ template<class Length>
 class collect_rect_attributes_adapter: boost::noncopyable
 {
 public:
-  template<class Context, class LengthToUserCoordinatesConverter>
-  void on_exit_attributes(Context & context, LengthToUserCoordinatesConverter const & converter) const
+  template<class Context>
+  bool on_exit_attributes(Context & context) const
   {
-    on_exit_attributesT<policy::load_value::default_policy<Context> >(context, converter);
-  }
+    typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
+    typedef typename length_policy_context::policy length_policy_t;
+    typedef typename detail::unwrap_context<Context, tag::error_policy> error_policy;
 
-  template<class ErrorPolicy, class LoadPolicy, class Context, class LengthToUserCoordinatesConverter>
-  bool on_exit_attributesT(Context & context, LengthToUserCoordinatesConverter const & converter) const
-  {
-    typename LengthToUserCoordinatesConverter::coordinate_type
+    typename length_policy_t::length_factory_type & converter 
+      = length_policy_t::length_factory(length_policy_context::get(context));
+
+    typename length_policy_t::length_factory_type::coordinate_type
       x = 0, y = 0, rx = 0, ry = 0, width, height;
     if (x_)
       x = converter.length_to_user_coordinate(*x_, tag::width_length());
@@ -56,18 +54,19 @@ public:
         rx = ry;
     }
     if (rx < 0)
-      return ErrorPolicy::negative_value(context, tag::attribute::rx());
+      return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::rx());
     if (ry < 0)
-      return ErrorPolicy::negative_value(context, tag::attribute::ry());
+      return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::ry());
     if (width < 0)
-      return ErrorPolicy::negative_value(context, tag::attribute::width());
+      return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::width());
     if (height < 0)
-      return ErrorPolicy::negative_value(context, tag::attribute::height());
+      return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::height());
 
     if (width == 0 || height == 0)
       return true;
 
-    LoadPolicy::set_rect(context, x, y, width, height, rx, ry);
+    typedef typename detail::unwrap_context<Context, tag::load_value_policy> load_value;
+    load_value::policy::set_rect(load_value::get(context), x, y, width, height, rx, ry);
     return true;
   }
 
@@ -105,81 +104,48 @@ namespace detail
   }
 }
 
-template<class LoadPathPolicy = void>
 struct rect_to_path_adapter
 {
   template<class Context, class Coordinate>
   static void set_rect(Context & context, Coordinate x, Coordinate y, Coordinate width, Coordinate height,
     Coordinate rx, Coordinate ry)
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<LoadPathPolicy, void>,
-      policy::load_path::default_policy<Context>,
-      LoadPathPolicy
-    >::type load_policy;
+    typedef typename detail::unwrap_context<Context, tag::load_path_policy> load_path;
 
+    load_path::type & path_context = load_path::get(context);
     if (rx == 0 || ry == 0)
     {
-      load_policy::path_move_to(context, x, y, tag::absolute_coordinate());
-      load_policy::path_line_to_ortho(context, width,  true,  tag::relative_coordinate());
-      load_policy::path_line_to_ortho(context, height, false, tag::relative_coordinate());
-      load_policy::path_line_to_ortho(context, -width, true,  tag::relative_coordinate());
-      load_policy::path_close_subpath(context);
-      load_policy::path_exit(context);
+      load_path::policy::path_move_to(path_context, x, y, tag::absolute_coordinate());
+      load_path::policy::path_line_to_ortho(path_context, width,  true,  tag::relative_coordinate());
+      load_path::policy::path_line_to_ortho(path_context, height, false, tag::relative_coordinate());
+      load_path::policy::path_line_to_ortho(path_context, -width, true,  tag::relative_coordinate());
+      load_path::policy::path_close_subpath(path_context);
+      load_path::policy::path_exit(path_context);
     }
     else
     {
-      detail::context_set_rounded_rect<load_policy>(context, x, y, width, height, rx, ry);
+      detail::context_set_rounded_rect<load_path::policy>(path_context, x, y, width, height, rx, ry);
     }
   }
-
-private:
-  rect_to_path_adapter();
 };
 
-template<
-  class OutputPathContext,
-  class OutputRectContext,
-  class LoadPathPolicy  = void,
-  class LoadValuePolicy = void
->
-class rounded_rect_to_path_adapter
+struct rounded_rect_to_path_adapter
 {
-public:
-  rounded_rect_to_path_adapter(OutputPathContext & path_context, OutputRectContext & rect_context)
-    : path_context_(path_context)
-    , rect_context_(rect_context)
-  {}
-
-  template<class Coordinate>
-  void set_rect(Coordinate x, Coordinate y, Coordinate width, Coordinate height,
+  template<class Context, class Coordinate>
+  static void set_rect(Context & context, Coordinate x, Coordinate y, Coordinate width, Coordinate height,
     Coordinate rx, Coordinate ry)
   {
     if (rx == 0 || ry == 0)
     {
-      typedef typename boost::mpl::if_<
-        boost::is_same<LoadValuePolicy, void>,
-        policy::load_value::default_policy<OutputRectContext>,
-        LoadValuePolicy
-      >::type load_value_policy;
-
-      load_value_policy::set_rect(rect_context_, x, y, width, height);
+      typedef typename detail::unwrap_context<Context, tag::load_value_policy> load_value;
+      load_value::policy::set_rect(load_value::get(context), x, y, width, height);
     }
     else
     {
-      typedef typename boost::mpl::if_<
-        boost::is_same<LoadPathPolicy, void>,
-        policy::load_path::default_policy<OutputPathContext>,
-        LoadPathPolicy
-      >::type load_path_policy;
-
-      detail::context_set_rounded_rect<load_path_policy>(path_context_, x, y, width, height, rx, ry);
+      typedef typename detail::unwrap_context<Context, tag::load_path_policy> load_path;
+      detail::context_set_rounded_rect<load_path::policy>(load_path::get(context), x, y, width, height, rx, ry);
     }
   }
-
-private:
-  OutputPathContext & path_context_;
-  OutputRectContext & rect_context_;
 };
 
 }

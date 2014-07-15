@@ -14,7 +14,8 @@ struct value_parser<tag::type::string, SVGPP_TEMPLATE_ARGS_PASS>
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
                                     PropertySource)
   {
-    policy::load_value::default_policy<Context>::set(context, tag, attribute_value);
+    typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
+    args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, attribute_value);
     return true;
   }
 };

@@ -1,5 +1,5 @@
 #include <svgpp/parser/grammar/color.hpp>
-#include <svgpp/integer_color_factory.hpp>
+#include <svgpp/factory/integer_color.hpp>
 
 #include <gtest/gtest.h>
 #include <boost/tuple/tuple_io.hpp>
@@ -19,7 +19,7 @@ struct color_factory_base
   }
 };
 
-typedef svgpp::color_factory_percentage_adapter<color_factory_base> color_factory;
+typedef svgpp::factory::color::percentage_adapter<color_factory_base> color_factory;
 
 template<class StringT>
 void valid_testT(StringT const & testStr, int r, int g, int b)

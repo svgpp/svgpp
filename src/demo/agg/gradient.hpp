@@ -26,11 +26,13 @@ struct GradientBase
 
   GradientBase()
     : spreadMethod_(spreadPad)
+    , useObjectBoundingBox_(true)
   {}
 
   boost::optional<boost::array<double, 6> > matrix_;
   SpreadMethod spreadMethod_;
   GradientStops stops_;
+  bool useObjectBoundingBox_;
 };
 
 struct LinearGradient: GradientBase
@@ -66,8 +68,8 @@ public:
   {}
 
   boost::optional<Gradient> get(
-    svg_string_t const & id/*, 
-    length_factory_t const &, 
+    svg_string_t const & id, 
+    length_factory_t const &/*, 
     get_bounding_box_func_t const & get_bounding_box*/);
 
 private:

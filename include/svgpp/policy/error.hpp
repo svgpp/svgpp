@@ -5,6 +5,7 @@
 #include <boost/range/iterator.hpp>
 #include <svgpp/definitions.hpp>
 #include <svgpp/detail/attribute_name.hpp>
+#include <svgpp/detail/namespace.hpp>
 #include <stdexcept>
 
 namespace svgpp
@@ -45,6 +46,7 @@ public:
   }
 };
 
+// TODO: add namespace information
 class unknown_attribute_error: public virtual boost::exception, public virtual std::exception
 {
 public:
@@ -53,12 +55,12 @@ public:
   
   template<class Name>
   unknown_attribute_error(Name const & name)
-    : message_((boost::format("Unknown SVG attribute: \"%s\"") % std::string(boost::begin(name), boost::end(name))).str())
+    : message_((boost::format("Unknown attribute: \"%s\"") % std::string(boost::begin(name), boost::end(name))).str())
   {}
 
   virtual const char * what() const
   {
-    return message_.empty() ? "Unknown SVG attribute" : message_.c_str();
+    return message_.empty() ? "Unknown attribute" : message_.c_str();
   }
 
 private:
@@ -197,6 +199,7 @@ struct raise_exception
   BOOST_ATTRIBUTE_NORETURN static bool unknown_attribute(Context const &, 
     XMLAttributesIterator const & attribute, 
     AttributeName const & name,
+    detail::namespace_id,
     tag::source::attribute,
     typename boost::enable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
@@ -208,6 +211,7 @@ struct raise_exception
   BOOST_ATTRIBUTE_NORETURN static bool unknown_attribute(Context const &, 
     XMLAttributesIterator const & attribute, 
     AttributeName const &,
+    detail::namespace_id,
     tag::source::attribute,
     typename boost::disable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {

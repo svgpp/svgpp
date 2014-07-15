@@ -11,8 +11,10 @@
 #endif
 
 #include <svgpp/document_traversal.hpp>
+#include <svgpp/utility/gil_utility.h>
 
 #include <boost/bind.hpp>
+#include <boost/gil/gil_all.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/mpl/transform_view.hpp>
 #include <boost/optional.hpp>
@@ -30,6 +32,7 @@
 #include <agg_conv_contour.h>
 #include <agg_conv_curve.h>
 #include <agg_path_storage.h>
+#include <agg_pixfmt_amask_adaptor.h>
 #include <agg_span_allocator.h>
 #include <agg_span_gradient.h>
 #include <agg_span_interpolator_linear.h>
@@ -41,14 +44,19 @@
 #include "bmp_header.hpp"
 #include "stylable.hpp"
 #include "gradient.hpp"
+#include "clip_path.hpp"
 
+class Transformable;
 class Canvas;
 class Path;
 class Use;
+class Switch;
 class ReferencedSymbolOrSvg;
+class Mask;
 
 typedef agg::pixfmt_rgba32 pixfmt_t;
-typedef agg::renderer_base<pixfmt_t> renderer_base_t;
+typedef agg::pixfmt_amask_adaptor<pixfmt_t, ClipBuffer::alpha_mask_t> pixfmt_amask_adaptor_t;
+typedef agg::renderer_base<pixfmt_amask_adaptor_t> renderer_base_amask_t;
 
 #ifndef USE_MSXML
 namespace
@@ -172,6 +180,16 @@ struct child_context_factories
   };
 
   template<>
+  struct apply<Canvas, svgpp::tag::element::switch_, void>
+  {
+    typedef svgpp::context_factory::on_stack<Canvas, Switch> type;
+  };
+
+  template<class ElementTag>
+  struct apply<Switch, ElementTag, void>: apply<Canvas, ElementTag>
+  {};
+
+  template<>
   struct apply<Canvas, svgpp::tag::element::use_, void>
   {
     typedef svgpp::context_factory::on_stack<Canvas, Use> type;
@@ -203,20 +221,46 @@ struct child_context_factories
   template<class ElementTag>
   struct apply<ReferencedSymbolOrSvg, ElementTag, void>: apply<Canvas, ElementTag>
   {};
+
+  // 'mask'
+  template<>
+  struct apply<Mask, svgpp::tag::element::mask, void>
+  {
+    typedef svgpp::context_factory::same<Mask, svgpp::tag::element::mask> type;
+  };
+
+  template<class ElementTag>
+  struct apply<Mask, ElementTag, void>: apply<Canvas, ElementTag>
+  {};
+};
+
+struct document_traversal_control
+{
+  static bool proceed_to_element_content(Stylable const & context)
+  {
+    return context.style().display_;
+  }
+
+  template<class Context>
+  static bool proceed_to_next_child(Context &)
+  {
+    return true;
+  }
 };
 
 typedef boost::mpl::set<
-    svgpp::tag::element::svg,
-    svgpp::tag::element::g,
-    svgpp::tag::element::a,
-    svgpp::tag::element::use_,
-    svgpp::tag::element::path,
-    svgpp::tag::element::rect,
-    svgpp::tag::element::line,
-    svgpp::tag::element::circle,
-    svgpp::tag::element::ellipse,
-    svgpp::tag::element::polyline
-  > processed_elements;
+  svgpp::tag::element::svg,
+  svgpp::tag::element::g,
+  svgpp::tag::element::switch_,
+  svgpp::tag::element::a,
+  svgpp::tag::element::use_,
+  svgpp::tag::element::path,
+  svgpp::tag::element::rect,
+  svgpp::tag::element::line,
+  svgpp::tag::element::circle,
+  svgpp::tag::element::ellipse
+  //svgpp::tag::element::polyline
+> processed_elements;
 
 typedef boost::mpl::fold<
   boost::mpl::protect<
@@ -229,6 +273,7 @@ typedef boost::mpl::fold<
   >,
   boost::mpl::set<
     //svgpp::tag::attribute::style, TODO:
+    svgpp::tag::attribute::display,
     svgpp::tag::attribute::d,
     svgpp::tag::attribute::transform,
     svgpp::tag::attribute::points,
@@ -242,12 +287,15 @@ typedef boost::mpl::fold<
     svgpp::tag::attribute::rx,
     svgpp::tag::attribute::ry,
     svgpp::tag::attribute::color,
-    svgpp::tag::attribute::stroke,
-    svgpp::tag::attribute::stroke_width,
     svgpp::tag::attribute::fill,
-    svgpp::tag::attribute::stroke_opacity,
     svgpp::tag::attribute::fill_opacity,
     svgpp::tag::attribute::fill_rule,
+    svgpp::tag::attribute::mask,
+    svgpp::tag::attribute::maskUnits,
+    svgpp::tag::attribute::maskContentUnits,
+    svgpp::tag::attribute::stroke,
+    svgpp::tag::attribute::stroke_width,
+    svgpp::tag::attribute::stroke_opacity,
     svgpp::tag::attribute::stroke_linecap,
     svgpp::tag::attribute::stroke_linejoin,
     svgpp::tag::attribute::stroke_miterlimit,
@@ -261,16 +309,6 @@ typedef boost::mpl::fold<
   boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
 >::type processed_attributes;
 
-typedef 
-  svgpp::document_traversal<
-    svgpp::context_factories<child_context_factories>,
-    svgpp::color_factory<color_factory_t>,
-    svgpp::processed_elements<processed_elements>,
-    svgpp::processed_attributes<processed_attributes>,
-    svgpp::basic_shapes_policy<basic_shapes_policy>,
-    svgpp::path_policy<path_policy>
-  > document_traversal_main;
-
 class ImageBuffer: boost::noncopyable
 {
 public:
@@ -281,25 +319,32 @@ public:
     : buffer_(width * height * pixfmt_t::pix_width)
     , rbuf_(&buffer_[0], width, height, width * pixfmt_t::pix_width)
     , pixfmt_(rbuf_)
-    , renderer_base_(pixfmt_)
-  {}
+  {
+    agg::renderer_base<pixfmt_t> renderer_base(pixfmt_);
+    renderer_base.clear(pixfmt_t::color_type(0, 0, 0, 0));
+  }
 
   pixfmt_t & pixfmt() { return pixfmt_; }
-  renderer_base_t & renderer_base() { return renderer_base_; }
-  void set_size(int width, int height)
+  void set_size(int width, int height, pixfmt_t::color_type const & fill_color)
   {
     BOOST_ASSERT(buffer_.empty());
     buffer_.resize(width * height * pixfmt_t::pix_width);
     rbuf_.attach(&buffer_[0], width, height, width * pixfmt_t::pix_width);
     pixfmt_.attach(rbuf_);
-    renderer_base_.attach(pixfmt_);
+    agg::renderer_base<pixfmt_t> renderer_base(pixfmt_);
+    renderer_base.clear(fill_color);
+  }
+
+  boost::gil::rgba8_view_t gil_view()
+  {
+    return boost::gil::interleaved_view(rbuf_.width(), rbuf_.height(), 
+      reinterpret_cast<boost::gil::rgba8_pixel_t*>(buffer_.data()), rbuf_.stride());
   }
 
 private:
   std::vector<unsigned char> buffer_;
   agg::rendering_buffer rbuf_;
   pixfmt_t pixfmt_;
-  renderer_base_t renderer_base_;
 };
 
 class Transformable
@@ -317,7 +362,7 @@ private:
   agg::trans_affine transform_;
 };
 
-typedef boost::function<renderer_base_t&()> lazy_renderer_t;
+typedef boost::function<pixfmt_t&()> lazy_pixfmt_t;
 
 class Canvas: 
   public Stylable,
@@ -326,8 +371,9 @@ class Canvas:
 public:
   Canvas(Document & document, ImageBuffer & image_buffer)
     : document_(document)
-    , parent_renderer_(boost::bind(&ImageBuffer::renderer_base, boost::ref(image_buffer)))
+    , parent_pixfmt_(boost::bind(&ImageBuffer::pixfmt, boost::ref(image_buffer)))
     , image_buffer_(&image_buffer)
+    , is_switch_child_(false)
   {}
 
   Canvas(Canvas & parent)
@@ -335,44 +381,178 @@ public:
     , Stylable(parent)
     , document_(parent.document_)
     , image_buffer_(NULL)
-    , parent_renderer_(boost::bind(&Canvas::get_renderer, &parent))
+    , parent_pixfmt_(boost::bind(&Canvas::get_pixfmt, &parent))
+    , is_switch_child_(parent.is_switch_element())
+    , length_factory_(parent.length_factory_)
+    , clip_buffer_(parent.clip_buffer_)
   {}
 
   void on_exit_element()
   {
-    if (own_buffer_.get())
-      parent_renderer_().blend_from(own_buffer_->pixfmt(), NULL, 0, 0, unsigned(style().opacity_ * 255));
+    if (!own_buffer_.get())
+      return;
+    if (style().mask_fragment_)
+    {
+      pixfmt_t & parent_pixfmt = parent_pixfmt_();
+      ImageBuffer mask_buffer(parent_pixfmt.width(), parent_pixfmt.height());
+      load_mask(mask_buffer);
+      auto mask_view = boost::gil::color_converted_view<boost::gil::gray8_pixel_t>(
+        mask_buffer.gil_view(), svgpp::gil_utility::rgba_to_mask_color_converter<>());
+
+      auto own_view = own_buffer_->gil_view();
+      auto o = own_view.begin();
+      for(auto m = mask_view.begin(); m !=mask_view.end(); ++m, ++o)
+      {
+        using namespace boost::gil;
+        get_color(*o, alpha_t()) = 
+          channel_multiply(
+            get_color(*o, alpha_t()),
+            get_color(*m, gray_color_t())
+          );
+      }
+      BOOST_ASSERT(o == own_view.end());
+    }
+    agg::renderer_base<pixfmt_t> renderer_base(parent_pixfmt_());
+    renderer_base.blend_from(own_buffer_->pixfmt(), NULL, 0, 0, unsigned(style().opacity_ * 255));
   }
 
   void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height)
   {
     if (image_buffer_) // If topmost SVG element
-      image_buffer_->set_size(viewport_width + 1.0, viewport_height + 1.0);
-    // TODO: set clipping
+    {
+      image_buffer_->set_size(viewport_width + 1.0, viewport_height + 1.0, pixfmt_t::color_type(255, 255, 255, 0));
+      clip_buffer_.reset(new ClipBuffer(image_buffer_->pixfmt().width(), image_buffer_->pixfmt().height()));
+    }
+    else
+    {
+      if (!clip_buffer_.unique())
+        clip_buffer_.reset(new ClipBuffer(*clip_buffer_));
+      clip_buffer_->intersect_clip_rect(transform(), viewport_x, viewport_y, viewport_width, viewport_height);
+    }
+    length_factory_.set_viewport_size(viewport_width, viewport_height);
+  }
+
+  length_factory_t const & length_factory() const
+  {
+    return length_factory_;
   }
 
 private:
   Document & document_;
   ImageBuffer * const image_buffer_; // Non-NULL only for topmost SVG element
-  lazy_renderer_t parent_renderer_;
+  lazy_pixfmt_t parent_pixfmt_;
   std::auto_ptr<ImageBuffer> own_buffer_;
+  boost::shared_ptr<ClipBuffer> clip_buffer_;
+  length_factory_t length_factory_;
+
+  void load_mask(ImageBuffer &) const;
 
 protected:
-  renderer_base_t & get_renderer()
+  pixfmt_t & get_pixfmt()
   {
-    renderer_base_t & parent_renderer = parent_renderer_();
+    pixfmt_t & parent_pixfmt = parent_pixfmt_();
 
-    if (style().opacity_ < 0.999)
+    if (style().opacity_ < 0.999 || style().mask_fragment_)
     {
       if (!own_buffer_.get())
-        own_buffer_.reset(new ImageBuffer(parent_renderer.width(), parent_renderer.height()));
-      return own_buffer_->renderer_base();
+        own_buffer_.reset(new ImageBuffer(parent_pixfmt.width(), parent_pixfmt.height()));
+      return own_buffer_->pixfmt();
     }
-    return parent_renderer;
+    return parent_pixfmt;
   }
 
   Document & document() const { return document_; }
+  ClipBuffer const & clip_buffer() const { return *clip_buffer_; }
+  virtual bool is_switch_element() const { return false; }
+
+  const bool is_switch_child_;
 };
+
+class Switch: public Canvas
+{
+public:
+  Switch(Canvas & parent)
+    : Canvas(parent)
+  {}
+
+  virtual bool is_switch_element() const { return true; }
+};
+
+class Path: public Canvas
+{
+public:
+  Path(Canvas & parent)
+    : Canvas(parent)
+  {}
+
+  void on_exit_element()
+  {
+    if (style().display_ && path_storage_.total_vertices() > 0)
+      draw_path();
+    Canvas::on_exit_element();
+  }
+
+  void path_move_to(double x, double y, svgpp::tag::absolute_coordinate const &)
+  { 
+    path_storage_.move_to(x, y);
+  }
+
+  void path_line_to(double x, double y, svgpp::tag::absolute_coordinate const &)
+  { 
+    path_storage_.line_to(x, y);
+  }
+
+  void path_cubic_bezier_to(
+    double x1, double y1, 
+    double x2, double y2, 
+    double x, double y, 
+    svgpp::tag::absolute_coordinate const &)
+  { 
+    path_storage_.curve4(x1, y1, x2, y2, x, y);
+  }
+
+  void path_quadratic_bezier_to(
+    double x1, double y1, 
+    double x, double y, 
+    svgpp::tag::absolute_coordinate const &)
+  { 
+    path_storage_.curve3(x1, y1, x, y);
+  }
+
+  void path_close_subpath()
+  {
+    path_storage_.end_poly(agg::path_flags_close);
+  }
+
+  void path_exit()
+  {
+  }
+
+private:
+  agg::path_storage path_storage_;
+
+  typedef boost::variant<svgpp::tag::value::none, agg::rgba8, Gradient> EffectivePaint;
+  template<class VertexSource>
+  void paint_scanlines(EffectivePaint const & paint, double opacity, agg::rasterizer_scanline_aa<> & rasterizer,
+    VertexSource & curved);
+  void draw_path();
+  EffectivePaint get_effective_paint(Paint const &) const;
+};
+
+typedef 
+  svgpp::document_traversal<
+    svgpp::context_factories<child_context_factories>,
+    svgpp::length_policy<svgpp::policy::length::forward_to_method<Canvas, const length_factory_t> >,
+    svgpp::color_factory<color_factory_t>,
+    svgpp::processed_elements<processed_elements>,
+    svgpp::processed_attributes<processed_attributes>,
+    svgpp::basic_shapes_policy<basic_shapes_policy>,
+    svgpp::path_policy<path_policy>,
+    svgpp::document_traversal_control_policy<document_traversal_control>,
+    svgpp::load_transform_policy<svgpp::policy::load_transform::forward_to_method<Transformable> >, // Same as default, but less instantiations
+    svgpp::load_path_policy<svgpp::policy::load_path::forward_to_method<Path> >, // Same as default, but less instantiations
+    svgpp::error_policy<svgpp::policy::error::default_policy<Stylable> > // Type of context isn't used
+  > document_traversal_main;
 
 class Use: public Canvas
 {
@@ -385,6 +565,8 @@ public:
 
   void on_exit_element()
   {
+    if (!style().display_)
+      return;
     if (XMLElement element = document().xml_document_.find_element_by_id(fragment_id_))
     {
       Document::FollowRef lock(document(), element);
@@ -455,66 +637,70 @@ private:
   Use & parent_;
 };
 
-class Path: public Canvas
+class Mask: public Canvas
 {
 public:
-  Path(Canvas & parent)
-    : Canvas(parent)
+  Mask(Document & document, ImageBuffer & image_buffer, Transformable const & referenced)
+    : Canvas(document, image_buffer)
+    , maskUseObjectBoundingBox_(true)
+    , maskContentUseObjectBoundingBox_(false)
+  {
+    transform() = referenced.transform();
+  }
+
+  void on_enter_element(svgpp::tag::element::mask) 
   {}
 
   void on_exit_element()
-  {
-    if (path_storage_.total_vertices() > 0)
-      draw_path();
-    Canvas::on_exit_element();
-  }
+  {}
 
-  void path_move_to(double x, double y, svgpp::tag::absolute_coordinate const &)
-  { 
-    path_storage_.move_to(x, y);
-  }
+  using Canvas::set;
 
-  void path_line_to(double x, double y, svgpp::tag::absolute_coordinate const &)
-  { 
-    path_storage_.line_to(x, y);
-  }
+  void set(svgpp::tag::attribute::maskUnits, svgpp::tag::value::userSpaceOnUse)
+  { maskUseObjectBoundingBox_ = false; }
 
-  void path_cubic_bezier_to(
-    double x1, double y1, 
-    double x2, double y2, 
-    double x, double y, 
-    svgpp::tag::absolute_coordinate const &)
-  { 
-    path_storage_.curve4(x1, y1, x2, y2, x, y);
-  }
+  void set(svgpp::tag::attribute::maskUnits, svgpp::tag::value::objectBoundingBox)
+  { maskUseObjectBoundingBox_ = true; }
 
-  void path_quadratic_bezier_to(
-    double x1, double y1, 
-    double x, double y, 
-    svgpp::tag::absolute_coordinate const &)
-  { 
-    path_storage_.curve3(x1, y1, x, y);
-  }
+  void set(svgpp::tag::attribute::maskContentUnits, svgpp::tag::value::userSpaceOnUse)
+  { maskContentUseObjectBoundingBox_ = false; }
 
-  void path_close_subpath()
-  {
-    path_storage_.end_poly(agg::path_flags_close);
-  }
+  void set(svgpp::tag::attribute::maskContentUnits, svgpp::tag::value::objectBoundingBox)
+  { maskContentUseObjectBoundingBox_ = true; }
 
-  void path_exit()
-  {
-  }
+  void set(svgpp::tag::attribute::x, double val)
+  { x_ = val; }
+
+  void set(svgpp::tag::attribute::y, double val)
+  { y_ = val; }
+
+  void set(svgpp::tag::attribute::width, double val)
+  { width_ = val; }
+
+  void set(svgpp::tag::attribute::height, double val)
+  { height_ = val; }
 
 private:
-  agg::path_storage path_storage_;
-
-  typedef boost::variant<svgpp::tag::value::none, agg::rgba8, Gradient> EffectivePaint;
-  template<class VertexSource>
-  void paint_scanlines(EffectivePaint const & paint, double opacity, agg::rasterizer_scanline_aa<> & rasterizer,
-    VertexSource & curved);
-  void draw_path();
-  EffectivePaint get_effective_paint(Paint const &) const;
+  bool maskUseObjectBoundingBox_, maskContentUseObjectBoundingBox_;
+  double x_, y_, width_, height_; // TODO: defaults
 };
+
+void Canvas::load_mask(ImageBuffer & mask_buffer) const
+{
+  if (XMLElement element = document().xml_document_.find_element_by_id(*style().mask_fragment_))
+  {
+    Document::FollowRef lock(document(), element);
+
+    Mask mask(document_, mask_buffer, *this);
+    document_traversal_main::load_referenced_element<
+      svgpp::tag::attribute::mask,
+      boost::mpl::set1<svgpp::tag::element::mask>,
+      svgpp::processed_elements<boost::mpl::set1<svgpp::tag::element::mask> > 
+    >(element, mask);
+  }
+  else
+    throw std::runtime_error("Element referenced by 'mask' not found");
+}
 
 template<class Gradient>
 class svg_gradient_repeat_adapter
@@ -612,7 +798,7 @@ private:
 };
 
 template<class GradientFunc, class VertexSource>
-void render_scanlines_gradient(renderer_base_t & renderer, 
+void render_scanlines_gradient(renderer_base_amask_t & renderer, 
   agg::rasterizer_scanline_aa<> & rasterizer,
   GradientFunc const & gradient_func, GradientBase const & gradient_base, 
   agg::trans_affine const & user_transform, agg::trans_affine const & gradient_geometry_transform,
@@ -634,7 +820,7 @@ void render_scanlines_gradient(renderer_base_t & renderer,
   if (gradient_base.matrix_)
     tr *= agg::trans_affine(gradient_base.matrix_->data());
 
-  /*if (gradient_base.useObjectBoundingBox_)
+  if (gradient_base.useObjectBoundingBox_)
   {
     double min_x, min_y, max_x, max_y;
     agg::bounding_rect_single(curved, 0, &min_x, &min_y, &max_x, &max_y);
@@ -642,7 +828,7 @@ void render_scanlines_gradient(renderer_base_t & renderer,
       return;
     else
       tr *= agg::trans_affine(max_x - min_x, 0, 0, max_y - min_y, min_x, min_y);
-  }*/
+  }
 
   tr *= user_transform;
   tr.invert();
@@ -659,13 +845,15 @@ template<class VertexSource>
 void Path::paint_scanlines(EffectivePaint const & paint, double opacity, agg::rasterizer_scanline_aa<> & rasterizer,
   VertexSource & curved) 
 {
+  pixfmt_amask_adaptor_t amask_adaptor(get_pixfmt(), clip_buffer().alpha_mask());
+  renderer_base_amask_t renderer_base(amask_adaptor);
   // TODO: pass bounding box function instead of curved
   if (agg::rgba8 const * paintColor = boost::get<agg::rgba8>(&paint))
   {
     agg::rgba8 color(*paintColor);
     color.opacity(opacity);
-    typedef agg::renderer_scanline_aa_solid<renderer_base_t> renderer_solid_t;
-    renderer_solid_t renderer_solid(get_renderer());
+    typedef agg::renderer_scanline_aa_solid<renderer_base_amask_t> renderer_solid_t;
+    renderer_solid_t renderer_solid(renderer_base);
     renderer_solid.color(color);
     agg::scanline_p8 scanline;
     agg::render_scanlines(rasterizer, scanline, renderer_solid);
@@ -682,7 +870,7 @@ void Path::paint_scanlines(EffectivePaint const & paint, double opacity, agg::ra
         agg::trans_affine_scaling(std::sqrt(dx * dx + dy * dy))
         * agg::trans_affine_rotation(std::atan2(dy, dx))
         * agg::trans_affine_translation(linearGradient->x1_, linearGradient->y1_);
-      render_scanlines_gradient(get_renderer(), rasterizer,
+      render_scanlines_gradient(renderer_base, rasterizer,
         gradient_func, *linearGradient, transform(), gradient_geometry_transform, opacity, curved);
     }
     else
@@ -692,7 +880,7 @@ void Path::paint_scanlines(EffectivePaint const & paint, double opacity, agg::ra
         radialGradient.fx_ - radialGradient.cx_, radialGradient.fy_ - radialGradient.cy_);
       agg::trans_affine gradient_geometry_transform = 
         agg::trans_affine_translation(radialGradient.cx_, radialGradient.cy_);
-      render_scanlines_gradient(get_renderer(), rasterizer,
+      render_scanlines_gradient(renderer_base, rasterizer,
         gradient_func, radialGradient, transform(), gradient_geometry_transform, opacity, curved);
     }
   }
@@ -772,7 +960,7 @@ Path::EffectivePaint Path::get_effective_paint(Paint const & paint) const
   SolidPaint const * solidPaint = nullptr;
   if (IRIPaint const * iri = boost::get<IRIPaint>(&paint))
   {
-    if (boost::optional<Gradient> const gradient = document().gradients_.get(iri->fragment_))
+    if (boost::optional<Gradient> const gradient = document().gradients_.get(iri->fragment_, length_factory()))
     {
       GradientBase_visitor gradientBase;
       boost::apply_visitor(gradientBase, *gradient);
@@ -805,8 +993,6 @@ Path::EffectivePaint Path::get_effective_paint(Paint const & paint) const
 template<class XMLElement>
 void render_document(XMLElement & svg_element, ImageBuffer & buffer)
 {
-  buffer.renderer_base().clear(pixfmt_t::color_type(255, 255, 255));
-
   Document document(svg_element);
   Canvas canvas(document, buffer);
   document_traversal_main::load_document(svg_element, canvas);
@@ -819,8 +1005,7 @@ int main(int argc, char * argv[])
     std::cout << "Usage: " << argv[0] << " <svg file name>\n";
     return 1;
   }
-  static const int frame_width = 1000, frame_height = 1000;
-  ImageBuffer buffer(frame_width, frame_height);
+  ImageBuffer buffer;
 
 #ifdef USE_MSXML
   

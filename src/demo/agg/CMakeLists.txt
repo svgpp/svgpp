@@ -24,6 +24,8 @@ set(AGG_DEMO_SOURCES
   gradient.cpp
   stylable.hpp
   common.hpp
+  clip_path.hpp
+  clip_path.cpp
 )
 
 add_executable(svgpp_agg_render

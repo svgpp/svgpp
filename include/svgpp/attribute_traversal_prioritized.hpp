@@ -313,19 +313,14 @@ struct attribute_traversal_prioritized
       boost::parameter::optional<tag::error_policy>,
       boost::parameter::optional<tag::css_name_to_id_policy>
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
-  typedef typename boost::parameter::value_type<args, tag::xml_attribute_iterator_policy, 
-    detail::parameter_not_set_tag >::type xml_attribute_policy_param;
   typedef typename boost::parameter::value_type<args, tag::css_name_to_id_policy, 
     css_name_to_id_policy_default>::type css_name_to_id_policy;
 
   template<class XMLAttributesIterator, class Dispatcher>
   static bool load(XMLAttributesIterator xml_attributes_iterator, Dispatcher & dispatcher)
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<xml_attribute_policy_param, detail::parameter_not_set_tag>,
-      xml_attribute_iterator_policy<XMLAttributesIterator>,
-      xml_attribute_policy_param
-    >::type xml_policy;
+    typedef typename boost::parameter::value_type<args, tag::xml_attribute_iterator_policy, 
+      xml_attribute_iterator_policy<XMLAttributesIterator> >::type xml_policy;
 
     typedef traversal_detail::attribute_value_saver<XMLAttributesIterator, xml_policy> value_saver;
     typedef traversal_detail::found_attributes<value_saver, ParseStyleAttribute> found_attributes;
@@ -346,7 +341,7 @@ struct attribute_traversal_prioritized
       {
       case detail::unknown_attribute_id:
         if (!error_policy_t::unknown_attribute(dispatcher.context(), xml_attributes_iterator, 
-          xml_policy::get_string_range(attribute_name), tag::source::attribute()))
+          xml_policy::get_string_range(attribute_name), ns, tag::source::attribute()))
           return false;
         break;
       case detail::attribute_id_style:
@@ -420,7 +415,8 @@ private:
       detail::attribute_id style_id = css_name_to_id_policy::find(it->first);
       if (style_id == detail::unknown_attribute_id)
       {
-        if (!ErrorPolicy::unknown_attribute(dispatcher.context(), xml_attributes_iterator, it->first, tag::source::css()))
+        if (!ErrorPolicy::unknown_attribute(dispatcher.context(), xml_attributes_iterator, 
+          it->first, tag::source::css()))
           return false;
       }
       else

@@ -1,8 +1,5 @@
 #pragma once
 
-#include <svgpp/policy/error.hpp>
-#include <svgpp/policy/load_transform.hpp>
-#include <svgpp/policy/load_value.hpp>
 #include <svgpp/utility/calculate_viewbox_transform.hpp>
 #include <boost/optional.hpp>
 #include <boost/mpl/set.hpp>
@@ -155,18 +152,17 @@ public:
     , meetOrSlice_(tag::value::meet())
   {}
 
-  template<class Context, class LengthToUserCoordinatesConverter>
-  bool on_exit_attributes(Context & context, LengthToUserCoordinatesConverter const & converter) const
+  template<class Context>
+  bool on_exit_attributes(Context & context) const
   {
-    return on_exit_attributesT<
-      policy::load_value::default_policy<Context>,
-      policy::error::default_policy<Context>
-    >(context, converter);
-  }
+    typedef typename detail::unwrap_context<Context, tag::load_value_policy> load_value;
+    typedef typename detail::unwrap_context<Context, tag::error_policy> error_policy;
+    typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
+    typedef typename length_policy_context::policy length_policy_t;
 
-  template<class LoadPolicy, class ErrorPolicy, class Context, class LengthToUserCoordinatesConverter>
-  bool on_exit_attributesT(Context & context, LengthToUserCoordinatesConverter const & converter) const
-  {
+    typename length_policy_t::length_factory_type & converter 
+      = length_policy_t::length_factory(length_policy_context::get(context));
+
     Coordinate viewport_x = converter.length_to_user_coordinate(
       viewport_x_ ? *viewport_x_ : converter.create_length(0, tag::length_units::none()),
       tag::width_length());
@@ -175,18 +171,18 @@ public:
       tag::height_length());
 
     Coordinate viewport_width = 0, viewport_height = 0;
-    base_type::get_viewport_size<LoadPolicy>(context, converter, viewport_width, viewport_height);
+    base_type::get_viewport_size<load_value::policy>(context, converter, viewport_width, viewport_height);
 
     if (viewport_width == 0 || viewport_height == 0)
       // TODO: disable rendering
       return true;
 
     if (viewport_width < 0)
-      return ErrorPolicy::negative_value(context, tag::attribute::width());
+      return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::width());
     if (viewport_height < 0)
-      return ErrorPolicy::negative_value(context, tag::attribute::height());
+      return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::height());
 
-    LoadPolicy::set_viewport(context, viewport_x, viewport_y, viewport_width, viewport_height);
+    load_value::policy::set_viewport(load_value::get(context), viewport_x, viewport_y, viewport_width, viewport_height);
 
     if (viewbox_)
     {
@@ -194,18 +190,18 @@ public:
         // TODO: disable rendering
         return true;
       if (viewbox_->get<2>() < 0 || viewbox_->get<3>() < 0)
-        return ErrorPolicy::negative_value(context, tag::attribute::viewBox());
+        return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::viewBox());
 
       Coordinate translate_x, translate_y, scale_x, scale_y;
       boost::apply_visitor(
-        options_visitor<LengthToUserCoordinatesConverter>(*viewbox_,
+        options_visitor<length_policy_t::length_factory_type>(*viewbox_,
           viewport_x, viewport_y, viewport_width, viewport_height,
           translate_x, translate_y, scale_x, scale_y), 
         align_, meetOrSlice_);
-      LoadPolicy::set_viewport_transform(context, translate_x, translate_y, scale_x, scale_y, defer_);
+      load_value::policy::set_viewport_transform(load_value::get(context), translate_x, translate_y, scale_x, scale_y, defer_);
     }
     else
-      LoadPolicy::set_viewport_transform(context, viewport_x, viewport_y);
+      load_value::policy::set_viewport_transform(load_value::get(context), viewport_x, viewport_y);
     return true;
   }
 
@@ -287,62 +283,42 @@ private:
   };
 };
 
-template<class LoadTransformPolicy = void, class LoadValuePolicy = void>
 struct viewport_transform_adapter
 {
   template<class Context, class Coordinate>
   static void set_viewport_transform(Context & context, Coordinate translate_x, Coordinate translate_y, 
     Coordinate scale_x, Coordinate scale_y, bool)
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<LoadTransformPolicy, void>,
-      policy::load_transform::default_policy<Context>,
-      LoadTransformPolicy
-    >::type load_policy;
+    typedef typename detail::unwrap_context<Context, tag::load_transform_policy> load_transform;
 
-    load_policy::append_transform_translate(context, translate_x, translate_y);
-    load_policy::append_transform_scale(context, scale_x, scale_y);
+    load_transform::policy::append_transform_translate(load_transform::get(context), translate_x, translate_y);
+    load_transform::policy::append_transform_scale(load_transform::get(context), scale_x, scale_y);
   }
 
   template<class Context, class Coordinate>
   static void set_viewport_transform(Context & context, Coordinate translate_x, Coordinate translate_y)
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<LoadTransformPolicy, void>,
-      policy::load_transform::default_policy<Context>,
-      LoadTransformPolicy
-    >::type load_policy;
+    typedef typename detail::unwrap_context<Context, tag::load_transform_policy> load_transform;
 
-    load_policy::append_transform_translate(context, translate_x, translate_y);
+    load_transform::policy::append_transform_translate(load_transform::get(context), translate_x, translate_y);
   }
 
   template<class Context, class Coordinate>
   static void set_viewport(Context & context, Coordinate viewport_x, Coordinate viewport_y, 
     Coordinate viewport_width, Coordinate viewport_height)
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<LoadValuePolicy, void>,
-      policy::load_value::default_policy<Context>,
-      LoadValuePolicy
-    >::type load_policy;
+    typedef typename detail::unwrap_context<Context, tag::load_value_policy> load_value;
 
-    load_policy::set_viewport(context, viewport_x, viewport_y, viewport_width, viewport_height);
+    load_value::policy::set_viewport(load_value::get(context), viewport_x, viewport_y, viewport_width, viewport_height);
   }
 
   template<class Context, class Coordinate>
   static void get_reference_viewport_size(Context & context, Coordinate & viewport_width, Coordinate & viewport_height) 
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<LoadValuePolicy, void>,
-      policy::load_value::default_policy<Context>,
-      LoadValuePolicy
-    >::type load_policy;
+    typedef typename detail::unwrap_context<Context, tag::load_value_policy> load_value;
 
-    load_policy::get_reference_viewport_size(context, viewport_width, viewport_height);
+    load_value::policy::get_reference_viewport_size(load_value::get(context), viewport_width, viewport_height);
   }
-
-private:
-  viewport_transform_adapter();
 };
 
 }

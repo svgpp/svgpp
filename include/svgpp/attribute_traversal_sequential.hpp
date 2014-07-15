@@ -22,8 +22,6 @@ private:
       boost::parameter::optional<tag::error_policy>,
       boost::parameter::optional<tag::css_name_to_id_policy>
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
-  typedef typename boost::parameter::value_type<args, tag::xml_attribute_iterator_policy, 
-    detail::parameter_not_set_tag >::type xml_attribute_policy_param;
   typedef typename boost::parameter::value_type<args, tag::css_name_to_id_policy, 
     css_name_to_id_policy_default>::type css_name_to_id_policy;
 
@@ -31,11 +29,8 @@ public:
   template<class XMLAttributesIterator, class Dispatcher>
   static bool load(XMLAttributesIterator xml_attributes_iterator, Dispatcher & dispatcher)
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<xml_attribute_policy_param, detail::parameter_not_set_tag>,
-      xml_attribute_iterator_policy<XMLAttributesIterator>,
-      xml_attribute_policy_param
-    >::type xml_policy;
+    typedef typename boost::parameter::value_type<args, tag::xml_attribute_iterator_policy, 
+      xml_attribute_iterator_policy<XMLAttributesIterator> >::type xml_policy;
 
     typedef typename boost::parameter::value_type<args, tag::error_policy, 
       policy::error::default_policy<typename Dispatcher::context_type> >::type error_policy;
@@ -53,7 +48,7 @@ public:
       {
       case detail::unknown_attribute_id:
         if (!error_policy::unknown_attribute(dispatcher.context(), xml_attributes_iterator, 
-          xml_policy::get_string_range(attribute_name), tag::source::attribute()))
+          xml_policy::get_string_range(attribute_name), ns, tag::source::attribute()))
           return false;
         break;
       case detail::attribute_id_style:

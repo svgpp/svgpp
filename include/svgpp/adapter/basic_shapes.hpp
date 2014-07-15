@@ -15,7 +15,7 @@ struct basic_shape_attributes;
 template<class ElementTag, class Length>
 struct collect_basic_shape_attributes_adapter;
 
-template<class ElementTag, class LoadPathPolicy = void>
+template<class ElementTag>
 struct basic_shape_to_path_adapter;
 
 template<>
@@ -66,28 +66,28 @@ struct collect_basic_shape_attributes_adapter<tag::element::line, Length>
   typedef collect_line_attributes_adapter<Length> type;
 };
 
-template<class LoadPathPolicy>
-struct basic_shape_to_path_adapter<tag::element::rect, LoadPathPolicy>
+template<>
+struct basic_shape_to_path_adapter<tag::element::rect>
 {
-  typedef rect_to_path_adapter<LoadPathPolicy> type;
+  typedef rect_to_path_adapter type;
 };
 
-template<class LoadPathPolicy>
-struct basic_shape_to_path_adapter<tag::element::circle, LoadPathPolicy>
+template<>
+struct basic_shape_to_path_adapter<tag::element::circle>
 {
-  typedef circle_to_path_adapter<LoadPathPolicy> type;
+  typedef circle_to_path_adapter type;
 };
 
-template<class LoadPathPolicy>
-struct basic_shape_to_path_adapter<tag::element::ellipse, LoadPathPolicy>
+template<>
+struct basic_shape_to_path_adapter<tag::element::ellipse>
 {
-  typedef ellipse_to_path_adapter<LoadPathPolicy> type;
+  typedef ellipse_to_path_adapter type;
 };
 
-template<class LoadPathPolicy>
-struct basic_shape_to_path_adapter<tag::element::line, LoadPathPolicy>
+template<>
+struct basic_shape_to_path_adapter<tag::element::line>
 {
-  typedef line_to_path_adapter<LoadPathPolicy> type;
+  typedef line_to_path_adapter type;
 };
 
 }

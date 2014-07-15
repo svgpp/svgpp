@@ -27,8 +27,8 @@ class same: boost::noncopyable
 public:
   typedef ParentContext type;
 
-  template<class XMLElement, class LoaderState>
-  same(ParentContext & context, XMLElement const &, LoaderState &)
+  template<class XMLElement>
+  same(ParentContext & context, XMLElement const &)
     : context_(context)
   {
     context_.on_enter_element(ElementTag());
@@ -51,8 +51,8 @@ class on_stack: boost::noncopyable
 public:
   typedef ChildContext type;
 
-  template<class XMLElement, class LoaderState>
-  on_stack(ParentContext & context, XMLElement const &, LoaderState &)
+  template<class XMLElement>
+  on_stack(ParentContext & context, XMLElement const &)
     : context_(context)
   {
   }
@@ -80,7 +80,7 @@ public:
   typedef ChildContext type;
 
   template<class XMLElement, class LoaderState>
-  get_ptr_from_parent(ParentContext & context, XMLElement const &, LoaderState &)
+  get_ptr_from_parent(ParentContext & context, XMLElement const &)
     : context_(context.get_child_context(ElementTag()))
   {
   }
@@ -130,14 +130,10 @@ protected:
   >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
   typedef typename boost::parameter::value_type<args, tag::context_factories, 
     default_context_factories>::type context_factories;
-  typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
-    detail::parameter_not_set_tag>::type xml_element_policy_param;
   typedef typename boost::parameter::value_type<args, tag::ignored_elements, 
     boost::mpl::empty_sequence>::type ignored_elements;
   typedef typename boost::parameter::value_type<args, tag::processed_elements, 
     boost::mpl::empty_sequence>::type processed_elements;
-  typedef typename boost::parameter::value_type<args, tag::length_factory, 
-    factory::length::default_factory>::type length_factory_type;
   typedef typename boost::parameter::value_type<args, tag::document_traversal_control_policy, 
     policy::document_traversal_control::stub>::type traversal_control_policy;
 
@@ -151,14 +147,6 @@ protected:
       boost::mpl::not_<boost::mpl::has_key<boost::mpl::protect<ignored_elements>, boost::mpl::_1> >  
     >::type is_element_processed;
 
-  struct state_holder
-  {
-    length_factory_type & length_factory() { return length_factory_; }
-
-  private:
-    length_factory_type length_factory_;
-  };
-
 public:
   template<class XMLElement, class Context>
   static bool load_document(XMLElement & xml_element_svg, Context & context)
@@ -168,23 +156,18 @@ public:
   }
 
   template<class ExpectedChildElements, class ReferencingElement, class XMLElement, class Context, class ElementTag>
-  static bool load_element(XMLElement & xml_element, Context & context, ElementTag element_tag, 
-    state_holder state_copy = state_holder())
+  static bool load_element(XMLElement & xml_element, Context & context, ElementTag element_tag)
   {
-    return load_attributes<ReferencingElement>(xml_element, context, element_tag, state_copy)
+    return load_attributes<ReferencingElement>(xml_element, context, element_tag)
       && (!traversal_control_policy::proceed_to_element_content(context)
-        || load_element_content<ExpectedChildElements>(xml_element, context, element_tag, state_copy));
+        || load_element_content<ExpectedChildElements>(xml_element, context, element_tag));
   }
 
   template<class ReferencingElement, class XMLElement, class Context, class ElementTag>
-  static bool load_attributes(XMLElement & xml_element, Context & context, ElementTag element_tag, 
-    state_holder & state)
+  static bool load_attributes(XMLElement & xml_element, Context & context, ElementTag element_tag)
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<xml_element_policy_param, detail::parameter_not_set_tag>,
-      xml_element_iterator_policy<XMLElement>,
-      xml_element_policy_param
-    >::type xml_policy_t;
+    typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
+      xml_element_iterator_policy<XMLElement> >::type xml_policy_t;
 
     typedef typename dispatcher_detail::referencing_element_if_needed<
       ReferencingElement,
@@ -195,14 +178,13 @@ public:
     typedef attribute_dispatcher<
       ElementTag, 
       Context, 
-      dispatcher_detail::length_factory_holder<length_factory_type&>,
       referencing_element<referencing_element_tag>,
       SVGPP_TEMPLATE_ARGS_PASS
     > attribute_dispatcher_t;
     static const bool parse_style_attribute = 
       !boost::mpl::has_key<attribute_dispatcher_t::passthrough_attributes, tag::attribute::style>::value
       && boost::mpl::apply<typename attribute_dispatcher_t::is_attribute_processed, tag::attribute::style>::type::value;
-    attribute_dispatcher_t attribute_dispatcher(context, state.length_factory());
+    attribute_dispatcher_t attribute_dispatcher(context);
     if (!attribute_traversal<
         ElementTag,
         parse_style_attribute,
@@ -213,12 +195,11 @@ public:
   }
 
   template<class ExpectedChildElements, class ReferencingElement, class XMLElement, class ParentContext, class ElementTag>
-  static bool load_child_element(XMLElement & xml_element, ParentContext & parent_context, ElementTag element_tag, 
-    state_holder const & state)
+  static bool load_child_element(XMLElement & xml_element, ParentContext & parent_context, ElementTag element_tag)
   {
     typedef typename context_factories::template apply<ParentContext, ElementTag>::type context_factory_t;
-    context_factory_t context_factory(parent_context, xml_element, state);
-    if (!load_element<ExpectedChildElements, ReferencingElement>(xml_element, context_factory.get(), element_tag, state))
+    context_factory_t context_factory(parent_context, xml_element);
+    if (!load_element<ExpectedChildElements, ReferencingElement>(xml_element, context_factory.get(), element_tag))
       return false;
     context_factory.on_exit_element();
     return true;
@@ -230,7 +211,7 @@ public:
     boost::mpl::and_<
       boost::mpl::empty<typename traits::child_element_types<ElementTag>::type>,
       boost::mpl::not_<traits::element_with_text_content<ElementTag> > >, bool>::type
-  load_element_content(XMLElement const &, Context const &, ElementTag, state_holder const &)
+  load_element_content(XMLElement const &, Context const &, ElementTag)
   {
     return true;
   }
@@ -240,14 +221,10 @@ public:
     boost::mpl::or_<
       boost::mpl::empty<typename traits::child_element_types<ElementTag>::type>,
       traits::element_with_text_content<ElementTag> >, bool>::type
-  load_element_content(XMLElement & xml_element, Context & context, ElementTag element_tag, 
-    state_holder const & state)
+  load_element_content(XMLElement & xml_element, Context & context, ElementTag element_tag)
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<xml_element_policy_param, detail::parameter_not_set_tag>,
-      xml_element_iterator_policy<XMLElement>,
-      xml_element_policy_param
-    >::type xml_policy_t;
+    typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
+      xml_element_iterator_policy<XMLElement> >::type xml_policy_t;
     typedef typename boost::parameter::value_type<args, tag::error_policy, 
       policy::error::default_policy<Context> >::type error_policy;
 
@@ -255,7 +232,7 @@ public:
       !xml_policy_t::is_end(xml_child_element); xml_policy_t::advance_element(xml_child_element))
     {
       if (!load_child_xml_element<ExpectedChildElements, is_element_processed, void>(
-          xml_child_element, context, element_tag, state))
+          xml_child_element, context, element_tag))
         return false;
       if (!traversal_control_policy::proceed_to_next_child(context))
         break;
@@ -265,14 +242,10 @@ public:
 
   template<class ExpectedChildElements, class XMLElement, class Context, class ElementTag>
   static typename boost::enable_if<traits::element_with_text_content<ElementTag>, bool>::type
-  load_element_content(XMLElement & xml_element, Context & context, ElementTag element_tag, 
-    state_holder const & state)
+  load_element_content(XMLElement & xml_element, Context & context, ElementTag element_tag)
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<xml_element_policy_param, detail::parameter_not_set_tag>,
-      xml_element_iterator_policy<XMLElement>,
-      xml_element_policy_param
-    >::type xml_policy_t;
+    typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
+      xml_element_iterator_policy<XMLElement> >::type xml_policy_t;
     typedef typename boost::parameter::value_type<args, tag::load_text_policy, 
       policy::load_text::default_policy<Context> >::type load_text_policy;
     
@@ -284,7 +257,7 @@ public:
       else
       {
         if (!load_child_xml_element<ExpectedChildElements, is_element_processed, false>(
-            xml_child_element, context, element_tag, state))
+            xml_child_element, context, element_tag))
           return false;
       }
       if (!traversal_control_policy::proceed_to_next_child(context))
@@ -302,8 +275,7 @@ public:
     class XMLElement, 
     class Context
   >
-  static bool load_referenced_element(XMLElement & xml_element, Context & parent_context, 
-    state_holder const & state = state_holder())
+  static bool load_referenced_element(XMLElement & xml_element, Context & parent_context)
   {
     typedef typename boost::parameter::parameters<
         boost::parameter::optional<tag::ignored_elements, boost::mpl::is_sequence<boost::mpl::_> >
@@ -333,9 +305,8 @@ public:
         is_element_processed, 
         ReferencingElement
       >(xml_element, parent_context, 
-        boost::mpl::void_(), // ParentElementTag parameter can be of any type, it shouldn't be used for
-                             // any element except 'a'
-        state);
+        boost::mpl::void_()); // ParentElementTag parameter can be of any type, it shouldn't be used for
+                              // any element except 'a'
   }
 
 protected:
@@ -349,10 +320,9 @@ protected:
   class load_element_functor: boost::noncopyable
   {
   public:
-    load_element_functor(XMLElement & xml_element, Context & context, state_holder const & state)
+    load_element_functor(XMLElement & xml_element, Context & context)
       : xml_element_(xml_element)
       , context_(context)
-      , state_(state)
       , result_(true)
     {
     }
@@ -366,7 +336,7 @@ protected:
       result_ = document_traversal::load_child_element<
         traits::child_element_types<ElementTag>::type, 
         ReferencingElement
-      >(xml_element_, context_, tag, state_);
+      >(xml_element_, context_, tag);
     }
 
     template<class ElementTag>
@@ -383,7 +353,7 @@ protected:
           tag::element::a
         >::type,
         ReferencingElement
-      >(xml_element_, context_, tag, state_);
+      >(xml_element_, context_, tag);
     }
 
     template<class ElementTag>
@@ -400,7 +370,6 @@ protected:
   private:
     XMLElement & xml_element_;
     Context & context_;
-    state_holder const & state_;
     bool result_;
   };
 
@@ -412,14 +381,10 @@ protected:
     class Context, 
     class ParentElementTag
   >
-  static bool load_child_xml_element(XMLElement & xml_element, Context & parent_context, ParentElementTag,
-    state_holder const & state)
+  static bool load_child_xml_element(XMLElement & xml_element, Context & parent_context, ParentElementTag)
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<xml_element_policy_param, detail::parameter_not_set_tag>,
-      xml_element_iterator_policy<XMLElement>,
-      xml_element_policy_param
-    >::type xml_policy_t;
+    typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
+      xml_element_iterator_policy<XMLElement> >::type xml_policy_t;
     typedef typename boost::parameter::value_type<args, tag::error_policy, 
       policy::error::default_policy<Context> >::type error_policy;
 
@@ -429,7 +394,7 @@ protected:
     if (element_type_id != detail::unknown_element_type_id)
     {
       load_element_functor<XMLElement, Context, IsElementProcessed, ParentElementTag, ReferencingElement> load_functor
-        (xml_element, parent_context, state);
+        (xml_element, parent_context);
       if (detail::id_to_element_tag<ExpectedElements>(element_type_id, load_functor))
         return load_functor.succeeded();
       else

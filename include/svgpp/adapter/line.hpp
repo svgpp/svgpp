@@ -1,12 +1,9 @@
 #pragma once
 
 #include <svgpp/definitions.hpp>
-#include <svgpp/policy/load_path.hpp>
-#include <svgpp/policy/load_value.hpp>
 #include <boost/optional.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/mpl/set.hpp>
-#include <stdexcept>
 
 namespace svgpp
 {
@@ -18,16 +15,16 @@ template<class Length>
 class collect_line_attributes_adapter: boost::noncopyable
 {
 public:
-  template<class Context, class LengthToUserCoordinatesConverter>
-  void on_exit_attributes(Context & context, LengthToUserCoordinatesConverter const & converter) const
+  template<class Context>
+  bool on_exit_attributes(Context & context) const
   {
-    on_exit_attributesT<policy::load_value::default_policy<Context> >(context, converter);
-  }
+    typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
+    typedef typename length_policy_context::policy length_policy_t;
 
-  template<class ErrorPolicy, class LoadPolicy, class Context, class LengthToUserCoordinatesConverter>
-  bool on_exit_attributesT(Context & context, LengthToUserCoordinatesConverter const & converter) const
-  {
-    typename LengthToUserCoordinatesConverter::coordinate_type
+    typename length_policy_t::length_factory_type & converter 
+      = length_policy_t::length_factory(length_policy_context::get(context));
+
+    typename length_policy_t::length_factory_type::coordinate_type
       x1 = 0, y1 = 0, x2 = 0, y2 = 0;
     if (x1_)
       x1 = converter.length_to_user_coordinate(*x1_, tag::width_length());
@@ -38,7 +35,8 @@ public:
     if (y2_)
       y2 = converter.length_to_user_coordinate(*y2_, tag::height_length());
 
-    LoadPolicy::set_line(context, x1, y1, x2, y2);
+    typedef typename detail::unwrap_context<Context, tag::load_value_policy> load_value;
+    load_value::policy::set_line(load_value::get(context), x1, y1, x2, y2);
     return true;
   }
 
@@ -51,21 +49,17 @@ private:
   boost::optional<Length> x1_, y1_, x2_, y2_;
 };
 
-template<class LoadPathPolicy = void>
 struct line_to_path_adapter
 {
   template<class Context, class Coordinate>
   static void set_line(Context & context, Coordinate x1, Coordinate y1, Coordinate x2, Coordinate y2)
   {
-    typedef typename boost::mpl::if_<
-      boost::is_same<LoadPathPolicy, void>,
-      policy::load_path::default_policy<Context>,
-      LoadPathPolicy
-    >::type load_policy;
+    typedef typename detail::unwrap_context<Context, tag::load_path_policy> load_path;
 
-    load_policy::path_move_to(context, x1, y1, tag::absolute_coordinate());
-    load_policy::path_line_to(context, x2, y2, tag::absolute_coordinate());
-    load_policy::path_exit(context);
+    load_path::type & path_context = load_path::get(context);
+    load_path::policy::path_move_to(path_context, x1, y1, tag::absolute_coordinate());
+    load_path::policy::path_line_to(path_context, x2, y2, tag::absolute_coordinate());
+    load_path::policy::path_exit(path_context);
   }
 };
 

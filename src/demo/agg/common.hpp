@@ -1,10 +1,10 @@
 #pragma once
 
-#define BOOST_PARAMETER_MAX_ARITY 12
+#define BOOST_PARAMETER_MAX_ARITY 15
 
 #include <agg_color_rgba.h>
 #include <svgpp/factory/integer_color.hpp>
-#include <svgpp/factory/length.hpp>
+#include <svgpp/factory/unitless_length.hpp>
 #ifdef USE_MSXML
 # define NOMINMAX
 # include <MsXml2.h>
@@ -29,7 +29,7 @@ struct agg_rgba8_color_factory
 };
 
 typedef svgpp::factory::color::percentage_adapter<agg_rgba8_color_factory> color_factory_t;
-typedef svgpp::factory::length::default_factory length_factory_t;
+typedef svgpp::factory::length::unitless<> length_factory_t;
 typedef boost::tuple<double, double, double, double> bounding_box_t;
 typedef boost::function<bounding_box_t()> get_bounding_box_func_t;
 
