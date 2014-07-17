@@ -2,7 +2,7 @@
 
 #include <svgpp/config.hpp>
 #include <svgpp/definitions.hpp>
-#include <svgpp/adapter/path.hpp>
+#include <svgpp/adapter/path_markers.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
 #include <svgpp/parser/grammar/path_data.hpp>
@@ -25,25 +25,32 @@ struct value_parser<tag::type::path_data, SVGPP_TEMPLATE_ARGS_PASS>
 
     typedef typename boost::parameter::parameters<
       boost::parameter::optional<tag::path_policy>,
-      boost::parameter::optional<tag::load_path_policy>
+      boost::parameter::optional<tag::load_path_policy>,
+      boost::parameter::optional<tag::markers_policy>,
+      boost::parameter::optional<tag::load_markers_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef detail::bind_context_parameters_wrapper<Context, args2_t> context_t;
     typedef typename detail::unwrap_context<context_t, tag::path_policy>::policy path_policy;
     typedef typename detail::unwrap_context<context_t, tag::load_path_policy> load_path_context;
-    typedef typename load_path_context::policy load_path_policy;
     typedef detail::path_adapter_if_needed<context_t> adapted_context_t; 
+    typedef detail::path_markers_adapter_if_needed<typename adapted_context_t::adapted_context> markers_adapted_context_t;
     typedef path_data_grammar<
       iterator_t, 
-      typename adapted_context_t::adapter_type, 
+      typename detail::unwrap_context<markers_adapted_context_t::adapted_context, tag::load_path_policy>::type,
       coordinate_t,
-      typename adapted_context_t::adapter_load_path_policy
+      typename detail::unwrap_context<markers_adapted_context_t::adapted_context, tag::load_path_policy>::policy
     > path_data_grammar;
 
     context_t bound_context(context);
-    typename adapted_context_t::adapter_type path_adapter(load_path_context::get(bound_context));
+    typename adapted_context_t::type path_adapter(load_path_context::get(bound_context));
+    typename adapted_context_t::adapted_context_holder adapted_path_context(adapted_context_t::adapt_context(bound_context, path_adapter));
+    typename markers_adapted_context_t::type markers_adapter(adapted_path_context);
     SVGPP_STATIC_IF_SAFE const path_data_grammar grammar;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
-    if (qi::phrase_parse(it, end, grammar(boost::phoenix::ref(path_adapter)), typename path_data_grammar::skipper_type()) 
+    if (qi::phrase_parse(it, end, grammar(boost::phoenix::ref(
+      detail::unwrap_context<markers_adapted_context_t::adapted_context, tag::load_path_policy>::get(
+        markers_adapted_context_t::adapt_context(adapted_path_context, markers_adapter))
+      )), typename path_data_grammar::skipper_type()) 
       && it == end)
     {
       return true;

@@ -290,6 +290,9 @@ typedef boost::mpl::fold<
     svgpp::tag::attribute::fill,
     svgpp::tag::attribute::fill_opacity,
     svgpp::tag::attribute::fill_rule,
+    svgpp::tag::attribute::marker_start,
+    svgpp::tag::attribute::marker_mid,
+    svgpp::tag::attribute::marker_end,
     svgpp::tag::attribute::mask,
     svgpp::tag::attribute::maskUnits,
     svgpp::tag::attribute::maskContentUnits,
@@ -528,6 +531,15 @@ public:
   {
   }
 
+  void marker(svgpp::marker_vertex v, double x, double y, double directionality, unsigned marker_index)
+  {}
+
+  void marker(svgpp::marker_vertex v, double x, double y, svgpp::tag::orient_fixed, unsigned marker_index)
+  {}
+
+  void marker_get_config(svgpp::marker_config & start, svgpp::marker_config & mid, svgpp::marker_config & end)
+  {}
+
 private:
   agg::path_storage path_storage_;
 
@@ -551,7 +563,8 @@ typedef
     svgpp::document_traversal_control_policy<document_traversal_control>,
     svgpp::load_transform_policy<svgpp::policy::load_transform::forward_to_method<Transformable> >, // Same as default, but less instantiations
     svgpp::load_path_policy<svgpp::policy::load_path::forward_to_method<Path> >, // Same as default, but less instantiations
-    svgpp::error_policy<svgpp::policy::error::default_policy<Stylable> > // Type of context isn't used
+    svgpp::error_policy<svgpp::policy::error::default_policy<Stylable> >, // Type of context isn't used
+    svgpp::markers_policy<svgpp::policy::markers::calculate>
   > document_traversal_main;
 
 class Use: public Canvas

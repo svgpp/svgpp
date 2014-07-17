@@ -44,6 +44,7 @@ struct InheritedStyle
   double miterlimit_;
   std::vector<double> stroke_dasharray_;
   double stroke_dashoffset_;
+  boost::optional<svg_string_t> marker_start_, marker_mid_, marker_end_;
 };
 
 struct NoninheritedStyle
@@ -232,6 +233,48 @@ public:
 
   Style & style() { return style_; }
   Style const & style() const { return style_; }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::marker_start, IRI const &)
+  { 
+    std::cout << "Non-local references aren't supported\n"; // Not error
+    style().marker_start_.reset();
+  }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::marker_start, svgpp::tag::iri_fragment, IRI const & fragment)
+  { style().marker_start_ = svg_string_t(boost::begin(fragment), boost::end(fragment)); }
+
+  void set(svgpp::tag::attribute::marker_start, svgpp::tag::value::none val)
+  { style().marker_start_.reset(); }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::marker_mid, IRI const &)
+  { 
+    std::cout << "Non-local references aren't supported\n"; // Not error
+    style().marker_mid_.reset();
+  }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::marker_mid, svgpp::tag::iri_fragment, IRI const & fragment)
+  { style().marker_mid_ = svg_string_t(boost::begin(fragment), boost::end(fragment)); }
+
+  void set(svgpp::tag::attribute::marker_mid, svgpp::tag::value::none val)
+  { style().marker_mid_.reset(); }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::marker_end, IRI const &)
+  { 
+    std::cout << "Non-local references aren't supported\n"; // Not error
+    style().marker_end_.reset();
+  }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::marker_end, svgpp::tag::iri_fragment, IRI const & fragment)
+  { style().marker_end_ = svg_string_t(boost::begin(fragment), boost::end(fragment)); }
+
+  void set(svgpp::tag::attribute::marker_end, svgpp::tag::value::none val)
+  { style().marker_end_.reset(); }
 
 private:
   Style style_;

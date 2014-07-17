@@ -115,8 +115,6 @@ adapt_context_load_value2(OriginalContext & original_context, AdapterContext & a
   >(original_context, adapter_context);
 }
 
-struct undefined_policy_stub;
-
 template<class Context, class PolicyTag>
 struct unwrap_context
 {
@@ -135,13 +133,15 @@ struct unwrap_context
       typename get_default_policy<Context, PolicyTag>::type>::type type;
   };
 
-  typedef undefined_policy_stub policy;
+  // undefined "policy" stub may get referenced when context is not bound to parameters via bind or bind_context_parameters_wrapper
+  struct policy;
 };
 
 template<class Context, class Parameters, class PolicyTag>
 struct unwrap_context<bind_context_parameters_wrapper<Context, Parameters>, PolicyTag>
-  : unwrap_context<Context, PolicyTag>
 {
+  typedef typename unwrap_context<Context, PolicyTag>::type type;
+
   static typename unwrap_context<Context, PolicyTag>::type & get(
     bind_context_parameters_wrapper<Context, Parameters> & wrapper)
   {

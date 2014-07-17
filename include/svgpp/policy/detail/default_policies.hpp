@@ -9,6 +9,7 @@
 #include <svgpp/policy/load_path.hpp>
 #include <svgpp/policy/load_transform.hpp>
 #include <svgpp/policy/load_value.hpp>
+#include <svgpp/policy/markers.hpp>
 #include <svgpp/policy/path.hpp>
 #include <svgpp/policy/transform.hpp>
 #include <svgpp/template_parameters.hpp>
@@ -47,6 +48,18 @@ template<class Context>
 struct get_default_policy<Context, tag::iri_policy>
 {
   typedef typename policy::iri::by_context<Context>::type type;
+};
+
+template<class Context>
+struct get_default_policy<Context, tag::markers_policy>
+{
+  typedef typename policy::markers::by_context<Context>::type type;
+};
+
+template<class Context>
+struct get_default_policy<Context, tag::load_markers_policy>
+{
+  typedef typename policy::load_markers::default_policy<Context> type;
 };
 
 template<class Context>

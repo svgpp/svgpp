@@ -128,7 +128,11 @@ public:
   }
 };
 
-template<class ElementTag, class Length, class Coordinate, class PathPolicy, class LoadPathPolicy>
+template<
+  class ElementTag, 
+  class Length, 
+  class ShapeToPathAdapter = typename basic_shape_to_path_adapter<ElementTag>::type
+>
 class convert_basic_shape_to_path_state
 {
   typedef typename collect_basic_shape_attributes_adapter<ElementTag, Length>::type collector_type;
@@ -141,24 +145,17 @@ public:
   bool on_exit_attributes(Context & context)
   {
     typedef path_adapter_if_needed<Context> path_adapter_t; 
-    typename path_adapter_t::adapter_type path_adapter(detail::unwrap_context<Context, tag::load_path_policy>::get(context));
+    typename path_adapter_t::type path_adapter(detail::unwrap_context<Context, tag::load_path_policy>::get(context));
 
     return collector_.on_exit_attributes(
-      detail::adapt_context_load_value2<
-        typename basic_shape_to_path_adapter<ElementTag>::type
-      >(context, path_adapter_t::adapt_context(context, path_adapter)));
+      detail::adapt_context_load_value2<ShapeToPathAdapter>(context, path_adapter_t::adapt_context(context, path_adapter)));
   }
 };
 
-template<class Length, class Coordinate, class PathPolicy, class LoadPathPolicy, bool OnlyRoundedRect>
-class convert_rect_to_path_state: 
-  public convert_basic_shape_to_path_state<tag::element::rect, Length, Coordinate, PathPolicy, LoadPathPolicy>
-{};
-
-template<class Length, class Coordinate, class PathPolicy, class LoadPathPolicy>
-class convert_rect_to_path_state<Length, Coordinate, PathPolicy, LoadPathPolicy, true>
+template<class Length, class ShapeToPathAdapter>
+class convert_basic_shape_to_path_state<tag::element::line, Length, ShapeToPathAdapter>
 {
-  typedef collect_rect_attributes_adapter<Length> collector_type;
+  typedef typename collect_basic_shape_attributes_adapter<tag::element::line, Length>::type collector_type;
   collector_type collector_;
 
 public:
@@ -167,29 +164,21 @@ public:
   template<class Context>
   bool on_exit_attributes(Context & context)
   {
-    typedef typename detail::unwrap_context<Context, tag::load_path_policy> load_path_context;
-
     typedef path_adapter_if_needed<Context> path_adapter_t; 
-    typename path_adapter_t::adapter_type path_adapter(context);
+    typedef path_markers_adapter_if_needed<typename path_adapter_t::adapted_context> markers_adapter_t;
+    typename path_adapter_t::type path_adapter(detail::unwrap_context<Context, tag::load_path_policy>::get(context));
+    typename path_adapter_t::adapted_context_holder adapted_path_context(path_adapter_t::adapt_context(context, path_adapter));
+    typename markers_adapter_t::type markers_adapter(adapted_path_context);
 
     return collector_.on_exit_attributes(
-      detail::adapt_context_policy<
-        tag::load_value_policy, 
-        typename basic_shape_to_path_adapter<ElementTag, typename adapted_context_type::load_path_policy>::type
-      >(adapted_context_type::adapt_context(context, path_adapter)));
-
-    typedef path_adapter_if_needed<Context, PathPolicy, Coordinate, LoadPathPolicy> path_context_t; 
-    typedef rounded_rect_to_path_adapter<typename path_context_t::type, Context> adapted_context_t;
-
-    typename path_context_t::holder_type path_context(context);
-    adapted_context_t adapted_context(path_context, context);
-
-    return collector_.template on_exit_attributesT<
-      delegate_error_policy<ErrorPolicy, adapted_context_type>, 
-      policy::load_value::default_policy<Context> 
-    >(adapted_context, length_factory);
+      detail::adapt_context_load_value2<ShapeToPathAdapter>(context, markers_adapter_t::adapt_context(adapted_path_context, markers_adapter)));
   }
 };
+
+template<class Length>
+class convert_rounded_rect_to_path_state
+  : public convert_basic_shape_to_path_state<tag::element::rect, Length, rounded_rect_to_path_adapter>
+{};
 
 template<class ViewportAdapter, class TransformPolicy, class LoadTransformPolicy>
 class viewport_transform_state: 
@@ -201,7 +190,7 @@ public:
   bool on_exit_attributes(Context & context)
   {
     typedef transform_adapter_if_needed<Context> transform_adapter_t; 
-    typename transform_adapter_t::adapter_type transform_adapter(
+    typename transform_adapter_t::type transform_adapter(
       detail::unwrap_context<Context, tag::load_transform_policy>::get(context));
 
     if (!base_type::on_exit_attributes(
@@ -525,22 +514,11 @@ class basic_shape_attribute_dispatcher:
   typedef typename boost::mpl::if_< 
     boost::mpl::has_key<typename base_type::basic_shapes_policy::convert_to_path, ElementTag>,
     boost::mpl::single_view<
-      typename boost::mpl::if_<
-        boost::is_same<ElementTag, tag::element::rect>,
-        convert_rect_to_path_state<
-          length_type, 
-          typename base_type::coordinate_type, 
-          typename base_type::path_policy, 
-          typename base_type::load_path_policy, 
-          base_type::basic_shapes_policy::convert_only_rounded_rect_to_path
-        >, 
-        convert_basic_shape_to_path_state<
-          ElementTag,
-          length_type, 
-          typename base_type::coordinate_type, 
-          typename base_type::path_policy,
-          typename base_type::load_path_policy
-        >
+      typename boost::mpl::if_c<
+        boost::is_same<ElementTag, tag::element::rect>::value 
+          && base_type::basic_shapes_policy::convert_only_rounded_rect_to_path,
+        convert_rounded_rect_to_path_state<length_type>, 
+        convert_basic_shape_to_path_state<ElementTag, length_type>
       >::type
     >,
     typename boost::mpl::if_< 

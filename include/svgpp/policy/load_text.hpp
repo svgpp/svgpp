@@ -1,7 +1,5 @@
 #pragma once
 
-#include <svgpp/policy/detail/same_object_func.hpp>
-
 namespace svgpp { namespace policy { namespace load_text 
 {
 

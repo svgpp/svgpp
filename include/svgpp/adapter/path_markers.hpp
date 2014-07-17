@@ -1,11 +1,13 @@
 #pragma once
 
+#include <svgpp/adapter/path.hpp>
 #include <svgpp/definitions.hpp>
+#include <svgpp/detail/adapt_context.hpp>
+#include <svgpp/policy/detail/load_path_splitter.hpp>
+#include <svgpp/policy/markers.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
 #include <boost/math/constants/constants.hpp>
-#include <vector>
-#include <cmath>
 
 /* TODO:
 When a 'closepath' command is followed by a command other than a 'moveto' command, then the orientation of the marker corresponding to the 'closepath' command is calculated assuming that:
@@ -21,80 +23,26 @@ namespace tag
   struct orient_fixed {};
 }
 
-// TODO: class enums for C++11
-enum marker_vertex { marker_start = 1, marker_mid = 2, marker_end = 3 };
-enum marker_config { marker_none = 0, marker_orient_ignore = 1, marker_orient_auto = 2 };
-
-struct marker_directionality_policy_radians
-{
-  typedef double directionality_type;
-
-  static BOOST_CONSTEXPR directionality_type undetermined_directionality() // "align with the positive x-axis in user space"
-  {
-    return 0;
-  }
-
-  template<class Coordinate>
-  static directionality_type segment_directionality(Coordinate dx, Coordinate dy)
-  {
-    return std::atan2(dy, dx);
-  }
-
-  static directionality_type bisector_directionality(directionality_type in_segment, directionality_type out_segment)
-  {
-    directionality_type dir = (in_segment + out_segment) * 0.5;
-    if (std::fabs(in_segment - out_segment) > boost::math::constants::pi<double>())
-      if (dir < 0)
-        return dir + boost::math::constants::pi<double>();
-      else
-        return dir - boost::math::constants::pi<double>();
-    return dir;
-  }
-};
-
-struct default_marker_policy
-{
-  typedef marker_directionality_policy_radians directionality_policy;
-
-  static const bool always_calculate_auto_orient = false; // Doesn't call marker_get_config if true
-};
-
 namespace detail
 {
-  template<class Context>
-  struct default_load_marker_policy
-  {
-    template<class Coordinate, class Directionality>
-    static void marker(Context & context, marker_vertex v, 
-      Coordinate x, Coordinate y, Directionality directionality, unsigned marker_index)
-    {
-      context.marker(v, x, y, directionality, marker_index);
-    }
-
-    static void marker_get_config(Context & context, marker_config & start, marker_config & mid, marker_config & end)
-    {
-      context.marker_get_config(start, mid, end);
-    }
-  };
-
-  template<class LoadMarkerPolicy, bool AlwaysCalculateAutoOrient>
+  template<class LoadMarkersPolicy, bool AlwaysCalculateAutoOrient>
   struct path_markers_adapter_config;
 
-  template<class LoadMarkerPolicy>
-  struct path_markers_adapter_config<LoadMarkerPolicy, false>
+  template<class LoadMarkersPolicy>
+  struct path_markers_adapter_config<LoadMarkersPolicy, false>
   {
   public:
     template<class Context>
     void request_config(Context & context)
     {
-      LoadMarkerPolicy::marker_get_config(context, config_start_, config_mid_, config_end_);
+      LoadMarkersPolicy::marker_get_config(context, config_start_, config_mid_, config_end_);
     }
 
     template<class Context, class Coordinate>
     static void call_marker_orient_fixed(Context & context, marker_vertex v, 
       Coordinate x, Coordinate y, unsigned marker_index)
     {
-      LoadMarkerPolicy::marker(context, v, x, y, tag::orient_fixed(), marker_index);
+      LoadMarkersPolicy::marker(context, v, x, y, tag::orient_fixed(), marker_index);
     }
 
     marker_config start() const { return config_start_; }
@@ -105,8 +53,8 @@ namespace detail
     marker_config config_start_, config_mid_, config_end_;
   };
 
-  template<class LoadMarkerPolicy>
-  struct path_markers_adapter_config<LoadMarkerPolicy, true>
+  template<class LoadMarkersPolicy>
+  struct path_markers_adapter_config<LoadMarkersPolicy, true>
   {
   public:
     template<class Context>
@@ -128,15 +76,15 @@ namespace detail
 
 template<
   class OutputContext, 
-  class Coordinate, 
-  class MarkerPolicy = default_marker_policy,
-  class LoadMarkerPolicy = detail::default_load_marker_policy<OutputContext> 
+  class MarkersPolicy = policy::markers::calculate,
+  class Coordinate = typename number_type_by_context<OutputContext>::type, 
+  class LoadMarkersPolicy = policy::load_markers::forward_to_method<OutputContext> 
 >
 struct path_markers_adapter: boost::noncopyable
 {
 public:
   typedef Coordinate coordinate_type;
-  typedef typename MarkerPolicy::directionality_policy::directionality_type directionality_type;
+  typedef typename MarkersPolicy::directionality_policy::directionality_type directionality_type;
 
   path_markers_adapter(OutputContext & context)
     : context_(context)
@@ -249,7 +197,7 @@ private:
     }
     else
     {
-      directionality_type directionality = MarkerPolicy::directionality_policy::segment_directionality(dx, dy);
+      directionality_type directionality = MarkersPolicy::directionality_policy::segment_directionality(dx, dy);
       on_valid_start_point_directionality(directionality);
       last_end_point_directionality_ = directionality;
       last_x_ = x;
@@ -283,7 +231,7 @@ private:
       {
         BOOST_ASSERT(subpath_start_directionality_);
         start_point_directionality = directionality 
-          = MarkerPolicy::directionality_policy::bisector_directionality(
+          = MarkersPolicy::directionality_policy::bisector_directionality(
             *last_end_point_directionality_, *subpath_start_directionality_);
       }
       else
@@ -292,11 +240,11 @@ private:
         start_point_directionality = *subpath_start_directionality_;
       }
     else
-      subpath_start_directionality_ = directionality = MarkerPolicy::directionality_policy::undetermined_directionality();
+      subpath_start_directionality_ = directionality = MarkersPolicy::directionality_policy::undetermined_directionality();
 
     if (config_.mid() == marker_orient_auto)
       for(; points_without_directionality_ > 0; --points_without_directionality_)
-        LoadMarkerPolicy::marker(context_, marker_mid, last_x_, last_y_, directionality, 
+        LoadMarkersPolicy::marker(context_, marker_mid, last_x_, last_y_, directionality, 
           next_marker_index_++);
 
     switch (config_.end())
@@ -306,12 +254,12 @@ private:
       config_.call_marker_orient_fixed(context_, marker_end, last_x_, last_y_, next_marker_index_++);
       break;
     case marker_orient_auto:
-      LoadMarkerPolicy::marker(context_, marker_end, last_x_, last_y_, directionality, next_marker_index_++);
+      LoadMarkersPolicy::marker(context_, marker_end, last_x_, last_y_, directionality, next_marker_index_++);
       break;
     }
 
     if (config_.start() == marker_orient_auto)
-      LoadMarkerPolicy::marker(context_, marker_start,
+      LoadMarkersPolicy::marker(context_, marker_start,
         subpath_start_x_, subpath_start_y_, 
         start_point_directionality, 
         last_start_marker_index_);
@@ -343,13 +291,13 @@ private:
       {
         directionality_type directionality;
         if (last_end_point_directionality_)
-          directionality = MarkerPolicy::directionality_policy::bisector_directionality(
+          directionality = MarkersPolicy::directionality_policy::bisector_directionality(
             *last_end_point_directionality_, start_point_directionality);
         else
           directionality = start_point_directionality;
 
         for(++points_without_directionality_; points_without_directionality_ > 0; --points_without_directionality_)
-          LoadMarkerPolicy::marker(context_, marker_mid, last_x_, last_y_, directionality, 
+          LoadMarkersPolicy::marker(context_, marker_mid, last_x_, last_y_, directionality, 
             next_marker_index_++);
         break;
       }
@@ -358,7 +306,7 @@ private:
   }
 
   OutputContext & context_;
-  detail::path_markers_adapter_config<LoadMarkerPolicy, MarkerPolicy::always_calculate_auto_orient> config_;
+  detail::path_markers_adapter_config<LoadMarkersPolicy, MarkersPolicy::always_calculate_auto_orient> config_;
 
   bool in_path_;
   bool in_subpath_;
@@ -371,5 +319,95 @@ private:
   unsigned next_marker_index_;
   unsigned last_start_marker_index_;
 };
+
+namespace detail
+{
+
+template<class OriginalContext>
+class path_bypass_and_markers_adapter
+{
+  typedef typename detail::unwrap_context<OriginalContext, tag::markers_policy>::policy markers_policy;
+  typedef typename detail::unwrap_context<OriginalContext, tag::load_markers_policy>::policy load_markers_policy;
+  typedef typename detail::unwrap_context<OriginalContext, tag::number_type>::policy number_type;
+  typedef typename detail::unwrap_context<OriginalContext, tag::load_path_policy>::policy original_load_path_policy;
+
+  typedef path_markers_adapter<
+    typename detail::unwrap_context<OriginalContext, tag::load_markers_policy>::type, 
+    markers_policy, 
+    number_type, 
+    load_markers_policy
+  > markers_adapter_t;
+
+  typedef path_adapter<
+    markers_adapter_t, 
+    policy::path::no_shorthands, 
+    number_type, 
+    policy::load_path::forward_to_method<markers_adapter_t>
+  > path_adapter_t;
+
+  typedef path_adapter_load_path_policy<path_adapter_t, policy::path::no_shorthands, number_type> path_adapter_load_path_policy_t;
+
+  typedef std::pair<path_adapter_t &, typename detail::unwrap_context<OriginalContext, tag::load_path_policy>::type &> splitter_context_t;
+
+  typedef load_path_splitter<splitter_context_t, path_adapter_load_path_policy_t, original_load_path_policy> splitter_policy_t;
+
+public:
+  path_bypass_and_markers_adapter(OriginalContext & original_context)
+    : markers_adapter_(detail::unwrap_context<OriginalContext, tag::load_markers_policy>::get(original_context))
+    , path_adapter_(markers_adapter_)
+    , splitter_context_(path_adapter_, detail::unwrap_context<OriginalContext, tag::load_path_policy>::get(original_context))
+  {}
+
+  typedef splitter_policy_t load_path_policy;
+  typedef splitter_context_t context_type;
+  context_type & context() { return splitter_context_; }
+
+private:
+  markers_adapter_t markers_adapter_;
+  path_adapter_t path_adapter_;
+  splitter_context_t splitter_context_;
+};
+
+template<class OriginalContext, class Enabled = void>
+struct path_markers_adapter_if_needed
+{
+private:
+  struct adapter_stub
+  {
+    template<class Context> adapter_stub(Context const &) {}
+  };
+
+public:
+  typedef adapter_stub type;
+  typedef OriginalContext adapted_context;
+  typedef OriginalContext & adapted_context_holder;
+
+  static OriginalContext & adapt_context(OriginalContext & context, adapter_stub &)
+  {
+    return context;
+  }
+};
+
+template<class OriginalContext>
+struct path_markers_adapter_if_needed<OriginalContext, 
+  typename boost::enable_if_c<
+    detail::unwrap_context<OriginalContext, tag::markers_policy>::policy::calculate_markers>::type>
+{
+  typedef path_bypass_and_markers_adapter<OriginalContext> type;
+  typedef adapted_context_wrapper<
+    OriginalContext, 
+    typename type::context_type, 
+    tag::load_path_policy, 
+    typename type::load_path_policy
+  > adapted_context;
+  typedef adapted_context adapted_context_holder;
+
+  static adapted_context adapt_context(OriginalContext & context, type & adapter)
+  {
+    return adapted_context(context, adapter.context());
+  }
+};
+
+} // namespace detail
 
 }

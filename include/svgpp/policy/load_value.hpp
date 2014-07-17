@@ -1,7 +1,6 @@
 #pragma once
 
 #include <svgpp/definitions.hpp>
-#include <svgpp/policy/detail/same_object_func.hpp>
 #include <svgpp/traits/inherited_property.hpp>
 
 namespace svgpp { namespace policy { namespace load_value 

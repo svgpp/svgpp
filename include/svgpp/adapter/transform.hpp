@@ -14,16 +14,6 @@
 namespace svgpp
 {
 
-template<class TransformPolicy>
-struct need_transform_adapter: 
-  boost::mpl::bool_<
-       TransformPolicy::join_transforms 
-    || TransformPolicy::no_rotate_about_point
-    || TransformPolicy::no_shorthands 
-    || TransformPolicy::only_matrix_transform>
-{
-};
-
 namespace detail
 {
 
@@ -277,6 +267,15 @@ public:
 namespace detail
 {
 
+template<class TransformPolicy>
+struct need_transform_adapter: 
+  boost::mpl::bool_<
+       TransformPolicy::join_transforms 
+    || TransformPolicy::no_rotate_about_point
+    || TransformPolicy::no_shorthands 
+    || TransformPolicy::only_matrix_transform>
+{};
+
 template<class OriginalContext, class Enable = void>
 struct transform_adapter_if_needed
 {
@@ -287,16 +286,15 @@ private:
   };
 
 public:
-  typedef adapter_stub adapter_type;
-  typedef OriginalContext & adapted_context;
-  typedef typename detail::unwrap_context<OriginalContext, tag::load_transform_policy>::policy adapter_load_transform_policy;
+  typedef adapter_stub type;
+  typedef OriginalContext adapted_context;
 
   static OriginalContext & adapt_context(OriginalContext & context, adapter_stub &)
   {
     return context;
   }
 
-  void on_exit_attribute(adapter_type const &) {}
+  void on_exit_attribute(type const &) {}
 };
 
 template<class OriginalContext>
@@ -305,25 +303,28 @@ struct transform_adapter_if_needed<OriginalContext,
 {
 private:
   typedef typename detail::unwrap_context<OriginalContext, tag::transform_policy>::policy transform_policy;
-  typedef typename detail::unwrap_context<OriginalContext, tag::load_transform_policy>::policy load_transform_policy;
+  typedef typename detail::unwrap_context<OriginalContext, tag::load_transform_policy>::policy original_load_transform_policy;
 
 public:
-  typedef transform_adapter<typename load_transform_policy::context_type, transform_policy, load_transform_policy> adapter_type;
-  typedef policy::load_transform::forward_to_method<adapter_type> adapter_load_transform_policy;
+  typedef transform_adapter<
+    typename original_load_transform_policy::context_type, 
+    transform_policy, 
+    original_load_transform_policy
+  > type;
 
   typedef adapted_context_wrapper<
     OriginalContext, 
-    adapter_type, 
+    type, 
     tag::load_transform_policy, 
-    adapter_load_transform_policy
+    policy::load_transform::forward_to_method<type>
   > adapted_context;
 
-  static adapted_context adapt_context(OriginalContext & context, adapter_type & adapter)
+  static adapted_context adapt_context(OriginalContext & context, type & adapter)
   {
     return adapted_context(context, adapter);
   }
 
-  static void on_exit_attribute(adapter_type & adapter) 
+  static void on_exit_attribute(type & adapter) 
   {
     adapter.on_exit_attribute();
   }

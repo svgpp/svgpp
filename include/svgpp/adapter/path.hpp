@@ -15,16 +15,6 @@
 namespace svgpp
 {
 
-template<class PathPolicy>
-struct need_path_adapter: boost::mpl::bool_<
-  PathPolicy::absolute_coordinates_only 
-  || PathPolicy::no_ortho_line_to
-  || PathPolicy::no_quadratic_bezier_shorthand 
-  || PathPolicy::no_cubic_bezier_shorthand 
-  || PathPolicy::quadratic_bezier_as_cubic>
-{
-};
-
 namespace detail
 {
   template<class Coordinate>
@@ -798,6 +788,15 @@ struct path_adapter_load_path_policy
   }
 };
 
+template<class PathPolicy>
+struct need_path_adapter: boost::mpl::bool_<
+  PathPolicy::absolute_coordinates_only 
+  || PathPolicy::no_ortho_line_to
+  || PathPolicy::no_quadratic_bezier_shorthand 
+  || PathPolicy::no_cubic_bezier_shorthand 
+  || PathPolicy::quadratic_bezier_as_cubic>
+{};
+
 template<class OriginalContext, class Enabled = void>
 struct path_adapter_if_needed
 {
@@ -808,9 +807,9 @@ private:
   };
 
 public:
-  typedef adapter_stub adapter_type;
-  typedef OriginalContext & adapted_context;
-  typedef typename detail::unwrap_context<OriginalContext, tag::load_path_policy>::policy adapter_load_path_policy;
+  typedef adapter_stub type;
+  typedef OriginalContext adapted_context;
+  typedef OriginalContext & adapted_context_holder;
 
   static OriginalContext & adapt_context(OriginalContext & context, adapter_stub &)
   {
@@ -824,20 +823,25 @@ struct path_adapter_if_needed<OriginalContext,
 {
 private:
   typedef typename detail::unwrap_context<OriginalContext, tag::path_policy>::policy path_policy;
-  typedef typename detail::unwrap_context<OriginalContext, tag::load_path_policy>::policy load_path_policy;
+  typedef typename detail::unwrap_context<OriginalContext, tag::load_path_policy>::policy original_load_path_policy;
   typedef typename detail::unwrap_context<OriginalContext, tag::number_type>::policy number_type;
 
 public:
-  typedef path_adapter<typename load_path_policy::context_type, path_policy, number_type, load_path_policy> adapter_type;
-  typedef path_adapter_load_path_policy<adapter_type, path_policy, number_type> adapter_load_path_policy;
+  typedef path_adapter<
+    typename original_load_path_policy::context_type, 
+    path_policy, 
+    number_type, 
+    original_load_path_policy
+  > type;
   typedef adapted_context_wrapper<
     OriginalContext, 
-    adapter_type, 
+    type, 
     tag::load_path_policy, 
-    adapter_load_path_policy
+    path_adapter_load_path_policy<type, path_policy, number_type>
   > adapted_context;
+  typedef adapted_context adapted_context_holder;
 
-  static adapted_context adapt_context(OriginalContext & context, adapter_type & adapter)
+  static adapted_context adapt_context(OriginalContext & context, type & adapter)
   {
     return adapted_context(context, adapter);
   }

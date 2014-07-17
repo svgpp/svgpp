@@ -26,6 +26,8 @@ set(AGG_DEMO_SOURCES
   common.hpp
   clip_path.hpp
   clip_path.cpp
+  filter.hpp
+  filter.cpp
 )
 
 add_executable(svgpp_agg_render
