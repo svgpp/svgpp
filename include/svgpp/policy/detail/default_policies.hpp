@@ -4,6 +4,7 @@
 #include <svgpp/factory/color.hpp>
 #include <svgpp/number_type.hpp>
 #include <svgpp/policy/error.hpp>
+#include <svgpp/policy/icc_color.hpp>
 #include <svgpp/policy/iri.hpp>
 #include <svgpp/policy/length.hpp>
 #include <svgpp/policy/load_path.hpp>
@@ -99,9 +100,9 @@ struct get_default_policy<Context, tag::color_factory>
 };
 
 template<class Context>
-struct get_default_policy<Context, tag::icc_color_factory>
+struct get_default_policy<Context, tag::icc_color_policy>
 {
-  typedef typename factory::icc_color::by_context<Context>::type type;
+  typedef typename policy::icc_color::default_policy<Context> type;
 };
 
 }}

@@ -33,13 +33,15 @@ template<class StringT>
 void valid_testT(StringT const & testStr, StringT const & expectedProfileName, std::vector<double> const & components)
 {
   typename StringT::const_iterator first = testStr.begin();
+  typedef icc_color_factory<StringT> icc_color_factory_t;
   typedef svgpp::icc_color_grammar<
     svgpp::tag::source::attribute, 
-    typename StringT::const_iterator, icc_color_factory<StringT>
+    typename StringT::const_iterator, icc_color_factory_t
   > grammar_t;
   grammar_t grammar;
-  typename icc_color_factory<StringT>::icc_color_type color;
-  EXPECT_TRUE(qi::parse(first, testStr.end(), grammar, color));
+  icc_color_factory_t factory;
+  typename icc_color_factory_t::icc_color_type color;
+  EXPECT_TRUE(qi::parse(first, testStr.end(), grammar(boost::phoenix::ref(factory)), color));
   EXPECT_TRUE(first == testStr.end());
   EXPECT_EQ(expectedProfileName, color.first);
   EXPECT_EQ(components, color.second);
@@ -50,7 +52,8 @@ void invalid_testT(StringT const & testStr)
 {
   typename StringT::const_iterator first = testStr.begin();
   svgpp::icc_color_grammar<svgpp::tag::source::attribute, typename StringT::const_iterator, icc_color_factory<StringT> > grammar;
-  EXPECT_TRUE(!qi::parse(first, testStr.end(), grammar) || first != testStr.end());
+  icc_color_factory<StringT> factory;
+  EXPECT_TRUE(!qi::parse(first, testStr.end(), grammar(boost::phoenix::ref(factory))) || first != testStr.end());
 }
 
 typedef boost::tuple<const char *, const char *, std::vector<double> > valid_case_t;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <boost/range/iterator_range.hpp>
+#include <boost/noncopyable.hpp>
 
 namespace svgpp { 
 
@@ -12,7 +13,7 @@ namespace tag
 namespace factory { namespace icc_color
 {
 
-struct stub
+struct stub: boost::noncopyable
 {
   typedef double component_type;
   typedef tag::skip_icc_color icc_color_type;

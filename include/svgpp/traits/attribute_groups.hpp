@@ -102,6 +102,15 @@ typedef boost::mpl::set6<
   tag::attribute::preserveAspectRatio
   > viewport_attributes;
 
+typedef boost::mpl::set6<
+  tag::attribute::refX, 
+  tag::attribute::refY, 
+  tag::attribute::markerWidth, 
+  tag::attribute::markerHeight, 
+  tag::attribute::viewBox, 
+  tag::attribute::preserveAspectRatio
+  > marker_viewport_attributes;
+
 typedef boost::mpl::set3<
   tag::attribute::requiredFeatures, 
   tag::attribute::requiredExtensions, 

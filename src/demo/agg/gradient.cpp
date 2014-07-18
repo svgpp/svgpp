@@ -23,7 +23,7 @@ public:
   boost::optional<Gradient> gradient_;
 };
 
-struct after_gradientUnits_tag {};
+struct afterGradientUnitsTag {};
 
 class GradientStopContext
 {
@@ -72,7 +72,7 @@ public:
     return length_factory_;
   }
 
-  void add_stop(GradientStop stop)
+  void addStop(GradientStop stop)
   {
     if (!data_.stops_.empty() && data_.stops_.back().offset_ > stop.offset_)
       stop.offset_ = data_.stops_.back().offset_;
@@ -103,7 +103,7 @@ public:
   void set(svgpp::tag::attribute::spreadMethod, svgpp::tag::value::repeat)
   { data_.spreadMethod_ = GradientBase::spreadRepeat; }
 
-  bool notify(after_gradientUnits_tag)
+  bool notify(afterGradientUnitsTag)
   { 
     if (!data_.useObjectBoundingBox_)
       length_factory_ = gradientContext_.referenced_length_factory_;
@@ -122,7 +122,7 @@ protected:
 void GradientStopContext::on_exit_element()
 {
   data_.color_.opacity(opacity_);
-  parent_.add_stop(data_);
+  parent_.addStop(data_);
 }
 
 class LinearGradientContext: public GradientBaseContext
@@ -229,7 +229,7 @@ struct attribute_traversal: svgpp::policy::attribute_traversal::default_policy
     boost::mpl::has_key<svgpp::traits::gradient_elements, boost::mpl::_1>,
     boost::mpl::vector<
       svgpp::tag::attribute::gradientUnits,
-      svgpp::notify_context<after_gradientUnits_tag>
+      svgpp::notify_context<afterGradientUnitsTag>
     >,
     boost::mpl::empty_sequence
   > get_priority_attributes_by_element;
@@ -253,7 +253,7 @@ boost::optional<Gradient> Gradients::get(
     get_bounding_box_func_t const & get_bounding_box*/)
 {
   // TODO: inheritance via xlink::href
-  if (XMLElement node = xml_document_.find_element_by_id(id))
+  if (XMLElement node = xml_document_.findElementById(id))
   {
     try
     {

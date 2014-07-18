@@ -48,7 +48,7 @@ public:
     : root_(root)
   {}
 
-  XMLElement find_element_by_id(svg_string_t const & id);
+  XMLElement findElementById(svg_string_t const & id);
 
 private:
 #ifndef USE_MSXML

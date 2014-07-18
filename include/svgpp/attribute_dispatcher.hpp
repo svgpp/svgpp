@@ -3,6 +3,7 @@
 #include <svgpp/definitions.hpp>
 #include <svgpp/adapter/list_of_points.hpp>
 #include <svgpp/adapter/basic_shapes.hpp>
+#include <svgpp/adapter/marker_viewport.hpp>
 #include <svgpp/adapter/viewport.hpp>
 #include <svgpp/adapter/transform.hpp>
 #include <svgpp/adapter/path.hpp>
@@ -30,7 +31,6 @@
 namespace svgpp
 {
 
-BOOST_PARAMETER_TEMPLATE_KEYWORD(length_factory)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(ignored_attributes)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(processed_attributes)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(passthrough_attributes)
@@ -44,6 +44,8 @@ namespace policy { namespace basic_shapes
     static const bool convert_rect_to_path = false;
     static const bool viewport_as_transform = false; // TODO: reorganize basic_shapes_policy
     static const bool calculate_viewport = false;
+    static const bool marker_viewport_as_transform = false;
+    static const bool calculate_marker_viewport = false;
     static const bool collect_rect_shape_attributes = false;
   };
 }}
@@ -180,7 +182,7 @@ class convert_rounded_rect_to_path_state
   : public convert_basic_shape_to_path_state<tag::element::rect, Length, rounded_rect_to_path_adapter>
 {};
 
-template<class ViewportAdapter, class TransformPolicy, class LoadTransformPolicy>
+template<class ViewportAdapter>
 class viewport_transform_state: 
   public ViewportAdapter
 {
@@ -255,7 +257,7 @@ protected:
       boost::parameter::optional<tag::ignored_attributes, boost::mpl::is_sequence<boost::mpl::_> >
     , boost::parameter::optional<tag::processed_attributes, boost::mpl::is_sequence<boost::mpl::_> >
     , boost::parameter::optional<tag::passthrough_attributes, boost::mpl::is_sequence<boost::mpl::_> >
-    , boost::parameter::optional<tag::length_factory>
+    , boost::parameter::optional<tag::length_policy>
     , boost::parameter::optional<tag::basic_shapes_policy>
     , boost::parameter::optional<tag::path_policy>
     , boost::parameter::optional<tag::load_path_policy>
@@ -269,8 +271,7 @@ protected:
     || boost::mpl::empty<processed_attributes>::value, 
     "Only one of ignored_attributes and processed_attributes may be non-empty");
 
-  typedef typename boost::parameter::value_type<args, tag::length_factory, 
-    factory::length::default_factory>::type length_factory_type;
+  typedef typename detail::unwrap_context<Context, tag::length_policy>::template bind<args>::type::length_factory_type length_factory_type;
   
 public:
   typedef typename boost::parameter::value_type<args, tag::number_type, 
@@ -441,30 +442,21 @@ public:
 
 private:
   typedef typename boost::parameter::parameters<
-    boost::parameter::optional<tag::transform_policy>,
-    boost::parameter::optional<tag::load_transform_policy>,
     boost::parameter::optional<tag::referencing_element>
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
-  typedef typename boost::parameter::value_type<args, tag::transform_policy, 
-    typename policy::transform::by_context<Context>::type>::type transform_policy;
-  typedef typename boost::parameter::value_type<args, tag::load_transform_policy, 
-    policy::load_transform::default_policy<Context> >::type load_transform_policy;
   typedef typename boost::parameter::value_type<args, tag::referencing_element, 
     void>::type referencing_element;
   
   typedef calculate_viewport_adapter<
+    ElementTag,
+    referencing_element,
     typename base_type::length_factory_type::length_type, 
-    typename base_type::coordinate_type,
-    typename get_viewport_size_source<referencing_element, ElementTag>::type
+    typename base_type::coordinate_type
   > viewport_adapter;
   typedef typename boost::mpl::if_c< 
     base_type::basic_shapes_policy::viewport_as_transform,
     boost::mpl::single_view<
-      detail::viewport_transform_state<
-        viewport_adapter,
-        typename transform_policy,
-        typename load_transform_policy
-      > 
+      detail::viewport_transform_state<viewport_adapter> 
     >,
     typename boost::mpl::if_c<base_type::basic_shapes_policy::calculate_viewport,
       boost::mpl::single_view<viewport_adapter>,
@@ -500,6 +492,74 @@ public:
   attribute_dispatcher(Context & context)
     : base_type(context)
   {}
+};
+
+template<class Context, SVGPP_TEMPLATE_ARGS>
+class attribute_dispatcher<tag::element::marker, Context, SVGPP_TEMPLATE_ARGS_PASS>:
+  public attribute_dispatcher_base<tag::element::marker, Context, SVGPP_TEMPLATE_ARGS_PASS>
+{
+  typedef attribute_dispatcher_base<tag::element::marker, Context, SVGPP_TEMPLATE_ARGS_PASS> base_type;
+
+public:
+  attribute_dispatcher(Context & context)
+    : base_type(context)
+    , viewport_attributes_applied_(false)
+  {}
+
+  using base_type::load_attribute_value; 
+
+  template<class AttributeTag, class AttributeValue>
+  typename boost::enable_if_c<(base_type::basic_shapes_policy::marker_viewport_as_transform
+      || base_type::basic_shapes_policy::calculate_marker_viewport)
+    && boost::mpl::has_key<traits::marker_viewport_attributes, AttributeTag>::value, bool>::type
+  load_attribute_value(AttributeTag attribute_tag, AttributeValue const & attribute_value, 
+                       tag::source::attribute property_source)
+  {
+    BOOST_ASSERT(!viewport_attributes_applied_);
+    return value_parser<typename traits::attribute_type<tag::element::marker, AttributeTag>::type, 
+        SVGPP_TEMPLATE_ARGS_PASS>::parse(
+      attribute_tag, 
+      detail::adapt_context_load_value(context_, boost::fusion::at_c<0>(states_)), // TODO: change 0 for some meaningful value
+      attribute_value, property_source);
+  }
+
+  using base_type::notify;
+
+  bool notify(tag::event::after_viewport_attributes)
+  {
+    return on_exit_attributes();
+  }
+
+  bool on_exit_attributes()
+  {
+    if (viewport_attributes_applied_)
+      return true;
+
+    viewport_attributes_applied_ = true;
+
+    detail::on_exit_attributes_functor<Context, SVGPP_TEMPLATE_ARGS_PASS> fn(this->context_);
+    boost::fusion::for_each(states_, fn);
+    return fn.succeeded();
+  }
+
+private:
+  typedef calculate_marker_viewport_adapter<
+    typename base_type::length_factory_type::length_type, 
+    typename base_type::coordinate_type
+  > viewport_adapter;
+  typedef typename boost::mpl::if_c< 
+    base_type::basic_shapes_policy::marker_viewport_as_transform,
+    boost::mpl::single_view<
+      detail::viewport_transform_state<viewport_adapter> 
+    >,
+    typename boost::mpl::if_c<base_type::basic_shapes_policy::calculate_marker_viewport,
+      boost::mpl::single_view<viewport_adapter>,
+      boost::mpl::empty_sequence>::type
+  >::type state_types_sequence;
+  typedef typename boost::fusion::result_of::as_vector<state_types_sequence>::type state_types;
+
+  state_types states_;
+  bool viewport_attributes_applied_;
 };
 
 namespace detail

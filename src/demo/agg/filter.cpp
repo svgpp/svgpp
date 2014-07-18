@@ -332,7 +332,7 @@ struct context_factories
 
 void Filters::get(svg_string_t const & id, length_factory_t const &)
 {
-  if (XMLElement node = xml_document_.find_element_by_id(id))
+  if (XMLElement node = xml_document_.findElementById(id))
   {
     FilterContext filter_context;
     svgpp::document_traversal<

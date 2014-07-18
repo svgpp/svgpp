@@ -28,7 +28,7 @@ struct default_policy
   typedef Context context_type;
   typedef factory::length::default_factory const length_factory_type;
 
-  static length_factory_type & length_factory(Context &)
+  static length_factory_type & length_factory(Context const &)
   {
     return default_factory_instance;
   }

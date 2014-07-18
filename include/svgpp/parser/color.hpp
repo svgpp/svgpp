@@ -52,16 +52,19 @@ struct value_parser<tag::type::color_optional_icc_color, SVGPP_TEMPLATE_ARGS_PAS
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::parameter::parameters<
       boost::parameter::optional<tag::color_factory>,
-      boost::parameter::optional<tag::icc_color_factory>
+      boost::parameter::optional<tag::icc_color_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename detail::unwrap_context<Context, tag::color_factory>::bind<args2_t>::type color_factory_t;
-    typedef typename detail::unwrap_context<Context, tag::icc_color_factory>::bind<args2_t>::type icc_color_factory_t;
+    typedef detail::unwrap_context<Context, tag::icc_color_policy> icc_color_context_t;
+    typedef typename icc_color_context_t::bind<args2_t>::type icc_color_policy_t;
+    typedef typename icc_color_policy_t::icc_color_factory_type icc_color_factory_t;
 
     SVGPP_STATIC_IF_SAFE const color_optional_icc_color_grammar<
       PropertySource, iterator_t, color_factory_t, icc_color_factory_t> color_rule;
+    icc_color_factory_t & icc_color_factory = icc_color_policy_t::icc_color_factory(icc_color_context_t::get(context));
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     boost::tuple<typename color_factory_t::color_type, boost::optional<typename icc_color_factory_t::icc_color_type> > color;
-    if (qi::parse(it, end, color_rule, color) && it == end)
+    if (qi::parse(it, end, color_rule(boost::phoenix::ref(icc_color_factory)), color) && it == end)
     {
       if (color.get<1>())
         args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, color.get<0>(), *color.get<1>());

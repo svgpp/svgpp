@@ -12,9 +12,9 @@ public:
   ClipBuffer(int width, int height);
   ClipBuffer(ClipBuffer const & src);
 
-  alpha_mask_t const & alpha_mask() const { return alpha_mask_; }
+  alpha_mask_t const & alphaMask() const { return alpha_mask_; }
 
-  void intersect_clip_rect(agg::trans_affine const & transform, double x, double y, double width, double height);
+  void intersectClipRect(agg::trans_affine const & transform, double x, double y, double width, double height);
 
 private:
   std::vector<unsigned char> buffer_;

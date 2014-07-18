@@ -28,17 +28,20 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::parameter::parameters<
       boost::parameter::optional<tag::color_factory>,
-      boost::parameter::optional<tag::icc_color_factory>,
+      boost::parameter::optional<tag::icc_color_policy>,
       boost::parameter::optional<tag::iri_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename detail::unwrap_context<Context, tag::color_factory>::bind<args2_t>::type color_factory_t;
-    typedef typename detail::unwrap_context<Context, tag::icc_color_factory>::bind<args2_t>::type icc_color_factory_t;
+    typedef detail::unwrap_context<Context, tag::icc_color_policy> icc_color_context_t;
+    typedef typename icc_color_context_t::bind<args2_t>::type icc_color_policy_t;
+    typedef typename icc_color_policy_t::icc_color_factory_type icc_color_factory_t;
     typedef typename detail::unwrap_context<Context, tag::iri_policy>::bind<args2_t>::type iri_policy_t;
 
     SVGPP_STATIC_IF_SAFE const color_optional_icc_color_grammar<
       PropertySource, iterator_t, color_factory_t, icc_color_factory_t> color_optional_icc_color;
     boost::tuple<typename color_factory_t::color_type, boost::optional<typename icc_color_factory_t::icc_color_type> > 
       color;
+    icc_color_factory_t & icc_color_factory = icc_color_policy_t::icc_color_factory(icc_color_context_t::get(context));
     SVGPP_STATIC_IF_SAFE const funciri_grammar<iterator_t> funciri_rule;
     typename boost::iterator_range<iterator_t> iri;
     static const int opt_not_set = 0, opt_none = 1, opt_currentColor = 2, opt_inherit = 3, opt_color = 4, opt_funciri = 5;
@@ -48,12 +51,14 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
         qi::lit("none")           [phx::ref(main_option) = opt_none]
       | qi::lit("currentColor")   [phx::ref(main_option) = opt_currentColor]
       | qi::lit("inherit")        [phx::ref(main_option) = opt_inherit]
-      | color_optional_icc_color  [phx::ref(color) = qi::_1, phx::ref(main_option) = opt_color]
+      | color_optional_icc_color(boost::phoenix::ref(icc_color_factory))  
+         [phx::ref(color) = qi::_1, phx::ref(main_option) = opt_color]
       | ( funciri_rule [phx::ref(iri) = qi::_1]
           >> - ( +space
                   >> ( qi::lit("none")          [phx::ref(funciri_suboption) = opt_none]
                      | qi::lit("currentColor")  [phx::ref(funciri_suboption) = opt_currentColor]
-                     | color_optional_icc_color [phx::ref(color) = qi::_1, phx::ref(funciri_suboption) = opt_color]
+                     | color_optional_icc_color(boost::phoenix::ref(icc_color_factory)) 
+                        [phx::ref(color) = qi::_1, phx::ref(funciri_suboption) = opt_color]
                      )
                )
         ) [phx::ref(main_option) = opt_funciri];

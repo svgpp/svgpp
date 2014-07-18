@@ -26,6 +26,6 @@ struct angle_conversion_coefficient<tag::angle_units::grad, tag::angle_units::de
 
 template<class Number>
 struct angle_conversion_coefficient<tag::angle_units::rad, tag::angle_units::deg, Number>
-{ static BOOST_CONSTEXPR Number value() { boost::math::constants::radian<Number>(); } };
+{ static BOOST_CONSTEXPR Number value() { return boost::math::constants::radian<Number>(); } };
 
 }}

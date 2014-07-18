@@ -26,7 +26,7 @@ ClipBuffer::ClipBuffer(ClipBuffer const & src)
   , alpha_mask_(rbuf_)
 {}
 
-void ClipBuffer::intersect_clip_rect(agg::trans_affine const & transform, double x, double y, double width, double height)
+void ClipBuffer::intersectClipRect(agg::trans_affine const & transform, double x, double y, double width, double height)
 {
   typedef agg::renderer_scanline_aa_solid<renderer_base_t> renderer_t;
 
@@ -77,7 +77,7 @@ boost::optional<ClipPath> ClipPaths::get(
     get_bounding_box_func_t const & get_bounding_box*/)
 {
   // TODO: inheritance via xlink::href
-  if (XMLElement node = xml_document_.find_element_by_id(id))
+  if (XMLElement node = xml_document_.findElementById(id))
   {
     try
     {

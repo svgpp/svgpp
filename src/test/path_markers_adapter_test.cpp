@@ -89,7 +89,7 @@ namespace
 
   void DoTest(Context & context, std::string const & path_string, MarkerSequence const & expected_markers)
   {
-    typedef svgpp::path_markers_adapter<Context, double> markers_adapter_t;
+    typedef svgpp::path_markers_adapter<Context> markers_adapter_t;
     markers_adapter_t markers_adapter(context);
     //svgpp::path_adapter<markers_adapter_t, svgpp::path_policies_no_shorthands> path_adapter(markers_adapter);
     svgpp::value_parser<svgpp::tag::type::path_data>::parse(

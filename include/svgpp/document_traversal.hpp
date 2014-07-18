@@ -123,7 +123,6 @@ protected:
     , boost::parameter::optional<tag::xml_element_policy>
     , boost::parameter::optional<tag::load_text_policy>
     , boost::parameter::optional<tag::error_policy>
-    , boost::parameter::optional<tag::length_factory>
     , boost::parameter::optional<tag::ignored_elements, boost::mpl::is_sequence<boost::mpl::_> >
     , boost::parameter::optional<tag::processed_elements, boost::mpl::is_sequence<boost::mpl::_> >
     , boost::parameter::optional<tag::document_traversal_control_policy>

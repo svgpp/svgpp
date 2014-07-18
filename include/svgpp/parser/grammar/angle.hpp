@@ -39,11 +39,11 @@ public:
     rule_ 
         =   number_ [_a = _1] 
             >>  ( lit("deg")
-                      [_val = phx::bind(&angle_grammar::call_make_angle<tag::angle_units::deg>, this, _a)]
+                      [_val = phx::bind(&angle_grammar::call_make_angle<tag::angle_units::deg>, _a)]
                 | lit("grad")
-                      [_val = phx::bind(&angle_grammar::call_make_angle<tag::angle_units::grad>, this, _a)]
+                      [_val = phx::bind(&angle_grammar::call_make_angle<tag::angle_units::grad>, _a)]
                 | lit("rad")
-                      [_val = phx::bind(&angle_grammar::call_make_angle<tag::angle_units::rad>, this, _a)]
+                      [_val = phx::bind(&angle_grammar::call_make_angle<tag::angle_units::rad>, _a)]
                 );
   }
 

@@ -15,7 +15,8 @@ template <
   class ICCColorFactory
 >
 class color_optional_icc_color_grammar:
-  public qi::grammar<Iterator, boost::tuple<typename ColorFactory::color_type, boost::optional<typename ICCColorFactory::icc_color_type> >() >
+  public qi::grammar<Iterator, 
+    boost::tuple<typename ColorFactory::color_type, boost::optional<typename ICCColorFactory::icc_color_type> >(ICCColorFactory const &) >
 {
   typedef color_optional_icc_color_grammar<PropertySource, Iterator, ColorFactory, ICCColorFactory> this_type;
 public:
@@ -27,7 +28,7 @@ public:
     rule_ = 
         color_rule_
         >> - ( +space 
-                >> icc_color_rule_
+                >> icc_color_rule_(qi::_r1)
              );
   }
 
