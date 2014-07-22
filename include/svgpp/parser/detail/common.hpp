@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <boost/spirit/include/qi.hpp>
@@ -26,7 +33,7 @@ template<class Coordinate>
 struct number_policies<Coordinate, tag::source::attribute>: svg_real_policies<Coordinate>
 {
   template <typename Iterator>
-  static BOOST_CONSTEXPR bool parse_exp(Iterator & first, Iterator const & last)
+  static bool parse_exp(Iterator & first, Iterator const & last)
   {
     // Check that "e" is followed by integer to be able to parse something like "4em" correctly
     Iterator it = first;
@@ -35,7 +42,7 @@ struct number_policies<Coordinate, tag::source::attribute>: svg_real_policies<Co
       // Do some prefetch before accepting "e" as start of the exponent part
       Iterator it2 = it;
       int exp_val;
-      if (parse_exp_n(it2, last, exp_val))
+      if (svg_real_policies<Coordinate>::parse_exp_n(it2, last, exp_val))
       {
         first = it;
         return true;

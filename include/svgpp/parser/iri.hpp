@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/config.hpp>
@@ -23,16 +30,16 @@ struct iri_value_parser
     typedef typename boost::parameter::parameters<
       boost::parameter::optional<tag::iri_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
-    typedef typename detail::unwrap_context<Context, tag::iri_policy>::bind<args2_t>::type iri_policy_t;
+    typedef typename detail::unwrap_context<Context, tag::iri_policy>::template bind<args2_t>::type iri_policy_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
 
-    SVGPP_STATIC_IF_SAFE GetGrammarMetafunction::apply<iterator_t>::type iri_rule;
+    SVGPP_STATIC_IF_SAFE typename GetGrammarMetafunction::template apply<iterator_t>::type iri_rule;
     boost::iterator_range<iterator_t> iri;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (qi::parse(it, end, iri_rule, iri) && it == end)
     {
-      typedef load_value_with_iri_policy<
-        args_t::load_value_policy, 
+      typedef typename load_value_with_iri_policy<
+        typename args_t::load_value_policy, 
         iri_policy_t
       >::type load_value_policy_t;
       load_value_policy_t::set(args_t::load_value_context::get(context), tag, iri);

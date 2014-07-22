@@ -28,7 +28,7 @@ TEST(LengthFactory, full)
 
   EXPECT_NEAR(125, factory.create_length(50, svgpp::tag::length_units::percent(), svgpp::tag::width_length()), 1e-8);
   EXPECT_NEAR(60, factory.create_length(50, svgpp::tag::length_units::percent(), svgpp::tag::height_length()), 1e-8);
-  EXPECT_NEAR(std::sqrt(250 * 250 + 120 * 120)/std::sqrt(2)/2, 
+  EXPECT_NEAR(std::sqrt(250. * 250 + 120 * 120)/std::sqrt(2.)/2, 
     factory.create_length(50, svgpp::tag::length_units::percent(), svgpp::tag::not_width_nor_height_length()), 1e-8);
 
   factory.set_viewport_size(300, 300);

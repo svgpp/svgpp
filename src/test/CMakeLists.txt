@@ -49,14 +49,14 @@ set(CHECK_HEADERS_DIR check_headers)
 file(GLOB_RECURSE SVGPP_HEADERS_HPP RELATIVE  ${CMAKE_CURRENT_SOURCE_DIR}/../../include/svgpp ${CMAKE_CURRENT_SOURCE_DIR}/../../include/svgpp/*.hpp)
 
 foreach(i ${SVGPP_HEADERS_HPP})
-  string(REPLACE "/" "_" _name ${i})
-  string(REPLACE "." "_" _file_name ${_name})
-  set(_file_name "${CMAKE_BINARY_DIR}/${CHECK_HEADERS_DIR}/check_${_file_name}.cpp")
-  message(${_file_name})
-  file(WRITE ${_file_name} "#include <svgpp/${i}>")
-  list(APPEND CHECK_HEADERS_SOURCES
-    ${_file_name}
-  )
+  if (NOT ${i} MATCHES "policy/xml/.*")
+    string(REPLACE "/" "_" _name ${i})
+    string(REPLACE "." "_" _file_name ${_name})
+    set(_file_name "${CMAKE_BINARY_DIR}/${CHECK_HEADERS_DIR}/check_${_file_name}.cpp")
+    message(${_file_name})
+    file(WRITE ${_file_name} "#include <svgpp/${i}>")
+    list(APPEND CHECK_HEADERS_SOURCES ${_file_name})
+  endif()
 endforeach()
 
 if (MSVC)
@@ -64,7 +64,7 @@ if (MSVC)
   set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /W4")
 endif()
 
-add_executable(CheckHeadersAutonomy
+add_library(CheckHeadersAutonomy STATIC
   ${CHECK_HEADERS_SOURCES}
 )
 

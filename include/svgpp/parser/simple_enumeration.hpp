@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/detail/literal_values_dictionary.hpp>
@@ -58,8 +65,7 @@ template<class EnumerationIdMetafunction, SVGPP_TEMPLATE_ARGS>
 struct simple_enumeration_parser
 {
   template<class AttributeTag, class Context, class ValueRange, class PropertySource>
-  static bool parse(AttributeTag, Context & context, 
-    ValueRange const & attribute_value, PropertySource)
+  static bool parse(AttributeTag tag, Context & context, ValueRange const & attribute_value, PropertySource)
   {
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::mpl::apply1<EnumerationIdMetafunction, AttributeTag>::type type_id_t;
@@ -69,13 +75,16 @@ struct simple_enumeration_parser
     simple_enumeration_type_visitor<
       dictionary_t, 
       AttributeTag, 
-      args_t::load_value_context::type, 
-      args_t::load_value_policy,
+      typename args_t::load_value_context::type, 
+      typename args_t::load_value_policy,
       ValueRange,
       boost::is_same<PropertySource, tag::source::attribute>::value
     > fn(args_t::load_value_context::get(context), attribute_value);
     boost::mpl::for_each<tag_list>(boost::ref(fn));
-    return fn.found();
+    if (fn.found())
+      return true;
+    else
+      return args_t::error_policy::parse_failed(args_t::error_policy_context::get(context), tag, attribute_value);
   }
 };
 
@@ -85,7 +94,6 @@ template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::type::simple_enumeration, SVGPP_TEMPLATE_ARGS_PASS>
   : detail::simple_enumeration_parser<boost::mpl::quote1<boost::mpl::identity>, SVGPP_TEMPLATE_ARGS_PASS>
 {
-  // TODO: error handling
 };
 
 template<class ElementTag, SVGPP_TEMPLATE_ARGS>

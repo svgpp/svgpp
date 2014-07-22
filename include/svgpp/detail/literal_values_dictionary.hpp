@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #if !BOOST_PP_IS_ITERATING
 
 #ifndef FILE_0C568232_06D8_4754_93E0_95F1E170E5B5_H_
@@ -42,13 +49,13 @@ struct literal_values_dictionary<SVGPP_ITER_CHAR_TYPE>
   : property_values_dictionary<SVGPP_ITER_CHAR_TYPE> 
 { 
   template<class ValueTag>
-  static BOOST_CONSTEXPR string_type get_name();
+  static string_type get_name();
 };
 
 #define SVGPP_ON_VALUE(name) SVGPP_ON_VALUE2(name, name)
 #define SVGPP_ON_VALUE2(name, string) \
   template<> \
-  inline BOOST_CONSTEXPR literal_values_dictionary<SVGPP_ITER_CHAR_TYPE>::string_type \
+  inline literal_values_dictionary<SVGPP_ITER_CHAR_TYPE>::string_type \
     literal_values_dictionary<SVGPP_ITER_CHAR_TYPE>::get_name<tag::value::name>() \
   { static const SVGPP_ITER_CHAR_TYPE value[] = SVGPP_ITER_STRINGIZE(string); \
     return string_type(value, value + sizeof(value)/sizeof(value[0]) - 1); }

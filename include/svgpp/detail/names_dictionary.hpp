@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #if !BOOST_PP_IS_ITERATING
 
 #ifndef FILE_B3F16CC7_A6B9_4315_9958_A9FE298EC3A7_H_

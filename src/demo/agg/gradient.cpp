@@ -201,24 +201,24 @@ struct gradient_context_factories
 {
   template<class ParentContext, class ElementTag>
   struct apply;
+};
 
-  template<>
-  struct apply<GradientContext, svgpp::tag::element::linearGradient>
-  {
-    typedef svgpp::context_factory::on_stack<GradientContext, LinearGradientContext> type;
-  };
+template<>
+struct gradient_context_factories::apply<GradientContext, svgpp::tag::element::linearGradient>
+{
+  typedef svgpp::context_factory::on_stack<GradientContext, LinearGradientContext> type;
+};
 
-  template<>
-  struct apply<GradientContext, svgpp::tag::element::radialGradient>
-  {
-    typedef svgpp::context_factory::on_stack<GradientContext, RadialGradientContext> type;
-  };
+template<>
+struct gradient_context_factories::apply<GradientContext, svgpp::tag::element::radialGradient>
+{
+  typedef svgpp::context_factory::on_stack<GradientContext, RadialGradientContext> type;
+};
 
-  template<class ParentContext>
-  struct apply<ParentContext, svgpp::tag::element::stop>
-  {
-    typedef svgpp::context_factory::on_stack<ParentContext, GradientStopContext> type;
-  };
+template<class ParentContext>
+struct gradient_context_factories::apply<ParentContext, svgpp::tag::element::stop>
+{
+  typedef svgpp::context_factory::on_stack<ParentContext, GradientStopContext> type;
 };
 
 }
@@ -235,18 +235,6 @@ struct attribute_traversal: svgpp::policy::attribute_traversal::default_policy
   > get_priority_attributes_by_element;
 };
 
-namespace svgpp { namespace policy { namespace length {
-
-  template<> struct default_policy<LinearGradientContext>
-    : forward_to_method<LinearGradientContext, const length_factory_t>
-  {};
-
-  template<> struct default_policy<RadialGradientContext>
-    : forward_to_method<RadialGradientContext, const length_factory_t>
-  {};
-
-}}}
-
 boost::optional<Gradient> Gradients::get(
     svg_string_t const & id, 
     length_factory_t const & length_factory/*, 
@@ -262,6 +250,7 @@ boost::optional<Gradient> Gradients::get(
         svgpp::context_factories<gradient_context_factories>,
         svgpp::color_factory<color_factory_t>,
         svgpp::attribute_traversal_policy<attribute_traversal>,
+        svgpp::length_policy<svgpp::policy::length::forward_to_method<GradientBaseContext, const length_factory_t> >,
         svgpp::processed_elements<
           boost::mpl::set<
             svgpp::tag::element::linearGradient,
@@ -289,10 +278,8 @@ boost::optional<Gradient> Gradients::get(
           >
         >
       >::load_referenced_element<
-        void, // Doesn't matter
-        svgpp::traits::gradient_elements, 
-        svgpp::processed_elements<svgpp::traits::gradient_elements>
-      >(node, gradient_context);
+        svgpp::expected_elements<svgpp::traits::gradient_elements>
+      >::load(node, gradient_context);
       return gradient_context.gradient_;
     } catch (std::exception const & e)
     {

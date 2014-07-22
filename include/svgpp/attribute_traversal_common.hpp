@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <boost/parameter.hpp>
@@ -7,7 +14,7 @@
 namespace svgpp
 {
 
-BOOST_PARAMETER_TEMPLATE_KEYWORD(xml_attribute_iterator_policy)
+BOOST_PARAMETER_TEMPLATE_KEYWORD(xml_attribute_policy)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(css_name_to_id_policy)
 
 struct css_name_to_id_policy_default

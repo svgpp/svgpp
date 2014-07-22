@@ -402,20 +402,6 @@ namespace rapidxml_ns
             return true;
         }
 
-        template<class Ch>
-        Ch const * xmlns_namespace_prefix()
-        {
-            static const Ch value[] = {'x', 'm', 'l', 'n', 's'};
-            return value;
-        }
-
-        template<class Ch>
-        void set_xmlns_namespace_uri(xml_attribute<Ch> * attr)
-        {
-            static const Ch value[] = {Ch('x'), Ch('m'), Ch('l'), Ch('n'), Ch('s')};
-            http://www.w3.org/2000/xmlns/
-        }
-
         template<class Ch, class NamespaceStorage>
         void assign_element_namespace_uris(xml_node<Ch> * element, NamespaceStorage & ns_storage)
         {
@@ -431,12 +417,13 @@ namespace rapidxml_ns
                         attr->namespace_uri(xmlns_namespace<Ch>::uri(), xmlns_namespace<Ch>::uri_size);
                         ns_storage.set_default_namespace(attr);
                     }
-                    break;
+                    continue;
                 case xml_namespace<Ch>::prefix_size:
                     if (compare(attr->prefix(), attr->prefix_size(), 
                         xml_namespace<Ch>::prefix(), xml_namespace<Ch>::prefix_size))
                     {
                         attr->namespace_uri(xml_namespace<Ch>::uri(), xml_namespace<Ch>::uri_size);
+                        continue;
                     }
                     break;
                 case xmlns_namespace<Ch>::prefix_size:
@@ -445,13 +432,12 @@ namespace rapidxml_ns
                     {
                         attr->namespace_uri(xmlns_namespace<Ch>::uri(), xmlns_namespace<Ch>::uri_size);
                         ns_storage.add_namespace_prefix(attr);
+                        continue;
                     }
                     break;
-                default:
-                    if (!first_prefixed_attribute)
-                        first_prefixed_attribute = attr;
-                    break;
                 } // switch
+                if (!first_prefixed_attribute)
+                    first_prefixed_attribute = attr;
             } // for
             if (element->prefix_size() == 0)
                 ns_storage.set_element_default_namespace_uri(element);
@@ -514,7 +500,7 @@ namespace rapidxml_ns
                 {
                     Ch const * prefix = node->prefix();
                     std::size_t prefix_size = node->prefix_size();
-                    for (xml_namespace_processor::xmlns_attributes_t::const_reverse_iterator 
+                    for (typename xml_namespace_processor::xmlns_attributes_t::const_reverse_iterator 
                             it = m_processor.m_namespace_prefixes.rbegin();
                             it != m_processor.m_namespace_prefixes.rend(); ++it)
                         if (compare((*it)->local_name(), (*it)->local_name_size(), prefix, prefix_size))
@@ -543,10 +529,10 @@ namespace rapidxml_ns
           class scope
           {
           public:
-            scope(xml_namespace_processor_stub & processor)
+            scope(xml_namespace_processor_stub &)
             {}
 
-            scope(scope const & parent_scope)
+            scope(scope const &)
             {}
 
             void process_element(xml_node<Ch> *) const
@@ -894,17 +880,24 @@ namespace rapidxml_ns
             return m_local_name ? (m_name_size - (m_local_name - m_name)) : 0;
         }
 
+        // Gets namespace prefix.
+        // Returned string is never zero-terminated, regardless of parse_no_string_terminators. Use prefix_size()
+        // "Note that the prefix functions only as a placeholder for a namespace name. Applications 
+        // SHOULD use the namespace name, not the prefix, in constructing names whose scope extends beyond the containing 
+        // document" Namespaces in XML 1.0 (Third Edition)
         Ch *prefix() const
         {
             return m_name ? m_name : nullstr();
         }
 
+        //! Gets size of namespace prefix, not including terminator character.
+        //! \return Size of namespace prefix, in characters.
         std::size_t prefix_size() const
         {
             return (m_name && m_local_name > m_name) ? (m_local_name - m_name - 1) : 0;
         }
 
-        //! Gets name of the node. 
+        //! Gets QName of the node. 
         //! Interpretation of name depends on type of node.
         //! Note that name will not be zero-terminated if rapidxml_ns::parse_no_string_terminators option was selected during parse.
         //! <br><br>
@@ -915,7 +908,7 @@ namespace rapidxml_ns
             return m_name ? m_name : nullstr();
         }
 
-        //! Gets size of node name, not including terminator character.
+        //! Gets size of node QName, not including terminator character.
         //! This function works correctly irrespective of whether name is or is not zero terminated.
         //! \return Size of node name, in characters.
         std::size_t name_size() const
@@ -955,7 +948,7 @@ namespace rapidxml_ns
         ///////////////////////////////////////////////////////////////////////////
         // Node modification
     
-        //! Sets name of node to a non zero-terminated string.
+        //! Sets QName of node to a non zero-terminated string.
         //! See \ref ownership_of_strings.
         //! <br><br>
         //! Note that node does not own its name or value, it only stores a pointer to it. 
@@ -964,20 +957,20 @@ namespace rapidxml_ns
         //! The easiest way to achieve it is to use memory_pool of the document to allocate the string -
         //! on destruction of the document the string will be automatically freed.
         //! <br><br>
+        //! Note that passed string will not be automatically divided to prefix and local_name,
+        //! it seems useless for manual node creation. qname() may be used instead
+        //! local_name() will be set to be equal to name()
+        //! <br><br>
         //! Size of name must be specified separately, because name does not have to be zero terminated.
         //! Use name(const Ch *) function to have the length automatically calculated (string must be zero terminated).
-        //! \param name Name of node to set. Does not have to be zero terminated.
+        //! \param name QName of node to set. Does not have to be zero terminated.
         //! \param size Size of name, in characters. This does not include zero terminator, if one is present.
         void name(const Ch *name, std::size_t size)
         {
-            // We won't divide for prefix and local part, because it seems useless
-            // for manual node creation. qname() may be used instead
-            m_name = const_cast<Ch *>(name);
-            m_name_size = size;
-            m_local_name = m_name;
+            qname(name, size);
         }
 
-        //! Sets name of node to a zero-terminated string.
+        //! Sets QName of node to a zero-terminated string.
         //! See also \ref ownership_of_strings and xml_node::name(const Ch *, std::size_t).
         //! \param name Name of node to set. Must be zero terminated.
         void name(const Ch *name)
@@ -1146,6 +1139,26 @@ namespace rapidxml_ns
                 return this->m_parent ? m_next_attribute : 0;
         }
 
+        xml_attribute<Ch> *next_attribute_ns(const Ch * namespace_uri, const Ch *local_name, 
+                                             bool local_name_case_sensitive = true) const
+        {
+            return next_attribute_ns(namespace_uri, internal::measure(namespace_uri), 
+                local_name, internal::measure(local_name), local_name_case_sensitive);
+        }
+
+        xml_attribute<Ch> *next_attribute_ns(const Ch * namespace_uri, std::size_t namespace_uri_size, 
+                                             const Ch *local_name,     std::size_t local_name_size, 
+                                             bool local_name_case_sensitive = true) const
+        {
+            for (xml_attribute<Ch> *attribute = m_next_attribute; attribute; attribute = attribute->m_next_attribute)
+                if (internal::compare(attribute->local_name(), attribute->local_name_size(), 
+                        local_name, local_name_size, local_name_case_sensitive)
+                    && internal::compare(attribute->namespace_uri(), attribute->namespace_uri_size(), 
+                        namespace_uri, namespace_uri_size))
+                    return attribute;
+            return 0;
+        }
+
     private:
 
         xml_attribute<Ch> *m_prev_attribute;        // Pointer to previous sibling of attribute, or 0 if none; only valid if parent is non-zero
@@ -1226,6 +1239,36 @@ namespace rapidxml_ns
                 return m_first_node;
         }
 
+        xml_node<Ch> *first_node_ns(const Ch * namespace_uri, const Ch *local_name, 
+                                    bool local_name_case_sensitive = true) const
+        {
+            return first_node_ns(namespace_uri, internal::measure(namespace_uri), 
+                local_name, internal::measure(local_name), local_name_case_sensitive);
+        }
+
+        xml_node<Ch> *first_node_ns(const Ch * namespace_uri, std::size_t namespace_uri_size, 
+                                    const Ch *local_name,     std::size_t local_name_size, 
+                                    bool local_name_case_sensitive = true) const
+        {
+            for (xml_node<Ch> *child = m_first_node; child; child = child->next_sibling())
+                if (internal::compare(child->local_name(), child->local_name_size(), 
+                        local_name, local_name_size, local_name_case_sensitive)
+                    && internal::compare(child->namespace_uri(), child->namespace_uri_size(), 
+                        namespace_uri, namespace_uri_size))
+                    return child;
+            return 0;
+        }
+
+        xml_node<Ch> *first_node_ns(const Ch *namespace_uri, std::size_t namespace_uri_size = 0) const
+        {
+            if (namespace_uri_size == 0)
+                namespace_uri_size = internal::measure(namespace_uri);
+            for (xml_node<Ch> *child = m_first_node; child; child = child->next_sibling())
+                if (internal::compare(child->namespace_uri(), child->namespace_uri_size(), namespace_uri, namespace_uri_size))
+                    return child;
+            return 0;
+        }
+
         //! Gets last child node, optionally matching node name. 
         //! Behaviour is undefined if node has no children.
         //! Use first_node() to test if node has children.
@@ -1295,6 +1338,36 @@ namespace rapidxml_ns
                 return m_next_sibling;
         }
 
+        xml_node<Ch> *next_sibling_ns(const Ch * namespace_uri, const Ch *local_name, 
+                                      bool local_name_case_sensitive = true) const
+        {
+            return next_sibling_ns(namespace_uri, internal::measure(namespace_uri), 
+                local_name, internal::measure(local_name), local_name_case_sensitive);
+        }
+
+        xml_node<Ch> *next_sibling_ns(const Ch * namespace_uri, std::size_t namespace_uri_size, 
+                                      const Ch *local_name,     std::size_t local_name_size, 
+                                      bool local_name_case_sensitive = true) const
+        {
+            for (xml_node<Ch> *sibling = m_next_sibling; sibling; sibling = sibling->m_next_sibling)
+                if (internal::compare(sibling->local_name(), sibling->local_name_size(), 
+                        local_name, local_name_size, local_name_case_sensitive)
+                    && internal::compare(sibling->namespace_uri(), sibling->namespace_uri_size(), 
+                        namespace_uri, namespace_uri_size))
+                    return sibling;
+            return 0;
+        }
+
+        xml_node<Ch> *next_sibling_ns(const Ch *namespace_uri, std::size_t namespace_uri_size = 0) const
+        {
+            if (namespace_uri_size == 0)
+                namespace_uri_size = internal::measure(namespace_uri);
+            for (xml_node<Ch> *sibling = m_next_sibling; sibling; sibling = sibling->m_next_sibling)
+                if (internal::compare(sibling->namespace_uri(), sibling->namespace_uri_size(), namespace_uri, namespace_uri_size))
+                    return sibling;
+            return 0;
+        }
+
         //! Gets first attribute of node, optionally matching attribute name.
         //! \param name Name of attribute to find, or 0 to return first attribute regardless of its name; this string doesn't have to be zero-terminated if name_size is non-zero
         //! \param name_size Size of name, in characters, or 0 to have size calculated automatically from string
@@ -1313,6 +1386,26 @@ namespace rapidxml_ns
             }
             else
                 return m_first_attribute;
+        }
+
+        xml_attribute<Ch> *first_attribute_ns(const Ch * namespace_uri, const Ch *local_name, 
+                                             bool local_name_case_sensitive = true) const
+        {
+            return first_attribute_ns(namespace_uri, internal::measure(namespace_uri), 
+                local_name, internal::measure(local_name), local_name_case_sensitive);
+        }
+
+        xml_attribute<Ch> *first_attribute_ns(const Ch * namespace_uri, std::size_t namespace_uri_size, 
+                                             const Ch *local_name,     std::size_t local_name_size, 
+                                             bool local_name_case_sensitive = true) const
+        {
+            for (xml_attribute<Ch> *attribute = m_first_attribute; attribute; attribute = attribute->m_next_attribute)
+                if (internal::compare(attribute->local_name(), attribute->local_name_size(), 
+                        local_name, local_name_size, local_name_case_sensitive)
+                    && internal::compare(attribute->namespace_uri(), attribute->namespace_uri_size(), 
+                        namespace_uri, namespace_uri_size))
+                    return attribute;
+            return 0;
         }
 
         //! Gets last attribute of node, optionally matching attribute name.
@@ -1675,7 +1768,7 @@ namespace rapidxml_ns
             
             NamespaceProcessor namespace_processor;
             // Creating topmost namespace scope that actually won't be used
-            NamespaceProcessor::scope const namespace_scope(namespace_processor);
+            typename NamespaceProcessor::scope const namespace_scope(namespace_processor);
 
             // Parse BOM, if any
             parse_bom<Flags>(text);
@@ -1692,7 +1785,7 @@ namespace rapidxml_ns
                 if (*text == Ch('<'))
                 {
                     ++text;     // Skip '<'
-                    if (xml_node<Ch> *node = parse_node<Flags, NamespaceProcessor::scope>(text, namespace_scope))
+                    if (xml_node<Ch> *node = parse_node<Flags, typename NamespaceProcessor::scope>(text, namespace_scope))
                         this->append_node(node);
                 }
                 else

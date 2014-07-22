@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/config.hpp>
@@ -31,11 +38,11 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
       boost::parameter::optional<tag::icc_color_policy>,
       boost::parameter::optional<tag::iri_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
-    typedef typename detail::unwrap_context<Context, tag::color_factory>::bind<args2_t>::type color_factory_t;
+    typedef typename detail::unwrap_context<Context, tag::color_factory>::template bind<args2_t>::type color_factory_t;
     typedef detail::unwrap_context<Context, tag::icc_color_policy> icc_color_context_t;
-    typedef typename icc_color_context_t::bind<args2_t>::type icc_color_policy_t;
+    typedef typename icc_color_context_t::template bind<args2_t>::type icc_color_policy_t;
     typedef typename icc_color_policy_t::icc_color_factory_type icc_color_factory_t;
-    typedef typename detail::unwrap_context<Context, tag::iri_policy>::bind<args2_t>::type iri_policy_t;
+    typedef typename detail::unwrap_context<Context, tag::iri_policy>::template bind<args2_t>::type iri_policy_t;
 
     SVGPP_STATIC_IF_SAFE const color_optional_icc_color_grammar<
       PropertySource, iterator_t, color_factory_t, icc_color_factory_t> color_optional_icc_color;
@@ -66,9 +73,9 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (qi::parse(it, end, rule) && it == end)
     {
-      typedef args_t::load_value_policy load_value_policy_t;
-      args_t::load_value_context::type & load_value_context = args_t::load_value_context::get(context);
-      typedef detail::load_value_with_iri_policy<load_value_policy_t, iri_policy_t>::type 
+      typedef typename args_t::load_value_policy load_value_policy_t;
+      typename args_t::load_value_context::type & load_value_context = args_t::load_value_context::get(context);
+      typedef typename detail::load_value_with_iri_policy<load_value_policy_t, iri_policy_t>::type 
         load_value_with_iri_policy_t;
 
       switch (main_option)
@@ -83,10 +90,10 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
         load_value_policy_t::set(load_value_context, tag, tag::value::inherit());
         break;
       case opt_color:
-        if (color.get<1>())
-          load_value_policy_t::set(load_value_context, tag, color.get<0>(), *color.get<1>());
+        if (color.template get<1>())
+          load_value_policy_t::set(load_value_context, tag, color.template get<0>(), *color.template get<1>());
         else
-          load_value_policy_t::set(load_value_context, tag, color.get<0>());
+          load_value_policy_t::set(load_value_context, tag, color.template get<0>());
         break;
       case opt_funciri:
         switch (funciri_suboption)
@@ -101,10 +108,10 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
           load_value_with_iri_policy_t::set(load_value_context, tag, iri, tag::value::currentColor());
           break;
         case opt_color:
-          if (color.get<1>())
-            load_value_with_iri_policy_t::set(load_value_context, tag, iri, color.get<0>(), *color.get<1>());
+          if (color.template get<1>())
+            load_value_with_iri_policy_t::set(load_value_context, tag, iri, color.template get<0>(), *color.template get<1>());
           else
-            load_value_with_iri_policy_t::set(load_value_context, tag, iri, color.get<0>());
+            load_value_with_iri_policy_t::set(load_value_context, tag, iri, color.template get<0>());
           break;
         }
         break;

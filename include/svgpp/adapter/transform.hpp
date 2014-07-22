@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <cmath>
@@ -8,6 +15,7 @@
 #include <boost/parameter.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
+#include <svgpp/detail/adapt_context.hpp>
 #include <svgpp/policy/load_transform.hpp>
 #include <svgpp/policy/transform.hpp>
 
@@ -312,7 +320,7 @@ public:
     original_load_transform_policy
   > type;
 
-  typedef adapted_context_wrapper<
+  typedef const adapted_context_wrapper<
     OriginalContext, 
     type, 
     tag::load_transform_policy, 

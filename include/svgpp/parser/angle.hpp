@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/config.hpp>
@@ -23,9 +30,9 @@ struct value_parser<tag::type::angle, SVGPP_TEMPLATE_ARGS_PASS>
     typedef typename boost::parameter::parameters<
       boost::parameter::optional<tag::angle_factory>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
-    typedef typename detail::unwrap_context<Context, tag::angle_factory>::bind<args2_t>::type angle_factory_t;
+    typedef typename detail::unwrap_context<Context, tag::angle_factory>::template bind<args2_t>::type angle_factory_t;
 
-    SVGPP_STATIC_IF_SAFE const angle_grammar<PropertySource, iterator_t, angle_factory_t, args_t::number_type> grammar;
+    SVGPP_STATIC_IF_SAFE const angle_grammar<PropertySource, iterator_t, angle_factory_t, typename args_t::number_type> grammar;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     typename angle_factory_t::angle_type value;
     if (boost::spirit::qi::parse(it, end, grammar, value) 

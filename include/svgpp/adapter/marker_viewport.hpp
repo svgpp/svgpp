@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/adapter/viewport.hpp>
@@ -10,11 +17,13 @@ class calculate_marker_viewport_adapter:
   public detail::collect_viewbox_adapter<Coordinate>,
   boost::noncopyable
 {
+  typedef detail::collect_viewbox_adapter<Coordinate> base_type;
+
 public:
   template<class Context>
   bool on_exit_attributes(Context & context) const
   {
-    typedef typename detail::unwrap_context<Context, tag::load_value_policy> load_value;
+    typedef typename detail::unwrap_context<Context, tag::load_viewport_policy> load_viewport;
     typedef typename detail::unwrap_context<Context, tag::error_policy> error_policy;
     typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
     typedef typename length_policy_context::policy length_policy_t;
@@ -49,27 +58,27 @@ public:
     if (marker_height < 0)
       return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::markerHeight());
 
-    if (viewbox_)
+    if (this->viewbox_)
     {
-      if (viewbox_->get<2>() == 0 || viewbox_->get<3>() == 0)
+      if (this->viewbox_->template get<2>() == 0 || this->viewbox_->template get<3>() == 0)
         // TODO: disable rendering
         return true;
-      if (viewbox_->get<2>() < 0 || viewbox_->get<3>() < 0)
+      if (this->viewbox_->template get<2>() < 0 || this->viewbox_->template get<3>() < 0)
         return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::viewBox());
 
       Coordinate translate_x, translate_y, scale_x, scale_y;
       boost::apply_visitor(
-        options_visitor<length_policy_t::length_factory_type>(*viewbox_,
+        typename base_type::template options_visitor<typename length_policy_t::length_factory_type>(*this->viewbox_,
           marker_width, marker_height,
           translate_x, translate_y, scale_x, scale_y), 
-        align_, meetOrSlice_);
+        this->align_, this->meetOrSlice_);
       Coordinate dx = -ref_x * scale_x - translate_x;
       Coordinate dy = -ref_y * scale_y - translate_y;
-      load_value::policy::set_viewport(load_value::get(context), dx, dy, marker_width, marker_height);
-      load_value::policy::set_viewbox_transform(load_value::get(context), translate_x, translate_y, scale_x, scale_y, defer_);
+      load_viewport::policy::set_viewport(load_viewport::get(context), dx, dy, marker_width, marker_height);
+      load_viewport::policy::set_viewbox_transform(load_viewport::get(context), translate_x, translate_y, scale_x, scale_y, this->defer_);
     }
     else
-      load_value::policy::set_viewport(load_value::get(context), -ref_x, -ref_y, marker_width, marker_height);
+      load_viewport::policy::set_viewport(load_viewport::get(context), -ref_x, -ref_y, marker_width, marker_height);
     return true;
   }
 

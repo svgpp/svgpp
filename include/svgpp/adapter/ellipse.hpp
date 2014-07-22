@@ -1,6 +1,14 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/definitions.hpp>
+#include <svgpp/detail/adapt_context.hpp>
 #include <boost/optional.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/mpl/set.hpp>
@@ -18,8 +26,8 @@ public:
   template<class Context>
   bool on_exit_attributes(Context & context) const
   {
-    typedef typename detail::unwrap_context<Context, tag::error_policy> error_policy;
-    typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
+    typedef detail::unwrap_context<Context, tag::error_policy> error_policy;
+    typedef detail::unwrap_context<Context, tag::length_policy> length_policy_context;
     typedef typename length_policy_context::policy length_policy_t;
 
     typename length_policy_t::length_factory_type & converter 
@@ -43,8 +51,8 @@ public:
         return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::ry());
       if (ry == 0)
         return true;
-      typedef typename detail::unwrap_context<Context, tag::load_value_policy> load_value;
-      load_value::policy::set_ellipse(load_value::get(context), cx, cy, rx, ry);
+      typedef detail::unwrap_context<Context, tag::load_basic_shapes_policy> load_basic_shapes;
+      load_basic_shapes::policy::set_ellipse(load_basic_shapes::get(context), cx, cy, rx, ry);
     }
     return true;
   }
@@ -63,9 +71,9 @@ struct ellipse_to_path_adapter
   template<class Context, class Coordinate>
   static void set_ellipse(Context & context, Coordinate cx, Coordinate cy, Coordinate rx, Coordinate ry)
   {
-    typedef typename detail::unwrap_context<Context, tag::load_path_policy> load_path;
+    typedef detail::unwrap_context<Context, tag::load_path_policy> load_path;
 
-    load_path::type & path_context = load_path::get(context);
+    typename load_path::type & path_context = load_path::get(context);
     load_path::policy::path_move_to(path_context, cx + rx, cy, tag::absolute_coordinate());
     load_path::policy::path_elliptical_arc_to(path_context, rx, ry, 0, false, true, cx - rx, cy, tag::absolute_coordinate());
     load_path::policy::path_elliptical_arc_to(path_context, rx, ry, 0, false, true, cx + rx, cy, tag::absolute_coordinate());

@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <boost/array.hpp>
@@ -62,9 +69,9 @@ public:
             >> number [_a = _1] 
             >> ( ( no_skip[comma_wsp] 
                   >> number [_b = _1] 
-                  >> lit(')') [bind(&call_translate, _r1, _a, _b)] 
+                  >> lit(')') [bind(&transform_grammar::call_translate, _r1, _a, _b)] 
                 )
-                | lit(')') [bind(&call_translate, _r1, _a)] 
+                | lit(')') [bind(&transform_grammar::call_translate, _r1, _a)] 
               );
     scale 
         =   lit("scale") 
@@ -72,9 +79,9 @@ public:
             >> number [_a = _1]
             >> ( ( no_skip[comma_wsp] 
                   >> number [_b = _1] 
-                  >> lit(')') [bind(&call_scale, _r1, _a, _b)] 
+                  >> lit(')') [bind(&transform_grammar::call_scale, _r1, _a, _b)] 
                 )
-                | lit(')') [bind(&call_scale, _r1, _a)] 
+                | lit(')') [bind(&transform_grammar::call_scale, _r1, _a)] 
               );
     rotate 
         =   lit("rotate") 
@@ -84,20 +91,20 @@ public:
                   >> number [_b = _1] 
                   >> no_skip[comma_wsp] 
                   >> number [_c = _1] 
-                  >> lit(')') [bind(&call_rotate, _r1, _a, _b, _c)] 
+                  >> lit(')') [bind(&transform_grammar::call_rotate, _r1, _a, _b, _c)] 
                 )
-                | lit(')') [bind(&call_rotate, _r1, _a)] 
+                | lit(')') [bind(&transform_grammar::call_rotate, _r1, _a)] 
               );
     skewX 
         =   ( lit("skewX") 
               >> lit('(') 
               >> number 
-              >> lit(')') ) [bind(&call_skew_x, _r1, _1)];
+              >> lit(')') ) [bind(&transform_grammar::call_skew_x, _r1, _1)];
     skewY 
         =   ( lit("skewY") 
               >> lit('(') 
               >> number 
-              >> lit(')') ) [bind(&call_skew_y, _r1, _1)];
+              >> lit(')') ) [bind(&transform_grammar::call_skew_y, _r1, _1)];
   }
 
 private:

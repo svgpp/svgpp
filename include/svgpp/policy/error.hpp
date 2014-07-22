@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <boost/exception/all.hpp>
@@ -28,7 +35,9 @@ public:
     : message_((boost::format("Unknown SVG element: \"%s\"") % std::string(boost::begin(name), boost::end(name))).str())
   {}
 
-  virtual const char * what() const
+  virtual ~unknown_element_error() throw() {}
+
+  virtual const char * what() const throw()
   {
     return message_.empty() ? "Unknown SVG element" : message_.c_str();
   }
@@ -40,7 +49,7 @@ private:
 class unexpected_element_error: public virtual boost::exception, public virtual std::exception
 {
 public:
-  virtual const char * what() const
+  virtual const char * what() const throw()
   {
     return "Unexpected SVG element";
   }
@@ -58,13 +67,27 @@ public:
     : message_((boost::format("Unknown attribute: \"%s\"") % std::string(boost::begin(name), boost::end(name))).str())
   {}
 
-  virtual const char * what() const
+  virtual ~unknown_attribute_error() throw() {}
+
+  virtual const char * what() const throw()
   {
     return message_.empty() ? "Unknown attribute" : message_.c_str();
   }
 
 private:
   std::string const message_;
+};
+
+class unexpected_attribute_error: public virtual boost::exception, public virtual std::exception
+{
+public:
+  unexpected_attribute_error(detail::attribute_id)
+  {}
+  
+  virtual const char * what() const throw()
+  {
+    return "Unexpected attribute";
+  }
 };
 
 class unknown_css_property_error: public virtual boost::exception, public virtual std::exception
@@ -78,7 +101,9 @@ public:
     : message_((boost::format("Unknown CSS property: \"%s\"") % std::string(boost::begin(name), boost::end(name))).str())
   {}
 
-  virtual const char * what() const
+  virtual ~unknown_css_property_error() throw() {}
+
+  virtual const char * what() const throw()
   {
     return message_.empty() ? "Unknown CSS property" : message_.c_str();
   }
@@ -96,7 +121,9 @@ public:
     , message_((boost::format("Required SVG attribute \"%s\" not found") % name).str())
   {}
 
-  virtual const char * what() const { return message_.c_str(); }
+  virtual ~required_attribute_not_found_error() throw() {}
+
+  virtual const char * what() const throw() { return message_.c_str(); }
   std::string const & name() const { return name_; }
 
 private:
@@ -112,7 +139,9 @@ public:
     , message_((boost::format("Negative value of attribute \"%s\"") % name).str())
   {}
 
-  virtual const char * what() const { return message_.c_str(); }
+  virtual ~negative_value_error() throw() {}
+
+  virtual const char * what() const throw() { return message_.c_str(); }
   std::string const & name() const { return name_; }
 
 private:
@@ -161,7 +190,9 @@ public:
       % attributeOrCSSPropertyName_).str())
   {}
 
-  virtual const char * what() const { return message_.c_str(); }
+  virtual ~invalid_value_error() throw() {}
+
+  virtual const char * what() const throw() { return message_.c_str(); }
   std::string const & name() const { return attributeOrCSSPropertyName_; }
   value_type const & value() const { return value_; }
 
@@ -184,7 +215,7 @@ struct raise_exception
     XMLElement const & element, ElementName const & name,
     typename boost::enable_if<typename detail::is_char_range<ElementName>::type>::type * = NULL)
   {
-    throw unknown_element_error(name) << boost::error_info<tag::error_info::xml_element, XMLElement const &>(element);
+    throw unknown_element_error(name) << boost::error_info<tag::error_info::xml_element, XMLElement const *>(&element);
   }
 
   template<class XMLElement, class ElementName>
@@ -192,31 +223,31 @@ struct raise_exception
     XMLElement const & element, ElementName const &,
     typename boost::disable_if<typename detail::is_char_range<ElementName>::type>::type * = NULL)
   {
-    throw unknown_element_error() << boost::error_info<tag::error_info::xml_element, XMLElement const &>(element);
+    throw unknown_element_error() << boost::error_info<tag::error_info::xml_element, XMLElement const *>(&element);
   }
 
   template<class XMLAttributesIterator, class AttributeName>
   BOOST_ATTRIBUTE_NORETURN static bool unknown_attribute(Context const &, 
     XMLAttributesIterator const & attribute, 
     AttributeName const & name,
-    detail::namespace_id,
+    BOOST_SCOPED_ENUM(detail::namespace_id),
     tag::source::attribute,
     typename boost::enable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
     throw unknown_attribute_error(name) 
-      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const &>(attribute);
+      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const *>(&attribute);
   }
 
   template<class XMLAttributesIterator, class AttributeName>
   BOOST_ATTRIBUTE_NORETURN static bool unknown_attribute(Context const &, 
     XMLAttributesIterator const & attribute, 
     AttributeName const &,
-    detail::namespace_id,
+    BOOST_SCOPED_ENUM(detail::namespace_id),
     tag::source::attribute,
     typename boost::disable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
     throw unknown_attribute_error() 
-      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const &>(attribute);
+      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const *>(&attribute);
   }
 
   template<class XMLAttributesIterator, class AttributeName>
@@ -227,7 +258,7 @@ struct raise_exception
     typename boost::enable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
     throw unknown_css_property_error(name) 
-      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const &>(attribute);
+      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const *>(&attribute);
   }
 
   template<class XMLAttributesIterator, class AttributeName>
@@ -238,9 +269,16 @@ struct raise_exception
     typename boost::disable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
     throw unknown_css_property_error() 
-      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const &>(attribute);
+      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const *>(&attribute);
   }
 
+  BOOST_ATTRIBUTE_NORETURN static bool unexpected_attribute(Context const &, 
+    detail::attribute_id id, tag::source::attribute)
+  {
+    // TODO: add attribute name
+    throw unexpected_attribute_error(id);
+  }
+  
   template<class AttributeTag>
   BOOST_ATTRIBUTE_NORETURN static bool required_attribute_not_found(Context const &, 
     AttributeTag)
@@ -261,11 +299,11 @@ struct raise_exception
   }
 
   template<class XMLElement>
-  BOOST_CONSTEXPR static bool unexpected_element(Context const &, 
+  BOOST_ATTRIBUTE_NORETURN static bool unexpected_element(Context const &, 
     XMLElement const & element)
   {
     throw unexpected_element_error() 
-      << boost::error_info<tag::error_info::xml_element, XMLElement const &>(element);
+      << boost::error_info<tag::error_info::xml_element, XMLElement const *>(&element);
   }
 
   template<class AttributeTag>

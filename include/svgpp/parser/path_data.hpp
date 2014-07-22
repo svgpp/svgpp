@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/config.hpp>
@@ -36,9 +43,9 @@ struct value_parser<tag::type::path_data, SVGPP_TEMPLATE_ARGS_PASS>
     typedef detail::path_markers_adapter_if_needed<typename adapted_context_t::adapted_context> markers_adapted_context_t;
     typedef path_data_grammar<
       iterator_t, 
-      typename detail::unwrap_context<markers_adapted_context_t::adapted_context, tag::load_path_policy>::type,
+      typename detail::unwrap_context<typename markers_adapted_context_t::adapted_context, tag::load_path_policy>::type,
       coordinate_t,
-      typename detail::unwrap_context<markers_adapted_context_t::adapted_context, tag::load_path_policy>::policy
+      typename detail::unwrap_context<typename markers_adapted_context_t::adapted_context, tag::load_path_policy>::policy
     > path_data_grammar;
 
     context_t bound_context(context);
@@ -48,7 +55,7 @@ struct value_parser<tag::type::path_data, SVGPP_TEMPLATE_ARGS_PASS>
     SVGPP_STATIC_IF_SAFE const path_data_grammar grammar;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (qi::phrase_parse(it, end, grammar(boost::phoenix::ref(
-      detail::unwrap_context<markers_adapted_context_t::adapted_context, tag::load_path_policy>::get(
+      detail::unwrap_context<typename markers_adapted_context_t::adapted_context, tag::load_path_policy>::get(
         markers_adapted_context_t::adapt_context(adapted_path_context, markers_adapter))
       )), typename path_data_grammar::skipper_type()) 
       && it == end)

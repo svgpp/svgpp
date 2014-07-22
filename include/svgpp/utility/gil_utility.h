@@ -1,6 +1,17 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
-#include <boost/gil/channel.hpp>
+#include <boost/cstdint.hpp>
+#include <boost/gil/channel_algorithm.hpp>
+#include <boost/gil/gray.hpp>
+#include <boost/gil/rgb.hpp>
+#include <boost/gil/rgba.hpp>
 
 namespace svgpp 
 { 
@@ -26,19 +37,20 @@ struct rgb_to_luminance_fn
 
 // performance specialization for unsigned char
 template <typename GrayChannelValue>
-struct rgb_to_luminance_fn<uint8_t,uint8_t,uint8_t, GrayChannelValue> 
+struct rgb_to_luminance_fn<boost::uint8_t, boost::uint8_t, boost::uint8_t, GrayChannelValue> 
 {
-  GrayChannelValue operator()(uint8_t red, uint8_t green, uint8_t blue) const 
+  GrayChannelValue operator()(boost::uint8_t red, boost::uint8_t green, boost::uint8_t blue) const 
   {
-    return boost::gil::channel_convert<GrayChannelValue>(uint8_t(
-      ((uint32_t(red)  *uint32_t(0.2125 * (1 << 14)) 
-      + uint32_t(green)*uint32_t(0.7154 * (1 << 14)) 
-      + uint32_t(blue) *uint32_t(0.0721 * (1 << 14)))) >> 14));
+    return boost::gil::channel_convert<GrayChannelValue>(boost::uint8_t(
+      ((boost::uint32_t(red)  *boost::uint32_t(0.2125 * (1 << 14)) 
+      + boost::uint32_t(green)*boost::uint32_t(0.7154 * (1 << 14)) 
+      + boost::uint32_t(blue) *boost::uint32_t(0.0721 * (1 << 14)))) >> 14));
   }
 };
 
 template <typename GrayChannel, typename RedChannel, typename GreenChannel, typename BlueChannel>
-inline typename boost::gil::channel_traits<GrayChannel>::value_type rgb_to_luminance(const RedChannel& red, const GreenChannel& green, const BlueChannel& blue) 
+inline typename boost::gil::channel_traits<GrayChannel>::value_type rgb_to_luminance(
+  const RedChannel& red, const GreenChannel& green, const BlueChannel& blue) 
 {
   return rgb_to_luminance_fn<RedChannel,GreenChannel,BlueChannel,
                               typename boost::gil::channel_traits<GrayChannel>::value_type>()(red,green,blue);

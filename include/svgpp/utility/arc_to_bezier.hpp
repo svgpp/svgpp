@@ -1,4 +1,11 @@
-﻿// Based on article by Luc Maisonobe
+﻿// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
+// Based on article by Luc Maisonobe
 // http://www.spaceroots.org/documents/ellipse/elliptical-arc.pdf
 
 #pragma once
@@ -227,7 +234,7 @@ private:
     while (!found && size_ < 1024)
     {
       found = false;
-      if (deta <= boost::math::constants::half_pi<Number>())
+      if (deta_ <= boost::math::constants::half_pi<Number>())
       {
         Number eta1b = eta1_;
         for(int i=0; i<size_; ++i)

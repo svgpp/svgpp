@@ -34,18 +34,8 @@ void ClipBuffer::intersectClipRect(agg::trans_affine const & transform, double x
   renderer_base_t renderer_base(pixfmt);
   agg::scanline_p8 scanline;
 
-  /*agg::path_storage path_storage;
-  path_storage.move_to(x, y);
-  path_storage.line_to(x + width, y);
-  path_storage.line_to(x + width, y + height);
-  path_storage.line_to(x, y + height);
-  path_storage.close_polygon();
-
-  agg::conv_transform<agg::path_storage> transformed(path_storage, transform);*/
-
   agg::rasterizer_scanline_aa<> rasterizer;
   rasterizer.filling_rule(agg::fill_even_odd);
-  //rasterizer.add_path(transformed);
 
   rasterizer.move_to_d(0, 0);
   rasterizer.line_to_d(pixfmt.width(), 0);
@@ -112,10 +102,8 @@ boost::optional<ClipPath> ClipPaths::get(
           >
         >
       >::load_referenced_element<
-        void, // Doesn't matter
-        svgpp::traits::gradient_elements, 
-        svgpp::processed_elements<svgpp::traits::gradient_elements>
-      >(node, gradient_context);
+        svgpp::expected_elements<svgpp::traits::gradient_elements>
+      >::load(node, gradient_context);
       return gradient_context.gradient_;
     } catch (std::exception const & e)
     {

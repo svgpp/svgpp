@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <boost/spirit/include/qi.hpp>
@@ -50,30 +57,30 @@ public:
         | quadratic_bezier_curveto(_r1)
         | quadratic_bezier_smooth_curveto(_r1)
         | elliptical_arc(_r1)))
-        >> qi::eps [phx::bind(&call_exit, _r1)];
+        >> qi::eps [phx::bind(&path_data_grammar::call_exit, _r1)];
     moveto = 
         (lit('M') [_a = true] | lit('m') [_a = false]) 
         >> (coordinate >> -lit(',') >> coordinate)
-          [phx::bind(&call_move_to, _r1, _1, _2, _a)]
+          [phx::bind(&path_data_grammar::call_move_to, _r1, _1, _2, _a)]
         >> -(-lit(',') >> lineto_argument_sequence(_r1, _a));
     closepath =
-        char_("Zz") [phx::bind(&call_close_subpath, _r1)];
+        char_("Zz") [phx::bind(&path_data_grammar::call_close_subpath, _r1)];
     lineto =
         (lit('L') [_a = true] | lit('l') [_a = false]) 
         >> lineto_argument_sequence(_r1, _a);
     lineto_argument_sequence = 
         (coordinate >> -lit(',') >> coordinate)
-          [phx::bind(&call_line_to, _r1, _1, _2, _r2)]
+          [phx::bind(&path_data_grammar::call_line_to, _r1, _1, _2, _r2)]
         % -lit(',');
     horizontal_lineto =
         (lit('H') [_a = true] | lit('h') [_a = false]) 
         >> (coordinate
-            [phx::bind(&call_line_to_ortho, _r1, _1, true, _a)]
+            [phx::bind(&path_data_grammar::call_line_to_ortho, _r1, _1, true, _a)]
           % -lit(','));
     vertical_lineto =
         (lit('V') [_a = true] | lit('v') [_a = false]) 
         >> (coordinate 
-            [phx::bind(&call_line_to_ortho, _r1, _1, false, _a)]
+            [phx::bind(&path_data_grammar::call_line_to_ortho, _r1, _1, false, _a)]
           % -lit(','));
     curveto =
         (lit('C') [_a = true] | lit('c') [_a = false]) 
@@ -81,32 +88,32 @@ public:
     curveto_argument = 
         (coordinate >> -lit(',') >> coordinate >> -lit(',') >> coordinate >> -lit(',') >> coordinate
             >> -lit(',') >> coordinate >> -lit(',') >> coordinate)
-          [phx::bind(&call_cubic_bezier_to, _r1, _1, _2, _3, _4, _5, _6, _r2)];
+          [phx::bind(&path_data_grammar::call_cubic_bezier_to, _r1, _1, _2, _3, _4, _5, _6, _r2)];
     smooth_curveto =
         (lit('S') [_a = true] | lit('s') [_a = false]) 
         >> (smooth_curveto_argument(_r1, _a) % -lit(','));
     smooth_curveto_argument = 
         (coordinate >> -lit(',') >> coordinate >> -lit(',') >> coordinate >> -lit(',') >> coordinate)
-          [phx::bind(&call_cubic_bezier_to, _r1, _1, _2, _3, _4, _r2)];
+          [phx::bind(&path_data_grammar::call_cubic_bezier_to, _r1, _1, _2, _3, _4, _r2)];
     quadratic_bezier_curveto =
         (lit('Q') [_a = true] | lit('q') [_a = false]) 
         >> (quadratic_bezier_curveto_argument(_r1, _a) % -lit(','));
     quadratic_bezier_curveto_argument = 
         (coordinate >> -lit(',') >> coordinate >> -lit(',') >> coordinate >> -lit(',') >> coordinate)
-          [phx::bind(&call_quadratic_bezier_to, _r1, _1, _2, _3, _4, _r2)];
+          [phx::bind(&path_data_grammar::call_quadratic_bezier_to, _r1, _1, _2, _3, _4, _r2)];
     quadratic_bezier_smooth_curveto =
         (lit('T') [_a = true] | lit('t') [_a = false]) 
         >> (quadratic_bezier_smooth_curveto_argument(_r1, _a) % -lit(','));
     quadratic_bezier_smooth_curveto_argument = 
         (coordinate >> -lit(',') >> coordinate)
-          [phx::bind(&call_quadratic_bezier_to, _r1, _1, _2, _r2)];
+          [phx::bind(&path_data_grammar::call_quadratic_bezier_to, _r1, _1, _2, _r2)];
     elliptical_arc =
         (lit('A') [_a = true] | lit('a') [_a = false]) 
         >> (elliptical_arc_argument(_r1, _a) % -lit(','));
     elliptical_arc_argument = 
         (nonnegative_number >> -lit(',') >> nonnegative_number >> -lit(',') >> coordinate
         >> -lit(',') >> flag >> -lit(',') >> flag >> -lit(',') >> coordinate >> -lit(',') >> coordinate)
-          [phx::bind(&call_elliptical_arc_to, _r1, _1, _2, _3, _4, _5, _6, _7, _r2)];
+          [phx::bind(&path_data_grammar::call_elliptical_arc_to, _r1, _1, _2, _3, _4, _5, _6, _7, _r2)];
     flag =
         lit('0') [_val = false] | lit('1') [_val = true];
   }

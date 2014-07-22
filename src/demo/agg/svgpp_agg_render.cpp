@@ -78,7 +78,7 @@ namespace
 
 XMLElement XMLDocument::findElementById(svg_string_t const & id)
 {
-  std::pair<element_by_id_t::iterator, bool> ins = element_by_id_.insert(element_by_id_t::value_type(id, NULL));
+  std::pair<element_by_id_t::iterator, bool> ins = element_by_id_.insert(element_by_id_t::value_type(id, XMLElement()));
   if (ins.second)
     ins.first->second = FindChildElementById(root_, id);
   return ins.first->second;
@@ -139,113 +139,94 @@ struct path_policy: svgpp::policy::path::no_shorthands
   static const bool arc_as_cubic_bezier = true; 
 };
 
-struct basic_shapes_policy
-{
-  typedef boost::mpl::set<
-    svgpp::tag::element::rect,
-    svgpp::tag::element::line,
-    svgpp::tag::element::circle,
-    svgpp::tag::element::ellipse
-  > convert_to_path;
-
-  typedef boost::mpl::set<
-  > collect_attributes;
-
-  static const bool convert_only_rounded_rect_to_path = false;
-  static const bool viewport_as_transform = true;
-  static const bool calculate_viewport = true;
-  static const bool marker_viewport_as_transform = true;
-  static const bool calculate_marker_viewport = true;
-};
-
 struct child_context_factories
 {
   template<class ParentContext, class ElementTag, class Enable = void>
   struct apply;
-
-  template<>
-  struct apply<Canvas, svgpp::tag::element::svg, void>
-  {
-    typedef svgpp::context_factory::on_stack<Canvas, Canvas> type;
-  };
-
-  template<>
-  struct apply<Canvas, svgpp::tag::element::g, void>
-  {
-    typedef svgpp::context_factory::on_stack<Canvas, Canvas> type;
-  };
-
-  template<>
-  struct apply<Canvas, svgpp::tag::element::a, void>
-  {
-    typedef svgpp::context_factory::on_stack<Canvas, Canvas> type;
-  };
-
-  template<>
-  struct apply<Canvas, svgpp::tag::element::switch_, void>
-  {
-    typedef svgpp::context_factory::on_stack<Canvas, Switch> type;
-  };
-
-  template<class ElementTag>
-  struct apply<Switch, ElementTag, void>: apply<Canvas, ElementTag>
-  {};
-
-  template<>
-  struct apply<Canvas, svgpp::tag::element::use_, void>
-  {
-    typedef svgpp::context_factory::on_stack<Canvas, Use> type;
-  };
-
-  template<class ElementTag>
-  struct apply<Canvas, ElementTag, typename boost::enable_if<boost::mpl::has_key<svgpp::traits::shape_elements, ElementTag> >::type>
-  {
-    typedef svgpp::context_factory::on_stack<Canvas, Path> type;
-  };
-
-  // For referenced by 'use' elements
-  template<>
-  struct apply<Use, svgpp::tag::element::svg, void>
-  {
-    typedef svgpp::context_factory::on_stack<Use, ReferencedSymbolOrSvg> type;
-  };
-
-  template<>
-  struct apply<Use, svgpp::tag::element::symbol, void>
-  {
-    typedef svgpp::context_factory::on_stack<Use, ReferencedSymbolOrSvg> type;
-  };
-
-  template<class ElementTag>
-  struct apply<Use, ElementTag, void>: apply<Canvas, ElementTag>
-  {};
-
-  template<class ElementTag>
-  struct apply<ReferencedSymbolOrSvg, ElementTag, void>: apply<Canvas, ElementTag>
-  {};
-
-  // 'mask'
-  template<>
-  struct apply<Mask, svgpp::tag::element::mask, void>
-  {
-    typedef svgpp::context_factory::same<Mask, svgpp::tag::element::mask> type;
-  };
-
-  template<class ElementTag>
-  struct apply<Mask, ElementTag, void>: apply<Canvas, ElementTag>
-  {};
-
-  // 'marker'
-  template<>
-  struct apply<Marker, svgpp::tag::element::marker, void>
-  {
-    typedef svgpp::context_factory::same<Marker, svgpp::tag::element::marker> type;
-  };
-
-  template<class ElementTag>
-  struct apply<Marker, ElementTag, void>: apply<Canvas, ElementTag>
-  {};
 };
+
+template<>
+struct child_context_factories::apply<Canvas, svgpp::tag::element::svg, void>
+{
+  typedef svgpp::context_factory::on_stack<Canvas, Canvas> type;
+};
+
+template<>
+struct child_context_factories::apply<Canvas, svgpp::tag::element::g, void>
+{
+  typedef svgpp::context_factory::on_stack<Canvas, Canvas> type;
+};
+
+template<>
+struct child_context_factories::apply<Canvas, svgpp::tag::element::a, void>
+{
+  typedef svgpp::context_factory::on_stack<Canvas, Canvas> type;
+};
+
+template<>
+struct child_context_factories::apply<Canvas, svgpp::tag::element::switch_, void>
+{
+  typedef svgpp::context_factory::on_stack<Canvas, Switch> type;
+};
+
+template<class ElementTag>
+struct child_context_factories::apply<Switch, ElementTag, void>: apply<Canvas, ElementTag>
+{};
+
+template<>
+struct child_context_factories::apply<Canvas, svgpp::tag::element::use_, void>
+{
+  typedef svgpp::context_factory::on_stack<Canvas, Use> type;
+};
+
+template<class ElementTag>
+struct child_context_factories::apply<Canvas, ElementTag, typename boost::enable_if<boost::mpl::has_key<svgpp::traits::shape_elements, ElementTag> >::type>
+{
+  typedef svgpp::context_factory::on_stack<Canvas, Path> type;
+};
+
+// For referenced by 'use' elements
+template<>
+struct child_context_factories::apply<Use, svgpp::tag::element::svg, void>
+{
+  typedef svgpp::context_factory::on_stack<Use, ReferencedSymbolOrSvg> type;
+};
+
+template<>
+struct child_context_factories::apply<Use, svgpp::tag::element::symbol, void>
+{
+  typedef svgpp::context_factory::on_stack<Use, ReferencedSymbolOrSvg> type;
+};
+
+template<class ElementTag>
+struct child_context_factories::apply<Use, ElementTag, void>: child_context_factories::apply<Canvas, ElementTag>
+{};
+
+template<class ElementTag>
+struct child_context_factories::apply<ReferencedSymbolOrSvg, ElementTag, void>: child_context_factories::apply<Canvas, ElementTag>
+{};
+
+// 'mask'
+template<>
+struct child_context_factories::apply<Mask, svgpp::tag::element::mask, void>
+{
+  typedef svgpp::context_factory::same<Mask, svgpp::tag::element::mask> type;
+};
+
+template<class ElementTag>
+struct child_context_factories::apply<Mask, ElementTag, void>: apply<Canvas, ElementTag>
+{};
+
+// 'marker'
+template<>
+struct child_context_factories::apply<Marker, svgpp::tag::element::marker, void>
+{
+  typedef svgpp::context_factory::same<Marker, svgpp::tag::element::marker> type;
+};
+
+template<class ElementTag>
+struct child_context_factories::apply<Marker, ElementTag, void>: child_context_factories::apply<Canvas, ElementTag>
+{};
 
 struct DocumentTraversalControl
 {
@@ -278,10 +259,8 @@ typedef boost::mpl::set<
 typedef boost::mpl::fold<
   boost::mpl::protect<
     boost::mpl::joint_view<
-      //boost::mpl::transform_view<
-        svgpp::rect_shape_attributes, //boost::mpl::pair<svgpp::tag::element::rect, boost::mpl::_1> >,
-      //boost::mpl::transform_view<
-          svgpp::traits::viewport_attributes//, boost::mpl::pair<svgpp::tag::element::svg, boost::mpl::_1> >
+      svgpp::rect_shape_attributes, 
+      svgpp::traits::viewport_attributes
     >
   >,
   boost::mpl::set<
@@ -360,7 +339,7 @@ public:
   boost::gil::rgba8_view_t gilView()
   {
     return boost::gil::interleaved_view(rbuf_.width(), rbuf_.height(), 
-      reinterpret_cast<boost::gil::rgba8_pixel_t*>(buffer_.data()), rbuf_.stride());
+      reinterpret_cast<boost::gil::rgba8_pixel_t*>(&buffer_[0]), rbuf_.stride());
   }
 
 private:
@@ -430,12 +409,17 @@ public:
       pixfmt_t & parent_pixfmt = parent_pixfmt_();
       ImageBuffer mask_buffer(parent_pixfmt.width(), parent_pixfmt.height());
       loadMask(mask_buffer);
-      auto mask_view = boost::gil::color_converted_view<boost::gil::gray8_pixel_t>(
+      typedef boost::gil::color_converted_view_type<
+        boost::gil::rgba8_view_t, 
+        boost::gil::gray8_pixel_t, 
+        svgpp::gil_utility::rgba_to_mask_color_converter<> 
+      >::type mask_view_t;
+      mask_view_t mask_view = boost::gil::color_converted_view<boost::gil::gray8_pixel_t>(
         mask_buffer.gilView(), svgpp::gil_utility::rgba_to_mask_color_converter<>());
 
-      auto own_view = own_buffer_->gilView();
-      auto o = own_view.begin();
-      for(auto m = mask_view.begin(); m !=mask_view.end(); ++m, ++o)
+      boost::gil::rgba8_view_t own_view = own_buffer_->gilView();
+      boost::gil::rgba8_view_t::iterator o = own_view.begin();
+      for(mask_view_t::iterator m = mask_view.begin(); m !=mask_view.end(); ++m, ++o)
       {
         using namespace boost::gil;
         get_color(*o, alpha_t()) = 
@@ -649,7 +633,6 @@ typedef
     svgpp::color_factory<color_factory_t>,
     svgpp::processed_elements<processed_elements>,
     svgpp::processed_attributes<processed_attributes>,
-    svgpp::basic_shapes_policy<basic_shapes_policy>,
     svgpp::path_policy<path_policy>,
     svgpp::document_traversal_control_policy<DocumentTraversalControl>,
     svgpp::load_transform_policy<svgpp::policy::load_transform::forward_to_method<Transformable> >, // Same as default, but less instantiations
@@ -677,12 +660,12 @@ public:
       Document::FollowRef lock(document(), element);
       transform().premultiply(agg::trans_affine_translation(x_, y_));
       document_traversal_main::load_referenced_element<
-        svgpp::tag::element::use_,
-        svgpp::traits::reusable_elements,
+        svgpp::referencing_element<svgpp::tag::element::use_>,
+        svgpp::expected_elements<svgpp::traits::reusable_elements>,
         svgpp::processed_elements<
           boost::mpl::insert<processed_elements, svgpp::tag::element::symbol>::type 
         >
-      >(element, *this);
+      >::load(element, *this);
     }
     else
       std::cerr << "Element referenced by 'use' not found\n";
@@ -798,10 +781,8 @@ void Canvas::loadMask(ImageBuffer & mask_buffer) const
 
     Mask mask(document_, mask_buffer, *this);
     document_traversal_main::load_referenced_element<
-      svgpp::tag::attribute::mask,
-      boost::mpl::set1<svgpp::tag::element::mask>,
-      svgpp::processed_elements<boost::mpl::set1<svgpp::tag::element::mask> > 
-    >(element, mask);
+      svgpp::expected_elements<boost::mpl::set1<svgpp::tag::element::mask> > 
+    >::load(element, mask);
   }
   else
     throw std::runtime_error("Element referenced by 'mask' not found");
@@ -917,7 +898,7 @@ void RenderScanlinesGradient(renderer_base_amask_t & renderer,
     span_interpolator_t,
     gradient_t,
     ColorFunctionProfile > span_gradient_t;
-  typedef agg::span_allocator<span_gradient_t::color_type> span_allocator_t;
+  typedef agg::span_allocator<typename span_gradient_t::color_type> span_allocator_t;
 
   static const double GradientScale = 100.0;
   agg::trans_affine tr = agg::trans_affine_scaling(1.0/GradientScale) * gradient_geometry_transform;
@@ -1130,10 +1111,8 @@ void Path::drawMarker(svg_string_t const & id, double x, double y, double dir)
 
     Marker markerContext(*this, style().stroke_width_, x, y, dir);
     document_traversal_main::load_referenced_element<
-      void, // not used
-      boost::mpl::set1<svgpp::tag::element::marker>,
-      svgpp::processed_elements<boost::mpl::set1<svgpp::tag::element::marker> >
-    >(element, markerContext);
+      svgpp::expected_elements<boost::mpl::set1<svgpp::tag::element::marker> >
+    >::load(element, markerContext);
   }
 }
 
@@ -1149,7 +1128,7 @@ struct GradientBase_visitor: boost::static_visitor<>
 
 Path::EffectivePaint Path::getEffectivePaint(Paint const & paint) const
 {
-  SolidPaint const * solidPaint = nullptr;
+  SolidPaint const * solidPaint = NULL;
   if (IRIPaint const * iri = boost::get<IRIPaint>(&paint))
   {
     if (boost::optional<Gradient> const gradient = document().gradients_.get(iri->fragment_, length_factory()))

@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/parser/length.hpp>
@@ -22,7 +29,7 @@ struct value_parser<tag::type::percentage_or_length, SVGPP_TEMPLATE_ARGS_PASS>
       boost::parameter::optional<tag::length_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
-    typedef typename length_policy_context::bind<args2_t>::type length_policy_t;
+    typedef typename length_policy_context::template bind<args2_t>::type length_policy_t;
 
     typename length_policy_t::length_factory_type & length_factory 
       = length_policy_t::length_factory(length_policy_context::get(context));
@@ -50,7 +57,9 @@ template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::type::list_of<tag::type::percentage_or_length>, SVGPP_TEMPLATE_ARGS_PASS>
   : value_parser<tag::type::list_of<tag::type::length>, SVGPP_TEMPLATE_ARGS_PASS>
 {
-  using value_parser<tag::type::list_of<tag::type::length>, SVGPP_TEMPLATE_ARGS_PASS>::parse;
+  typedef value_parser<tag::type::list_of<tag::type::length>, SVGPP_TEMPLATE_ARGS_PASS> base_type;
+
+  using base_type::parse;
 
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
@@ -58,9 +67,9 @@ struct value_parser<tag::type::list_of<tag::type::percentage_or_length>, SVGPP_T
   {
     typedef typename traits::length_direction_by_attribute<AttributeTag>::type direction_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
-    return parseT<
+    return base_type::template parseT<
       boost::mpl::bind<
-        boost::mpl::quote5<percentage_or_length_css_grammar>, 
+        boost::mpl::quote4<percentage_or_length_css_grammar>, 
         iterator_t, boost::mpl::_1, direction_t, boost::mpl::_2
       >,
       AttributeTag, Context, AttributeValue, tag::source::css>

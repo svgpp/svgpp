@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/attribute_traversal.hpp>
@@ -108,13 +115,14 @@ struct default_context_factories
 };
 
 BOOST_PARAMETER_TEMPLATE_KEYWORD(context_factories)
+BOOST_PARAMETER_TEMPLATE_KEYWORD(expected_elements)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(xml_element_policy)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(load_text_policy)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(ignored_elements)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(processed_elements)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(document_traversal_control_policy)
 
-template<SVGPP_TEMPLATE_ARGS_DEF>
+template<SVGPP_TEMPLATE_ARGS2_DEF>
 class document_traversal
 {
 protected:
@@ -126,7 +134,7 @@ protected:
     , boost::parameter::optional<tag::ignored_elements, boost::mpl::is_sequence<boost::mpl::_> >
     , boost::parameter::optional<tag::processed_elements, boost::mpl::is_sequence<boost::mpl::_> >
     , boost::parameter::optional<tag::document_traversal_control_policy>
-  >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
+  >::template bind<SVGPP_TEMPLATE_ARGS2_PASS>::type args;
   typedef typename boost::parameter::value_type<args, tag::context_factories, 
     default_context_factories>::type context_factories;
   typedef typename boost::parameter::value_type<args, tag::ignored_elements, 
@@ -166,28 +174,28 @@ public:
   static bool load_attributes(XMLElement & xml_element, Context & context, ElementTag element_tag)
   {
     typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
-      xml_element_iterator_policy<XMLElement> >::type xml_policy_t;
+      policy::xml::element_iterator<XMLElement> >::type xml_policy_t;
 
     typedef typename dispatcher_detail::referencing_element_if_needed<
       ReferencingElement,
       ElementTag,
       Context,
-      SVGPP_TEMPLATE_ARGS_PASS
+      SVGPP_TEMPLATE_ARGS2_PASS
     >::type referencing_element_tag;
     typedef attribute_dispatcher<
       ElementTag, 
       Context, 
       referencing_element<referencing_element_tag>,
-      SVGPP_TEMPLATE_ARGS_PASS
+      SVGPP_TEMPLATE_ARGS2_PASS
     > attribute_dispatcher_t;
     static const bool parse_style_attribute = 
-      !boost::mpl::has_key<attribute_dispatcher_t::passthrough_attributes, tag::attribute::style>::value
+      !boost::mpl::has_key<typename attribute_dispatcher_t::passthrough_attributes, tag::attribute::style>::value
       && boost::mpl::apply<typename attribute_dispatcher_t::is_attribute_processed, tag::attribute::style>::type::value;
     attribute_dispatcher_t attribute_dispatcher(context);
     if (!attribute_traversal<
         ElementTag,
         parse_style_attribute,
-        SVGPP_TEMPLATE_ARGS_PASS
+        SVGPP_TEMPLATE_ARGS2_PASS
       >::type::load(xml_policy_t::get_attributes(xml_element), attribute_dispatcher))
       return false;
     return attribute_dispatcher.on_exit_attributes();
@@ -223,7 +231,7 @@ public:
   load_element_content(XMLElement & xml_element, Context & context, ElementTag element_tag)
   {
     typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
-      xml_element_iterator_policy<XMLElement> >::type xml_policy_t;
+      policy::xml::element_iterator<XMLElement> >::type xml_policy_t;
     typedef typename boost::parameter::value_type<args, tag::error_policy, 
       policy::error::default_policy<Context> >::type error_policy;
 
@@ -244,7 +252,7 @@ public:
   load_element_content(XMLElement & xml_element, Context & context, ElementTag element_tag)
   {
     typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
-      xml_element_iterator_policy<XMLElement> >::type xml_policy_t;
+      policy::xml::element_iterator<XMLElement> >::type xml_policy_t;
     typedef typename boost::parameter::value_type<args, tag::load_text_policy, 
       policy::load_text::default_policy<Context> >::type load_text_policy;
     
@@ -265,48 +273,53 @@ public:
     return true;
   }
 
-  template<
-    class ReferencingElement,   
-    class ExpectedElements,     // Elements other than ExpectedElements will cause unexpected_element error
-    class ProcessedElements,    // ignored_elements<Sequence> or processed_elements<Sequence> - override
-                                // class settings for the referenced element.
-                                // E.g. "symbol" is processed only when referenced by "use"
-    class XMLElement, 
-    class Context
-  >
-  static bool load_referenced_element(XMLElement & xml_element, Context & parent_context)
+  template<SVGPP_TEMPLATE_ARGS_DEF>
+  struct load_referenced_element
   {
-    typedef typename boost::parameter::parameters<
-        boost::parameter::optional<tag::ignored_elements, boost::mpl::is_sequence<boost::mpl::_> >
-      , boost::parameter::optional<tag::processed_elements, boost::mpl::is_sequence<boost::mpl::_> >
-    >::template bind<ProcessedElements>::type args;
-    typedef typename boost::parameter::value_type<args, tag::ignored_elements, 
-      boost::mpl::empty_sequence>::type ignored_elements;
-    typedef typename boost::parameter::value_type<args, tag::processed_elements, 
-      boost::mpl::empty_sequence>::type processed_elements;
+    template<class XMLElement, class Context>
+    static bool load(XMLElement & xml_element, Context & parent_context)
+    {
+      typedef typename boost::parameter::parameters<
+          boost::parameter::optional<tag::referencing_element>
+        , boost::parameter::required<tag::expected_elements, boost::mpl::is_sequence<boost::mpl::_> >
+        , boost::parameter::optional<tag::ignored_elements, boost::mpl::is_sequence<boost::mpl::_> >
+        , boost::parameter::optional<tag::processed_elements, boost::mpl::is_sequence<boost::mpl::_> >
+      >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
+      typedef typename boost::parameter::value_type<args, tag::referencing_element, void>::type referencing_element;
+      typedef typename boost::parameter::value_type<args, tag::expected_elements>::type expected_elements;
+      typedef typename boost::parameter::value_type<args, tag::ignored_elements, void>::type ignored_elements;
+      typedef typename boost::parameter::value_type<args, tag::processed_elements, void>::type processed_elements;
 
-    BOOST_STATIC_ASSERT_MSG(!boost::mpl::empty<ignored_elements>::value 
-      || !boost::mpl::empty<processed_elements>::value, "One of ignored_elements and processed_elements must be non-empty");
+      BOOST_STATIC_ASSERT_MSG(boost::is_void<ignored_elements>::value 
+        || boost::is_void<processed_elements>::value, "Only one of ignored_elements and processed_elements may be set");
 
-    typedef typename
-      boost::mpl::if_<
-        boost::mpl::not_<boost::mpl::empty<processed_elements> >,
-        boost::mpl::has_key<boost::mpl::protect<processed_elements>, boost::mpl::_1>,
-        boost::mpl::not_<boost::mpl::has_key<boost::mpl::protect<ignored_elements>, boost::mpl::_1> >  
-      >::type is_element_processed;
+      // Elements other than ExpectedElements will cause unexpected_element error
 
-    // The 'a' element may contain any element that its parent may contain, except itself.
-    // So we can't handle 'a' without knowing its parent.
-    BOOST_MPL_ASSERT_NOT((boost::mpl::has_key<ExpectedElements, tag::element::a>));
-    // TODO: Pass ReferencingElement only when needed, to reduce number of instantiations
-    return load_child_xml_element<
-        ExpectedElements, 
-        is_element_processed, 
-        ReferencingElement
-      >(xml_element, parent_context, 
-        boost::mpl::void_()); // ParentElementTag parameter can be of any type, it shouldn't be used for
-                              // any element except 'a'
-  }
+      // If neither ignored_elements nor processed_elements are set then expected_elements treated as processed_elements
+      typedef typename
+        boost::mpl::if_<
+          boost::mpl::not_<boost::is_void<processed_elements> >,
+          boost::mpl::has_key<boost::mpl::protect<processed_elements>, boost::mpl::_1>,
+          typename boost::mpl::if_<
+            boost::mpl::not_<boost::is_void<ignored_elements> >,
+            boost::mpl::not_<boost::mpl::has_key<boost::mpl::protect<ignored_elements>, boost::mpl::_1> >,
+            boost::mpl::has_key<boost::mpl::protect<expected_elements>, boost::mpl::_1>
+          >::type
+        >::type is_element_processed;
+
+      // The 'a' element may contain any element that its parent may contain, except itself.
+      // So we can't handle 'a' without knowing its parent.
+      BOOST_MPL_ASSERT_NOT((boost::mpl::has_key<expected_elements, tag::element::a>));
+      // TODO: Pass ReferencingElement only when needed, to reduce number of instantiations
+      return load_child_xml_element<
+          expected_elements, 
+          is_element_processed, 
+          referencing_element
+        >(xml_element, parent_context, 
+          boost::mpl::void_()); // ParentElementTag parameter can be of any type, it shouldn't be used for
+                                // any element except 'a'
+    }
+  };
 
 protected:
   template<
@@ -333,7 +346,7 @@ protected:
     >::type operator()(ElementTag tag) 
     {
       result_ = document_traversal::load_child_element<
-        traits::child_element_types<ElementTag>::type, 
+        typename traits::child_element_types<ElementTag>::type, 
         ReferencingElement
       >(xml_element_, context_, tag);
     }
@@ -347,8 +360,8 @@ protected:
       // The 'a' element may contain any element that its parent may contain, except itself.
       // Removing 'a' itself from list of permitted child types
       result_ = document_traversal::load_child_element<
-        boost::mpl::erase_key<
-          traits::child_element_types<ParentElementTag>::type,
+        typename boost::mpl::erase_key<
+          typename traits::child_element_types<ParentElementTag>::type,
           tag::element::a
         >::type,
         ReferencingElement
@@ -358,8 +371,7 @@ protected:
     template<class ElementTag>
     typename boost::disable_if<typename boost::mpl::apply<IsElementProcessed, ElementTag>::type>::type
     operator()(ElementTag) const
-    {
-    }
+    {}
 
     bool succeeded() const 
     { 
@@ -383,11 +395,11 @@ protected:
   static bool load_child_xml_element(XMLElement & xml_element, Context & parent_context, ParentElementTag)
   {
     typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
-      xml_element_iterator_policy<XMLElement> >::type xml_policy_t;
+      policy::xml::element_iterator<XMLElement> >::type xml_policy_t;
     typedef typename boost::parameter::value_type<args, tag::error_policy, 
       policy::error::default_policy<Context> >::type error_policy;
 
-    xml_policy_t::element_name_type element_name = xml_policy_t::get_local_name(xml_element);
+    typename xml_policy_t::element_name_type element_name = xml_policy_t::get_local_name(xml_element);
     detail::element_type_id element_type_id = detail::element_name_to_id_dictionary::find(
       xml_policy_t::get_string_range(element_name));
     if (element_type_id != detail::unknown_element_type_id)

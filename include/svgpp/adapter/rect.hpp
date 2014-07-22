@@ -1,6 +1,14 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/adapter/path.hpp>
+#include <svgpp/detail/adapt_context.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/optional.hpp>
 #include <boost/noncopyable.hpp>
@@ -17,8 +25,6 @@ typedef boost::mpl::set6<
   tag::attribute::height
 > rect_shape_attributes;
 
-// TODO: add option to collect rect attributes without length conversion to coordinates
-
 template<class Length>
 class collect_rect_attributes_adapter: boost::noncopyable
 {
@@ -26,9 +32,9 @@ public:
   template<class Context>
   bool on_exit_attributes(Context & context) const
   {
-    typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
+    typedef detail::unwrap_context<Context, tag::length_policy> length_policy_context;
     typedef typename length_policy_context::policy length_policy_t;
-    typedef typename detail::unwrap_context<Context, tag::error_policy> error_policy;
+    typedef detail::unwrap_context<Context, tag::error_policy> error_policy;
 
     typename length_policy_t::length_factory_type & converter 
       = length_policy_t::length_factory(length_policy_context::get(context));
@@ -65,8 +71,8 @@ public:
     if (width == 0 || height == 0)
       return true;
 
-    typedef typename detail::unwrap_context<Context, tag::load_value_policy> load_value;
-    load_value::policy::set_rect(load_value::get(context), x, y, width, height, rx, ry);
+    typedef detail::unwrap_context<Context, tag::load_basic_shapes_policy> load_basic_shapes;
+    load_basic_shapes::policy::set_rect(load_basic_shapes::get(context), x, y, width, height, rx, ry);
     return true;
   }
 
@@ -110,9 +116,9 @@ struct rect_to_path_adapter
   static void set_rect(Context & context, Coordinate x, Coordinate y, Coordinate width, Coordinate height,
     Coordinate rx, Coordinate ry)
   {
-    typedef typename detail::unwrap_context<Context, tag::load_path_policy> load_path;
+    typedef detail::unwrap_context<Context, tag::load_path_policy> load_path;
 
-    load_path::type & path_context = load_path::get(context);
+    typename load_path::type & path_context = load_path::get(context);
     if (rx == 0 || ry == 0)
     {
       load_path::policy::path_move_to(path_context, x, y, tag::absolute_coordinate());
@@ -124,7 +130,7 @@ struct rect_to_path_adapter
     }
     else
     {
-      detail::context_set_rounded_rect<load_path::policy>(path_context, x, y, width, height, rx, ry);
+      detail::context_set_rounded_rect<typename load_path::policy>(path_context, x, y, width, height, rx, ry);
     }
   }
 };
@@ -137,8 +143,8 @@ struct rounded_rect_to_path_adapter
   {
     if (rx == 0 || ry == 0)
     {
-      typedef typename detail::unwrap_context<Context, tag::load_value_policy> load_value;
-      load_value::policy::set_rect(load_value::get(context), x, y, width, height);
+      typedef typename detail::unwrap_context<Context, tag::load_basic_shapes_policy> load_basic_shapes;
+      load_basic_shapes::policy::set_rect(load_basic_shapes::get(context), x, y, width, height);
     }
     else
     {

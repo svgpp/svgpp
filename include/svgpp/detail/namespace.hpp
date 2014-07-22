@@ -1,5 +1,13 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
+#include <boost/detail/scoped_enum_emulation.hpp>
 #include <boost/preprocessor/cat.hpp>
 #include <boost/range/iterator_range.hpp>
 
@@ -10,7 +18,7 @@
 namespace svgpp { namespace detail 
 {
 
-enum class namespace_id { svg, xml, xlink, other };
+BOOST_SCOPED_ENUM_START(namespace_id) { svg, xml, xlink, other }; BOOST_SCOPED_ENUM_END
 
 template<class Ch> inline boost::iterator_range<Ch const *> svg_namespace_uri();
 template<class Ch> inline boost::iterator_range<Ch const *> xml_namespace_uri();

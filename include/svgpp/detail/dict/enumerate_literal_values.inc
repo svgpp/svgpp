@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 SVGPP_ON_VALUE(A)
 SVGPP_ON_VALUE(align)
 SVGPP_ON_VALUE(all)
@@ -23,7 +30,6 @@ SVGPP_ON_VALUE(crispEdges)
 SVGPP_ON_VALUE(CSS)
 SVGPP_ON_VALUE(currentColor)
 SVGPP_ON_VALUE(darken)
-SVGPP_ON_VALUE(default)
 SVGPP_ON_VALUE(dilate)
 SVGPP_ON_VALUE(disable)
 SVGPP_ON_VALUE(discrete)

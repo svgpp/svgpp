@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/definitions.hpp>
@@ -9,8 +16,10 @@
 #include <svgpp/adapter/path.hpp>
 #include <svgpp/detail/adapt_context.hpp>
 #include <svgpp/detail/attribute_id_to_tag.hpp>
-#include <svgpp/factory/length.hpp>
 #include <svgpp/parser/value_parser.hpp>
+#include <svgpp/policy/basic_shapes.hpp>
+#include <svgpp/policy/notify.hpp>
+#include <svgpp/policy/viewport.hpp>
 #include <svgpp/traits/attribute_groups.hpp>
 #include <svgpp/traits/attribute_type.hpp>
 #include <svgpp/traits/attribute_without_parser.hpp>
@@ -31,43 +40,31 @@
 namespace svgpp
 {
 
+BOOST_PARAMETER_TEMPLATE_KEYWORD(basic_shapes_policy)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(ignored_attributes)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(processed_attributes)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(passthrough_attributes)
-BOOST_PARAMETER_TEMPLATE_KEYWORD(basic_shapes_policy)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(referencing_element)
-
-namespace policy { namespace basic_shapes
-{
-  struct default_policy
-  {
-    static const bool convert_rect_to_path = false;
-    static const bool viewport_as_transform = false; // TODO: reorganize basic_shapes_policy
-    static const bool calculate_viewport = false;
-    static const bool marker_viewport_as_transform = false;
-    static const bool calculate_marker_viewport = false;
-    static const bool collect_rect_shape_attributes = false;
-  };
-}}
+BOOST_PARAMETER_TEMPLATE_KEYWORD(viewport_policy)
 
 namespace dispatcher_detail
 {
   // To reduce number of instantiations referencing_element_if_needed::type returns ReferencingElementTag
   // only when it matters and 'void' otherwise
-  template<class ReferencingElementTag, class ElementTag, class Context, SVGPP_TEMPLATE_ARGS>
+  template<class ReferencingElementTag, class ElementTag, class Context, SVGPP_TEMPLATE_ARGS2>
   struct referencing_element_if_needed
   {
   private:
     // Unpacking named template parameters
     typedef typename boost::parameter::parameters<
-      boost::parameter::optional<::svgpp::tag::basic_shapes_policy>
-    >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
-    typedef typename boost::parameter::value_type<args, ::svgpp::tag::basic_shapes_policy, 
-      policy::basic_shapes::default_policy>::type basic_shapes_policy;
+      boost::parameter::optional< ::svgpp::tag::viewport_policy>
+    >::bind<SVGPP_TEMPLATE_ARGS2_PASS>::type args;
+    typedef typename boost::parameter::value_type<args, ::svgpp::tag::viewport_policy, 
+      typename policy::viewport::by_context<Context>::type>::type viewport_policy;
 
   public:
     typedef typename boost::mpl::if_c<
-      (basic_shapes_policy::viewport_as_transform || basic_shapes_policy::calculate_viewport)
+      (viewport_policy::viewport_as_transform || viewport_policy::calculate_viewport)
       && boost::mpl::has_key<
           viewport_adapter_needs_to_know_referencing_element, 
           boost::mpl::pair<ReferencingElementTag, ElementTag>
@@ -150,7 +147,7 @@ public:
     typename path_adapter_t::type path_adapter(detail::unwrap_context<Context, tag::load_path_policy>::get(context));
 
     return collector_.on_exit_attributes(
-      detail::adapt_context_load_value2<ShapeToPathAdapter>(context, path_adapter_t::adapt_context(context, path_adapter)));
+      detail::adapt_context<tag::load_basic_shapes_policy, ShapeToPathAdapter>(context, path_adapter_t::adapt_context(context, path_adapter)));
   }
 };
 
@@ -173,7 +170,7 @@ public:
     typename markers_adapter_t::type markers_adapter(adapted_path_context);
 
     return collector_.on_exit_attributes(
-      detail::adapt_context_load_value2<ShapeToPathAdapter>(context, markers_adapter_t::adapt_context(adapted_path_context, markers_adapter)));
+      detail::adapt_context<tag::load_basic_shapes_policy, ShapeToPathAdapter>(context, markers_adapter_t::adapt_context(adapted_path_context, markers_adapter)));
   }
 };
 
@@ -196,7 +193,7 @@ public:
       detail::unwrap_context<Context, tag::load_transform_policy>::get(context));
 
     if (!base_type::on_exit_attributes(
-      detail::adapt_context_load_value2<viewport_transform_adapter>(
+      detail::adapt_context<tag::load_viewport_policy, viewport_transform_adapter>(
         context, 
         transform_adapter_t::adapt_context(context, transform_adapter))))
       return false;
@@ -218,7 +215,6 @@ public:
   void operator()(T & state) const
   {
     typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::load_value_policy>,
       boost::parameter::optional<tag::error_policy>,
       boost::parameter::optional<tag::length_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args_t;
@@ -249,7 +245,7 @@ class attribute_dispatcher_base
 public:
   typedef Context context_type;
   typedef ElementTag element_tag;
-  typedef attribute_dispatcher<ElementTag, Context, SVGPP_TEMPLATE_ARGS_PASS> actual_type; // TODO: review
+  typedef attribute_dispatcher<ElementTag, Context, SVGPP_TEMPLATE_ARGS_PASS> actual_type; 
 
 protected:
   // Unpacking named template parameters
@@ -278,8 +274,6 @@ public:
     typename number_type_by_context<Context>::type>::type coordinate_type;
   typedef typename boost::parameter::value_type<args, tag::passthrough_attributes, 
     boost::mpl::set0<> >::type passthrough_attributes;
-  typedef typename boost::parameter::value_type<args, tag::basic_shapes_policy, 
-    policy::basic_shapes::default_policy>::type basic_shapes_policy;
   typedef typename boost::parameter::value_type<args, tag::path_policy, 
     typename policy::path::by_context<Context>::type>::type path_policy;
   typedef typename boost::parameter::value_type<args, tag::load_path_policy, 
@@ -315,12 +309,19 @@ public:
   }
 
   template<class AttributeValue>
-  bool load_attribute(detail::attribute_id id, AttributeValue const & attributeValue, tag::source::attribute)
+  bool load_attribute(detail::attribute_id id, AttributeValue const & attributeValue, tag::source::attribute source)
   {
     detail::load_attribute_functor<actual_type, AttributeValue, tag::source::attribute> fn(
       *static_cast<actual_type *>(this), attributeValue);
     if (!detail::attribute_id_to_tag(element_tag(), id, fn))
-      ; // TODO: error
+    {
+      typedef typename boost::parameter::parameters<
+          boost::parameter::optional<tag::error_policy>
+      >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args_t;
+      typedef typename boost::parameter::value_type<args_t, tag::error_policy, 
+        policy::error::default_policy<Context> >::type error_policy_t;
+      error_policy_t::unexpected_attribute(context_, id, source);
+    }
     return fn.succeeded();
   }
 
@@ -330,7 +331,7 @@ public:
     detail::load_attribute_functor<actual_type, AttributeValue, tag::source::css> fn(
       *static_cast<actual_type *>(this), attributeValue);
     if (!detail::css_id_to_tag(id, fn))
-      ; // TODO: error or assert
+      BOOST_ASSERT(false);
     return fn.succeeded();
   }
 
@@ -365,7 +366,7 @@ public:
   bool notify(EventTag event_tag)
   {
     // Forward notification to original context
-    return context_.notify(event_tag);
+    return policy::notify::default_policy<Context>::notify(context_, event_tag);
   }
 
 protected:
@@ -398,6 +399,15 @@ class viewport_attribute_dispatcher:
 {
   typedef attribute_dispatcher_base<ElementTag, Context, SVGPP_TEMPLATE_ARGS_PASS> base_type;
 
+  typedef typename boost::parameter::parameters<
+    boost::parameter::optional<tag::referencing_element>,
+    boost::parameter::optional<tag::viewport_policy>
+  >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
+  typedef typename boost::parameter::value_type<args, tag::referencing_element, 
+    void>::type referencing_element;
+  typedef typename boost::parameter::value_type<args, tag::viewport_policy, 
+    typename policy::viewport::by_context<Context>::type>::type viewport_policy;
+
 public:
   viewport_attribute_dispatcher(Context & context)
     : base_type(context)
@@ -407,8 +417,8 @@ public:
   using base_type::load_attribute_value; 
 
   template<class AttributeTag, class AttributeValue>
-  typename boost::enable_if_c<(base_type::basic_shapes_policy::viewport_as_transform
-      || base_type::basic_shapes_policy::calculate_viewport)
+  typename boost::enable_if_c<(viewport_policy::viewport_as_transform
+      || viewport_policy::calculate_viewport)
     && boost::mpl::has_key<traits::viewport_attributes, AttributeTag>::value, bool>::type
   load_attribute_value(AttributeTag attribute_tag, AttributeValue const & attribute_value, 
                        tag::source::attribute property_source)
@@ -417,7 +427,7 @@ public:
     return value_parser<typename traits::attribute_type<ElementTag, AttributeTag>::type, 
         SVGPP_TEMPLATE_ARGS_PASS>::parse(
       attribute_tag, 
-      detail::adapt_context_load_value(context_, boost::fusion::at_c<0>(states_)), // TODO: change 0 for some meaningful value
+      detail::adapt_context_load_value(this->context_, boost::fusion::at_c<0>(states_)), // TODO: change 0 for some meaningful value
       attribute_value, property_source);
   }
 
@@ -441,12 +451,6 @@ public:
   }
 
 private:
-  typedef typename boost::parameter::parameters<
-    boost::parameter::optional<tag::referencing_element>
-  >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
-  typedef typename boost::parameter::value_type<args, tag::referencing_element, 
-    void>::type referencing_element;
-  
   typedef calculate_viewport_adapter<
     ElementTag,
     referencing_element,
@@ -454,11 +458,11 @@ private:
     typename base_type::coordinate_type
   > viewport_adapter;
   typedef typename boost::mpl::if_c< 
-    base_type::basic_shapes_policy::viewport_as_transform,
+    viewport_policy::viewport_as_transform,
     boost::mpl::single_view<
       detail::viewport_transform_state<viewport_adapter> 
     >,
-    typename boost::mpl::if_c<base_type::basic_shapes_policy::calculate_viewport,
+    typename boost::mpl::if_c<viewport_policy::calculate_viewport,
       boost::mpl::single_view<viewport_adapter>,
       boost::mpl::empty_sequence>::type
   >::type state_types_sequence;
@@ -500,6 +504,12 @@ class attribute_dispatcher<tag::element::marker, Context, SVGPP_TEMPLATE_ARGS_PA
 {
   typedef attribute_dispatcher_base<tag::element::marker, Context, SVGPP_TEMPLATE_ARGS_PASS> base_type;
 
+  typedef typename boost::parameter::parameters<
+    boost::parameter::optional<tag::viewport_policy>
+  >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
+  typedef typename boost::parameter::value_type<args, tag::viewport_policy, 
+    typename policy::viewport::by_context<Context>::type>::type viewport_policy;
+
 public:
   attribute_dispatcher(Context & context)
     : base_type(context)
@@ -509,8 +519,8 @@ public:
   using base_type::load_attribute_value; 
 
   template<class AttributeTag, class AttributeValue>
-  typename boost::enable_if_c<(base_type::basic_shapes_policy::marker_viewport_as_transform
-      || base_type::basic_shapes_policy::calculate_marker_viewport)
+  typename boost::enable_if_c<(viewport_policy::marker_viewport_as_transform
+      || viewport_policy::calculate_marker_viewport)
     && boost::mpl::has_key<traits::marker_viewport_attributes, AttributeTag>::value, bool>::type
   load_attribute_value(AttributeTag attribute_tag, AttributeValue const & attribute_value, 
                        tag::source::attribute property_source)
@@ -519,7 +529,7 @@ public:
     return value_parser<typename traits::attribute_type<tag::element::marker, AttributeTag>::type, 
         SVGPP_TEMPLATE_ARGS_PASS>::parse(
       attribute_tag, 
-      detail::adapt_context_load_value(context_, boost::fusion::at_c<0>(states_)), // TODO: change 0 for some meaningful value
+      detail::adapt_context_load_value(this->context_, boost::fusion::at_c<0>(states_)), // TODO: change 0 for some meaningful value
       attribute_value, property_source);
   }
 
@@ -548,11 +558,11 @@ private:
     typename base_type::coordinate_type
   > viewport_adapter;
   typedef typename boost::mpl::if_c< 
-    base_type::basic_shapes_policy::marker_viewport_as_transform,
+    viewport_policy::marker_viewport_as_transform,
     boost::mpl::single_view<
       detail::viewport_transform_state<viewport_adapter> 
     >,
-    typename boost::mpl::if_c<base_type::basic_shapes_policy::calculate_marker_viewport,
+    typename boost::mpl::if_c<viewport_policy::calculate_marker_viewport,
       boost::mpl::single_view<viewport_adapter>,
       boost::mpl::empty_sequence>::type
   >::type state_types_sequence;
@@ -571,18 +581,23 @@ class basic_shape_attribute_dispatcher:
 {
   typedef attribute_dispatcher_base<ElementTag, Context, SVGPP_TEMPLATE_ARGS_PASS> base_type;
   typedef typename base_type::length_factory_type::length_type length_type;
+  typedef typename boost::parameter::parameters<
+    boost::parameter::optional<tag::basic_shapes_policy>
+  >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
+  typedef typename boost::parameter::value_type<args, tag::basic_shapes_policy, 
+    typename policy::basic_shapes::by_context<Context>::type>::type basic_shapes_policy;
   typedef typename boost::mpl::if_< 
-    boost::mpl::has_key<typename base_type::basic_shapes_policy::convert_to_path, ElementTag>,
+    boost::mpl::has_key<typename basic_shapes_policy::convert_to_path, ElementTag>,
     boost::mpl::single_view<
       typename boost::mpl::if_c<
         boost::is_same<ElementTag, tag::element::rect>::value 
-          && base_type::basic_shapes_policy::convert_only_rounded_rect_to_path,
+          && basic_shapes_policy::convert_only_rounded_rect_to_path,
         convert_rounded_rect_to_path_state<length_type>, 
         convert_basic_shape_to_path_state<ElementTag, length_type>
       >::type
     >,
     typename boost::mpl::if_< 
-      boost::mpl::has_key<typename base_type::basic_shapes_policy::collect_attributes, ElementTag>,
+      boost::mpl::has_key<typename basic_shapes_policy::collect_attributes, ElementTag>,
       boost::mpl::single_view<collect_basic_shape_attributes_state<ElementTag, length_type> >,
       boost::mpl::empty_sequence
     >::type
@@ -608,7 +623,7 @@ public:
 
   template<class AttributeValue, class AttributeTag>
   typename boost::enable_if_c<
-    boost::mpl::has_key<typename base_type::basic_shapes_policy::convert_to_path, ElementTag>::value
+    boost::mpl::has_key<typename basic_shapes_policy::convert_to_path, ElementTag>::value
     && boost::mpl::has_key<typename basic_shape_attributes<ElementTag>::type, AttributeTag>::value, bool>::type
   load_attribute_value(AttributeTag attribute_tag, 
                        AttributeValue const & attribute_value, 
@@ -621,7 +636,7 @@ public:
       >::parse(
         attribute_tag, 
         //boost::fusion::at_key<collect_attributes_adapter>(states_), 
-        detail::adapt_context_load_value(context_, boost::fusion::at_c<0>(states_).get_own_context()), // TODO: change 0 for some meaningful value
+        detail::adapt_context_load_value(this->context_, boost::fusion::at_c<0>(states_).get_own_context()), // TODO: change 0 for some meaningful value
         attribute_value, property_source);
   }
 };

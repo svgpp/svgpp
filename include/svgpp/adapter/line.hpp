@@ -1,6 +1,14 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/definitions.hpp>
+#include <svgpp/detail/adapt_context.hpp>
 #include <boost/optional.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/mpl/set.hpp>
@@ -18,7 +26,7 @@ public:
   template<class Context>
   bool on_exit_attributes(Context & context) const
   {
-    typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
+    typedef detail::unwrap_context<Context, tag::length_policy> length_policy_context;
     typedef typename length_policy_context::policy length_policy_t;
 
     typename length_policy_t::length_factory_type & converter 
@@ -35,8 +43,8 @@ public:
     if (y2_)
       y2 = converter.length_to_user_coordinate(*y2_, tag::height_length());
 
-    typedef typename detail::unwrap_context<Context, tag::load_value_policy> load_value;
-    load_value::policy::set_line(load_value::get(context), x1, y1, x2, y2);
+    typedef detail::unwrap_context<Context, tag::load_basic_shapes_policy> load_basic_shapes;
+    load_basic_shapes::policy::set_line(load_basic_shapes::get(context), x1, y1, x2, y2);
     return true;
   }
 
@@ -54,9 +62,9 @@ struct line_to_path_adapter
   template<class Context, class Coordinate>
   static void set_line(Context & context, Coordinate x1, Coordinate y1, Coordinate x2, Coordinate y2)
   {
-    typedef typename detail::unwrap_context<Context, tag::load_path_policy> load_path;
+    typedef detail::unwrap_context<Context, tag::load_path_policy> load_path;
 
-    load_path::type & path_context = load_path::get(context);
+    typename load_path::type & path_context = load_path::get(context);
     load_path::policy::path_move_to(path_context, x1, y1, tag::absolute_coordinate());
     load_path::policy::path_line_to(path_context, x2, y2, tag::absolute_coordinate());
     load_path::policy::path_exit(path_context);

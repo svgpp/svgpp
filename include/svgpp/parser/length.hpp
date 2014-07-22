@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/config.hpp>
@@ -28,7 +35,7 @@ struct value_parser<tag::type::length, SVGPP_TEMPLATE_ARGS_PASS>
       boost::parameter::optional<tag::length_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
-    typedef typename length_policy_context::bind<args2_t>::type length_policy_t;
+    typedef typename length_policy_context::template bind<args2_t>::type length_policy_t;
 
     typename length_policy_t::length_factory_type & length_factory 
       = length_policy_t::length_factory(length_policy_context::get(context));
@@ -40,7 +47,7 @@ struct value_parser<tag::type::length, SVGPP_TEMPLATE_ARGS_PASS>
     > length_grammar;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     typename length_policy_t::length_factory_type::length_type value;
-    if (boost::spirit::qi::parse(it, end, length_grammar(boost::phoenix::ref(length_factory)), value) 
+    if (boost::spirit::qi::parse(it, end, length_grammar(boost::phoenix::cref(length_factory)), value) 
       && it == end)
     {
       args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, value);
@@ -82,7 +89,7 @@ protected:
       boost::parameter::optional<tag::length_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
-    typedef typename length_policy_context::bind<args2_t>::type length_policy_t;
+    typedef typename length_policy_context::template bind<args2_t>::type length_policy_t;
     typedef typename length_policy_t::length_factory_type length_factory_t;
     typedef qi::rule<iterator_t, typename length_factory_t::length_type()> length_rule_t;
     typedef detail::comma_wsp_rule_no_skip<iterator_t> separator_t;
@@ -94,8 +101,7 @@ protected:
     > parse_list_iterator_t;
     typedef detail::finite_function_iterator<parse_list_iterator_t> output_iterator_t;
 
-    typename length_factory_t & length_factory 
-      = length_policy_t::length_factory(length_policy_context::get(context));
+    length_factory_t & length_factory = length_policy_t::length_factory(length_policy_context::get(context));
     SVGPP_STATIC_IF_SAFE const typename boost::mpl::apply<
       LengthGrammarFunc, 
       length_factory_t, 

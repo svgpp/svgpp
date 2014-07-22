@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/config.hpp>
@@ -32,7 +39,7 @@ struct value_parser<tag::type::transform_list, SVGPP_TEMPLATE_ARGS_PASS>
       iterator_t, 
       typename adapted_context_t::type, 
       typename transform_policy::number_type,
-      typename detail::unwrap_context<adapted_context_t::adapted_context, tag::load_transform_policy>::policy
+      typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::load_transform_policy>::policy
     > transform_grammar_t;
 
     context_t bound_context(context);

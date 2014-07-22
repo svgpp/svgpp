@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <boost/noncopyable.hpp>
@@ -145,7 +152,6 @@ private:
   }
 
   OutputContext & output_context;
-  // TODO: move some data to optional base class
   coordinate_type current_x, current_y, subpath_start_x, subpath_start_y;
 
 public:
@@ -626,9 +632,9 @@ public:
 
     typedef arc_to_bezier<coordinate_type> arc_to_bezier_t;
     arc_to_bezier_t a2b(cx, cy, rx, ry, x_axis_rotation, 
-      arc_to_bezier_t::circle_angle_tag(), theta1, theta2, 
-      arc_to_bezier_t::max_angle_tag(), boost::math::constants::half_pi<coordinate_type>());
-    for(arc_to_bezier_t::iterator it(a2b); !it.eof(); it.advance())
+      typename arc_to_bezier_t::circle_angle_tag(), theta1, theta2, 
+      typename arc_to_bezier_t::max_angle_tag(), boost::math::constants::half_pi<coordinate_type>());
+    for(typename arc_to_bezier_t::iterator it(a2b); !it.eof(); it.advance())
       path_cubic_bezier_to<Policy>(
         it.p1x(), it.p1y(),
         it.p2x(), it.p2y(),
@@ -833,7 +839,7 @@ public:
     number_type, 
     original_load_path_policy
   > type;
-  typedef adapted_context_wrapper<
+  typedef const adapted_context_wrapper<
     OriginalContext, 
     type, 
     tag::load_path_policy, 

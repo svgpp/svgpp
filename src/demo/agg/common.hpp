@@ -6,13 +6,15 @@
 #include <svgpp/factory/integer_color.hpp>
 #include <svgpp/factory/unitless_length.hpp>
 #ifdef USE_MSXML
-# define NOMINMAX
+# ifndef NOMINMAX
+#  define NOMINMAX 1
+# endif
 # include <MsXml2.h>
 # include <windows.h>
-# include <svgpp/xml/msxml.hpp>
+# include <svgpp/policy/xml/msxml.hpp>
 #else
 # include <rapidxml_ns/rapidxml_ns.hpp>
-# include <svgpp/xml/rapidxml_ns.hpp>
+# include <svgpp/policy/xml/rapidxml_ns.hpp>
 #endif
 #include <boost/function.hpp>
 #include <boost/tuple/tuple.hpp>

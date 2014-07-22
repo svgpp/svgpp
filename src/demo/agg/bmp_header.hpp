@@ -1,9 +1,13 @@
 #pragma once
 
-#include <stdint.h>
+#include <boost/cstdint.hpp>
 
 namespace bmp
 {
+
+  using boost::uint16_t;
+  using boost::uint32_t;
+  using boost::int32_t;
 
 #pragma pack(push, 1)
 

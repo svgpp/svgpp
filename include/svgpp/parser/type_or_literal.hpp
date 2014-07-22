@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/definitions.hpp>
@@ -28,8 +35,8 @@ struct value_parser<
     detail::simple_enumeration_type_visitor<
       dictionary, 
       AttributeTag, 
-      args_t::load_value_context::type, 
-      args_t::load_value_policy,
+      typename args_t::load_value_context::type, 
+      typename args_t::load_value_policy,
       AttributeValue,
       boost::is_same<PropertySource, tag::source::attribute>::value
     > fn(args_t::load_value_context::get(context), attribute_value);

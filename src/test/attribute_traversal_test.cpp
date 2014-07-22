@@ -1,6 +1,6 @@
 #include <svgpp/attribute_traversal.hpp>
 #include <rapidxml_ns/rapidxml_ns.hpp>
-#include <svgpp/xml/rapidxml_ns.hpp>
+#include <svgpp/policy/xml/rapidxml_ns.hpp>
 
 #include <gtest/gtest.h>
 

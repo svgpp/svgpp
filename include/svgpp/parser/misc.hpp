@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/config.hpp>
@@ -135,7 +142,7 @@ struct value_parser<tag::attribute::preserveAspectRatio, SVGPP_TEMPLATE_ARGS_PAS
       boost::parameter::optional<tag::load_value_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename detail::unwrap_context<Context, tag::load_value_policy> unwrap_load_value_policy_t;
-    typedef typename unwrap_load_value_policy_t::bind<args2_t>::type load_value_policy_t;
+    typedef typename unwrap_load_value_policy_t::template bind<args2_t>::type load_value_policy_t;
     switch (align)
     {
     case 1:

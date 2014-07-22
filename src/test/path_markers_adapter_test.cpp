@@ -159,8 +159,8 @@ TEST(path_markers_adapter, test2)
     (MarkerInstance(svgpp::marker_mid, 10, 0, 45.0 * deg))
     (MarkerInstance(svgpp::marker_mid, 10, 10, 135.0 * deg))
     (MarkerInstance(svgpp::marker_mid, 0, 10, -135.0 * deg))
-    (MarkerInstance(svgpp::marker_end, 0, 0, -45.0 * deg))
-    (MarkerInstance(svgpp::marker_start, 20, 20, -45.0 * deg))
+    (MarkerInstance(svgpp::marker_mid, 0, 0, -45.0 * deg))
+    (MarkerInstance(svgpp::marker_mid, 20, 20, -45.0 * deg))
     (MarkerInstance(svgpp::marker_mid, 30, 20, 45.0 * deg))
     (MarkerInstance(svgpp::marker_mid, 30, 30, 135.0 * deg))
     (MarkerInstance(svgpp::marker_mid, 20, 30, -135.0 * deg))
@@ -207,7 +207,7 @@ TEST(path_markers_adapter, test6)
   DoConfigTests("M0 0 L 10 10 z L 0 20", list_of
     (MarkerInstance(svgpp::marker_start, 0, 0, 135.0 * deg)) // "the direction of marker is undefined", we check 
     (MarkerInstance(svgpp::marker_mid, 10, 10, 135.0 * deg)) // the way it is implemented in svgpp
-    (MarkerInstance(svgpp::marker_end, 0, 0, 135.0 * deg))   //
+    (MarkerInstance(svgpp::marker_mid, 0, 0, 135.0 * deg))   //
     (MarkerInstance(svgpp::marker_mid, 0, 0, 0.0))
     (MarkerInstance(svgpp::marker_mid, 10, 0, 45.0 * deg))
     (MarkerInstance(svgpp::marker_mid, 10, 10, 135.0 * deg))

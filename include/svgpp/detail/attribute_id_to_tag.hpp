@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/definitions.hpp>
@@ -138,6 +145,7 @@ inline bool attribute_id_to_tag(tag::element::animateMotion, attribute_id id, F 
     SVGPP_ON(keyPoints)
     SVGPP_ON(rotate)
     SVGPP_ON(origin)
+    SVGPP_ON(fill)
     default:
       return false;
   }
@@ -159,6 +167,7 @@ inline bool attribute_id_to_tag(tag::element::animateTransform, attribute_id id,
 #include <svgpp/detail/dict/enumerate_animation_addition_attributes.inc>
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(type)
+    SVGPP_ON(fill)
     default:
       return false;
   }
@@ -1236,6 +1245,7 @@ inline bool attribute_id_to_tag(tag::element::set, attribute_id id, F & fn)
 #include <svgpp/detail/dict/enumerate_animation_timing_attributes.inc>
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(to)
+    SVGPP_ON(fill)
     default:
       return false;
   }

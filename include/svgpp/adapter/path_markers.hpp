@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 #include <svgpp/adapter/path.hpp>
@@ -88,7 +95,7 @@ public:
 
   path_markers_adapter(OutputContext & context)
     : context_(context)
-    , in_path_(false)
+    , first_vertex_(true)
     , in_subpath_(false)
     , subpath_first_segment_(true)
     , points_without_directionality_(0)
@@ -99,14 +106,12 @@ public:
     coordinate_type x, 
     coordinate_type y, tag::absolute_coordinate tag)
   {
-    if (!in_path_)
+    if (first_vertex_)
     {
       // "Moveto" must be the first command in path - checked by grammar
-      in_path_ = true;
       config_.request_config(context_);
     }
-
-    if (in_subpath_)
+    else if (in_subpath_)
       exit_subpath(false);
 
     in_subpath_ = true;
@@ -125,6 +130,7 @@ public:
       last_start_marker_index_ = next_marker_index_++;
       break;
     }
+    first_vertex_ = false;
   }
 
   void path_line_to(
@@ -240,7 +246,7 @@ private:
         start_point_directionality = *subpath_start_directionality_;
       }
     else
-      subpath_start_directionality_ = directionality = MarkersPolicy::directionality_policy::undetermined_directionality();
+      start_point_directionality = directionality = MarkersPolicy::directionality_policy::undetermined_directionality();
 
     if (config_.mid() == marker_orient_auto)
       for(; points_without_directionality_ > 0; --points_without_directionality_)
@@ -308,7 +314,7 @@ private:
   OutputContext & context_;
   detail::path_markers_adapter_config<LoadMarkersPolicy, MarkersPolicy::always_calculate_auto_orient> config_;
 
-  bool in_path_;
+  bool first_vertex_;
   bool in_subpath_;
   bool subpath_first_segment_;
   coordinate_type subpath_start_x_, subpath_start_y_;
@@ -394,7 +400,7 @@ struct path_markers_adapter_if_needed<OriginalContext,
     detail::unwrap_context<OriginalContext, tag::markers_policy>::policy::calculate_markers>::type>
 {
   typedef path_bypass_and_markers_adapter<OriginalContext> type;
-  typedef adapted_context_wrapper<
+  typedef const adapted_context_wrapper<
     OriginalContext, 
     typename type::context_type, 
     tag::load_path_policy, 

@@ -1,3 +1,10 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 // Properties
 SVGPP_ON_ATTR(alignment_baseline,              (auto_)(baseline)(before_edge)(text_before_edge)(middle)(central)(after_edge)(text_after_edge)(ideographic)(alphabetic)(hanging)(mathematical)(inherit))
 SVGPP_ON_ATTR(clip_rule,                       (nonzero)(evenodd)(inherit))  // Default: nonzero
@@ -70,5 +77,5 @@ SVGPP_ON_ATTR(xChannelSelector,                (R)(G)(B)(A))
 SVGPP_ON_ATTR(yChannelSelector,                (R)(G)(B)(A))
 SVGPP_ON_ATTR(zoomAndPan,                      (disable)(magnify))
 
-SVGPP_ON_ATTR_NS(xml,   space,                 (default)(preserve))
+SVGPP_ON_ATTR_NS(xml,   space,                 (default_)(preserve))
 SVGPP_ON_ATTR_NS(xlink, type,                  (simple))

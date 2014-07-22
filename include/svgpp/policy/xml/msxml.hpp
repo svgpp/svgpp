@@ -1,11 +1,17 @@
+// Copyright Oleg Maximenko 2014.
+// Distributed under the Boost Software License, Version 1.0.
+// (See accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+//
+// See http://github.com/svgpp/svgpp for library home page.
+
 #pragma once
 
 // Microsoft XML headers must be already included by user
 
 #include <svgpp/definitions.hpp>
-#include <svgpp/xml_policy_fwd.hpp>
 #include <svgpp/detail/namespace.hpp>
-#include <boost/intrusive_ptr.hpp>
+#include <svgpp/policy/xml_fwd.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/range/iterator_range.hpp>
 
@@ -30,6 +36,8 @@ namespace boost
 }
 #endif
 
+#include <boost/intrusive_ptr.hpp>
+
 namespace svgpp
 {
 
@@ -43,11 +51,37 @@ public:
     : str_(NULL)
   {}
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
   bstr_t(bstr_t && src)
     : str_(src.str_)
   {
     src.str_ = NULL;
   }
+#else
+  bstr_t(bstr_t & src)
+    : str_(src.str_)
+  {
+    src.str_ = NULL;
+  }
+
+  struct ref
+  {
+    BSTR ptr_;
+      
+    explicit ref(BSTR ptr): ptr_(ptr) { }
+  };
+  
+  bstr_t(ref __ref) throw()
+      : str_(__ref.ptr_) 
+  {}
+
+  operator ref() throw()
+  { 
+    BSTR str = str_;
+    str_ = NULL;
+    return ref(str); 
+  } 
+#endif
 
   ~bstr_t()
   {
@@ -96,11 +130,18 @@ typedef boost::intrusive_ptr<SVGPP_MSXML_NAMESPACE::IXMLDOMAttribute> attribute_
 class attribute_iterator: boost::noncopyable
 {
 public:
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
   attribute_iterator(attribute_iterator && src)
   {
     attribute_map_.swap(src.attribute_map_);
     current_attribute_.swap(src.current_attribute_);
   }
+#else
+  attribute_iterator(attribute_iterator const & src)
+    : attribute_map_(src.attribute_map_)
+    , current_attribute_(src.current_attribute_)
+  {}
+#endif
 
   attribute_iterator(attribute_map_ptr const & attribute_map)
     : attribute_map_(attribute_map)
@@ -123,7 +164,7 @@ public:
       node->Release();
       BOOST_ASSERT(hr == S_OK);
       if (hr == S_OK)
-        current_attribute_.swap(attribute_ptr(attr, false));
+        attribute_ptr(attr, false).swap(current_attribute_);
     }
   }
 
@@ -147,8 +188,11 @@ private:
 
 }
 
+namespace policy { namespace xml
+{
+
 template<>
-struct xml_attribute_iterator_policy<msxml_detail::attribute_iterator>: 
+struct attribute_iterator<msxml_detail::attribute_iterator>: 
   msxml_detail::bstr_policy
 {
   typedef msxml_detail::attribute_iterator iterator_type;
@@ -168,7 +212,7 @@ struct xml_attribute_iterator_policy<msxml_detail::attribute_iterator>:
     return xml_attribute.is_end();
   }
 
-  static detail::namespace_id get_namespace(iterator_type const & xml_attribute)
+  static BOOST_SCOPED_ENUM(detail::namespace_id) get_namespace(iterator_type const & xml_attribute)
   {
     attribute_name_type uri;
     if (S_OK != xml_attribute->get_namespaceURI(&uri))
@@ -210,7 +254,7 @@ struct xml_attribute_iterator_policy<msxml_detail::attribute_iterator>:
 };
 
 template<>
-struct xml_element_iterator_policy<msxml_detail::node_ptr>:
+struct element_iterator<msxml_detail::node_ptr>:
   msxml_detail::bstr_policy
 {
   typedef msxml_detail::node_ptr iterator_type;
@@ -309,7 +353,7 @@ private:
         switch(xml_node->get_nextSibling(&nextSibling))
         {
         case S_OK:
-          xml_node.swap(iterator_type(nextSibling, false));
+          iterator_type(nextSibling, false).swap(xml_node);
           break;
         default:
           BOOST_ASSERT(false);
@@ -348,13 +392,13 @@ private:
 };
 
 template<>
-struct xml_element_iterator_policy<SVGPP_MSXML_NAMESPACE::IXMLDOMElement *>
-  : xml_element_iterator_policy<msxml_detail::node_ptr>
+struct element_iterator<SVGPP_MSXML_NAMESPACE::IXMLDOMElement *>
+  : element_iterator<msxml_detail::node_ptr>
 {};
 
 template<>
-struct xml_element_iterator_policy<SVGPP_MSXML_NAMESPACE::IXMLDOMNode *>
-  : xml_element_iterator_policy<msxml_detail::node_ptr>
+struct element_iterator<SVGPP_MSXML_NAMESPACE::IXMLDOMNode *>
+  : element_iterator<msxml_detail::node_ptr>
 {};
 
-}
+}}}
