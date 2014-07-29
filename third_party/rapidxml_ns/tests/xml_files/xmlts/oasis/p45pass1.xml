@@ -1,9 +1,0 @@
-<!DOCTYPE doc
-[
-<!ELEMENT doc ANY>
-<!ELEMENT
-a ANY
->
-<!ELEMENT c (#PCDATA)>
-]>
-<doc/>
