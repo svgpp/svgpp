@@ -25,7 +25,7 @@ struct list_of_points_to_path_adapter<tag::element::polyline>
     typedef detail::unwrap_context<Context, tag::load_path_policy> load_path;
 
     typename load_path::type & path_context = load_path::get(context);
-    boost::range_const_iterator<Range>::type it = boost::begin(r), end = boost::end(r);
+    typename boost::range_const_iterator<Range>::type it = boost::begin(r), end = boost::end(r);
     if (it != end)
     {
       load_path::policy::path_move_to(path_context, it->first, it->second, tag::absolute_coordinate());
@@ -44,7 +44,7 @@ struct list_of_points_to_path_adapter<tag::element::polygon>
     typedef detail::unwrap_context<Context, tag::load_path_policy> load_path;
 
     typename load_path::type & path_context = load_path::get(context);
-    boost::range_const_iterator<Range>::type it = boost::begin(r), end = boost::end(r);
+    typename boost::range_const_iterator<Range>::type it = boost::begin(r), end = boost::end(r);
     if (it != end)
     {
       load_path::policy::path_move_to(path_context, it->first, it->second, tag::absolute_coordinate());
