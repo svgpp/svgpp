@@ -30,6 +30,8 @@ TEST(value_parser, number)
     Context ctx;
     EXPECT_TRUE(value_parser<tag::type::number>::parse(tag::attribute::by(), ctx, std::string("1234"), tag::source::attribute()));
     EXPECT_EQ(1234, ctx.value_);
+    EXPECT_TRUE(value_parser<tag::type::number>::parse(tag::attribute::by(), ctx, std::string("+1234"), tag::source::attribute()));
+    EXPECT_EQ(1234, ctx.value_);
     EXPECT_TRUE(value_parser<tag::type::number>::parse(tag::attribute::by(), ctx, std::string("-567"), tag::source::attribute()));
     EXPECT_EQ(-567, ctx.value_);
     EXPECT_TRUE(value_parser<tag::type::number>::parse(tag::attribute::by(), ctx, std::string("+0"), tag::source::attribute()));

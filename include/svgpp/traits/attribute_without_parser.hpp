@@ -44,6 +44,7 @@ template<> struct attribute_without_parser<tag::attribute::requiredExtensions  >
 template<> struct attribute_without_parser<tag::attribute::requiredFeatures    > : boost::mpl::true_ {};
 template<> struct attribute_without_parser<tag::attribute::result              > : boost::mpl::true_ {};
 template<> struct attribute_without_parser<tag::attribute::string              > : boost::mpl::true_ {};
+template<> struct attribute_without_parser<tag::attribute::style               > : boost::mpl::true_ {};
 template<> struct attribute_without_parser<tag::attribute::systemLanguage      > : boost::mpl::true_ {};
 template<> struct attribute_without_parser<tag::attribute::target              > : boost::mpl::true_ {};
 template<> struct attribute_without_parser<tag::attribute::title               > : boost::mpl::true_ {};

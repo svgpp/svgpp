@@ -26,8 +26,6 @@ struct attribute_iterator<rapidxml_ns::xml_attribute<Ch> const *>
   typedef string_type attribute_value_type;
   typedef string_type saved_value_type;
 
-  static const bool store_value = true; // Preferred way of storing attribute: value
-
   static string_type get_string_range(string_type const & str)
   { 
     return str;
@@ -88,7 +86,7 @@ struct element_iterator<rapidxml_ns::xml_node<Ch> const *>
   typedef rapidxml_ns::xml_node<Ch> const * iterator_type;
   typedef boost::iterator_range<Ch const *> string_type;
   typedef boost::iterator_range<Ch const *> element_name_type;
-  typedef Ch const * element_text_type;
+  typedef boost::iterator_range<Ch const *> element_text_type;
   typedef rapidxml_ns::xml_attribute<Ch> const * attribute_enumerator_type;
 
   static string_type get_string_range(string_type const & str)
@@ -115,7 +113,7 @@ struct element_iterator<rapidxml_ns::xml_node<Ch> const *>
 
   static bool is_text(iterator_type xml_element)
   {
-    return xml_element->types() != rapidxml_ns::node_element;
+    return xml_element->type() != rapidxml_ns::node_element;
   }
 
   static element_name_type get_local_name(iterator_type xml_element)

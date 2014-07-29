@@ -146,4 +146,27 @@ typedef boost::mpl::set6<
   tag::attribute::onzoom
   > document_event_attributes;
 
+typedef boost::mpl::set<
+    boost::mpl::pair<tag::element::path, tag::attribute::d>,
+    boost::mpl::pair<tag::element::rect, tag::attribute::x>,
+    boost::mpl::pair<tag::element::rect, tag::attribute::y>,
+    boost::mpl::pair<tag::element::rect, tag::attribute::width>, 
+    boost::mpl::pair<tag::element::rect, tag::attribute::height>,
+    boost::mpl::pair<tag::element::rect, tag::attribute::rx>,
+    boost::mpl::pair<tag::element::rect, tag::attribute::ry>,
+    boost::mpl::pair<tag::element::circle, tag::attribute::cx>,
+    boost::mpl::pair<tag::element::circle, tag::attribute::cy>,
+    boost::mpl::pair<tag::element::circle, tag::attribute::r>,
+    boost::mpl::pair<tag::element::ellipse, tag::attribute::cx>,
+    boost::mpl::pair<tag::element::ellipse, tag::attribute::cy>,
+    boost::mpl::pair<tag::element::ellipse, tag::attribute::rx>,
+    boost::mpl::pair<tag::element::ellipse, tag::attribute::ry>,
+    boost::mpl::pair<tag::element::line, tag::attribute::x1>,
+    boost::mpl::pair<tag::element::line, tag::attribute::y1>,
+    boost::mpl::pair<tag::element::line, tag::attribute::x2>,
+    boost::mpl::pair<tag::element::line, tag::attribute::y2>,
+    boost::mpl::pair<tag::element::polyline, tag::attribute::points>,
+    boost::mpl::pair<tag::element::polygon, tag::attribute::points>
+  >::type shapes_attributes_by_element;
+
 }}

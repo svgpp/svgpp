@@ -206,19 +206,19 @@ struct gradient_context_factories
 template<>
 struct gradient_context_factories::apply<GradientContext, svgpp::tag::element::linearGradient>
 {
-  typedef svgpp::context_factory::on_stack<GradientContext, LinearGradientContext> type;
+  typedef svgpp::factory::context::on_stack<GradientContext, LinearGradientContext> type;
 };
 
 template<>
 struct gradient_context_factories::apply<GradientContext, svgpp::tag::element::radialGradient>
 {
-  typedef svgpp::context_factory::on_stack<GradientContext, RadialGradientContext> type;
+  typedef svgpp::factory::context::on_stack<GradientContext, RadialGradientContext> type;
 };
 
 template<class ParentContext>
 struct gradient_context_factories::apply<ParentContext, svgpp::tag::element::stop>
 {
-  typedef svgpp::context_factory::on_stack<ParentContext, GradientStopContext> type;
+  typedef svgpp::factory::context::on_stack<ParentContext, GradientStopContext> type;
 };
 
 }
@@ -256,7 +256,7 @@ boost::optional<Gradient> Gradients::get(
             svgpp::tag::element::linearGradient,
             svgpp::tag::element::radialGradient,
             svgpp::tag::element::stop
-          > 
+          >::type 
         >,
         svgpp::processed_attributes<
           boost::mpl::set<
@@ -275,7 +275,7 @@ boost::optional<Gradient> Gradients::get(
             svgpp::tag::attribute::offset,
             boost::mpl::pair<svgpp::tag::element::stop, svgpp::tag::attribute::stop_color>,
             boost::mpl::pair<svgpp::tag::element::stop, svgpp::tag::attribute::stop_opacity>
-          >
+          >::type
         >
       >::load_referenced_element<
         svgpp::expected_elements<svgpp::traits::gradient_elements>

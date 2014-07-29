@@ -94,10 +94,10 @@ protected:
     typedef qi::rule<iterator_t, typename length_factory_t::length_type()> length_rule_t;
     typedef detail::comma_wsp_rule_no_skip<iterator_t> separator_t;
     typedef detail::parse_list_iterator<
+      typename length_factory_t::length_type,
       iterator_t, 
       length_rule_t, 
-      separator_t, 
-      typename length_factory_t::length_type
+      separator_t
     > parse_list_iterator_t;
     typedef detail::finite_function_iterator<parse_list_iterator_t> output_iterator_t;
 

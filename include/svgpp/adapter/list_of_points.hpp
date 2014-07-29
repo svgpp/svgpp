@@ -8,35 +8,56 @@
 #pragma once
 
 #include <svgpp/definitions.hpp>
+#include <svgpp/detail/adapt_context.hpp>
 
 namespace svgpp
 {
 
-template<class OutputContext>
-class list_of_points_to_path_adapter
+template<class ElementTag>
+struct list_of_points_to_path_adapter;
+
+template<>
+struct list_of_points_to_path_adapter<tag::element::polyline>
 {
-public:
-  list_of_points_to_path_adapter(OutputContext & original_context)
-    : context_(original_context)
-    , first_point_(true)
+  template<class Context, class Range>
+  static void set(Context & context, tag::attribute::points, Range const & r)
   {
-  }
+    typedef detail::unwrap_context<Context, tag::load_path_policy> load_path;
 
-  template<class Coordinate>
-  void append_list_point(Coordinate x, Coordinate y)
-  {
-    if (first_point_)
+    typename load_path::type & path_context = load_path::get(context);
+    boost::range_const_iterator<Range>::type it = boost::begin(r), end = boost::end(r);
+    if (it != end)
     {
-      first_point_ = false;
-      context_.path_move_to(x, y, tag::absolute_coordinate());
+      load_path::policy::path_move_to(path_context, it->first, it->second, tag::absolute_coordinate());
+      for(++it; it != end; ++it)
+        load_path::policy::path_line_to(path_context, it->first, it->second, tag::absolute_coordinate());
     }
-    else
-      context_.path_line_to(x, y, tag::absolute_coordinate());
   }
+};
 
-private:
-  OutputContext & context_;
-  bool first_point_;
+template<>
+struct list_of_points_to_path_adapter<tag::element::polygon>
+{
+  template<class Context, class Range>
+  static void set(Context & context, tag::attribute::points, Range const & r)
+  {
+    typedef detail::unwrap_context<Context, tag::load_path_policy> load_path;
+
+    typename load_path::type & path_context = load_path::get(context);
+    boost::range_const_iterator<Range>::type it = boost::begin(r), end = boost::end(r);
+    if (it != end)
+    {
+      load_path::policy::path_move_to(path_context, it->first, it->second, tag::absolute_coordinate());
+      bool line = false;
+      for(++it; it != end; ++it)
+      {
+        load_path::policy::path_line_to(path_context, it->first, it->second, tag::absolute_coordinate());
+        line = true;
+      }
+      if (line)
+        load_path::policy::path_close_subpath(path_context);
+    }
+  }
 };
 
 }

@@ -10,19 +10,18 @@
 namespace svgpp { namespace policy { namespace document_traversal_control
 {
 
+template<class Context>
 struct stub
 {
-  template<class Context>
   static bool proceed_to_element_content(Context &)
-  {
-    return true;
-  }
+  { return true; }
 
-  template<class Context>
   static bool proceed_to_next_child(Context &)
-  {
-    return true;
-  }
+  { return true; }
 };
+
+template<class Context>
+struct default_policy: stub<Context>
+{};
 
 }}}

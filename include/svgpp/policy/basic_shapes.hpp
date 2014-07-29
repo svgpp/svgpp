@@ -23,11 +23,13 @@ struct raw
 
 struct all_to_path
 {
-  typedef boost::mpl::set4<
+  typedef boost::mpl::set6<
     svgpp::tag::element::rect,
     svgpp::tag::element::line,
     svgpp::tag::element::circle,
-    svgpp::tag::element::ellipse
+    svgpp::tag::element::ellipse,
+    svgpp::tag::element::polyline,
+    svgpp::tag::element::polygon
   > convert_to_path;
 
   typedef boost::mpl::set0<> collect_attributes;

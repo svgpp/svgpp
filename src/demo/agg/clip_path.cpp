@@ -80,7 +80,7 @@ boost::optional<ClipPath> ClipPaths::get(
             svgpp::tag::element::linearGradient,
             svgpp::tag::element::radialGradient,
             svgpp::tag::element::stop
-          > 
+          >::type 
         >,
         svgpp::processed_attributes<
           boost::mpl::set<
@@ -99,7 +99,7 @@ boost::optional<ClipPath> ClipPaths::get(
             svgpp::tag::attribute::offset,
             boost::mpl::pair<svgpp::tag::element::stop, svgpp::tag::attribute::stop_color>,
             boost::mpl::pair<svgpp::tag::element::stop, svgpp::tag::attribute::stop_opacity>
-          >
+          >::type
         >
       >::load_referenced_element<
         svgpp::expected_elements<svgpp::traits::gradient_elements>

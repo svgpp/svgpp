@@ -31,12 +31,14 @@ add_executable( ParserGTest
   css_style_iterator_test.cpp 
   icc_color_grammar_test.cpp 
   length_factory_test.cpp 
+  list_of_points_test.cpp 
   #path_adapter_test.cpp 
   path_grammar_test.cpp 
   path_markers_adapter_test.cpp 
   preserveAspectRatio_test.cpp 
   #supported_value_parsers_test.cpp 
   transform_grammar_test.cpp 
+  urange_grammar_test.cpp 
   value_parser_test.cpp
   value_parser_length_test.cpp 
   value_parser_paint_test.cpp 

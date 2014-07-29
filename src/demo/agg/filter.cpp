@@ -291,43 +291,43 @@ struct context_factories
 template<>
 struct context_factories::apply<FilterContext, svgpp::tag::element::filter>
 {
-  typedef svgpp::context_factory::same<FilterContext, svgpp::tag::element::filter> type;
+  typedef svgpp::factory::context::same<FilterContext, svgpp::tag::element::filter> type;
 };
 
 template<>
 struct context_factories::apply<FilterContext, svgpp::tag::element::feBlend>
 {
-  typedef svgpp::context_factory::on_stack<FilterContext, feBlendContext> type;
+  typedef svgpp::factory::context::on_stack<FilterContext, feBlendContext> type;
 };
 
 template<>
 struct context_factories::apply<FilterContext, svgpp::tag::element::feComponentTransfer>
 {
-  typedef svgpp::context_factory::on_stack<FilterContext, feComponentTransferContext> type;
+  typedef svgpp::factory::context::on_stack<FilterContext, feComponentTransferContext> type;
 };
 
 template<>
 struct context_factories::apply<feComponentTransferContext, svgpp::tag::element::feFuncA>
 {
-  typedef svgpp::context_factory::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbA> > type;
+  typedef svgpp::factory::context::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbA> > type;
 };
 
 template<>
 struct context_factories::apply<feComponentTransferContext, svgpp::tag::element::feFuncR>
 {
-  typedef svgpp::context_factory::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbR> > type;
+  typedef svgpp::factory::context::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbR> > type;
 };
 
 template<>
 struct context_factories::apply<feComponentTransferContext, svgpp::tag::element::feFuncG>
 {
-  typedef svgpp::context_factory::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbG> > type;
+  typedef svgpp::factory::context::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbG> > type;
 };
 
 template<>
 struct context_factories::apply<feComponentTransferContext, svgpp::tag::element::feFuncB>
 {
-  typedef svgpp::context_factory::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbB> > type;
+  typedef svgpp::factory::context::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbB> > type;
 };
 
 void Filters::get(svg_string_t const & id, length_factory_t const &)
@@ -349,7 +349,7 @@ void Filters::get(svg_string_t const & id, length_factory_t const &)
           svgpp::tag::element::feFuncB,
           svgpp::tag::element::feFuncG,
           svgpp::tag::element::feFuncR
-        >
+        >::type
       >,
       svgpp::processed_attributes<
         boost::mpl::set<
@@ -382,7 +382,7 @@ void Filters::get(svg_string_t const & id, length_factory_t const &)
           svgpp::tag::attribute::amplitude, 
           svgpp::tag::attribute::exponent, 
           svgpp::tag::attribute::offset
-        >
+        >::type
       >
     >::load_referenced_element<
       svgpp::expected_elements<boost::mpl::set1<svgpp::tag::element::filter> >

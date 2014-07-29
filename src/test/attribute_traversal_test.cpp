@@ -73,6 +73,11 @@ namespace
       >::type
     > get_priority_attributes_by_element;
   };
+
+  struct traversal_policy_wo_style: traversal_policy
+  {
+    static const bool parse_style = false;
+  };
 }
 
 TEST(AttributeTraversal, Prioritized)
@@ -85,7 +90,6 @@ TEST(AttributeTraversal, Prioritized)
   traversal_context2 context;
   EXPECT_TRUE((svgpp::attribute_traversal<
     svgpp::tag::element::svg, 
-    true, 
     svgpp::attribute_traversal_policy<traversal_policy> 
   >::type::load(svg_element->first_attribute(), context)));
   {
@@ -112,8 +116,7 @@ TEST(AttributeTraversal, Prioritized_Without_Style)
   traversal_context2 context;
   EXPECT_TRUE((svgpp::attribute_traversal<
       svgpp::tag::element::svg, 
-      false, 
-      svgpp::attribute_traversal_policy<traversal_policy> 
+      svgpp::attribute_traversal_policy<traversal_policy_wo_style> 
     >::type::load(svg_element->first_attribute(), context)));
   {
     using namespace svgpp;
@@ -139,7 +142,6 @@ TEST(AttributeTraversal, Sequential)
   traversal_context context;
   EXPECT_TRUE((svgpp::attribute_traversal<
       svgpp::tag::element::svg, 
-      true, 
       svgpp::attribute_traversal_policy<svgpp::policy::attribute_traversal::raw> 
     >::type::load(svg_element->first_attribute(), context)));
   {

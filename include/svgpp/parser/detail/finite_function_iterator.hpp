@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <boost/assert.hpp>
 #include <boost/iterator/iterator_facade.hpp>
 
 namespace svgpp { namespace detail 
@@ -46,7 +47,7 @@ public:
 
   bool equal(finite_function_iterator const & other) const 
   {
-    // Only comparation with end iterator is supported
+    // Only comparison with end iterator is supported
     BOOST_ASSERT(f_ == NULL || other.f_ == NULL);
     return f_ == other.f_;
   }

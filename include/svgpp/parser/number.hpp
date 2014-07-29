@@ -61,7 +61,7 @@ struct value_parser<tag::type::list_of<tag::type::number>, SVGPP_TEMPLATE_ARGS_P
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     typedef qi::real_parser<coordinate_t, detail::number_policies<coordinate_t, PropertySource> > grammar_t;
     typedef detail::comma_wsp_rule_no_skip<iterator_t> separator_t;
-    typedef detail::parse_list_iterator<iterator_t, grammar_t, separator_t, coordinate_t> parse_list_iterator_t;
+    typedef detail::parse_list_iterator<coordinate_t, iterator_t, grammar_t, separator_t> parse_list_iterator_t;
     typedef detail::finite_function_iterator<parse_list_iterator_t> output_iterator_t;
 
     SVGPP_STATIC_IF_SAFE const grammar_t number_grammar;
@@ -98,7 +98,7 @@ struct value_parser<tag::type::number_optional_number, SVGPP_TEMPLATE_ARGS_PASS>
 
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     SVGPP_STATIC_IF_SAFE const qi::real_parser<coordinate_t, detail::number_policies<coordinate_t, tag::source::attribute> > number;
-    SVGPP_STATIC_IF_SAFE const detail::comma_wsp_rule<iterator_t> comma_wsp;
+    SVGPP_STATIC_IF_SAFE const detail::comma_wsp_rule_no_skip<iterator_t> comma_wsp;
     coordinate_t value1, value2;
     bool two_values = false;
     if (qi::parse(it, end, 

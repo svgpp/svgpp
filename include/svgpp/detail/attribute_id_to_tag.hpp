@@ -107,8 +107,9 @@ inline bool attribute_id_to_tag(tag::element::altGlyphItem, attribute_id id, F &
 
 template<class ElementTag, class F>
 inline bool attribute_id_to_tag(ElementTag, attribute_id id, F & fn, 
-  typename boost::enable_if<boost::mpl::has_key<boost::mpl::set<
-    tag::element::animate, tag::element::animateColor>, ElementTag> >::type * = 0)
+  typename boost::enable_if_c<
+     boost::is_same<ElementTag, tag::element::animate>::value
+  || boost::is_same<ElementTag, tag::element::animateColor>::value>::type * = 0)
 {
   switch (id)
   {
@@ -248,8 +249,9 @@ inline bool attribute_id_to_tag(tag::element::cursor, attribute_id id, F & fn)
 
 template<class ElementTag, class F>
 inline bool attribute_id_to_tag(ElementTag, attribute_id id, F & fn, 
-  typename boost::enable_if<boost::mpl::has_key<boost::mpl::set<
-    tag::element::defs, tag::element::g>, ElementTag> >::type * = 0)
+  typename boost::enable_if_c<
+       boost::is_same<ElementTag, tag::element::defs>::value
+    || boost::is_same<ElementTag, tag::element::g>::value>::type * = 0)
 {
   switch (id)
   {
@@ -268,8 +270,9 @@ inline bool attribute_id_to_tag(ElementTag, attribute_id id, F & fn,
 
 template<class ElementTag, class F>
 inline bool attribute_id_to_tag(ElementTag, attribute_id id, F & fn, 
-  typename boost::enable_if<boost::mpl::has_key<boost::mpl::set<
-    tag::element::desc, tag::element::title>, ElementTag> >::type * = 0)
+  typename boost::enable_if_c<
+       boost::is_same<ElementTag, tag::element::desc>::value
+    || boost::is_same<ElementTag, tag::element::title>::value>::type * = 0)
 {
   switch (id)
   {
@@ -480,8 +483,8 @@ inline bool attribute_id_to_tag(tag::element::feFlood, attribute_id id, F & fn)
 
 template<class ElementTag, class F>
 inline bool attribute_id_to_tag(ElementTag, attribute_id id, F & fn, 
-  typename boost::enable_if<boost::mpl::has_key<boost::mpl::set<
-    tag::element::feFuncA, tag::element::feFuncB, tag::element::feFuncR, tag::element::feFuncG>, ElementTag> >::type * = 0)
+  typename boost::enable_if<boost::mpl::has_key<boost::mpl::set4<
+    tag::element::feFuncA, tag::element::feFuncB, tag::element::feFuncR, tag::element::feFuncG>::type, ElementTag> >::type * = 0)
 {
   switch (id)
   {

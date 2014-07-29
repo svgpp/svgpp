@@ -97,7 +97,7 @@ struct value_parser<tag::attribute::preserveAspectRatio, SVGPP_TEMPLATE_ARGS_PAS
     AttributeValue const & attribute_value, tag::source::attribute)
   {
     namespace qi = boost::spirit::qi;
-    using namespace boost::phoenix;
+    namespace phx = boost::phoenix;
     using qi::_1;
     using qi::_a;
     using qi::_b;
@@ -125,7 +125,7 @@ struct value_parser<tag::attribute::preserveAspectRatio, SVGPP_TEMPLATE_ARGS_PAS
                    | qi::lit("slice") [_c = true] 
                    ) 
                 )
-            ) [bind(&value_parser::call_set_value<Context>, ref(context), _a, _b, _c)];
+            ) [phx::bind(&value_parser::call_set_value<Context>, phx::ref(context), _a, _b, _c)];
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (qi::parse(it, end, rule) && it == end)
       return true;

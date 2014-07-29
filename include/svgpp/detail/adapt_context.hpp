@@ -176,6 +176,12 @@ struct unwrap_context<bind_context_parameters_wrapper<Context, Parameters>, Poli
     return unwrap_context<Context, PolicyTag>::get(wrapper.original_context);
   }
 
+  template<class PassedParameters>
+  struct bind
+  {
+    typedef typename unwrap_context<Context, PolicyTag>::template bind<Parameters>::type type;
+  };
+
   typedef typename unwrap_context<Context, PolicyTag>::template bind<Parameters>::type policy;
 };
 
@@ -190,6 +196,12 @@ struct unwrap_context<const bind_context_parameters_wrapper<Context, Parameters>
   {
     return unwrap_context<Context, PolicyTag>::get(wrapper.original_context);
   }
+
+  template<class PassedParameters>
+  struct bind
+  {
+    typedef typename unwrap_context<Context, PolicyTag>::template bind<Parameters>::type type;
+  };
 
   typedef typename unwrap_context<Context, PolicyTag>::template bind<Parameters>::type policy;
 };

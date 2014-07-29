@@ -5,16 +5,12 @@
 #include <agg_color_rgba.h>
 #include <svgpp/factory/integer_color.hpp>
 #include <svgpp/factory/unitless_length.hpp>
-#ifdef USE_MSXML
-# ifndef NOMINMAX
-#  define NOMINMAX 1
-# endif
-# include <MsXml2.h>
-# include <windows.h>
-# include <svgpp/policy/xml/msxml.hpp>
-#else
-# include <rapidxml_ns/rapidxml_ns.hpp>
-# include <svgpp/policy/xml/rapidxml_ns.hpp>
+#ifdef SVG_PARSER_MSXML
+# include "parser_msxml.hpp"
+#elif defined(SVG_PARSER_RAPIDXML_NS)
+# include "parser_rapidxml_ns.hpp"
+#elif defined(SVG_PARSER_LIBXML)
+# include "parser_libxml.hpp"
 #endif
 #include <boost/function.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -35,28 +31,3 @@ typedef svgpp::factory::length::unitless<> length_factory_t;
 typedef boost::tuple<double, double, double, double> bounding_box_t;
 typedef boost::function<bounding_box_t()> get_bounding_box_func_t;
 
-#ifdef USE_MSXML
-typedef boost::intrusive_ptr<IXMLDOMNode> XMLElement;
-typedef std::wstring svg_string_t;
-#else
-typedef rapidxml_ns::xml_node<> const * XMLElement;
-typedef std::string svg_string_t;
-#endif
-
-class XMLDocument
-{
-public:
-  XMLDocument(XMLElement const & root)
-    : root_(root)
-  {}
-
-  XMLElement findElementById(svg_string_t const & id);
-
-private:
-#ifndef USE_MSXML
-  typedef std::map<svg_string_t, XMLElement> element_by_id_t;
-  element_by_id_t element_by_id_;
-#endif
-
-  XMLElement const root_;
-};

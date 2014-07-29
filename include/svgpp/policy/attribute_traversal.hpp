@@ -14,6 +14,7 @@ namespace svgpp { namespace policy { namespace attribute_traversal
 
 struct raw
 {
+  static const bool parse_style = false;
   static const bool css_hides_presentation_attribute = false;
 
   typedef boost::mpl::always<boost::mpl::empty_sequence> get_priority_attributes_by_element;
@@ -23,6 +24,7 @@ struct raw
 
 struct default_policy
 {
+  static const bool parse_style = true;
   static const bool css_hides_presentation_attribute = true;
 
   typedef boost::mpl::always<boost::mpl::empty_sequence> get_priority_attributes_by_element;

@@ -9,6 +9,7 @@
 
 #include <svgpp/attribute_traversal.hpp>
 #include <svgpp/attribute_dispatcher.hpp>
+#include <svgpp/factory/context.hpp>
 #include <svgpp/template_parameters.hpp>
 #include <svgpp/detail/element_id_to_tag.hpp>
 #include <svgpp/policy/document_traversal_control.hpp>
@@ -18,99 +19,18 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/parameter.hpp>
 #include <boost/static_assert.hpp>
-#include <boost/pointee.hpp>
 #include <boost/preprocessor.hpp>
 #include <boost/type_traits.hpp>
 
 namespace svgpp
 {
 
-namespace context_factory
-{
-
-template<class ParentContext, class ElementTag>
-class same: boost::noncopyable
-{
-public:
-  typedef ParentContext type;
-
-  template<class XMLElement>
-  same(ParentContext & context, XMLElement const &)
-    : context_(context)
-  {
-    context_.on_enter_element(ElementTag());
-  }
-
-  type & get() const { return context_; }
-
-  void on_exit_element() const
-  {
-    context_.on_exit_element();
-  }
-
-private:
-  type & context_;
-};
-
-template<class ParentContext, class ChildContext>
-class on_stack: boost::noncopyable
-{
-public:
-  typedef ChildContext type;
-
-  template<class XMLElement>
-  on_stack(ParentContext & context, XMLElement const &)
-    : context_(context)
-  {
-  }
-
-  type & get() { return context_; }
-
-  void on_exit_element() 
-  {
-    context_.on_exit_element();
-  }
-
-private:
-  type context_;
-};
-
-template<
-  class ParentContext, 
-  class ElementTag, 
-  class ChildContextPtr, 
-  class ChildContext = typename boost::pointee<ChildContextPtr>::type 
->
-class get_ptr_from_parent: boost::noncopyable
-{
-public:
-  typedef ChildContext type;
-
-  template<class XMLElement, class LoaderState>
-  get_ptr_from_parent(ParentContext & context, XMLElement const &)
-    : context_(context.get_child_context(ElementTag()))
-  {
-  }
-
-  type & get() const { return *context_; }
-
-  void on_exit_element() const
-  {
-    context_->on_exit_element();
-  }
-
-private:
-  ChildContextPtr context_;
-};
-
-} // namespace context_factory
-
 struct default_context_factories
 {
   template<class ParentContext, class ElementTag>
   struct apply
   {
-    typedef context_factory::same<ParentContext, ElementTag> type;
+    typedef factory::context::same<ParentContext, ElementTag> type;
   };
 };
 
@@ -137,41 +57,40 @@ protected:
   >::template bind<SVGPP_TEMPLATE_ARGS2_PASS>::type args;
   typedef typename boost::parameter::value_type<args, tag::context_factories, 
     default_context_factories>::type context_factories;
-  typedef typename boost::parameter::value_type<args, tag::ignored_elements, 
-    boost::mpl::empty_sequence>::type ignored_elements;
-  typedef typename boost::parameter::value_type<args, tag::processed_elements, 
-    boost::mpl::empty_sequence>::type processed_elements;
-  typedef typename boost::parameter::value_type<args, tag::document_traversal_control_policy, 
-    policy::document_traversal_control::stub>::type traversal_control_policy;
+  typedef typename boost::parameter::value_type<args, tag::ignored_elements, void>::type ignored_elements;
+  typedef typename boost::parameter::value_type<args, tag::processed_elements, void>::type processed_elements;
 
-  BOOST_STATIC_ASSERT_MSG(boost::mpl::empty<ignored_elements>::value 
-    || boost::mpl::empty<processed_elements>::value, "Only one of ignored_elements and processed_elements may be non-empty");
+  BOOST_STATIC_ASSERT_MSG(boost::is_void<ignored_elements>::value 
+    != boost::is_void<processed_elements>::value, "Only one of ignored_elements and processed_elements must be set");
 
   typedef typename
     boost::mpl::if_<
-      boost::mpl::not_<boost::mpl::empty<processed_elements> >,
+      boost::is_void<ignored_elements>,
       boost::mpl::has_key<boost::mpl::protect<processed_elements>, boost::mpl::_1>,
       boost::mpl::not_<boost::mpl::has_key<boost::mpl::protect<ignored_elements>, boost::mpl::_1> >  
     >::type is_element_processed;
 
 public:
   template<class XMLElement, class Context>
-  static bool load_document(XMLElement & xml_element_svg, Context & context)
+  static bool load_document(XMLElement const & xml_element_svg, Context & context)
   {
     return load_element<traits::child_element_types<tag::element::svg>::type, void>
       (xml_element_svg, context, tag::element::svg());
   }
 
   template<class ExpectedChildElements, class ReferencingElement, class XMLElement, class Context, class ElementTag>
-  static bool load_element(XMLElement & xml_element, Context & context, ElementTag element_tag)
+  static bool load_element(XMLElement const & xml_element, Context & context, ElementTag element_tag)
   {
+    typedef typename boost::parameter::value_type<args, tag::document_traversal_control_policy, 
+      policy::document_traversal_control::default_policy<Context> >::type traversal_control_policy;
+
     return load_attributes<ReferencingElement>(xml_element, context, element_tag)
       && (!traversal_control_policy::proceed_to_element_content(context)
         || load_element_content<ExpectedChildElements>(xml_element, context, element_tag));
   }
 
   template<class ReferencingElement, class XMLElement, class Context, class ElementTag>
-  static bool load_attributes(XMLElement & xml_element, Context & context, ElementTag element_tag)
+  static bool load_attributes(XMLElement const & xml_element, Context & context, ElementTag element_tag)
   {
     typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
       policy::xml::element_iterator<XMLElement> >::type xml_policy_t;
@@ -188,13 +107,9 @@ public:
       referencing_element<referencing_element_tag>,
       SVGPP_TEMPLATE_ARGS2_PASS
     > attribute_dispatcher_t;
-    static const bool parse_style_attribute = 
-      !boost::mpl::has_key<typename attribute_dispatcher_t::passthrough_attributes, tag::attribute::style>::value
-      && boost::mpl::apply<typename attribute_dispatcher_t::is_attribute_processed, tag::attribute::style>::type::value;
     attribute_dispatcher_t attribute_dispatcher(context);
     if (!attribute_traversal<
         ElementTag,
-        parse_style_attribute,
         SVGPP_TEMPLATE_ARGS2_PASS
       >::type::load(xml_policy_t::get_attributes(xml_element), attribute_dispatcher))
       return false;
@@ -202,7 +117,7 @@ public:
   }
 
   template<class ExpectedChildElements, class ReferencingElement, class XMLElement, class ParentContext, class ElementTag>
-  static bool load_child_element(XMLElement & xml_element, ParentContext & parent_context, ElementTag element_tag)
+  static bool load_child_element(XMLElement const & xml_element, ParentContext & parent_context, ElementTag element_tag)
   {
     typedef typename context_factories::template apply<ParentContext, ElementTag>::type context_factory_t;
     context_factory_t context_factory(parent_context, xml_element);
@@ -228,12 +143,14 @@ public:
     boost::mpl::or_<
       boost::mpl::empty<typename traits::child_element_types<ElementTag>::type>,
       traits::element_with_text_content<ElementTag> >, bool>::type
-  load_element_content(XMLElement & xml_element, Context & context, ElementTag element_tag)
+  load_element_content(XMLElement const & xml_element, Context & context, ElementTag element_tag)
   {
     typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
       policy::xml::element_iterator<XMLElement> >::type xml_policy_t;
     typedef typename boost::parameter::value_type<args, tag::error_policy, 
       policy::error::default_policy<Context> >::type error_policy;
+    typedef typename boost::parameter::value_type<args, tag::document_traversal_control_policy, 
+      policy::document_traversal_control::default_policy<Context> >::type traversal_control_policy;
 
     for(typename xml_policy_t::iterator_type xml_child_element = xml_policy_t::get_child_elements(xml_element); 
       !xml_policy_t::is_end(xml_child_element); xml_policy_t::advance_element(xml_child_element))
@@ -249,12 +166,14 @@ public:
 
   template<class ExpectedChildElements, class XMLElement, class Context, class ElementTag>
   static typename boost::enable_if<traits::element_with_text_content<ElementTag>, bool>::type
-  load_element_content(XMLElement & xml_element, Context & context, ElementTag element_tag)
+  load_element_content(XMLElement const & xml_element, Context & context, ElementTag element_tag)
   {
     typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
       policy::xml::element_iterator<XMLElement> >::type xml_policy_t;
     typedef typename boost::parameter::value_type<args, tag::load_text_policy, 
       policy::load_text::default_policy<Context> >::type load_text_policy;
+    typedef typename boost::parameter::value_type<args, tag::document_traversal_control_policy, 
+      policy::document_traversal_control::default_policy<Context> >::type traversal_control_policy;
     
     for(typename xml_policy_t::iterator_type xml_child_element = xml_policy_t::get_child_elements_and_texts(xml_element); 
       !xml_policy_t::is_end(xml_child_element); xml_policy_t::advance_element_or_text(xml_child_element))
@@ -273,18 +192,19 @@ public:
     return true;
   }
 
-  template<SVGPP_TEMPLATE_ARGS_DEF>
+  template<BOOST_PP_ENUM_BINARY_PARAMS(6, class ArgRef, = boost::parameter::void_ BOOST_PP_INTERCEPT)>
   struct load_referenced_element
   {
+    // struct is needed just because in C++03 function default template parameters are not supported
     template<class XMLElement, class Context>
-    static bool load(XMLElement & xml_element, Context & parent_context)
+    static bool load(XMLElement const & xml_element, Context & parent_context)
     {
       typedef typename boost::parameter::parameters<
           boost::parameter::optional<tag::referencing_element>
         , boost::parameter::required<tag::expected_elements, boost::mpl::is_sequence<boost::mpl::_> >
         , boost::parameter::optional<tag::ignored_elements, boost::mpl::is_sequence<boost::mpl::_> >
         , boost::parameter::optional<tag::processed_elements, boost::mpl::is_sequence<boost::mpl::_> >
-      >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
+      >::template bind<BOOST_PP_ENUM_PARAMS(6, ArgRef)>::type args;
       typedef typename boost::parameter::value_type<args, tag::referencing_element, void>::type referencing_element;
       typedef typename boost::parameter::value_type<args, tag::expected_elements>::type expected_elements;
       typedef typename boost::parameter::value_type<args, tag::ignored_elements, void>::type ignored_elements;
@@ -332,7 +252,7 @@ protected:
   class load_element_functor: boost::noncopyable
   {
   public:
-    load_element_functor(XMLElement & xml_element, Context & context)
+    load_element_functor(XMLElement const & xml_element, Context & context)
       : xml_element_(xml_element)
       , context_(context)
       , result_(true)
@@ -379,7 +299,7 @@ protected:
     }
 
   private:
-    XMLElement & xml_element_;
+    XMLElement const & xml_element_;
     Context & context_;
     bool result_;
   };
@@ -392,7 +312,7 @@ protected:
     class Context, 
     class ParentElementTag
   >
-  static bool load_child_xml_element(XMLElement & xml_element, Context & parent_context, ParentElementTag)
+  static bool load_child_xml_element(XMLElement const & xml_element, Context & parent_context, ParentElementTag)
   {
     typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
       policy::xml::element_iterator<XMLElement> >::type xml_policy_t;

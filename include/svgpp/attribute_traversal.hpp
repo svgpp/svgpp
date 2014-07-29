@@ -23,6 +23,7 @@ namespace detail
 template<class AttributeTraversalDocumentWidePolicy, class ElementTag>
 struct get_attribute_traversal_policy_for_element
 {
+  static const bool parse_style = AttributeTraversalDocumentWidePolicy::parse_style;
   static const bool css_hides_presentation_attribute = AttributeTraversalDocumentWidePolicy::css_hides_presentation_attribute;
   typedef typename boost::mpl::apply1<
     typename AttributeTraversalDocumentWidePolicy::get_priority_attributes_by_element,
@@ -40,7 +41,7 @@ struct get_attribute_traversal_policy_for_element
 
 }
 
-template<class ElementTag, bool ParseStyleAttribute, SVGPP_TEMPLATE_ARGS_DEF>
+template<class ElementTag, SVGPP_TEMPLATE_ARGS_DEF>
 struct attribute_traversal
 {
 private:
@@ -54,17 +55,17 @@ private:
 
 public:
   typedef typename boost::mpl::if_c<
-    ParseStyleAttribute && element_attribute_traversal_policy::css_hides_presentation_attribute
+    element_attribute_traversal_policy::parse_style 
+      && element_attribute_traversal_policy::css_hides_presentation_attribute
       || !boost::mpl::empty<typename element_attribute_traversal_policy::priority_attributes>::value
       || !boost::mpl::empty<typename element_attribute_traversal_policy::deferred_attributes>::value,
     attribute_traversal_prioritized<
       element_attribute_traversal_policy, 
-      ParseStyleAttribute, 
       SVGPP_TEMPLATE_ARGS_PASS
     >,
     attribute_traversal_sequential<
       typename element_attribute_traversal_policy::required_attributes, 
-      ParseStyleAttribute, 
+      element_attribute_traversal_policy::parse_style, 
       SVGPP_TEMPLATE_ARGS_PASS
     >
   >::type type;

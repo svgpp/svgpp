@@ -32,19 +32,42 @@ set(AGG_DEMO_SOURCES
 
 add_executable(svgpp_agg_render
   ${AGG_DEMO_SOURCES}
+  parser_rapidxml_ns.hpp 
+  parser_rapidxml_ns.cpp 
+)
+
+target_compile_definitions(svgpp_agg_render
+  PRIVATE SVG_PARSER_RAPIDXML_NS
 )
 
 add_executable(svgpp_agg_render_msxml
   ${AGG_DEMO_SOURCES}
+  parser_msxml.hpp 
+  parser_msxml.cpp 
 )
 
 target_compile_definitions(svgpp_agg_render_msxml
-  PRIVATE USE_MSXML
+  PRIVATE SVG_PARSER_MSXML
+)
+
+add_executable(svgpp_agg_render_libxml
+  ${AGG_DEMO_SOURCES}
+  parser_libxml.hpp
+  parser_libxml.cpp
+)
+
+target_compile_definitions(svgpp_agg_render_libxml
+  PRIVATE SVG_PARSER_LIBXML
+)
+
+set_property(TARGET svgpp_agg_render_libxml
+  APPEND PROPERTY INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/libxml2/include"
 )
 
 if (MSVC)
-  set_target_properties(svgpp_agg_render svgpp_agg_render_msxml PROPERTIES
-    COMPILE_FLAGS "/bigobj"
+  set_target_properties(
+    svgpp_agg_render svgpp_agg_render_msxml svgpp_agg_render_libxml 
+    PROPERTIES COMPILE_FLAGS "/bigobj"
   )
 endif()
   

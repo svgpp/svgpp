@@ -3,13 +3,6 @@
 
 #include "common.hpp"
 
-#ifdef USE_MSXML
-# include <comip.h>
-# include <comdef.h>
-#else
-# include <rapidxml_ns/rapidxml_ns_utils.hpp>
-#endif
-
 #include <svgpp/document_traversal.hpp>
 #include <svgpp/utility/gil_utility.h>
 
@@ -59,54 +52,16 @@ typedef agg::pixfmt_rgba32 pixfmt_t;
 typedef agg::pixfmt_amask_adaptor<pixfmt_t, ClipBuffer::alpha_mask_t> pixfmt_amask_adaptor_t;
 typedef agg::renderer_base<pixfmt_amask_adaptor_t> renderer_base_amask_t;
 
-#ifndef USE_MSXML
-namespace
-{
-  rapidxml_ns::xml_node<> const * FindChildElementById(rapidxml_ns::xml_node<> const * parent, std::string const & id)
-  {
-    for(rapidxml_ns::xml_node<> const * node = parent->first_node(); node; node = node->next_sibling())
-    {
-      if (rapidxml_ns::xml_attribute<> const * id_attr = node->first_attribute("id"))
-        if (boost::range::equal(boost::iterator_range<const char *>(id_attr->value(), id_attr->value() + id_attr->value_size()), id))
-          return node;
-      if (rapidxml_ns::xml_node<> const * child_node = FindChildElementById(node, id))
-        return child_node;
-    }
-    return NULL;
-  }
-}
-
-XMLElement XMLDocument::findElementById(svg_string_t const & id)
-{
-  std::pair<element_by_id_t::iterator, bool> ins = element_by_id_.insert(element_by_id_t::value_type(id, XMLElement()));
-  if (ins.second)
-    ins.first->second = FindChildElementById(root_, id);
-  return ins.first->second;
-}
-
-#else
-
-XMLElement XMLDocument::findElementById(svg_string_t const & id)
-{
-  std::wstring xpath = L"//*[@id='" + id + L"']"; // TODO: escape id string, check namespace
-  _com_ptr_t<_com_IIID<IXMLDOMNode, &IID_IXMLDOMNode> > node;
-  if (S_OK != root_->selectSingleNode(_bstr_t(xpath.c_str()), &node))
-    return XMLElement();
-  return XMLElement(node.GetInterfacePtr());
-}
-
-#endif
-
 struct Document
 {
   class FollowRef;
 
-  Document(XMLElement const & xml_root)
-    : xml_document_(xml_root)
+  Document(XMLDocument & xmlDocument)
+    : xml_document_(xmlDocument)
     , gradients_(xml_document_)
   {}
 
-  XMLDocument xml_document_;
+  XMLDocument & xml_document_;
   Gradients gradients_;
   typedef std::set<XMLElement> followed_refs_t;
   followed_refs_t followed_refs_;
@@ -148,25 +103,25 @@ struct child_context_factories
 template<>
 struct child_context_factories::apply<Canvas, svgpp::tag::element::svg, void>
 {
-  typedef svgpp::context_factory::on_stack<Canvas, Canvas> type;
+  typedef svgpp::factory::context::on_stack<Canvas, Canvas> type;
 };
 
 template<>
 struct child_context_factories::apply<Canvas, svgpp::tag::element::g, void>
 {
-  typedef svgpp::context_factory::on_stack<Canvas, Canvas> type;
+  typedef svgpp::factory::context::on_stack<Canvas, Canvas> type;
 };
 
 template<>
 struct child_context_factories::apply<Canvas, svgpp::tag::element::a, void>
 {
-  typedef svgpp::context_factory::on_stack<Canvas, Canvas> type;
+  typedef svgpp::factory::context::on_stack<Canvas, Canvas> type;
 };
 
 template<>
 struct child_context_factories::apply<Canvas, svgpp::tag::element::switch_, void>
 {
-  typedef svgpp::context_factory::on_stack<Canvas, Switch> type;
+  typedef svgpp::factory::context::on_stack<Canvas, Switch> type;
 };
 
 template<class ElementTag>
@@ -176,26 +131,26 @@ struct child_context_factories::apply<Switch, ElementTag, void>: apply<Canvas, E
 template<>
 struct child_context_factories::apply<Canvas, svgpp::tag::element::use_, void>
 {
-  typedef svgpp::context_factory::on_stack<Canvas, Use> type;
+  typedef svgpp::factory::context::on_stack<Canvas, Use> type;
 };
 
 template<class ElementTag>
 struct child_context_factories::apply<Canvas, ElementTag, typename boost::enable_if<boost::mpl::has_key<svgpp::traits::shape_elements, ElementTag> >::type>
 {
-  typedef svgpp::context_factory::on_stack<Canvas, Path> type;
+  typedef svgpp::factory::context::on_stack<Canvas, Path> type;
 };
 
 // For referenced by 'use' elements
 template<>
 struct child_context_factories::apply<Use, svgpp::tag::element::svg, void>
 {
-  typedef svgpp::context_factory::on_stack<Use, ReferencedSymbolOrSvg> type;
+  typedef svgpp::factory::context::on_stack<Use, ReferencedSymbolOrSvg> type;
 };
 
 template<>
 struct child_context_factories::apply<Use, svgpp::tag::element::symbol, void>
 {
-  typedef svgpp::context_factory::on_stack<Use, ReferencedSymbolOrSvg> type;
+  typedef svgpp::factory::context::on_stack<Use, ReferencedSymbolOrSvg> type;
 };
 
 template<class ElementTag>
@@ -210,7 +165,7 @@ struct child_context_factories::apply<ReferencedSymbolOrSvg, ElementTag, void>: 
 template<>
 struct child_context_factories::apply<Mask, svgpp::tag::element::mask, void>
 {
-  typedef svgpp::context_factory::same<Mask, svgpp::tag::element::mask> type;
+  typedef svgpp::factory::context::same<Mask, svgpp::tag::element::mask> type;
 };
 
 template<class ElementTag>
@@ -221,7 +176,7 @@ struct child_context_factories::apply<Mask, ElementTag, void>: apply<Canvas, Ele
 template<>
 struct child_context_factories::apply<Marker, svgpp::tag::element::marker, void>
 {
-  typedef svgpp::context_factory::same<Marker, svgpp::tag::element::marker> type;
+  typedef svgpp::factory::context::same<Marker, svgpp::tag::element::marker> type;
 };
 
 template<class ElementTag>
@@ -252,32 +207,21 @@ typedef boost::mpl::set<
   svgpp::tag::element::rect,
   svgpp::tag::element::line,
   svgpp::tag::element::circle,
-  svgpp::tag::element::ellipse
-  //svgpp::tag::element::polyline
-> processed_elements;
+  svgpp::tag::element::ellipse,
+  svgpp::tag::element::polyline,
+  svgpp::tag::element::polygon
+>::type processed_elements;
 
 typedef boost::mpl::fold<
   boost::mpl::protect<
     boost::mpl::joint_view<
-      svgpp::rect_shape_attributes, 
+      svgpp::traits::shapes_attributes_by_element, 
       svgpp::traits::viewport_attributes
     >
   >,
   boost::mpl::set<
-    //svgpp::tag::attribute::style, TODO:
     svgpp::tag::attribute::display,
-    svgpp::tag::attribute::d,
     svgpp::tag::attribute::transform,
-    svgpp::tag::attribute::points,
-    svgpp::tag::attribute::x1,
-    svgpp::tag::attribute::y1,
-    svgpp::tag::attribute::x2,
-    svgpp::tag::attribute::y2,
-    svgpp::tag::attribute::cx,
-    svgpp::tag::attribute::cy,
-    svgpp::tag::attribute::r,
-    svgpp::tag::attribute::rx,
-    svgpp::tag::attribute::ry,
     svgpp::tag::attribute::color,
     svgpp::tag::attribute::fill,
     svgpp::tag::attribute::fill_opacity,
@@ -306,7 +250,7 @@ typedef boost::mpl::fold<
     boost::mpl::pair<svgpp::tag::element::use_, svgpp::tag::attribute::xlink::href>,
     boost::mpl::pair<svgpp::tag::element::use_, svgpp::tag::attribute::x>,
     boost::mpl::pair<svgpp::tag::element::use_, svgpp::tag::attribute::y>
-  >,
+  >::type,
   boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
 >::type processed_attributes;
 
@@ -1161,12 +1105,11 @@ Path::EffectivePaint Path::getEffectivePaint(Paint const & paint) const
   return boost::get<agg::rgba8>(*solidPaint);
 }
 
-template<class XMLElement>
-void renderDocument(XMLElement & svg_element, ImageBuffer & buffer)
+void renderDocument(XMLDocument & xmlDocument, ImageBuffer & buffer)
 {
-  Document document(svg_element);
+  Document document(xmlDocument);
   Canvas canvas(document, buffer);
-  document_traversal_main::load_document(svg_element, canvas);
+  document_traversal_main::load_document(xmlDocument.getRoot(), canvas);
 }
 
 int main(int argc, char * argv[])
@@ -1177,93 +1120,18 @@ int main(int argc, char * argv[])
     return 1;
   }
   ImageBuffer buffer;
-
-#ifdef USE_MSXML
   
-  //init
-  HRESULT hr;
-  if (FAILED(hr = CoInitialize(NULL)))
-  {
-    std::cerr << "CoInitialize failed with result 0x" << std::hex << hr << "\n" << std::dec;
-    return 1;
-  }
-  BOOST_SCOPE_EXIT(void) {
-    CoUninitialize();
-  } BOOST_SCOPE_EXIT_END
-
-  _com_ptr_t<_com_IIID<IXMLDOMDocument, &IID_IXMLDOMDocument> > docPtr;
-  if (FAILED(hr = docPtr.CreateInstance(L"Msxml2.DOMDocument.3.0")))
-  {
-    std::cerr << "Error creating DOMDocument 0x" << std::hex << hr << "\n" << std::dec;
-    return 1;
-  }
-
-  // Load a document.
-  docPtr->put_async(VARIANT_FALSE);
-  docPtr->put_resolveExternals(VARIANT_FALSE);
-  docPtr->put_validateOnParse(VARIANT_FALSE);
-  VARIANT_BOOL load_result;
-  if (S_OK != (hr = docPtr->load(_variant_t(argv[1]), &load_result)))
-  {
-    _com_ptr_t<_com_IIID<IXMLDOMParseError, &IID_IXMLDOMParseError> > parseError;
-    if (SUCCEEDED(docPtr->get_parseError(&parseError)))
-    {
-      _bstr_t reason;
-      if (S_OK == parseError->get_reason(reason.GetAddress()))
-      {
-        std::cerr << "Parse error: " << std::string(reason.GetBSTR(), reason.GetBSTR() + reason.length()) << "\n";
-        return 1;
-      }
-    }
-    std::cerr << "Error loading XML document 0x" << std::hex << hr << "\n" << std::dec;
-    return 1;
-  }
-
-  _com_ptr_t<_com_IIID<IXMLDOMElement, &IID_IXMLDOMElement> > root;
-  if (FAILED(hr = docPtr->get_documentElement(&root)))
-  {
-    std::cerr << "Error getting documentElement 0x" << std::hex << hr << "\n" << std::dec;
-    return 1;
-  }
-
   try
   {
-    renderDocument(root.GetInterfacePtr(), buffer);
+    XMLDocument xmlDoc;
+    xmlDoc.load(argv[1]);
+    renderDocument(xmlDoc, buffer);
   }
   catch(std::exception const & e)
   {
     std::cerr << "Error reading file " << argv[1] << ": " << e.what() << "\n";
     return 1;
   }
-
-#else
-  try
-  {
-    rapidxml_ns::file<> xml_file(argv[1]);
-    rapidxml_ns::xml_document<> doc;    // character type defaults to char
-    doc.parse<rapidxml_ns::parse_no_string_terminators>(xml_file.data());  
-    if (rapidxml_ns::xml_node<> * svg_element = doc.first_node("svg"))
-    {
-      renderDocument(svg_element, buffer);
-    }
-    else
-    {
-      std::cerr << "Can't find root <svg> element\n";
-      return 1;
-    }
-  }
-  catch(rapidxml_ns::parse_error const & e)
-  {
-    std::cerr << "Error parsing file " << argv[1] << ": " << e.what() << "\n"
-      "Invalid or unsupported XML\n";
-    return 1;
-  }
-  catch(std::exception const & e)
-  {
-    std::cerr << "Error reading file " << argv[1] << ": " << e.what() << "\n";
-    return 1;
-  }
-#endif
 
   // Saving output
   std::ofstream file("svgpp.bmp", std::ios::out | std::ios::binary);

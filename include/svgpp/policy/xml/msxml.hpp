@@ -89,6 +89,17 @@ public:
       ::SysFreeString(str_);
   }
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+  bstr_t & operator=(bstr_t && src)
+  {
+    if (str_)
+      ::SysFreeString(str_);
+    str_ = src.str_;
+    src.str_ = NULL;
+    return *this;
+  }
+#endif
+
   void assign(BSTR val)
   {
     if (str_)
@@ -200,8 +211,6 @@ struct attribute_iterator<msxml_detail::attribute_iterator>:
   typedef msxml_detail::bstr_t attribute_value_type;
   typedef msxml_detail::attribute_ptr saved_value_type;
 
-  static const bool store_value = true; // Preferred way of storing attribute: value
-
   static void advance(iterator_type & xml_attribute)
   {
     xml_attribute.advance();
@@ -233,14 +242,14 @@ struct attribute_iterator<msxml_detail::attribute_iterator>:
     return str;
   }
 
-  static attribute_name_type get_value(iterator_type const & xml_attribute)
+  static attribute_value_type get_value(iterator_type const & xml_attribute)
   {
     attribute_value_type str;
     BOOST_VERIFY(S_OK == xml_attribute->get_text(&str));
     return str;
   }
 
-  static attribute_name_type get_value(saved_value_type const & xml_attribute)
+  static attribute_value_type get_value(saved_value_type const & xml_attribute)
   {
     attribute_value_type str;
     BOOST_VERIFY(S_OK == xml_attribute->get_text(&str));

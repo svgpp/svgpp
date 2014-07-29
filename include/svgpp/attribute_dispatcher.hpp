@@ -8,12 +8,12 @@
 #pragma once
 
 #include <svgpp/definitions.hpp>
-#include <svgpp/adapter/list_of_points.hpp>
 #include <svgpp/adapter/basic_shapes.hpp>
+#include <svgpp/adapter/list_of_points.hpp>
 #include <svgpp/adapter/marker_viewport.hpp>
-#include <svgpp/adapter/viewport.hpp>
-#include <svgpp/adapter/transform.hpp>
 #include <svgpp/adapter/path.hpp>
+#include <svgpp/adapter/transform.hpp>
+#include <svgpp/adapter/viewport.hpp>
 #include <svgpp/detail/adapt_context.hpp>
 #include <svgpp/detail/attribute_id_to_tag.hpp>
 #include <svgpp/parser/value_parser.hpp>
@@ -216,7 +216,11 @@ public:
   {
     typedef typename boost::parameter::parameters<
       boost::parameter::optional<tag::error_policy>,
-      boost::parameter::optional<tag::length_policy>
+      boost::parameter::optional<tag::length_policy>,
+      boost::parameter::optional<tag::path_policy>,
+      boost::parameter::optional<tag::load_path_policy>,
+      boost::parameter::optional<tag::markers_policy>,
+      boost::parameter::optional<tag::load_markers_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args_t;
 
     result_ = state.on_exit_attributes(detail::bind_context_parameters<args_t>(context_)) 
@@ -255,17 +259,14 @@ protected:
     , boost::parameter::optional<tag::passthrough_attributes, boost::mpl::is_sequence<boost::mpl::_> >
     , boost::parameter::optional<tag::length_policy>
     , boost::parameter::optional<tag::basic_shapes_policy>
-    , boost::parameter::optional<tag::path_policy>
-    , boost::parameter::optional<tag::load_path_policy>
+    , boost::parameter::optional<tag::number_type>
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
-  typedef typename boost::parameter::value_type<args, tag::ignored_attributes, 
-    boost::mpl::set0<> >::type ignored_attributes;
-  typedef typename boost::parameter::value_type<args, tag::processed_attributes, 
-    boost::mpl::set0<> >::type processed_attributes;
+  typedef typename boost::parameter::value_type<args, tag::ignored_attributes, void>::type ignored_attributes;
+  typedef typename boost::parameter::value_type<args, tag::processed_attributes, void>::type processed_attributes;
 
-  BOOST_STATIC_ASSERT_MSG(boost::mpl::empty<ignored_attributes>::value 
-    || boost::mpl::empty<processed_attributes>::value, 
-    "Only one of ignored_attributes and processed_attributes may be non-empty");
+  BOOST_STATIC_ASSERT_MSG(boost::is_void<ignored_attributes>::value 
+    != boost::is_void<processed_attributes>::value, 
+    "Only one of ignored_attributes and processed_attributes must be set");
 
   typedef typename detail::unwrap_context<Context, tag::length_policy>::template bind<args>::type::length_factory_type length_factory_type;
   
@@ -274,14 +275,10 @@ public:
     typename number_type_by_context<Context>::type>::type coordinate_type;
   typedef typename boost::parameter::value_type<args, tag::passthrough_attributes, 
     boost::mpl::set0<> >::type passthrough_attributes;
-  typedef typename boost::parameter::value_type<args, tag::path_policy, 
-    typename policy::path::by_context<Context>::type>::type path_policy;
-  typedef typename boost::parameter::value_type<args, tag::load_path_policy, 
-    policy::load_path::default_policy<Context> >::type load_path_policy;
 
   typedef typename
     boost::mpl::if_<
-      boost::mpl::not_<boost::mpl::empty<processed_attributes> >,
+      boost::is_void<ignored_attributes>,
       boost::mpl::or_<
         boost::mpl::has_key<boost::mpl::protect<processed_attributes>, boost::mpl::_1>,
         boost::mpl::has_key<boost::mpl::protect<processed_attributes>, boost::mpl::pair<ElementTag, boost::mpl::_1> >
@@ -691,14 +688,23 @@ public:
   {}
 };
 
-/*template<class Context, SVGPP_TEMPLATE_ARGS>
-class attribute_dispatcher<tag::element::polyline, Context, SVGPP_TEMPLATE_ARGS_PASS>:
-  public attribute_dispatcher_base<tag::element::polyline, Context, SVGPP_TEMPLATE_ARGS_PASS>
+namespace detail
 {
-  typedef attribute_dispatcher_base<tag::element::polyline, Context, SVGPP_TEMPLATE_ARGS_PASS> base_type;
+
+template<class ElementTag, class Context, SVGPP_TEMPLATE_ARGS>
+class list_of_points_attribute_dispatcher:
+  public attribute_dispatcher_base<ElementTag, Context, SVGPP_TEMPLATE_ARGS_PASS>
+{
+  typedef attribute_dispatcher_base<ElementTag, Context, SVGPP_TEMPLATE_ARGS_PASS> base_type;
+
+  typedef typename boost::parameter::parameters<
+    boost::parameter::optional<tag::basic_shapes_policy>
+  >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
+  typedef typename boost::parameter::value_type<args, tag::basic_shapes_policy, 
+    typename policy::basic_shapes::by_context<Context>::type>::type basic_shapes_policy;
 
 public:
-  attribute_dispatcher(Context & context)
+  list_of_points_attribute_dispatcher(Context & context)
     : base_type(context)
   {
   }
@@ -708,17 +714,57 @@ public:
   template<class AttributeValue>
   typename boost::enable_if_c<
     !boost::is_same<AttributeValue, void>::value // Just to make type dependent on template parameter
-    && base_type::basic_shapes_policy::polyline_as_path, bool>::type
+    && boost::mpl::has_key<typename basic_shapes_policy::convert_to_path, ElementTag>::value, bool>::type
   load_attribute_value(tag::attribute::points attribute_tag, AttributeValue const & attribute_value, 
                        tag::source::attribute property_source)
   {
-    list_of_points_to_path_adapter<Context> adapter(this->context_);
+    typedef typename boost::parameter::parameters<
+      boost::parameter::optional<tag::path_policy>,
+      boost::parameter::optional<tag::load_path_policy>,
+      boost::parameter::optional<tag::markers_policy>,
+      boost::parameter::optional<tag::load_markers_policy>
+    >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
+    typedef bind_context_parameters_wrapper<Context, args2_t> context_t;
+    typedef path_adapter_if_needed<context_t> path_adapter_t; 
+    typedef path_markers_adapter_if_needed<typename path_adapter_t::adapted_context> markers_adapter_t;
+
+    context_t bound_context(this->context_);
+    typename path_adapter_t::type path_adapter(detail::unwrap_context<context_t, tag::load_path_policy>::get(bound_context));
+    typename path_adapter_t::adapted_context_holder adapted_path_context(path_adapter_t::adapt_context(bound_context, path_adapter));
+    typename markers_adapter_t::type markers_adapter(adapted_path_context);
+
     return value_parser<traits::attribute_type<tag::element::polyline, tag::attribute::points>::type, 
         SVGPP_TEMPLATE_ARGS_PASS>::parse(
       attribute_tag, 
-      detail::adapt_context<tag::l>(adapter),
+      adapt_context<tag::load_value_policy, list_of_points_to_path_adapter<ElementTag> >(adapted_path_context, markers_adapter_t::adapt_context(adapted_path_context, markers_adapter)),
       attribute_value, property_source);
   }
-};*/
+};
+
+}
+
+template<class Context, SVGPP_TEMPLATE_ARGS>
+class attribute_dispatcher<tag::element::polyline, Context, SVGPP_TEMPLATE_ARGS_PASS>:
+  public detail::list_of_points_attribute_dispatcher<tag::element::polyline, Context, SVGPP_TEMPLATE_ARGS_PASS>
+{
+  typedef detail::list_of_points_attribute_dispatcher<tag::element::polyline, Context, SVGPP_TEMPLATE_ARGS_PASS> base_type;
+
+public:
+  attribute_dispatcher(Context & context)
+    : base_type(context)
+  {}
+};
+
+template<class Context, SVGPP_TEMPLATE_ARGS>
+class attribute_dispatcher<tag::element::polygon, Context, SVGPP_TEMPLATE_ARGS_PASS>:
+  public detail::list_of_points_attribute_dispatcher<tag::element::polygon, Context, SVGPP_TEMPLATE_ARGS_PASS>
+{
+  typedef detail::list_of_points_attribute_dispatcher<tag::element::polygon, Context, SVGPP_TEMPLATE_ARGS_PASS> base_type;
+
+public:
+  attribute_dispatcher(Context & context)
+    : base_type(context)
+  {}
+};
 
 }

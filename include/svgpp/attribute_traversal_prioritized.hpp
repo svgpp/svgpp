@@ -314,7 +314,7 @@ namespace traversal_detail
   };
 } // namespace traversal_detail
 
-template<class AttributeTraversalPolicy, bool ParseStyleAttribute = true, SVGPP_TEMPLATE_ARGS_DEF>
+template<class AttributeTraversalPolicy, SVGPP_TEMPLATE_ARGS_DEF>
 struct attribute_traversal_prioritized
 {
   typedef typename boost::parameter::parameters<
@@ -332,7 +332,7 @@ struct attribute_traversal_prioritized
       policy::xml::attribute_iterator<XMLAttributesIterator> >::type xml_policy;
 
     typedef traversal_detail::attribute_value_saver<XMLAttributesIterator, xml_policy> value_saver;
-    typedef traversal_detail::found_attributes<value_saver, ParseStyleAttribute> found_attributes;
+    typedef traversal_detail::found_attributes<value_saver, AttributeTraversalPolicy::parse_style> found_attributes;
     typedef typename boost::parameter::value_type<args, tag::error_policy, 
       policy::error::default_policy<typename Dispatcher::context_type> >::type error_policy_t;
 
@@ -354,7 +354,7 @@ struct attribute_traversal_prioritized
           return false;
         break;
       case detail::attribute_id_style:
-        if (ParseStyleAttribute)
+        if (AttributeTraversalPolicy::parse_style)
         {
           if (!load_style<xml_policy, error_policy_t>(xml_attributes_iterator, dispatcher, style_value, found))
             return false;
@@ -414,7 +414,7 @@ private:
   static bool load_style(XMLAttributesIterator const & xml_attributes_iterator, Dispatcher & dispatcher,
     typename XMLPolicy::attribute_value_type & style_value,
     FoundAttributes & found,
-    typename boost::enable_if_c<ParseStyleAttribute && (true || boost::is_void<XMLAttributesIterator>::value)>::type * = NULL)
+    typename boost::enable_if_c<AttributeTraversalPolicy::parse_style && (true || boost::is_void<XMLAttributesIterator>::value)>::type * = NULL)
   {
     style_value = XMLPolicy::get_value(xml_attributes_iterator);
     typename XMLPolicy::string_type style_string = XMLPolicy::get_string_range(style_value);
@@ -440,7 +440,7 @@ private:
   static bool load_style(XMLAttributesIterator const & xml_attributes_iterator, Dispatcher & dispatcher,
     typename XMLPolicy::attribute_value_type & style_value,
     FoundAttributes & found,
-    typename boost::disable_if_c<ParseStyleAttribute && (true || boost::is_void<XMLAttributesIterator>::value)>::type * = NULL)
+    typename boost::disable_if_c<AttributeTraversalPolicy::parse_style && (true || boost::is_void<XMLAttributesIterator>::value)>::type * = NULL)
   {
     BOOST_ASSERT(false); // Must not be called
     return true;
