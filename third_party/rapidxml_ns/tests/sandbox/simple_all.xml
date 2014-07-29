@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<!DOCTYPE el1 [
+	<!ELEMENT el1 EMPTY>
+]>
+<?target <some><instructions>?>
+<!---->
+<!--comment1-->
+<!--comm-ent2-->
+<!--comm--ent3-->
+<!--
+	sdfsdf
+	sdfsd
+-->
+<root entities="&lt;&gt;&amp;&quot;&apos;&#32;&#29123;&#x20;&#xa41fD;">
+	&lt;&gt;&amp;&quot;&apos;&#32;&#29123;&#x20;&#xa41fD;
+	<attributes att1="'value1'" att2='"value2"'>data</root>
+	<cdata>
+		<![CDATA[data<fake>&amp;&#20;</fake>]]>
+	</cdata>
+	standalone data
+	<element>
+		<child>data</child>
+	</element>
+	<element2>data<interior/></element2 >
+	<![CDATA[standalone cdata]]>
+</root>

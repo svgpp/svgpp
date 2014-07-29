@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE subs-interface-reply SYSTEM "http://account.ea.com/subsxml/subs-interface.dtd">
+<subs-interface-reply version="2.0">
+   <status>0</status>
+   <message>Success</message>
+   <get-registration-dictionary-reply>
+      <message-dictionary>
+         <message id="00GAMENAME-1"><![CDATA[FIFA 07]]></message>
+         <message id="BUTTONSANDLABELS-1"><![CDATA[사용자 등록]]></message>
+         <message id="BUTTONSANDLABELS-10"><![CDATA[확인]]></message>
+         <message id="BUTTONSANDLABELS-11"><![CDATA[취소]]></message>
+         <message id="BUTTONSANDLABELS-12"><![CDATA[다시 시도]]></message>
+         <message id="BUTTONSANDLABELS-13"><![CDATA[닫기]]></message>
+         <message id="BUTTONSANDLABELS-14"><![CDATA[나가기]]></message>
+         <message id="BUTTONSANDLABELS-15"><![CDATA[나중에 끝내기]]></message>
+         <message id="BUTTONSANDLABELS-2"><![CDATA[나중에 등록]]></message>
+         <message id="BUTTONSANDLABELS-3"><![CDATA[지금 등록]]></message>
+         <message id="BUTTONSANDLABELS-4"><![CDATA[예]]></message>
+         <message id="BUTTONSANDLABELS-5"><![CDATA[아니오]]></message>
+         <message id="BUTTONSANDLABELS-6"><![CDATA[이전]]></message>
+         <message id="BUTTONSANDLABELS-7"><![CDATA[다음]]></message>
+         <message id="BUTTONSANDLABELS-8"><![CDATA[뒤로]]></message>
+         <message id="BUTTONSANDLABELS-9"><![CDATA[완료]]></message>
+         <message id="CONNECT1A-1"><![CDATA[<B>게임 등록을 하시기 위해서는 인터넷에 연결을 하셔야만 합니다.</b>]]></message>
+         <message id="CONNECT1A-2"><![CDATA[아직 인터넷에 연결하지 않으셨다면, 지금 연결해 주십시오. 연결이 되면, <b>다음</b>버튼을 눌러서 계속 하십시오.<BR><BR>]]></message>
+         <message id="CONNECT1A-3"><![CDATA[<font color="#333399"><a href="asfunction:gotoURL,r3b"><u>인터넷 연결 서비스가 없으면 어떻게 합니까?</u></a></font>]]></message>
+         <message id="CONNECT1B-1"><![CDATA[<b>사용자 등록을 확인하기 위해서, 흥미로운 선전용 제안을 확인하기 위해서 인터넷에 연결하셔야 합니다.</b>]]></message>
+         <message id="CONNECT1B-2"><![CDATA[아직 인터넷에 연결하지 않으셨다면, 지금 연결해 주십시오. 연결이 되면, <b>다음</b>버튼을 눌러서 계속 하십시오.]]></message>
+         <message id="CONNECT1B-3"><![CDATA[<font color="#333399"><a href="asfunction:gotoURL,r3b"><u>인터넷 연결 서비스가 없으면 어떻게 합니까?</u></a></font>]]></message>
+         <message id="CONNECT1C-1"><![CDATA[<b>EA에 연결하고 있습니다…</b>]]></message>
+         <message id="CONNECT1C-2"><![CDATA[<b>잠시 기다려 주십시오 - 몇 분 정도 걸릴 수 있습니다.</b>]]></message>
+         <message id="CONNECTED1A-1"><![CDATA[<b>연결되었습니다.</b>]]></message>
+         <message id="CONNECTED1A-2"><![CDATA[<b>등록을 시작합니다…</b>]]></message>
+         <message id="CONNECTED1B-1"><![CDATA[<b>EA에 연결할 수가 없습니다.</b>]]></message>
+         <message id="CONNECTED1B-2"><![CDATA[EA의 제품 등록 시스템에 연결할 수가 없습니다. 제품을 등록하기 위해서는 인터넷에 연결해야만 합니다. 만약 인터넷에 연결하지 않았다면 지금 연결해 주십시오.]]></message>
+         <message id="CONNECTED1B-3"><![CDATA[연결이 되면 <b>다시 시도</B> 버튼을 눌러 주십시오.]]></message>
+         <message id="CONNECTED1B-4"><![CDATA[<font color="#333399"><a href="asfunction:gotoURL,r3b"><u>몇 번의 시도후에도 연결이 안되면 어떻게 합니까?</u></a></font>]]></message>
+         <message id="CONNECTHOWTO-1"><![CDATA[<b>제품을 등록하기 위해서는 인터넷에 연결해야만 합니다.</b> 게임을 하기 위해서는 등록을 꼭 해야 하는 것은 아닙니다. 등록을 원하시는 데 몇 번 시도를 해도 EA 제품 등록 시스템에 연결 하실 수 없다면 다음과 같이 하시기를 권합니다:]]></message>
+         <message id="CONNECTHOWTO-2"><![CDATA[인터넷 연결이 되었는지 확인해 보십시오.]]></message>
+         <message id="CONNECTHOWTO-3"><![CDATA[EA 기술 지원팀에 연락하십시오. EA 기술 지원팀 연락처는 게임 사용자 설명서를 참조 하십시오.]]></message>
+         <message id="CONNECTHOWTO-4"><![CDATA[<font color="#333399"><a href="http://www.ea.co.kr/mileage/mileage_code_info.asp"><u>온라인 고객 등록</u></a>으로 가서 등록하십시오.</font>]]></message>
+         <message id="CONNECTING-1"><![CDATA[<b>EA에 연결</b>]]></message>
+         <message id="CONNECTING-2"><![CDATA[EA의 제품 등록 시스템에 연결하고 있습니다. 잠시만 기다려 주십시오. 몇 분 정도 걸릴 수 있습니다.]]></message>
+         <message id="NOINTERNET-1"><![CDATA[<B>인터넷 연결 서비스가 없습니까? 걱정하지 마십시오!</B>]]></message>
+         <message id="NOINTERNET-2"><![CDATA[게임 등록을 하지 않고도 {client:game-name} 게임을 플레이하실 수 있습니다. 기술 지원이 필요하실 경우, 전화로 등록하여 도움을 요청할 수 있습니다. 기술 지원에 관해서 사용 설명서를 참조하십시오.<BR>]]></message>
+         <message id="NOINTERNET-3"><![CDATA[즐거운 시간 되십시오!]]></message>
+         <message id="NOINTERNET-4"><![CDATA[Electronic Arts]]></message>
+         <message id="OFFLINEEXITCONFIRM-1"><![CDATA[<b>정말 끝내시겠습니까?</b>]]></message>
+         <message id="REGISTERLATER-1"><![CDATA[<b>제품의 사용자 등록을 하지 않으시면 다음 몇가지 혜택들을 받으실 수 없습니다:</b><BR>]]></message>
+         <message id="REGISTERLATER-2"><![CDATA[&nbsp;]]></message>
+         <message id="REGISTERLATER-3"><![CDATA[<li>완벽한 기술 지원</li>]]></message>
+         <message id="REGISTERLATER-4"><![CDATA[<li>여러분이 좋아하는 EA 게임의 내부 정보</li>]]></message>
+         <message id="REGISTERLATER-5"><![CDATA[<li>무료 치트키 또는 게임 힌트</li>]]></message>
+         <message id="REGISTERLATER-6"><![CDATA[<BR><b>빠른 시일 내에 사용자 등록을 하시고 게임을 즐기십시오.</b>]]></message>
+         <message id="SIGNIN1B-1"><![CDATA[<b>이 버전의 {client:game-name}게임은 등록하실 수 없습니다.</b> 이 제품은 등록하실 필요가 없습니다. <font color="#333399"><a href="http://www.ea.co.kr"><u>www.ea.co.kr</u></a></font>로 가시면 EA 제품의 최신 정보를 보실 수 있고 EA 소식지를 신청하실 수 있습니다.<BR>]]></message>
+         <message id="START1A-1"><![CDATA[<b>치트키나 게임 힌트 그리고 더 많은 혜택을 누리세요!</b> <BR><BR>]]></message>
+         <message id="START1A-2"><![CDATA[<b>지금 {client:game-name} 게임의 사용자 등록을 하시고 좋은 혜택들을 누리세요!</b><BR>]]></message>
+         <message id="START1A-3"><![CDATA[<li>무료 치트키 또는 게임 힌트</li>]]></message>
+         <message id="START1A-4"><![CDATA[<li>여러분이 좋아하는 EA 게임의 내부 정보</li>]]></message>
+         <message id="START1A-5"><![CDATA[<li>완벽한 기술 지원</li>]]></message>
+         <message id="START1A-6"><![CDATA[&nbsp;]]></message>
+         <message id="START1B-1"><![CDATA[<b>{client:game-name} 게임은 이미 등록하셨습니다.</b>]]></message>
+         <message id="START1B-2"><![CDATA[등록정보를 재검토하시거나 EA 게임의 특별 제안을 위해 몇가지 추가 질문에 답하시겠습니까?]]></message>
+         <message id="TITLE-PREFIX"><![CDATA[<font face="_sans">]]></message>
+         <message id="TITLE-SUFFIX"><![CDATA[</font>]]></message>
+      </message-dictionary>
+   </get-registration-dictionary-reply>
+</subs-interface-reply>

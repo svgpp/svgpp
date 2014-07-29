@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE subs-interface-reply SYSTEM "http://account.ea.com/subsxml/subs-interface.dtd">
+<subs-interface-reply version="2.0">
+   <status>0</status>
+   <message>Success</message>
+   <get-registration-dictionary-reply>
+      <message-dictionary>
+         <message id="00GAMENAME-1"><![CDATA[FIFA 07]]></message>
+         <message id="BUTTONSANDLABELS-1"><![CDATA[登録]]></message>
+         <message id="BUTTONSANDLABELS-10"><![CDATA[OK]]></message>
+         <message id="BUTTONSANDLABELS-11"><![CDATA[キャンセル]]></message>
+         <message id="BUTTONSANDLABELS-12"><![CDATA[再試行]]></message>
+         <message id="BUTTONSANDLABELS-13"><![CDATA[閉じる]]></message>
+         <message id="BUTTONSANDLABELS-14"><![CDATA[終了]]></message>
+         <message id="BUTTONSANDLABELS-15"><![CDATA[後で終了する]]></message>
+         <message id="BUTTONSANDLABELS-2"><![CDATA[後で登録する]]></message>
+         <message id="BUTTONSANDLABELS-3"><![CDATA[今すぐ登録する]]></message>
+         <message id="BUTTONSANDLABELS-4"><![CDATA[はい]]></message>
+         <message id="BUTTONSANDLABELS-5"><![CDATA[いいえ]]></message>
+         <message id="BUTTONSANDLABELS-6"><![CDATA[前へ]]></message>
+         <message id="BUTTONSANDLABELS-7"><![CDATA[次へ]]></message>
+         <message id="BUTTONSANDLABELS-8"><![CDATA[戻る]]></message>
+         <message id="BUTTONSANDLABELS-9"><![CDATA[完了]]></message>
+         <message id="CONNECT1A-1"><![CDATA[<B>ユーザ登録するにはインターネットに接続する必要があります。</b>]]></message>
+         <message id="CONNECT1A-2"><![CDATA[インターネットに接続していない場合は、すぐに接続して下さい。接続したら、 <b>次へ</b>をクリックして進んで下さい。<BR><BR>]]></message>
+         <message id="CONNECT1A-3"><![CDATA[<font color="#333399"><a href="asfunction:gotoURL,r3b"><u>インターネット環境がない場合、どうすればいいのでしょうか?</u></a></font>]]></message>
+         <message id="CONNECT1B-1"><![CDATA[<b>登録を確認したり、お得な情報をチェックするには、インターネットに接続する必要があります。</b>]]></message>
+         <message id="CONNECT1B-2"><![CDATA[インターネットに接続していない場合は、すぐに接続して下さい。接続したら、 <b>次へ</b>をクリックして進んで下さい。]]></message>
+         <message id="CONNECT1B-3"><![CDATA[<font color="#333399"><a href="asfunction:gotoURL,r3b"><u>インターネット環境がない場合、どうすればいいのでしょうか?</u></a></font>]]></message>
+         <message id="CONNECT1C-1"><![CDATA[<b>EAに接続しています…</b>]]></message>
+         <message id="CONNECT1C-2"><![CDATA[<b>時間がかかる場合があります。しばらくお待ち下さい。</b>]]></message>
+         <message id="CONNECTED1A-1"><![CDATA[<b>接続が完了しました。</b>]]></message>
+         <message id="CONNECTED1A-2"><![CDATA[<b>登録を開始します…</b>]]></message>
+         <message id="CONNECTED1B-1"><![CDATA[<b>EAに接続できませんでした。</b>]]></message>
+         <message id="CONNECTED1B-2"><![CDATA[ＥＡ製品のユーザ登録システムに接続できませんでした。ユーザ登録を行うには、インターネットに接続する必要があります。インターネットに接続していない場合は、すぐに接続して下さい。]]></message>
+         <message id="CONNECTED1B-3"><![CDATA[接続したら<b>再試行</B>をクリックして下さい。]]></message>
+         <message id="CONNECTED1B-4"><![CDATA[<font color="#333399"><a href="asfunction:gotoURL,r3b"><u>何度かやってみても接続できない場合、どうすればいいのでしょうか？</u></a></font>]]></message>
+         <message id="CONNECTHOWTO-1"><![CDATA[<b>ユーザ登録を行うには、インターネットに接続する必要があります。</b>登録しなくてもゲームをプレイすることはできますが、登録を希望していてEA製品のユーザ登録システムに接続できない場合は、以下の内容をお試し下さい:]]></message>
+         <message id="CONNECTHOWTO-2"><![CDATA[インターネット接続が正常に作動しているか確認して下さい。]]></message>
+         <message id="CONNECTHOWTO-3"><![CDATA[ＥＡカスタマーサポートにお問い合わせ下さい。連絡先はゲームのマニュアルをご参照下さい。]]></message>
+         <message id="CONNECTHOWTO-4"><![CDATA[<font color="#333399"><a href="http://www.eagamereg.com"><u>www.eagamereg.com</u></a>に接続し、オンライン登録フォームにご記入下さい。</font>]]></message>
+         <message id="CONNECTING-1"><![CDATA[<b>EAに接続中</b>]]></message>
+         <message id="CONNECTING-2"><![CDATA[EA製品のユーザ登録システムに接続しています。時間がかかる場合がありますが、しばらくお待ち下さい。]]></message>
+         <message id="NOINTERNET-1"><![CDATA[<B>インターネットに接続できなくても大丈夫です！</B>]]></message>
+         <message id="NOINTERNET-2"><![CDATA[ユーザ登録しなくても{client:game-name}をプレイできます。カスタマーサポートにご連絡いただければ、電話での登録をご案内します。連絡先はゲームのマニュアルをご参照下さい。<BR>]]></message>
+         <message id="NOINTERNET-3"><![CDATA[ゲームを楽しもう!]]></message>
+         <message id="NOINTERNET-4"><![CDATA[エレクトロニック・アーツ]]></message>
+         <message id="OFFLINEEXITCONFIRM-1"><![CDATA[<b>中止してもよろしいですか?</b>]]></message>
+         <message id="REGISTERLATER-1"><![CDATA[<b>ユーザ登録すれば、以下のすばらしい特典があなたのものになります:</b><BR>]]></message>
+         <message id="REGISTERLATER-2"><![CDATA[&nbsp;]]></message>
+         <message id="REGISTERLATER-3"><![CDATA[<li>万全のテクニカルサポート</li>]]></message>
+         <message id="REGISTERLATER-4"><![CDATA[<li>お気に入りのEAソフトに関する裏情報</li>]]></message>
+         <message id="REGISTERLATER-5"><![CDATA[<li>チートコード、またはゲームのヒントを無料で提供！</li>]]></message>
+         <message id="REGISTERLATER-6"><![CDATA[<BR><b>今すぐ登録してゲームを楽しもう。</b>]]></message>
+         <message id="SIGNIN1B-1"><![CDATA[<b>このバージョンの{client:game-name}は登録できません。</b>登録しなくてもゲームをプレイすることができます。<font color="#333399"><a href="http://www.ea.com"><u>www.ea.com</u></a></font>に接続し、EA製品の最新情報を入手してEAニュースレターの購読申し込みを行って下さい。<BR>]]></message>
+         <message id="START1A-1"><![CDATA[<b>チートコードやゲームのヒントなどなど、特典をゲットしよう！</b> <BR><BR>]]></message>
+         <message id="START1A-2"><![CDATA[<b>今すぐ {client:game-name}に登録すれば、すばらしい特典があなたのものに！</b><BR>]]></message>
+         <message id="START1A-3"><![CDATA[<li>チートコード、またはゲームのヒントを無料で提供！</li>]]></message>
+         <message id="START1A-4"><![CDATA[<li>お気に入りのEAソフトに関する裏情報</li>]]></message>
+         <message id="START1A-5"><![CDATA[<li>万全のテクニカルサポート</li>]]></message>
+         <message id="START1A-6"><![CDATA[&nbsp;]]></message>
+         <message id="START1B-1"><![CDATA[<b>すでに {client:game-name}に登録済みです</b>]]></message>
+         <message id="START1B-2"><![CDATA[登録情報を確認しますか？またはＥＡソフトのスペシャルオファーを受けられる質問にお答えになりますか？]]></message>
+         <message id="TITLE-PREFIX"><![CDATA[<font face="_sans">]]></message>
+         <message id="TITLE-SUFFIX"><![CDATA[</font>]]></message>
+      </message-dictionary>
+   </get-registration-dictionary-reply>
+</subs-interface-reply>

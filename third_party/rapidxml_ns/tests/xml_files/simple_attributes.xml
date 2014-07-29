@@ -1,0 +1,2 @@
+<root att1='value1' att2="value2" att3='va"l"ue3' att4="va'l'ue4" att5="va<l>ue5" att6='' att7=' 
+foo  bar	'>data</root>

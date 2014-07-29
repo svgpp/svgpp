@@ -1,0 +1,676 @@
+<?xml version="1.0" encoding="utf-8"?>
+<doc>
+	<assembly>
+		<name>EnvDTE80</name>
+	</assembly>
+	<members>
+		<member name="P:EnvDTE80.Breakpoint2.FunctionLineOffset">
+			<summary>Gets the line offset from the name of a function breakpoint.</summary>
+			<returns>An integer containing the line offset from the name of a function breakpoint.</returns>
+		</member>
+		<member name="M:EnvDTE80.CodeClass2.AddDelegate(System.String,System.Object,System.Object,EnvDTE.vsCMAccess)">
+			<summary>Creates a new delegate in the specified class.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeDelegate"></see> object.</returns>
+			<param name="Position">Optional. Default = 0. The code element after which to add the new element. If the value is a Long data type, then Position indicates the element after which to add the new element. Because collections begin their count at 1, passing 0 indicates that the new element should be placed at the beginning of the collection. A value of -1 means the element should be placed at the end.</param>
+			<param name="Type">Required. A <see cref="T:EnvDTE.vsCMTypeRef"></see> constant indicating the data type that the function returns. This can be a <see cref="T:EnvDTE.CodeTypeRef"></see> object, a <see cref="T:EnvDTE.vsCMTypeRef"></see> constant, or a fully qualified type name.</param>
+			<param name="Access">Optional. A <see cref="T:EnvDTE.vsCMAccess"></see> constant specifying the access type.</param>
+			<param name="Name">Required. The name of the delegate to add.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeClass2.AddEnum(System.String,System.Object,System.Object,EnvDTE.vsCMAccess)">
+			<summary>Creates a new enumeration in the class.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeEnum"></see> object.</returns>
+			<param name="Position">Optional. Default = 0. The code element after which to add the new element. If the value is a <see cref="T:EnvDTE.CodeElement"></see>, then the new element is added immediately after it.If the value is a Long, then Position indicates the element after which to add the new element.Because collections begin their count at 1, passing 0 indicates that the new element should be placed at the beginning of the collection. A value of -1 means the element should be placed at the end. </param>
+			<param name="Access">Optional. A <see cref="T:EnvDTE.vsCMAccess"></see> constant specifying the enumeration's access type.</param>
+			<param name="Name">Required. The name of the enumeration to add.</param>
+			<param name="Bases">Optional. Default = Nothing. A variant that holds a SafeArray of fully qualified type names or <see cref="T:EnvDTE.CodeType"></see> objects that specify the underlying type of the new enum.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeClass2.AddEvent(System.String,System.String,System.Boolean,System.Object,EnvDTE.vsCMAccess)">
+			<summary>Adds a class event.</summary>
+			<returns>Returns the class event handler that was created.</returns>
+			<param name="Position">Optional. Default = &#x10a5;. The element after which to add the new event handler.If the value is a Long, then Position indicates the location of the element after which to add the new element.Because automation collections begin their count at 1, passing 0 indicates that the new event handler should be placed at the beginning of the class. A value of -1 means the function should be placed at the end.</param>
+			<param name="Access">Optional. A <see cref="T:EnvDTE.vsCMAccess"></see> constant.</param>
+			<param name="Name">Required. Name of the class event to add.</param>
+			<param name="CreatePropertyStyleEvent">Optional. Creates an event that has a property style accessor. True indicates that the event should have an accessor, false indicates that it should not.</param>
+			<param name="FullDelegateName">Required. Name of the delegate to base the event on. This acts as a template for the new event handler.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeClass2.AddFunction(System.String,EnvDTE.vsCMFunction,System.Object,System.Object,EnvDTE.vsCMAccess,System.Object)">
+			<summary>Creates a new function in the class.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeFunction"></see> object.</returns>
+			<param name="Position">Optional. Default = 0. The code element after which to add the new function.If the value is a Long, then Position indicates the element after which to add the new element.Because collections begin their count at 1, passing 0 indicates that the new element should be placed at the beginning of the collection. A value of -1 means the function should be placed at the end.</param>
+			<param name="Type">Required. A <see cref="T:EnvDTE.vsCMTypeRef"></see> constant indicating the data type that the function returns. This can be a <see cref="T:EnvDTE.CodeTypeRef"></see> object, a <see cref="T:EnvDTE.vsCMTypeRef"></see> constant, or a fully qualified type name.</param>
+			<param name="Access">Optional. A <see cref="T:EnvDTE.vsCMAccess"></see> constant.</param>
+			<param name="Name">Required. The name of the new function.</param>
+			<param name="Kind">Required. The vsCMFunction constant indicating the type of function, such as whether the function is a property getter, a method, and so forth.</param>
+			<param name="Location">Optional. Location of the new function.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeClass2.AddImplementedInterface(System.Object,System.Object)">
+			<summary>Adds an interface to the list of inherited objects.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeInterface"></see> object.</returns>
+			<param name="Position">Optional. Default = 0. The code element after which to add the new interface.If the value is a Long data type, then Position indicates the element after which to add the new element. Because collections begin their count at 1, passing 0 indicates that the new element should be placed at the beginning of the collection. A value of -1 means the element should be placed at the end.</param>
+			<param name="Base">Required. The interface that the class will implement. This is either a <see cref="T:EnvDTE.CodeInterface"></see> object or a fully-qualified type name.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeClass2.AddProperty(System.String,System.String,System.Object,System.Object,EnvDTE.vsCMAccess,System.Object)">
+			<summary>Creates a new property construct in the class.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeProperty"></see> object.</returns>
+			<param name="Position">Optional. Default = 0. The code element after which to add the new element.If the value is a Long data type, then the Position method indicates the element after which to add the new element. Because collections begin their count at 1, passing 0 indicates that the new element should be placed at the beginning of the collection. A value of -1 means the element should be placed at the end.</param>
+			<param name="Type">Required. The type of property. This can be a <see cref="T:EnvDTE.CodeTypeRef"></see> object, a <see cref="T:EnvDTE.vsCMTypeRef"></see> value, or a fully qualified type name.</param>
+			<param name="Access">Optional. A <see cref="T:EnvDTE.vsCMAccess"></see> constant value indicating the access type.</param>
+			<param name="GetterName">Required. The name of the function that gets the property's value.</param>
+			<param name="Location">Optional. Location of the new function.</param>
+			<param name="PutterName">Required. The name of the function that sets the property.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeClass2.AddStruct(System.String,System.Object,System.Object,System.Object,EnvDTE.vsCMAccess)">
+			<summary>Creates a new structure in the class.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeStruct"></see> object.</returns>
+			<param name="Position">Optional. Default = 0. The code element after which to add the new element.If the value is a Long data type, then the Position method indicates the element after which to add the new element. Because collections begin their count at 1, passing 0 indicates that the new element should be placed at the beginning of the collection. A value of -1 means the element should be placed at the end.</param>
+			<param name="Access">Optional. A <see cref="T:EnvDTE.vsCMAccess"></see> constant.</param>
+			<param name="ImplementedInterfaces">Required. Default value is Nothing. A SafeArray of fully qualified type names or <see cref="T:EnvDTE.CodeInterface"></see> objects representing interfaces that the new class promises to implement.</param>
+			<param name="Name">Required. The name of the new structure.</param>
+			<param name="Bases">Required. Default value is Nothing. A variant that holds a SafeArray of fully qualified type names or <see cref="T:EnvDTE.CodeInterface"></see> objects from which the new struct derives.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeClass2.AddVariable(System.String,System.Object,System.Object,EnvDTE.vsCMAccess,System.Object)">
+			<summary>Creates a new variable in the class.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeVariable"></see> object.</returns>
+			<param name="Position">Optional. Default = 0. The code element after which to add the new element.If the value is a Long data type, then Position indicates the element after which to add the new element. Because collections begin their count at 1, passing 0 indicates that the new element should be placed at the beginning of the collection. A value of -1 means the element should be placed at the end.</param>
+			<param name="Type">Required. A <see cref="T:EnvDTE.vsCMTypeRef"></see> constant indicating the data type that the function returns. This can be a <see cref="T:EnvDTE.CodeTypeRef"></see> object, a <see cref="T:EnvDTE.vsCMTypeRef"></see> constant, or a fully qualified type name.</param>
+			<param name="Access">Optional. A <see cref="T:EnvDTE.vsCMAccess"></see> constant.</param>
+			<param name="Name">Required. The name of the new variable.</param>
+			<param name="Location">Optional. The path and file name for the new variable definition. Depending on the language, the file name is either relative or absolute to the project file. The file is added to the project if it is not already a project item. If the file cannot be created and added to the project, then <see cref="M:EnvDTE80.CodeClass2.AddVariable(System.String,System.Object,System.Object,EnvDTE.vsCMAccess,System.Object)"></see> fails.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeClass2.GetEndPoint(EnvDTE.vsCMPart)">
+			<summary>Gets a <see cref="T:EnvDTE.TextPoint"></see> object that marks the end of the class.</summary>
+			<returns>A <see cref="T:EnvDTE.TextPoint"></see> object.</returns>
+			<param name="Part">Optional. A <see cref="T:EnvDTE.vsCMPart"></see> constant specifying the portion of the class to retrieve.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeClass2.GetStartPoint(EnvDTE.vsCMPart)">
+			<summary>Gets a <see cref="T:EnvDTE.TextPoint"></see> object that defines the beginning of the class.</summary>
+			<returns>A <see cref="T:EnvDTE.TextPoint"></see> object.</returns>
+			<param name="Part">Optional. A <see cref="T:EnvDTE.vsCMPart"></see> constant specifying the portion of the class to retrieve.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeClass2.RemoveBase(System.Object)">
+			<summary>Removes an object from the list of bases.</summary>
+			<param name="Element">Required. A <see cref="T:EnvDTE.CodeElement"></see> or the name of one in the collection.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeClass2.RemoveInterface(System.Object)">
+			<summary>Removes an interface from the list of implemented interfaces.</summary>
+			<param name="Element">Required. A <see cref="T:EnvDTE.CodeElement"></see> or the name of one in the collection.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeClass2.RemoveMember(System.Object)">
+			<summary>Removes a member of the class.</summary>
+			<param name="Element">Required. A <see cref="T:EnvDTE.CodeElement"></see> object or the name of one in the collection.</param>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.Access">
+			<summary>Sets or gets the access attributes of this code class.</summary>
+			<returns>A <see cref="T:EnvDTE.vsCMAccess"></see> value.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.Attributes">
+			<summary>Gets a collection of all of the attributes for the code class.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeElements"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.Bases">
+			<summary>Gets a collection of classes from which this code class derives.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeElements"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.Children">
+			<summary>Gets a collection of objects contained within this code class.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeElements"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.Collection">
+			<summary>Gets the collection contained within the code class.</summary>
+			<returns>A collection of <see cref="T:EnvDTE.CodeClass"></see> objects.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.Comment">
+			<summary>Sets or gets the comment associated with the code class.</summary>
+			<returns>A string representing the comment.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.DataTypeKind">
+			<summary>Sets of gets the relationship of this class with other classes.</summary>
+			<returns>Returns value from the <see cref="T:EnvDTE80.vsCMDataTypeKind"></see> enumeration.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.DerivedTypes">
+			<summary>Gets a collection of objects derived from the code class. Not implemented in Visual C# and Visual J#.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeElements"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.DocComment">
+			<summary>Gets or sets the document comment for the code class.</summary>
+			<returns>A string representing the document comment.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.DTE">
+			<summary>Gets the top-level extensibility object.</summary>
+			<returns>A <see cref="T:EnvDTE.DTE"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.EndPoint">
+			<summary>Gets the edit point that is the location of the end of the code class.</summary>
+			<returns>A <see cref="T:EnvDTE.TextPoint"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.Extender(System.String)">
+			<summary>Returns the requested Extender object if it is available for the code class. Not implemented in Visual C# and Visual J#.</summary>
+			<returns>A string representing the name of the Extender.</returns>
+			<param name="ExtenderName">Required. The name of the Extender to return.</param>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.ExtenderCATID">
+			<summary>Gets the Extender category ID (CATID) for the code class. Not implemented in Visual C# and Visual J#.</summary>
+			<returns>A GUID string representing the CATID of the code class.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.ExtenderNames">
+			<summary>Gets a list of available Extenders for the code class. Not implemented in Visual C# and Visual J#.</summary>
+			<returns>An array of strings representing the list of available Extenders for the object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.FullName">
+			<summary>Gets the full path and name of the file of the code class.</summary>
+			<returns>A string representing the full path and name of the file of the code class.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.ImplementedInterfaces">
+			<summary>Gets a collection of interfaces implemented by the code class.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeElements"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.InfoLocation">
+			<summary>Gets the capabilities of the code model.</summary>
+			<returns>A <see cref="T:EnvDTE.vsCMInfoLocation"></see> constant value.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.InheritanceKind">
+			<summary>Gets or sets a value indicating whether a class may be used to create a new class.</summary>
+			<returns>A <see cref="T:EnvDTE80.vsCMInheritanceKind"></see> constant.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeClass2.IsAbstract">
+			<summary>Sets or gets whether or not the code class is declared as abstract.</summary>
+			<returns>A boolean value that is true if the code class is declared as abstract; false otherwise.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeFunction2.Language">
+			<summary>Gets the programming language used to author the code.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeModelLanguageConstants"></see> constant.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeParameter2.FullName">
+			<summary>Gets the full path and name of the object's file.</summary>
+			<returns>The full path and name of the <see cref="T:EnvDTE.CodeParameter"></see> object's file.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeParameter2.InfoLocation">
+			<summary>Gets the capabilities of the code model.</summary>
+			<returns>A <see cref="T:EnvDTE.vsCMInfoLocation"></see> constant value.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeParameter2.IsCodeType">
+			<summary>Gets a value indicating whether a <see cref="T:EnvDTE.CodeType"></see> object can be obtained from this <see cref="T:EnvDTE.CodeParameter"></see> object.</summary>
+			<returns>A Boolean that is true if a <see cref="T:EnvDTE.CodeType"></see> object can be obtained; otherwise, false.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeParameter2.Kind">
+			<summary>Gets an enumeration indicating the type of object.</summary>
+			<returns>A <see cref="T:EnvDTE.vsCMElement"></see> value.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeParameter2.Language">
+			<summary>Gets the programming language used to author the code.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeModelLanguageConstants"></see> constant.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeParameter2.Name">
+			<summary>Gets or sets the name of the object.</summary>
+			<returns>A string representing the name of the <see cref="T:EnvDTE.CodeParameter"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeParameter2.ParameterKind">
+			<summary>Gets or sets a value indicating whether the parameter is expected to have value or reference behavior</summary>
+			<returns>A <see cref="T:EnvDTE80.vsCMParameterKind"></see> enumeration.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeParameter2.Parent">
+			<summary>Gets the immediate parent object of a <see cref="T:EnvDTE.CodeParameter"></see> object.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeElement"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeParameter2.ProjectItem">
+			<summary>Gets the <see cref="T:EnvDTE.ProjectItem"></see> associated with the given object.</summary>
+			<returns>A <see cref="T:EnvDTE.ProjectItem"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeParameter2.StartPoint">
+			<summary>Gets a <see cref="T:EnvDTE.TextPoint"></see> object that defines the beginning of the code item.</summary>
+			<returns>A <see cref="T:EnvDTE.TextPoint"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeParameter2.Type">
+			<summary>Gets or sets an object representing the programmatic type.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeTypeRef"></see> object.</returns>
+		</member>
+		<member name="T:EnvDTE80.CodeProperty2">
+			<summary>An object defining a property construct in a source file.</summary>
+		</member>
+		<member name="M:EnvDTE80.CodeProperty2.AddAttribute(System.String,System.String,System.Object)">
+			<summary>Creates a new attribute code construct and inserts the code in the correct location.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeAttribute"></see> object.</returns>
+			<param name="Position">Optional. Default = 0. The code element after which to add the new element. If the value is a <see cref="T:EnvDTE.CodeElement"></see>, then the new element is added immediately after it.If the value is a Long data type, then <see cref="M:EnvDTE80.CodeProperty2.AddAttribute(System.String,System.String,System.Object)"></see> indicates the element after which to add the new element.Because collections begin their count at 1, passing 0 indicates that the new element should be placed at the beginning of the collection. A value of -1 means the element should be placed at the end. </param>
+			<param name="Name">Required. The name of the new attribute.</param>
+			<param name="Value">Required. The value of the attribute, which may be a list of parameters for a parameterized property, separated by commas </param>
+		</member>
+		<member name="M:EnvDTE80.CodeProperty2.AddParameter(System.String,System.Object,System.Object)">
+			<summary>Adds a parameter to a property definition.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeParameter"></see> object.</returns>
+			<param name="Position">Optional. Default = 0. The code element after which to add the new element. If the value is a <see cref="T:EnvDTE.CodeElement"></see>, then the new element is added immediately after it.If the value is a Long data type, then <see cref="M:EnvDTE80.CodeProperty2.AddParameter(System.String,System.Object,System.Object)"></see> indicates the element after which to add the new element.Because collections begin their count at 1, passing 0 indicates that the new element should be placed at the beginning of the collection. A value of -1 means the element should be placed at the end. </param>
+			<param name="Type">Required. A <see cref="T:EnvDTE.vsCMTypeRef"></see> constant indicating the data type that the function returns. This can be a <see cref="T:EnvDTE.CodeTypeRef"></see> object, a <see cref="T:EnvDTE.vsCMTypeRef"></see> constant, or a fully qualified type name.</param>
+			<param name="Name">Required. The name of the parameter.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeProperty2.GetEndPoint(EnvDTE.vsCMPart)">
+			<summary>Gets a <see cref="T:EnvDTE.TextPoint"></see> object that marks the end of the code element definition.</summary>
+			<returns>A <see cref="T:EnvDTE.TextPoint"></see> object.</returns>
+			<param name="Part">Optional. A <see cref="T:EnvDTE.vsCMPart"></see> constant specifying the portion of the code to retrieve.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeProperty2.GetStartPoint(EnvDTE.vsCMPart)">
+			<summary>Gets a <see cref="T:EnvDTE.TextPoint"></see> object that defines the beginning of the code element definition.</summary>
+			<returns>A <see cref="T:EnvDTE.TextPoint"></see> object.</returns>
+			<param name="Part">Optional. A <see cref="T:EnvDTE.vsCMPart"></see> constant specifying the portion of the code to retrieve.</param>
+		</member>
+		<member name="M:EnvDTE80.CodeProperty2.RemoveParameter(System.Object)">
+			<summary>Removes a parameter from the property's signature.</summary>
+			<param name="Element">The parameter to remove,</param>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.Access">
+			<summary>Gets or sets the access attributes of this item.</summary>
+			<returns>A <see cref="T:EnvDTE.vsCMAccess"></see> value.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.Attributes">
+			<summary>Gets a collection of all attributes for the parent object.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeElements"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.Children">
+			<summary>Gets a collection of objects contained within this <see cref="T:EnvDTE80.CodeProperty2"></see> object.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeElements"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.Collection">
+			<summary>Gets the collection containing the <see cref="T:EnvDTE.CodeProperty"></see> object supporting this property.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeElements"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.Comment">
+			<summary>Gets or sets the comment associated with the code element.</summary>
+			<returns>The comment associated with the code element.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.DocComment">
+			<summary>Gets or sets the document comment for the current code model element.</summary>
+			<returns>A string representing the document comment.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.DTE">
+			<summary>Gets the top-level extensibility object.</summary>
+			<returns>A <see cref="T:EnvDTE.DTE"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.EndPoint">
+			<summary>Gets the edit point that is the location of the end of the code item.</summary>
+			<returns>A <see cref="T:EnvDTE.TextPoint"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.Extender(System.String)">
+			<summary>Gets the requested Extender if it is available for this object.</summary>
+			<returns>An Extender.</returns>
+			<param name="ExtenderName">Required. The name of the Extender to return.</param>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.ExtenderCATID">
+			<summary>Gets the Extender category ID (CATID) for the object.</summary>
+			<returns>A GUID string representing the CATID of the object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.ExtenderNames">
+			<summary>Gets a list of available Extenders for the object.</summary>
+			<returns>An automation-compliant array of strings.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.FullName">
+			<summary>Gets the full path and name of the object's file.</summary>
+			<returns>The full path and name of the object's file.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.Getter">
+			<summary>Gets or sets an object defining the code to return a property.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeFunction"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.InfoLocation">
+			<summary>Gets the capabilities of the code model.</summary>
+			<returns>A <see cref="T:EnvDTE.vsCMInfoLocation"></see> constant value.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.IsCodeType">
+			<summary>Gets a value indicating whether a <see cref="T:EnvDTE.CodeType"></see> object can be obtained from this object.</summary>
+			<returns>A Boolean that is true if a <see cref="T:EnvDTE.CodeType"></see> object can be obtained, otherwise, false.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.IsDefault">
+			<summary>Sets or gets whether this is the default property.</summary>
+			<returns>true if this is the default property of the class or interface, otherwise false.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.IsGeneric">
+			<summary>Gets a value indicating whether or not the property is a generic.</summary>
+			<returns>A Boolean that is true if the property is a generic; otherwise, false.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.IsShared">
+			<summary>Gets or sets the shared status of the property.</summary>
+			<returns>true if the status of the property is shared (static), otherwise false.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.Kind">
+			<summary>Gets an enumeration indicating the type of object.</summary>
+			<returns>A <see cref="T:EnvDTE.vsCMElement"></see> value.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.Language">
+			<summary>Gets the programming language used to author the code.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeModelLanguageConstants"></see> constant.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.Name">
+			<summary>Gets or sets the name of the object.</summary>
+			<returns>The name of the <see cref="T:EnvDTE.CodeProperty"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.OverrideKind">
+			<summary>Gets or sets the override modifiers on Property.</summary>
+			<returns>Returns a value from the vsCMOverrideKind enumeration describing how a property can be overridden.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.Parameters">
+			<summary>Gets <see cref="T:EnvDTE80.CodeParameter2"></see> objects for any parameters to the property.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeElements"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.Parent">
+			<summary>Gets the immediate parent object of a <see cref="T:EnvDTE.CodeProperty"></see> object.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeClass"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.Parent2">
+			<summary>Gets the parent of the element.</summary>
+			<returns>Returns the class, interface, or struct containing the element.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeProperty2.ProjectItem">
+			<summary>Gets the <see cref="T:EnvDTE.ProjectItem"></see> associated with the given object.</summary>
+			<returns>A <see cref="T:EnvDTE.ProjectItem"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeStruct2.StartPoint">
+			<summary>Gets a <see cref="T:EnvDTE.TextPoint"></see> object that defines the beginning of the code item.</summary>
+			<returns>A <see cref="T:EnvDTE.TextPoint"></see> object.</returns>
+		</member>
+		<member name="T:EnvDTE80.CodeTypeRef2">
+			<summary>Defines the type of a construct in a source file.</summary>
+		</member>
+		<member name="M:EnvDTE80.CodeTypeRef2.CreateArrayType(System.Int32)">
+			<summary>Creates an array of specified type, and inserts it into the code in the correct location.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeTypeRef"></see> object.</returns>
+			<param name="Rank">Optional. Default value = 1. The number of dimensions in the type array.</param>
+		</member>
+		<member name="P:EnvDTE80.CodeTypeRef2.AsFullName">
+			<summary>Gets the fully qualified name of the <see cref="T:EnvDTE.CodeTypeRef"></see> object.</summary>
+			<returns>The fully qualified name of the <see cref="T:EnvDTE.CodeTypeRef"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeTypeRef2.AsString">
+			<summary>Gets a string to use for displaying the <see cref="T:EnvDTE.CodeTypeRef"></see> object.</summary>
+			<returns>A string used for displaying the <see cref="T:EnvDTE.CodeTypeRef"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeTypeRef2.CodeType">
+			<summary>Gets or sets information describing what kind of <see cref="T:EnvDTE.CodeTypeRef"></see> object this item is.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeType"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeTypeRef2.DTE">
+			<summary>Gets the top-level extensibility object.</summary>
+			<returns>A <see cref="T:EnvDTE.DTE"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeTypeRef2.ElementType">
+			<summary>Gets or sets an object representing the programmatic type.</summary>
+			<returns>A <see cref="T:EnvDTE.CodeTypeRef"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.CodeTypeRef2.IsGeneric">
+			<summary>Gets a value indicating whether the current class or struct is a generic.</summary>
+			<returns>A Boolean that is true if the current class or struct is a generic; otherwise, false.</returns>
+		</member>
+		<member name="E:EnvDTE80.DebuggerExpressionEvaluationEventsClass.OnExpressionEvaluation">
+			<summary>Raised when an expression is evaluated from the immediate window or from automation.</summary>
+		</member>
+		<member name="M:EnvDTE80.DebuggerExpressionEvaluationEventsClass.add_OnExpressionEvaluation(EnvDTE80._dispDebuggerExpressionEvaluationEvents_OnExpressionEvaluationEventHandler)">
+			<summary>Microsoft Internal Use Only.</summary>
+			<param name="A_1">�</param>
+		</member>
+		<member name="M:EnvDTE80.DebuggerExpressionEvaluationEventsClass.remove_OnExpressionEvaluation(EnvDTE80._dispDebuggerExpressionEvaluationEvents_OnExpressionEvaluationEventHandler)">
+			<summary>Microsoft Internal Use Only.</summary>
+			<param name="A_1">�</param>
+		</member>
+		<member name="T:EnvDTE80.DebuggerProcessEvents">
+			<summary>Represents the OnProcessStateChanged event. This changes when the debugger switches from run to stop or stop to run. Refer to <see cref="T:EnvDTE80.DebuggerProcessEventsClass"></see> for this object's documentation. Do not instantiate this class.</summary>
+		</member>
+		<member name="T:EnvDTE80.DebuggerProcessEventsClass">
+			<summary>This class supports the .NET Framework infrastructure and is not intended to be used directly from your code. Refer to <see cref="T:EnvDTE80.DebuggerProcessEvents"></see> for this functionality. Do not instantiate from this class.</summary>
+		</member>
+		<member name="M:EnvDTE80.DebuggerProcessEventsClass.#ctor">
+			<summary>Microsoft Internal Use Only.</summary>
+		</member>
+		<member name="E:EnvDTE80.DebuggerProcessEventsClass.OnProcessStateChanged">
+			<summary>Raised when a process switches from run to stop or stop to run.</summary>
+		</member>
+		<member name="M:EnvDTE80.DebuggerProcessEventsClass.add_OnProcessStateChanged(EnvDTE80._dispDebuggerProcessEvents_OnProcessStateChangedEventHandler)">
+			<summary>Microsoft Internal Use Only.</summary>
+			<param name="A_1">�</param>
+		</member>
+		<member name="M:EnvDTE80.DebuggerProcessEventsClass.remove_OnProcessStateChanged(EnvDTE80._dispDebuggerProcessEvents_OnProcessStateChangedEventHandler)">
+			<summary>Microsoft Internal Use Only.</summary>
+			<param name="A_1">�</param>
+		</member>
+		<member name="T:EnvDTE80.DTE2">
+			<summary>The top-level object in the Visual Studio automation object model.</summary>
+		</member>
+		<member name="M:EnvDTE80.DTE2.ExecuteCommand(System.String,System.String)">
+			<summary>Executes the specified command.</summary>
+			<param name="CommandArgs">Optional. A string containing the same arguments you would supply if you were invoking the command from the Command window. If a string is supplied, it is passed to the command line as the command's first argument and is parsed to form the various arguments for the command. This is similar to how commands are invoked in the Command window. </param>
+			<param name="CommandName">Required. The name of the command to invoke.</param>
+		</member>
+		<member name="P:EnvDTE80.DTE2.CommandBars">
+			<summary>Gets a reference to the development environment's CommandBars object.</summary>
+			<returns>A Microsoft.VisualStudio.CommandBars object.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.CommandLineArguments">
+			<summary>Gets a string representing the command line arguments.</summary>
+			<returns>The command line arguments.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.Commands">
+			<summary>Gets the <see cref="T:EnvDTE.Commands"></see> collection.</summary>
+			<returns>A <see cref="T:EnvDTE.Commands"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.ContextAttributes">
+			<summary>Gets a <see cref="T:EnvDTE.ContextAttributes"></see> collection which allows automation clients to add new attributes to the current selected items in the Dynamic Help window and provide contextual help for the additional attributes.</summary>
+			<returns>A <see cref="T:EnvDTE.ContextAttributes"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.Debugger">
+			<summary>Gets the debugger objects.</summary>
+			<returns>A <see cref="T:EnvDTE.Debugger"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.DisplayMode">
+			<summary>Gets or sets the display mode, either MDI or Tabbed Documents.</summary>
+			<returns>A <see cref="T:EnvDTE.vsDisplay"></see> constant representing the display mode.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.Documents">
+			<summary>Gets the collection of open documents in the development environment.</summary>
+			<returns>A <see cref="T:EnvDTE.Documents"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.DTE">
+			<summary>Gets the top-level extensibility object.</summary>
+			<returns>A <see cref="T:EnvDTE.DTE"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.Edition">
+			<summary>Gets a description of the edition of the environment.</summary>
+			<returns>The description of the environment edition.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.Events">
+			<summary>Gets a reference to the <see cref="T:EnvDTE.Events"></see> object.</summary>
+			<returns>A <see cref="T:EnvDTE.Events"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.Find">
+			<summary>Gets the <see cref="T:EnvDTE.Find"></see> object that represents global text find operations.</summary>
+			<returns>A <see cref="T:EnvDTE.Find"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.FullName">
+			<summary>Gets the full path and name of the object's file.</summary>
+			<returns>The full path and name of the object's file.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.Globals">
+			<summary>Gets the <see cref="T:EnvDTE.Globals"></see> object that contains Add-in values that may be saved in the solution (.sln) file, the project file, or in the user's profile data.</summary>
+			<returns>A <see cref="T:EnvDTE.Globals"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.SelectedItems">
+			<summary>Gets a collection containing the items currently selected in the environment.</summary>
+			<returns>A <see cref="T:EnvDTE.SelectedItems"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.DTE2.Solution">
+			<summary>Gets the <see cref="T:EnvDTE.Solution"></see> object that represents all open projects in the current instance of the environment and allows access to the build objects.</summary>
+			<returns>A <see cref="T:EnvDTE.Solution"></see> object.</returns>
+		</member>
+		<member name="M:EnvDTE80.IVsProfferCommands2.AddNamedCommand2(System.Guid@,System.Guid@,System.String,System.UInt32@,System.String,System.String,System.String,System.String,System.UInt32,System.UInt32,System.UInt32,System.UInt32,System.Guid@,System.UInt32)">
+			<summary>Microsoft Internal Use Only.</summary>
+			<param name="dwCmdFlagsDefault">�</param>
+			<param name="rgguidUIContexts">�</param>
+			<param name="dwUIElementType">�</param>
+			<param name="pszBtnText">�</param>
+			<param name="pszSatelliteDLL">�</param>
+			<param name="pszCmdNameCanonical">�</param>
+			<param name="dwBitmapResourceId">�</param>
+			<param name="pszCmdNameLocalized">�</param>
+			<param name="pguidPackage">�</param>
+			<param name="pszCmdTooltip">�</param>
+			<param name="pguidCmdGroup">�</param>
+			<param name="cUIContexts">�</param>
+			<param name="dwBitmapImageIndex">�</param>
+			<param name="pdwCmdId">�</param>
+		</member>
+		<member name="M:EnvDTE80.IVsProfferCommands2.FindCommandBar(System.IntPtr,System.Guid@,System.UInt32)">
+			<summary>Microsoft Internal Use Only.</summary>
+			<param name="dwMenuId">�</param>
+			<param name="pToolbarSet">�</param>
+			<param name="pguidCmdGroup">�</param>
+		</member>
+		<member name="M:EnvDTE80.IVsProfferCommands2.RemoveCommandBar(System.Object)">
+			<summary>Microsoft Internal Use Only.</summary>
+			<param name="pCmdBar">�</param>
+		</member>
+		<member name="M:EnvDTE80.IVsProfferCommands2.RemoveCommandBarControl(System.Object)">
+			<summary>Microsoft Internal Use Only.</summary>
+			<param name="pCmdBarCtrl">�</param>
+		</member>
+		<member name="M:EnvDTE80.IVsProfferCommands2.RemoveNamedCommand(System.String)">
+			<summary>Microsoft Internal Use Only.</summary>
+			<param name="pszCmdNameCanonical">�</param>
+		</member>
+		<member name="M:EnvDTE80.IVsProfferCommands2.RenameNamedCommand(System.String,System.String,System.String)">
+			<summary>Microsoft Internal Use Only.</summary>
+			<param name="pszCmdNameCanonicalNew">�</param>
+			<param name="pszCmdNameLocalizedNew">�</param>
+			<param name="pszCmdNameCanonical">�</param>
+		</member>
+		<member name="T:EnvDTE80.LifetimeInformation">
+			<summary>Used to determine if an object has been deleted but not discarded by the garbage collector.</summary>
+		</member>
+		<member name="P:EnvDTE80.LifetimeInformation.HasBeenDeleted">
+			<summary>Gets a value indicating whether whether an object has been deleted but not yet discarded by the garbage collector.</summary>
+			<returns>true if the object behind it has been deleted; otherwise, false.</returns>
+		</member>
+		<member name="T:EnvDTE80.Process2">
+			<summary>The <see cref="T:EnvDTE80.Process2"></see> object is used to examine and manipulate processes. The <see cref="T:EnvDTE80.Process2"></see> object supersedes the <see cref="T:EnvDTE.Process"></see> object.</summary>
+		</member>
+		<member name="P:EnvDTE80.Process2.Programs">
+			<summary>Gets a collection of <see cref="T:EnvDTE.Program"></see> objects.</summary>
+			<returns>A <see cref="T:EnvDTE.Programs"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.Process2.Threads">
+			<summary>Gets a collection of <see cref="T:EnvDTE.Thread"></see> objects.</summary>
+			<returns>A <see cref="T:EnvDTE.Threads"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.Process2.Transport">
+			<summary>Gets the <see cref="T:EnvDTE80.Transport"></see> being used to debug this process.</summary>
+			<returns>A <see cref="T:EnvDTE80.Transport"></see> object.</returns>
+		</member>
+		<member name="M:EnvDTE80.Solution2.AddFromFile(System.String,System.Boolean)">
+			<summary>Adds a project to the solution that is based on a project file already stored in the system.</summary>
+			<returns>A <see cref="T:EnvDTE.Project"></see> object.</returns>
+			<param name="FileName">Required. The full path and file name of the project file.</param>
+			<param name="Exclusive">Optional. Indicates whether the project loads in the current solution or its own solution; true if the current solution is closed and the project is added to a new solution, false if the project is added to the existing, open solution.</param>
+		</member>
+		<member name="M:EnvDTE80.Solution2.AddFromTemplate(System.String,System.String,System.String,System.Boolean)">
+			<summary>Copies an existing project file, and any items or subdirectories it contains, to the specified location and adds it to the solution.</summary>
+			<returns>A <see cref="T:EnvDTE.Project"></see> object.</returns>
+			<param name="Destination">Required. The full path of the directory in which to copy the contents of FileName.</param>
+			<param name="FileName">Required. The full path and file name with extension of the template project file.</param>
+			<param name="Exclusive">Optional. Indicates whether the project loads in the current solution or its own; true if the current solution is closed and the project is added to a new solution, false if the project is added to the existing, open solution.</param>
+			<param name="ProjectName">Required. The name of the project file in the destination directory. This should include the extension. The displayed name is derived from ProjectName.</param>
+		</member>
+		<member name="M:EnvDTE80.Solution2.AddSolutionFolder(System.String)">
+			<summary>Adds a solution folder to a <see cref="T:EnvDTE.ProjectItems"></see> collection.</summary>
+			<returns>A <see cref="T:EnvDTE.Project"></see> object.</returns>
+			<param name="Name">The name of the solution folder.</param>
+		</member>
+		<member name="M:EnvDTE80.Solution2.Close(System.Boolean)">
+			<summary>Closes the current solution.</summary>
+			<param name="SaveFirst">Optional. Indicates whether to save the solution before closing it; true if the solution should be saved prior to closing it, false if not.</param>
+		</member>
+		<member name="M:EnvDTE80.Solution2.Create(System.String,System.String)">
+			<summary>Creates an empty solution in the specified directory with the specified name.</summary>
+			<param name="Destination">Required. The directory in which to create the .sln and .suo (solution) files.</param>
+			<param name="Name">Required. The name to display in Solution Explorer. This is also the base name of the .sln and .suo files.</param>
+		</member>
+		<member name="M:EnvDTE80.Solution2.FindProjectItem(System.String)">
+			<summary>Locates an item in a project.</summary>
+			<returns>A <see cref="T:EnvDTE.ProjectItem"></see> object.</returns>
+			<param name="FileName">Required. The name of the project item.</param>
+		</member>
+		<member name="M:EnvDTE80.Solution2.GetEnumerator">
+			<summary>Returns an enumeration for items in a collection.</summary>
+			<returns>An enumerator.</returns>
+		</member>
+		<member name="M:EnvDTE80.SolutionBuild2.PublishProject(System.String,System.String,System.Boolean)">
+			<summary>Publishes a project.</summary>
+			<param name="SolutionConfiguration">The solution configuration to publish.</param>
+			<param name="WaitForPublishToFinish">If true, the call waits until publish has completed. If false, the call returns immediately.</param>
+			<param name="ProjectUniqueName">The unique name of a project to publish.</param>
+		</member>
+		<member name="M:EnvDTE80.SolutionBuild2.Run">
+			<summary>Causes the active solution configuration to execute.</summary>
+		</member>
+		<member name="P:EnvDTE80.SolutionBuild2.ActiveConfiguration">
+			<summary>Gets the currently active <see cref="T:EnvDTE.SolutionConfiguration"></see> object.</summary>
+			<returns>A <see cref="T:EnvDTE.SolutionConfiguration"></see> object.</returns>
+		</member>
+		<member name="F:EnvDTE80.vsCMDataTypeKind.vsCMDataTypeKindPartial">
+			<summary>A partial class.</summary>
+		</member>
+		<member name="T:EnvDTE80.vsCMElement2">
+			<summary>Indicates the type of code element.</summary>
+		</member>
+		<member name="F:EnvDTE80.vsCMElement2.vsCMElementAttributeArgument">
+			<summary>An attribute argument element.</summary>
+		</member>
+		<member name="F:EnvDTE80.vsCMElement2.vsCMElementUnknown">
+			<summary>An unknown element.</summary>
+		</member>
+		<member name="T:EnvDTE80.vsCMFunction2">
+			<summary>A constant indicating the type of function.</summary>
+		</member>
+		<member name="F:EnvDTE80.vsCMFunction2.vsCMFunctionAddHandler">
+			<summary>An add handler function.</summary>
+		</member>
+		<member name="F:EnvDTE80.vsCMFunction2.vsCMFunctionRaiseEvent">
+			<summary>A raise event function.</summary>
+		</member>
+		<member name="F:EnvDTE80.vsCMFunction2.vsCMFunctionRemoveHandler">
+			<summary>A remove handler function.</summary>
+		</member>
+		<member name="F:EnvDTE80.vsCMInheritanceKind.vsCMInheritanceKindAbstract">
+			<summary>This type must be used to define another type. (This is equivalent to the MustOverride keyword in Visual Basic.)</summary>
+		</member>
+		<member name="M:EnvDTE80.Windows2.CreateToolWindow2(EnvDTE.AddIn,System.String,System.String,System.String,System.String,System.Object@)">
+			<summary>Creates a new tool window and hosts a user-defined, .NET control in it.</summary>
+			<returns>A <see cref="T:EnvDTE.Window"></see> object.</returns>
+			<param name="Caption">The caption to display in the new tool window.</param>
+			<param name="Class">The full name of the class implementing the User control.</param>
+			<param name="ControlObject">The User control to be hosted in the new tool window.</param>
+			<param name="GuidPosition">A unique identifier for the new window. (This can be used to locate the window in the <see cref="T:EnvDTE.Windows"></see> collection.)</param>
+			<param name="Assembly">The full name or file path of the assembly containing the User control.</param>
+			<param name="Addin">An instance of the Add-in creating the tool window.</param>
+		</member>
+		<member name="M:EnvDTE80.Windows2.GetEnumerator">
+			<summary>Gets an enumeration for items in a collection.</summary>
+			<returns>An enumerator.</returns>
+		</member>
+		<member name="M:EnvDTE80.Windows2.Item(System.Object)">
+			<summary>Returns an indexed member of a <see cref="T:EnvDTE.Windows"></see> collection.</summary>
+			<returns>A <see cref="T:EnvDTE.Window"></see> object.</returns>
+			<param name="index">Required. The index of the item to return. </param>
+		</member>
+		<member name="P:EnvDTE80.Windows2.Count">
+			<summary>Gets a value indicating the number of objects in the <see cref="T:EnvDTE80.Windows2"></see> collection.</summary>
+			<returns>An integer containing the number of objects in the <see cref="T:EnvDTE80.Windows2"></see> collection.</returns>
+		</member>
+		<member name="P:EnvDTE80.Windows2.DTE">
+			<summary>Gets the top-level extensibility object.</summary>
+			<returns>A <see cref="T:EnvDTE.DTE"></see> object.</returns>
+		</member>
+		<member name="P:EnvDTE80.Windows2.Parent">
+			<summary>Gets the immediate parent object of a <see cref="T:EnvDTE80.Windows2"></see> collection.</summary>
+			<returns>A <see cref="T:EnvDTE.DTE"></see> object.</returns>
+		</member>
+		<member name="T:EnvDTE80.WindowVisibilityEvents">
+			<summary>Tells whether <see cref="T:EnvDTE80.ToolWindows"></see> are visible (hide or show). Use this object for functionality and refer to <see cref="T:EnvDTE80.WindowVisibilityEventsClass"></see> for this object's documentation.</summary>
+		</member>
+		<member name="T:EnvDTE80.WindowVisibilityEventsClass">
+			<summary>Microsoft Internal Use Only.</summary>
+		</member>
+	</members>
+</doc>
