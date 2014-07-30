@@ -37,12 +37,12 @@ struct value_parser<tag::attribute::viewBox, SVGPP_TEMPLATE_ARGS_PASS>
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
 
     SVGPP_STATIC_IF_SAFE const qi::real_parser<coordinate_t, detail::svg_real_policies<coordinate_t> > number;
-    SVGPP_STATIC_IF_SAFE const detail::comma_wsp_rule<iterator_t> comma_wsp;
+    SVGPP_STATIC_IF_SAFE const detail::comma_wsp_rule_no_skip<iterator_t> comma_wsp;
     coordinate_t x, y, w, h;
     if (qi::parse(it, end, 
-      number[ref(x) = _1] >> qi::no_skip[comma_wsp] >>
-      number[ref(y) = _1] >> qi::no_skip[comma_wsp] >>
-      number[ref(w) = _1] >> qi::no_skip[comma_wsp] >>
+      number[ref(x) = _1] >> comma_wsp >>
+      number[ref(y) = _1] >> comma_wsp >>
+      number[ref(w) = _1] >> comma_wsp >>
       number[ref(h) = _1]) && it == end)
     {
       args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, x, y, w, h);

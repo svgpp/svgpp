@@ -270,6 +270,9 @@ public:
   }
 
   pixfmt_t & pixfmt() { return pixfmt_; }
+
+  bool isSizeSet() const { return !buffer_.empty(); }
+
   void setSize(int width, int height, pixfmt_t::color_type const & fill_color)
   {
     BOOST_ASSERT(buffer_.empty());
@@ -321,7 +324,10 @@ public:
     , parent_pixfmt_(boost::bind(&ImageBuffer::pixfmt, boost::ref(image_buffer)))
     , image_buffer_(&image_buffer)
     , is_switch_child_(false)
-  {}
+  {
+    if (image_buffer.isSizeSet())
+      clip_buffer_.reset(new ClipBuffer(image_buffer_->pixfmt().width(), image_buffer_->pixfmt().height()));
+  }
 
   Canvas(Canvas & parent)
     : Transformable(parent)
@@ -624,7 +630,7 @@ public:
 
   template<class IRI>
   void set(svgpp::tag::attribute::xlink::href, IRI const & fragment)
-  { std::cerr << "External references aren't supported"; }
+  { std::cerr << "External references aren't supported\n"; }
 
   void set(svgpp::tag::attribute::x, double val)
   { x_ = val; }
@@ -792,7 +798,7 @@ struct ColorFunctionProfile
     agg::rgba8 color1 = stopColor(*stop1, opacity), color2 = color1;
     for(int i = 0; i < size_; ++i, offset += offset_step)
     {
-      while(offset > stop2->offset_ && stop2 != stops.end())
+      while(stop2 != stops.end() && offset > stop2->offset_)
       {
         stop1 = stop2;
         color1 = color2;
@@ -1116,7 +1122,7 @@ int main(int argc, char * argv[])
 {
   if (argc < 2)
   {
-    std::cout << "Usage: " << argv[0] << " <svg file name>\n";
+    std::cout << "Usage: " << argv[0] << " <svg file name> [<output BMP file name>]\n";
     return 1;
   }
   ImageBuffer buffer;
@@ -1134,7 +1140,7 @@ int main(int argc, char * argv[])
   }
 
   // Saving output
-  std::ofstream file("svgpp.bmp", std::ios::out | std::ios::binary);
+  std::ofstream file(argc > 2 ? argv[2] : "svgpp.bmp", std::ios::out | std::ios::binary);
   if (file)
   {
     bmp::write_32bit_header(file, buffer.pixfmt().width(), buffer.pixfmt().height());

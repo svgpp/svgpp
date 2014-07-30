@@ -20,6 +20,8 @@ struct attribute_name<char>
 {
   template<class AttributeTag>
   inline static BOOST_CONSTEXPR const char * get();
+
+  inline static BOOST_CONSTEXPR const char * by_id(detail::attribute_id);
 };
 
 #define SVGPP_ON_STYLE(name, string) SVGPP_ON(name, string)
@@ -35,5 +37,28 @@ struct attribute_name<char>
 #undef SVGPP_ON
 #undef SVGPP_ON_NS
 #undef SVGPP_ON_STYLE
+
+inline BOOST_CONSTEXPR const char * attribute_name<char>::by_id(detail::attribute_id id)
+{
+#define SVGPP_ON_STYLE(name, string) SVGPP_ON(name, string)
+#define SVGPP_ON(name, string) \
+  case detail::attribute_id_## name: \
+    return get<tag::attribute::name>();
+#define SVGPP_ON_NS(ns, name, string) \
+  case detail::attribute_id_ ## ns ## _ ## name: \
+    return get<tag::attribute::ns::name>();
+
+  switch (id)
+  {
+#include <svgpp/detail/dict/enumerate_all_attributes.inc>
+  default:
+    BOOST_ASSERT(false);
+    return "<Unknown>";
+  }
+
+#undef SVGPP_ON
+#undef SVGPP_ON_NS
+#undef SVGPP_ON_STYLE
+}
 
 }

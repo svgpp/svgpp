@@ -13,16 +13,21 @@ namespace svgpp { namespace factory { namespace color
 template<class BaseFactory>
 struct percentage_adapter: BaseFactory
 {
-  static unsigned char cast_percent(unsigned char c)
+  typedef double percentage_type;
+  
+  static typename BaseFactory::color_type create_from_percent(percentage_type r, percentage_type g, percentage_type b)
+  {
+    return BaseFactory::create(cast_percent(r), cast_percent(g), cast_percent(b));
+  }
+
+private:
+  static unsigned char cast_percent(percentage_type c)
   {
     if (c > 100)
       c = 100;
-    return (static_cast<unsigned int>(c) * 255 + 49) / 100;
-  }
-
-  static typename BaseFactory::color_type create_from_percent(unsigned char r, unsigned char g, unsigned char b)
-  {
-    return BaseFactory::create(cast_percent(r), cast_percent(g), cast_percent(b));
+    else if (c < 0)
+      c = 0;
+    return static_cast<unsigned char>(c * 2.55 + 0.0049);
   }
 };
 

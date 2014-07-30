@@ -1,0 +1,19 @@
+        <tr>
+          <td align="center" colspan="2">
+            $header
+          </td>
+        </tr>
+        <tr>
+          <td align="left">
+            <img src="$raster_file"/>
+          </td>
+          <td align="right">
+            <!--[if IE]>
+              <object src="$svg_file" width="480" height="360" classid="image/svg+xml"><p style="font-size:300%;color:red">FAIL</p>
+            <![endif]-->
+            <!--[if !IE]>-->
+              <object data="$svg_file" width="480" height="360" type="image/svg+xml"><p style="font-size:300%;color:red">FAIL</p>
+            <!--<![endif]-->
+              </object>
+          </td>
+        </tr>

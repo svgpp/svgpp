@@ -53,6 +53,7 @@ color_test_t ValidColorTests[] = {
   color_test_t("rgb(111,222,132)", 111, 222, 132),
   color_test_t("rgb(111 ,222 , 132)", 111, 222, 132),
   color_test_t("rgb( 0%, 50%, 100%)", 0, 127, 255),
+  color_test_t("rgb(66.667%,0%,6.667%)", 170, 0, 17),
   color_test_t("#ffffff", 0xff, 0xff, 0xff),
   color_test_t("#aBCdeF", 0xab, 0xcd, 0xef),
   color_test_t("#123456", 0x12, 0x34, 0x56),

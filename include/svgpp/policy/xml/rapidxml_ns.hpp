@@ -118,7 +118,7 @@ struct element_iterator<rapidxml_ns::xml_node<Ch> const *>
 
   static element_name_type get_local_name(iterator_type xml_element)
   {
-    return element_name_type(xml_element->name(), xml_element->name() + xml_element->name_size());
+    return element_name_type(xml_element->local_name(), xml_element->local_name() + xml_element->local_name_size());
   }
 
   static element_text_type get_text(iterator_type xml_element)

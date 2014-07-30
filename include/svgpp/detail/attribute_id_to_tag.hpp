@@ -47,6 +47,7 @@ inline bool attribute_id_to_tag(tag::element::a, attribute_id id, F & fn)
 #include <svgpp/detail/dict/enumerate_graphical_event_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
 #include <svgpp/detail/dict/enumerate_xlink_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(transform)
@@ -67,6 +68,7 @@ inline bool attribute_id_to_tag(tag::element::altGlyph, attribute_id id, F & fn)
 #include <svgpp/detail/dict/enumerate_graphical_event_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
 #include <svgpp/detail/dict/enumerate_xlink_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(x)
@@ -184,6 +186,7 @@ inline bool attribute_id_to_tag(tag::element::circle, attribute_id id, F & fn)
 #include <svgpp/detail/dict/enumerate_core_attributes.inc>
 #include <svgpp/detail/dict/enumerate_graphical_event_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(transform)
@@ -204,6 +207,7 @@ inline bool attribute_id_to_tag(tag::element::clipPath, attribute_id id, F & fn)
 #include <svgpp/detail/dict/enumerate_conditional_processing_attributes.inc>
 #include <svgpp/detail/dict/enumerate_core_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(transform)
@@ -259,6 +263,7 @@ inline bool attribute_id_to_tag(ElementTag, attribute_id id, F & fn,
 #include <svgpp/detail/dict/enumerate_core_attributes.inc>
 #include <svgpp/detail/dict/enumerate_graphical_event_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(transform)
@@ -277,6 +282,7 @@ inline bool attribute_id_to_tag(ElementTag, attribute_id id, F & fn,
   switch (id)
   {
 #include <svgpp/detail/dict/enumerate_core_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     default:
       return false;
@@ -293,6 +299,7 @@ inline bool attribute_id_to_tag(tag::element::ellipse, attribute_id id, F & fn)
 #include <svgpp/detail/dict/enumerate_core_attributes.inc>
 #include <svgpp/detail/dict/enumerate_graphical_event_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(transform)
@@ -957,6 +964,7 @@ inline bool attribute_id_to_tag(tag::element::line, attribute_id id, F & fn)
 #include <svgpp/detail/dict/enumerate_core_attributes.inc>
 #include <svgpp/detail/dict/enumerate_graphical_event_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(transform)
@@ -1001,6 +1009,7 @@ inline bool attribute_id_to_tag(tag::element::marker, attribute_id id, F & fn)
   {
 #include <svgpp/detail/dict/enumerate_core_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(viewBox)
@@ -1095,6 +1104,7 @@ inline bool attribute_id_to_tag(tag::element::path, attribute_id id, F & fn)
 #include <svgpp/detail/dict/enumerate_core_attributes.inc>
 #include <svgpp/detail/dict/enumerate_graphical_event_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(transform)
@@ -1142,6 +1152,7 @@ inline bool attribute_id_to_tag(tag::element::polygon, attribute_id id, F & fn)
 #include <svgpp/detail/dict/enumerate_core_attributes.inc>
 #include <svgpp/detail/dict/enumerate_graphical_event_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(transform)
@@ -1161,6 +1172,7 @@ inline bool attribute_id_to_tag(tag::element::polyline, attribute_id id, F & fn)
 #include <svgpp/detail/dict/enumerate_core_attributes.inc>
 #include <svgpp/detail/dict/enumerate_graphical_event_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(transform)
@@ -1205,6 +1217,7 @@ inline bool attribute_id_to_tag(tag::element::rect, attribute_id id, F & fn)
 #include <svgpp/detail/dict/enumerate_core_attributes.inc>
 #include <svgpp/detail/dict/enumerate_graphical_event_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(transform)
@@ -1296,6 +1309,7 @@ inline bool attribute_id_to_tag(tag::element::svg, attribute_id id, F & fn)
 #include <svgpp/detail/dict/enumerate_document_event_attributes.inc>
 #include <svgpp/detail/dict/enumerate_graphical_event_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(x)
@@ -1342,6 +1356,7 @@ inline bool attribute_id_to_tag(tag::element::symbol, attribute_id id, F & fn)
 #include <svgpp/detail/dict/enumerate_core_attributes.inc>
 #include <svgpp/detail/dict/enumerate_graphical_event_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+    SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(externalResourcesRequired)
     SVGPP_ON(viewBox)

@@ -45,6 +45,7 @@ public:
   color_grammar()
     : this_type::grammar(color)
   {
+    namespace phx = boost::phoenix;
     using qi::_1;
     using qi::_a;
     using qi::_b;
@@ -59,47 +60,58 @@ public:
             >> *space;
     color 
         =   hex_rule [_val = _1]
-        |   components_rule [_val = _1]
-        |   detail::color_keywords::symbols_ [_val = bind(&color_keyword, _1)];
+        |   (
+                 lit("rgb(") 
+              >> *space 
+              >> (  components_rule [_val = _1]
+                 |  percentage_rule [_val = _1]
+                 )
+              >> *space 
+              >> ')' 
+            )
+        |   detail::color_keywords::symbols_ [_val = phx::bind(&color_grammar::color_keyword, _1)];
 
     hex_rule 
         =   lit('#') 
             >> hex3 [_a = _1] 
-            >> ( hex3 [_val = bind(&six_hex_digits, _a, _1)] 
-              | qi::eps [_val = bind(&three_hex_digits, _a)] 
-              );
+            >> ( hex3 [_val = phx::bind(&color_grammar::six_hex_digits, _a, _1)] 
+               | qi::eps [_val = phx::bind(&color_grammar::three_hex_digits, _a)] 
+               );
 
     components_rule 
-        =   lit("rgb(") 
-            >> *space 
-            >> integer [_a = _1] 
-            >> ( ( comma 
-                  >> integer [_b = _1] 
-                  >> comma 
-                  >> integer [_c = _1] 
-                  >> *space 
-                  >> ')' 
-                ) [_val = bind(&absolute_components, _a, _b, _c)]
-              | ( lit('%') 
-                  >> comma 
-                  >> integer [_b = _1] 
-                  >> '%' 
-                  >> comma 
-                  >> integer [_c = _1] 
-                  >> '%' 
-                  >> *space 
-                  >> ')' 
-                ) [_val = bind(&percent_components, _a, _b, _c)]
-              );
+        =       
+               integer [_a = _1] 
+            >> comma 
+            >> integer [_b = _1] 
+            >> comma 
+            >> integer 
+              [_val = phx::bind(&color_grammar::absolute_components, _a, _b, _1)];
+
+    percentage_rule 
+        =      number [_a = _1] 
+            >> '%'
+            >> comma 
+            >> number [_b = _1] 
+            >> '%' 
+            >> comma 
+            >> number 
+              [_val = phx::bind(&color_grammar::percent_components, _a, _b, _1)]
+            >> '%' ;
   }
 
 private:
+  typedef typename ColorFactory::percentage_type number_type;
+
   typename this_type::start_type color;
   qi::rule<Iterator> comma;
   qi::rule<Iterator, color_type (), qi::locals<unsigned int> > hex_rule;
-  qi::rule<Iterator, color_type (), qi::locals<unsigned char, unsigned char, unsigned char> > components_rule;
-  qi::uint_parser< unsigned char, 10, 1, 3 > integer;
-  qi::uint_parser< unsigned int, 16, 3, 3 > hex3;
+  qi::rule<Iterator, color_type (), qi::locals<unsigned char, unsigned char> > components_rule;
+  qi::rule<Iterator, color_type (), qi::locals<number_type, number_type> > percentage_rule;
+  qi::uint_parser<unsigned char, 10, 1, 3> integer;
+  // There was mistake in SVG 1.1 that limits percentage to integer values, while CSS permits floating point numbers.
+  // Till fixed version is not released, we will use CSS version of percentage definition.
+  qi::real_parser<number_type, detail::number_policies<number_type, tag::source::css> > number;
+  qi::uint_parser<unsigned int, 16, 3, 3> hex3;
 
   static color_type three_hex_digits(unsigned int h)
   {
@@ -122,7 +134,7 @@ private:
     return ColorFactory::create(r, g, b);
   }
 
-  static color_type percent_components(unsigned char r, unsigned char g, unsigned char b)
+  static color_type percent_components(number_type r, number_type g, number_type b)
   {
     return ColorFactory::create_from_percent(r, g, b);
   }

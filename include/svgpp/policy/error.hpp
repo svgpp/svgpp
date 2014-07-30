@@ -81,13 +81,19 @@ private:
 class unexpected_attribute_error: public virtual boost::exception, public virtual std::exception
 {
 public:
-  unexpected_attribute_error(detail::attribute_id)
+  unexpected_attribute_error(const char * name)
+    : name_(name)
+    , message_((boost::format("Unexpected attribute \"%s\"") % name).str())
   {}
-  
-  virtual const char * what() const throw()
-  {
-    return "Unexpected attribute";
-  }
+
+  virtual ~unexpected_attribute_error() throw() {}
+
+  virtual const char * what() const throw() { return message_.c_str(); }
+  std::string const & name() const { return name_; }
+
+private:
+  std::string const name_;
+  std::string const message_;
 };
 
 class unknown_css_property_error: public virtual boost::exception, public virtual std::exception
@@ -227,27 +233,33 @@ struct raise_exception
   }
 
   template<class XMLAttributesIterator, class AttributeName>
-  BOOST_ATTRIBUTE_NORETURN static bool unknown_attribute(Context const &, 
+  static bool unknown_attribute(Context const &, 
     XMLAttributesIterator const & attribute, 
     AttributeName const & name,
-    BOOST_SCOPED_ENUM(detail::namespace_id),
+    BOOST_SCOPED_ENUM(detail::namespace_id) namespace_id,
     tag::source::attribute,
     typename boost::enable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
-    throw unknown_attribute_error(name) 
-      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const *>(&attribute);
+    if (namespace_id == detail::namespace_id::svg)
+      throw unknown_attribute_error(name) 
+        << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const *>(&attribute);
+    else
+      return true;
   }
 
   template<class XMLAttributesIterator, class AttributeName>
-  BOOST_ATTRIBUTE_NORETURN static bool unknown_attribute(Context const &, 
+  static bool unknown_attribute(Context const &, 
     XMLAttributesIterator const & attribute, 
     AttributeName const &,
-    BOOST_SCOPED_ENUM(detail::namespace_id),
+    BOOST_SCOPED_ENUM(detail::namespace_id) namespace_id,
     tag::source::attribute,
     typename boost::disable_if<typename detail::is_char_range<AttributeName>::type>::type * = NULL)
   {
-    throw unknown_attribute_error() 
-      << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const *>(&attribute);
+    if (namespace_id == detail::namespace_id::svg)
+      throw unknown_attribute_error() 
+        << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const *>(&attribute);
+    else
+      return true;
   }
 
   template<class XMLAttributesIterator, class AttributeName>
@@ -276,7 +288,7 @@ struct raise_exception
     detail::attribute_id id, tag::source::attribute)
   {
     // TODO: add attribute name
-    throw unexpected_attribute_error(id);
+    throw unexpected_attribute_error(attribute_name<char>::by_id(id));
   }
   
   template<class AttributeTag>
