@@ -8,6 +8,7 @@
 #pragma once
 
 #include <svgpp/definitions.hpp>
+#include <svgpp/parser/detail/value_parser_parameters.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
 #include <svgpp/policy/load_value.hpp>
 

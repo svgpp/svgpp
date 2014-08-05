@@ -12,6 +12,7 @@ include_directories(
 set(AGG_SOURCES
   ${AGG_PATH}/src/agg_curves.cpp 
   ${AGG_PATH}/src/agg_trans_affine.cpp 
+  ${AGG_PATH}/src/agg_vcgen_dash.cpp 
   ${AGG_PATH}/src/agg_vcgen_stroke.cpp 
 )
 source_group("AGG" FILES ${AGG_SOURCES})

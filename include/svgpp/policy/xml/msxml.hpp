@@ -357,7 +357,6 @@ private:
     {
       if (!CheckPassedNode || !first_step)
       {
-        first_step = false;
         IXMLDOMNode * nextSibling = NULL;
         switch(xml_node->get_nextSibling(&nextSibling))
         {
@@ -371,6 +370,7 @@ private:
           return;
         }
       }
+      first_step = false;
 
       SVGPP_MSXML_NAMESPACE::DOMNodeType type;
       if (S_OK != xml_node->get_nodeType(&type))
@@ -384,9 +384,9 @@ private:
       {
       case 1: /*NODE_ELEMENT*/
       {
-        /*TODO: boost::iterator_range<Ch const *> ns_uri(xml_attribute->namespace_uri(), 
-          xml_attribute->namespace_uri() + xml_attribute->namespace_uri_size());
-        if (boost::range::equal(detail::svg_namespace_uri<Ch>(), ns_uri))*/
+        msxml_detail::bstr_t uri;
+        if (S_OK == xml_node->get_namespaceURI(&uri)
+          && boost::range::equal(detail::svg_namespace_uri<wchar_t>(), uri.get_range()))
           return;
         break;
       }

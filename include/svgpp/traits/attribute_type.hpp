@@ -8,7 +8,9 @@
 #pragma once
 
 #include <svgpp/definitions.hpp>
+#include <svgpp/traits/attribute_groups.hpp>
 #include <svgpp/traits/element_groups.hpp>
+#include <svgpp/traits/literal_enumeration_values.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/mpl/set.hpp>
@@ -117,10 +119,14 @@ template<>              struct attribute_type<tag::element::feFuncG, tag::attrib
 template<>              struct attribute_type<tag::element::feFuncR, tag::attribute::offset       > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::feOffset, tag::attribute::dx          > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::feOffset, tag::attribute::dy          > { typedef tag::type::number type; };
+template<>              struct attribute_type<tag::element::glyphRef, tag::attribute::x           > { typedef tag::type::number type; };
+template<>              struct attribute_type<tag::element::glyphRef, tag::attribute::y           > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::glyphRef, tag::attribute::dx          > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::glyphRef, tag::attribute::dy          > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::fePointLight, tag::attribute::dx      > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::fePointLight, tag::attribute::dy      > { typedef tag::type::number type; };
+template<>              struct attribute_type<tag::element::feSpotLight, tag::attribute::x        > { typedef tag::type::number type; };
+template<>              struct attribute_type<tag::element::feSpotLight, tag::attribute::y        > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::feSpotLight, tag::attribute::dx       > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::feSpotLight, tag::attribute::dy       > { typedef tag::type::number type; };
 
@@ -203,15 +209,18 @@ template<class Element> struct attribute_type<Element, tag::attribute::fill>   {
 template<class Element> struct attribute_type<Element, tag::attribute::stroke> { typedef tag::type::paint type; };
 
 #define SVGPP_ON_ATTR(name, values) \
-  template<class Element> struct attribute_type<Element, tag::attribute:: name> { typedef tag::type::simple_enumeration type; };
+  template<class Element> struct attribute_type<Element, tag::attribute::name> \
+    { typedef tag::type::literal_enumeration<literal_enumeration_values<tag::attribute::name>::type> type; };
 #define SVGPP_ON_ATTR_NS(ns, name, values) SVGPP_ON_ATTR(ns::name, values)
 #define SVGPP_ON_ELEM_ATTR(elem, attr, values) \
   template<> struct attribute_type<tag::element:: elem, tag::attribute:: attr> \
-  { typedef boost::mpl::pair<tag::element:: elem, tag::attribute:: attr> type; };
-#include <svgpp/detail/dict/enumerate_simple_enumeration_attributes.inc>
+  { typedef tag::type::literal_enumeration<literal_enumeration_values<boost::mpl::pair<tag::element:: elem, tag::attribute:: attr> >::type> type; };
+#define SVGPP_ON_ELEM_ATTR_NS(elem, ns, name, values) SVGPP_ON_ELEM_ATTR(elem, ns::name, values)
+#include <svgpp/detail/dict/enumerate_literal_enumeration_attributes.inc>
 #undef SVGPP_ON_ATTR
 #undef SVGPP_ON_ATTR_NS
 #undef SVGPP_ON_ELEM_ATTR
+#undef SVGPP_ON_ELEM_ATTR_NS
 
 template<> 
 struct attribute_type<tag::element::stop, tag::attribute::offset> 
@@ -369,5 +378,49 @@ template<> struct attribute_type<tag::element::animateMotion, tag::attribute::ro
 { 
   typedef tag::type::type_or_literal<tag::type::number, tag::value::auto_, tag::value::auto_reverse> type; 
 };
+
+template<class ElementTag, class AttributeTag>
+struct attribute_type<ElementTag, AttributeTag,
+  typename boost::enable_if_c<
+       boost::mpl::has_key<animation_event_attributes, AttributeTag>::value
+    || boost::mpl::has_key<graphical_event_attributes, AttributeTag>::value
+    || boost::mpl::has_key<document_event_attributes, AttributeTag>::value 
+  >::type>
+{
+  typedef tag::type::string type;
+};
+
+template<class Element> struct attribute_type<Element, tag::attribute::baseProfile           > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::class_                > { typedef tag::type::string type; }; // TODO: parse list of strings
+template<class Element> struct attribute_type<Element, tag::attribute::contentScriptType     > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::contentStyleType      > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::id                    > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::attributeName         > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::font_family           > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::format                > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::glyphRef              > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::lang                  > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::local                 > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::media                 > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::name                  > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::requiredExtensions    > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::requiredFeatures      > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::result                > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::string                > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::style                 > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::systemLanguage        > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::target                > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::title                 > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::unicode               > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::viewTarget            > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::begin                 > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::end                   > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::by                    > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::from                  > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::to                    > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::xlink::title          > { typedef tag::type::string type; };
+template<class Element> struct attribute_type<Element, tag::attribute::xml::lang             > { typedef tag::type::string type; };
+template<>              struct attribute_type<tag::element::script, tag::attribute::type     > { typedef tag::type::string type; };
+template<>              struct attribute_type<tag::element::style, tag::attribute::type      > { typedef tag::type::string type; };
 
 }}

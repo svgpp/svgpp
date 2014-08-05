@@ -24,13 +24,10 @@ template <
   class AngleFactory, 
   class Number = double
 >
-class angle_grammar;
-
-template <class Iterator, class AngleFactory, class Number>
-class angle_grammar<tag::source::attribute, Iterator, AngleFactory, Number>:
+class angle_grammar:
   public qi::grammar<Iterator, typename AngleFactory::angle_type(), qi::locals<Number> >
 {
-  typedef angle_grammar<tag::source::attribute, Iterator, AngleFactory, Number> this_type;
+  typedef angle_grammar<PropertySource, Iterator, AngleFactory, Number> this_type;
 public:
   typedef typename AngleFactory::angle_type angle_type; 
 
@@ -45,18 +42,21 @@ public:
 
     rule_ 
         =   number_ [_a = _1] 
-            >>  ( lit("deg")
-                      [_val = phx::bind(&angle_grammar::call_make_angle<tag::angle_units::deg>, _a)]
-                | lit("grad")
-                      [_val = phx::bind(&angle_grammar::call_make_angle<tag::angle_units::grad>, _a)]
-                | lit("rad")
-                      [_val = phx::bind(&angle_grammar::call_make_angle<tag::angle_units::rad>, _a)]
-                );
+            >>  detail::no_case_if_css(PropertySource())
+                [
+                    ( lit("grad")
+                          [_val = phx::bind(&angle_grammar::call_make_angle<tag::angle_units::grad>, _a)]
+                    | lit("rad")
+                          [_val = phx::bind(&angle_grammar::call_make_angle<tag::angle_units::rad>, _a)]
+                    | ( -lit("deg") )
+                          [_val = phx::bind(&angle_grammar::call_make_angle<tag::angle_units::deg>, _a)]
+                    )
+                ];
   }
 
 private:
   typename this_type::start_type rule_; 
-  qi::real_parser<Number, detail::number_policies<Number, tag::source::attribute> > number_;
+  qi::real_parser<Number, detail::number_policies<Number, PropertySource> > number_;
 
   template<class UnitsTag>
   static angle_type call_make_angle(Number value) 

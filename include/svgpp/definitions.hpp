@@ -79,7 +79,6 @@ namespace type
   struct transform_list;
   struct path_data;
   struct number_optional_number;
-  struct simple_enumeration;
   struct iri;
   struct funciri;
   struct color;
@@ -90,6 +89,7 @@ namespace type
   struct clock_value;
   struct string;
   template<class Type> struct list_of;
+  template<class LiteralsList> struct literal_enumeration;
 
 #define SVGPP_TYPE_OR_LITERAL_ARITY 10
   template<class Type, class Value,

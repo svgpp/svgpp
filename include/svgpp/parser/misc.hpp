@@ -21,6 +21,32 @@ namespace svgpp
 {
 
 template<SVGPP_TEMPLATE_ARGS>
+struct value_parser<tag::type::integer, SVGPP_TEMPLATE_ARGS_PASS>
+{
+  template<class AttributeTag, class Context, class AttributeValue>
+  static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
+                                    tag::source::any)
+  {
+    namespace qi = boost::spirit::qi;
+
+    typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
+    typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
+    iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
+
+    int value;
+    if (qi::parse(it, end, qi::int_, value) && it == end)
+    {
+      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, value);
+      return true;
+    }
+    else
+    {
+      return args_t::error_policy::parse_failed(args_t::error_policy_context::get(context), tag, attribute_value);
+    }
+  }
+};
+
+template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::attribute::viewBox, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue>

@@ -122,5 +122,4 @@ struct value_parser<tag::type::number_optional_number, SVGPP_TEMPLATE_ARGS_PASS>
   }
 };
 
-
 }

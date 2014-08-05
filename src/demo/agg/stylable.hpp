@@ -57,6 +57,7 @@ struct NoninheritedStyle
   double opacity_;
   bool display_;
   boost::optional<svg_string_t> mask_fragment_;
+  boost::optional<svg_string_t> filter_;
 };
 
 struct Style: 
@@ -275,6 +276,20 @@ public:
 
   void set(svgpp::tag::attribute::marker_end, svgpp::tag::value::none val)
   { style().marker_end_.reset(); }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::filter, IRI const &)
+  { throw std::runtime_error("Non-local references aren't supported"); }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::filter, svgpp::tag::iri_fragment, IRI const & fragment)
+  { style().filter_ = svg_string_t(boost::begin(fragment), boost::end(fragment)); }
+
+  void set(svgpp::tag::attribute::filter, svgpp::tag::value::none val)
+  { style().filter_.reset(); }
+
+  void set(svgpp::tag::attribute::filter, svgpp::tag::value::inherit val)
+  { style().filter_ = parentStyle_.filter_; }
 
 private:
   Style style_;

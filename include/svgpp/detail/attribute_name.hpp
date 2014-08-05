@@ -8,6 +8,7 @@
 #pragma once
 
 #include <svgpp/definitions.hpp>
+#include <boost/assert.hpp>
 
 namespace svgpp
 {

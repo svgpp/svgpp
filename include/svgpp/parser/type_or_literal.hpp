@@ -8,7 +8,7 @@
 #pragma once
 
 #include <svgpp/definitions.hpp>
-#include <svgpp/parser/simple_enumeration.hpp>
+#include <svgpp/parser/literal_enumeration.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
 
 namespace svgpp
@@ -32,7 +32,7 @@ struct value_parser<
     typedef detail::literal_values_dictionary<typename boost::range_value<AttributeValue>::type> dictionary;
     typedef boost::mpl::vector<Value, BOOST_PP_ENUM_PARAMS(SVGPP_TYPE_OR_LITERAL_ARITY, Value)> tag_list;
 
-    detail::simple_enumeration_type_visitor<
+    detail::literal_enumeration_type_visitor<
       dictionary, 
       AttributeTag, 
       typename args_t::load_value_context::type, 

@@ -17,6 +17,7 @@ XMLDocument::XMLDocument()
 
 XMLDocument::~XMLDocument()
 {
+  root_.reset(); // Must be done before CoUninitialize
   CoUninitialize();
 }
 

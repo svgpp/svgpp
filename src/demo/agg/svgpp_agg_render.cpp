@@ -24,6 +24,7 @@
 #include <agg_conv_stroke.h>
 #include <agg_conv_contour.h>
 #include <agg_conv_curve.h>
+#include <agg_conv_dash.h>
 #include <agg_path_storage.h>
 #include <agg_pixfmt_amask_adaptor.h>
 #include <agg_span_allocator.h>
@@ -33,11 +34,13 @@
 #include <map>
 #include <set>
 #include <fstream>
+#include <numeric>
 
 #include "bmp_header.hpp"
 #include "stylable.hpp"
 #include "gradient.hpp"
 #include "clip_path.hpp"
+#include "filter.hpp"
 
 class Transformable;
 class Canvas;
@@ -59,10 +62,12 @@ struct Document
   Document(XMLDocument & xmlDocument)
     : xml_document_(xmlDocument)
     , gradients_(xml_document_)
+    , filters_(xml_document_)
   {}
 
   XMLDocument & xml_document_;
   Gradients gradients_;
+  Filters filters_;
   typedef std::set<XMLElement> followed_refs_t;
   followed_refs_t followed_refs_;
 };
@@ -226,6 +231,7 @@ typedef boost::mpl::fold<
     svgpp::tag::attribute::fill,
     svgpp::tag::attribute::fill_opacity,
     svgpp::tag::attribute::fill_rule,
+    svgpp::tag::attribute::filter,
     svgpp::tag::attribute::marker_start,
     svgpp::tag::attribute::marker_mid,
     svgpp::tag::attribute::marker_end,
@@ -295,6 +301,12 @@ private:
   pixfmt_t pixfmt_;
 };
 
+inline boost::gil::rgba8_view_t gilView(pixfmt_t & pixfmt)
+{
+  return boost::gil::interleaved_view(pixfmt.width(), pixfmt.height(), 
+    reinterpret_cast<boost::gil::rgba8_pixel_t*>(pixfmt.row_ptr(0)), pixfmt.stride());
+}
+
 class Transformable
 {
 public:
@@ -354,6 +366,7 @@ public:
   {
     if (!own_buffer_.get())
       return;
+    applyFilter();
     if (style().mask_fragment_)
     {
       pixfmt_t & parent_pixfmt = parent_pixfmt_();
@@ -415,13 +428,14 @@ private:
   length_factory_t length_factory_;
 
   void loadMask(ImageBuffer &) const;
+  void applyFilter();
 
 protected:
   pixfmt_t & getPixfmt()
   {
     pixfmt_t & parent_pixfmt = parent_pixfmt_();
 
-    if (style().opacity_ < 0.999 || style().mask_fragment_)
+    if (style().opacity_ < 0.999 || style().mask_fragment_ || style().filter_)
     {
       if (!own_buffer_.get())
         own_buffer_.reset(new ImageBuffer(parent_pixfmt.width(), parent_pixfmt.height()));
@@ -436,6 +450,31 @@ protected:
 
   const bool is_switch_child_;
 };
+
+void Canvas::applyFilter()
+{
+  if (!style().filter_)
+    return;
+
+  struct View: IFilterView
+  {
+    View(boost::gil::rgba8c_view_t const & v)
+      : view_(v)
+    {}
+
+    virtual boost::gil::rgba8c_view_t view() { return view_; }
+
+  private:
+    boost::gil::rgba8c_view_t view_;
+  };
+
+  Filters::Input in;
+  in.sourceGraphic_ = IFilterViewPtr(new View(own_buffer_->gilView()));
+  in.backgroundImage_ = IFilterViewPtr(new View(gilView(parent_pixfmt_())));
+  IFilterViewPtr out = document_.filters_.get(*style().filter_, length_factory_, in);
+  if (out)
+    boost::gil::copy_pixels(out->view(), own_buffer_->gilView());
+}
 
 class Switch: public Canvas
 {
@@ -555,6 +594,8 @@ private:
   template<class VertexSource>
   void paintScanlines(EffectivePaint const & paint, double opacity, agg::rasterizer_scanline_aa<> & rasterizer,
     VertexSource & curved);
+  template<class VertexSourceStroked, class VertexSourceCurved>
+  void strokePath(EffectivePaint const & stroke, VertexSourceStroked & curved_stroked, VertexSourceCurved & curved);
   void drawPath();
   void drawMarkers();
   void drawMarker(svg_string_t const & id, double x, double y, double dir);
@@ -922,6 +963,33 @@ void Path::paintScanlines(EffectivePaint const & paint, double opacity, agg::ras
   }
 }
 
+template<class VertexSourceStroked, class VertexSourceCurved>
+void Path::strokePath(EffectivePaint const & stroke, 
+  VertexSourceStroked & curved_stroked, VertexSourceCurved & curved) 
+{
+  curved_stroked.width(style().stroke_width_);
+  curved_stroked.line_join(style().line_join_);
+  curved_stroked.line_cap(style().line_cap_);
+  curved_stroked.miter_limit(style().miterlimit_);
+  curved_stroked.inner_join(agg::inner_round);
+  //curved_stroked.approximation_scale(scl);
+
+  // If the *visual* line width is considerable we 
+  // turn on processing of curve cusps.
+  //---------------------
+  /*if(attr.stroke_width * scl > 1.0)
+  {
+      m_curved.angle_tolerance(0.2);
+  }*/
+
+  typedef agg::conv_transform<VertexSourceStroked> transformed_t;
+  transformed_t curved_stroked_transformed(curved_stroked, transform());
+  agg::rasterizer_scanline_aa<> rasterizer;
+  rasterizer.filling_rule(agg::fill_non_zero);
+  rasterizer.add_path(curved_stroked_transformed);
+  paintScanlines(stroke, style().stroke_opacity_, rasterizer, curved);
+}
+
 void Path::drawPath()
 {
   typedef agg::conv_curve<agg::path_storage> curved_t;
@@ -954,30 +1022,31 @@ void Path::drawPath()
   EffectivePaint stroke = getEffectivePaint(style().stroke_paint_);
   if (boost::get<svgpp::tag::value::none>(&stroke) == NULL)
   {
-    typedef agg::conv_stroke<curved_t> curved_stroked_t;
-    typedef agg::conv_transform<curved_stroked_t> curved_stroked_transformed_t;
-
-    curved_stroked_t curved_stroked(curved);
-    curved_stroked.width(style().stroke_width_);
-    curved_stroked.line_join(style().line_join_);
-    curved_stroked.line_cap(style().line_cap_);
-    curved_stroked.miter_limit(style().miterlimit_);
-    curved_stroked.inner_join(agg::inner_round);
-    //curved_stroked.approximation_scale(scl);
-
-    // If the *visual* line width is considerable we 
-    // turn on processing of curve cusps.
-    //---------------------
-    /*if(attr.stroke_width * scl > 1.0)
+    if (std::accumulate(style().stroke_dasharray_.begin(), style().stroke_dasharray_.end(), 0.0) <= 0.0)
     {
-        m_curved.angle_tolerance(0.2);
-    }*/
+      typedef agg::conv_stroke<curved_t> curved_stroked_t;
+      curved_stroked_t curved_stroked(curved);
+      strokePath(stroke, curved_stroked, curved);
+    }
+    else
+    {
+      typedef agg::conv_dash<curved_t> curved_dashed_t;
+      curved_dashed_t curved_dashed(curved);
 
-    curved_stroked_transformed_t curved_stroked_transformed(curved_stroked, transform());
-    agg::rasterizer_scanline_aa<> rasterizer;
-    rasterizer.filling_rule(agg::fill_non_zero);
-    rasterizer.add_path(curved_stroked_transformed);
-    paintScanlines(stroke, style().stroke_opacity_, rasterizer, curved);
+      std::vector<double> const & dasharray = style().stroke_dasharray_;
+      int num_dash_values = 
+        dasharray.size() % 2 == 0
+          ? dasharray.size() 
+          : 2 * dasharray.size();
+      for(int i=0; i<num_dash_values; i+=2)
+        curved_dashed.add_dash(dasharray[i % dasharray.size()], dasharray[(i+1) % dasharray.size()]);
+
+      curved_dashed.dash_start(style().stroke_dashoffset_);
+
+      typedef agg::conv_stroke<curved_dashed_t> curved_stroked_t;
+      curved_stroked_t curved_stroked(curved_dashed);
+      strokePath(stroke, curved_stroked, curved);
+    }
   }
 }
 

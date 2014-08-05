@@ -7,8 +7,10 @@
 
 #pragma once
 
+#include <svgpp/definitions.hpp>
 #include <boost/move/utility.hpp>
 #include <boost/preprocessor.hpp>
+#include <boost/range.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/utility.hpp>
 

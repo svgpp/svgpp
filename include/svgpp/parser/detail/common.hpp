@@ -10,6 +10,23 @@
 #include <boost/spirit/include/qi.hpp>
 #include <svgpp/definitions.hpp>
 
+namespace boost { namespace spirit
+{
+  BOOST_SPIRIT_TERMINAL(svgpp_noop_directive)
+
+  ///////////////////////////////////////////////////////////////////////////
+  // Enablers
+  ///////////////////////////////////////////////////////////////////////////
+  template <>
+  struct use_directive<
+      qi::domain, tag::svgpp_noop_directive> // enables encoding
+    : mpl::true_ {};
+
+  template <>
+  struct is_modifier_directive<qi::domain, tag::svgpp_noop_directive>
+    : mpl::true_ {};
+}}
+
 namespace svgpp { namespace detail 
 { 
 
@@ -95,5 +112,15 @@ struct comma_wsp_rule_no_skip: boost::spirit::qi::rule<Iterator>
   {
   }
 };
+
+inline character_encoding_namespace::no_case_type const & no_case_if_css(tag::source::css)
+{
+  return character_encoding_namespace::no_case;
+}
+
+inline boost::spirit::svgpp_noop_directive_type const & no_case_if_css(tag::source::attribute)
+{
+  return boost::spirit::svgpp_noop_directive;
+}
 
 }}

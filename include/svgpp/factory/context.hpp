@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <boost/noncopyable.hpp>
 #include <boost/pointee.hpp>
 
 namespace svgpp { namespace factory { namespace context 

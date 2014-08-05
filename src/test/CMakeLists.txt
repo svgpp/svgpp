@@ -73,3 +73,7 @@ add_library(CheckHeadersAutonomy STATIC
 add_executable(boost_param_test
   boost_param_test.cpp 
 )
+
+add_executable(FullParseTest
+  full_parse_test.cpp
+)

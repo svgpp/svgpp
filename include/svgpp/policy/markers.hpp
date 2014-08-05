@@ -9,6 +9,7 @@
 
 #include <cmath>
 #include <boost/config.hpp>
+#include <boost/math/constants/constants.hpp>
 
 namespace svgpp { 
   

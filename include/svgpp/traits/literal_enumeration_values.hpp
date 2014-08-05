@@ -25,9 +25,9 @@ namespace svgpp { namespace traits
 #define SVGPP_ON_ATTR_NS(ns, name, values) SVGPP_ON_ATTR(ns::name, values)
 #define SVGPP_ON_ELEM_ATTR(elem, attr, values) \
   template<> struct literal_enumeration_values<boost::mpl::pair<tag::element::elem, tag::attribute::attr> > { \
-    typedef boost::mpl::vector<SVGPP_ON_VALUES(values)> type; \
+    typedef boost::mpl::vector<SVGPP_ON_VALUES(values)>::type type; \
   };
-#define SVGPP_ON_ELEM_ATTR_NS(elem, ns, name, values) SVGPP_ON_ELEM_ATTR(elem, ns::name, values)
+#define SVGPP_ON_ELEM_ATTR_NS(elem, ns, attr, values) SVGPP_ON_ELEM_ATTR(elem, ns::attr, values)
 #define SVGPP_ON_VALUES(values) BOOST_PP_SEQ_FOR_EACH_I(SVGPP_ON_VALUE, _, values)
 #define SVGPP_ON_VALUE(r, _, i, value_tag) BOOST_PP_COMMA_IF(i) tag::value::value_tag  
 #include <svgpp/detail/dict/enumerate_literal_enumeration_attributes.inc>

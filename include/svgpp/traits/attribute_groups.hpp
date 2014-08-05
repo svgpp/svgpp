@@ -146,6 +146,12 @@ typedef boost::mpl::set6<
   tag::attribute::onzoom
   > document_event_attributes;
 
+typedef boost::mpl::set3<
+  tag::attribute::onbegin, 
+  tag::attribute::onend, 
+  tag::attribute::onrepeat
+  > animation_event_attributes;
+
 typedef boost::mpl::set<
     boost::mpl::pair<tag::element::path, tag::attribute::d>,
     boost::mpl::pair<tag::element::rect, tag::attribute::x>,

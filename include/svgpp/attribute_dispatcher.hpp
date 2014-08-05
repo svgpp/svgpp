@@ -22,7 +22,6 @@
 #include <svgpp/policy/viewport.hpp>
 #include <svgpp/traits/attribute_groups.hpp>
 #include <svgpp/traits/attribute_type.hpp>
-#include <svgpp/traits/attribute_without_parser.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/fusion/include/as_vector.hpp>
 #include <boost/fusion/include/at_key.hpp>
@@ -338,7 +337,7 @@ public:
     AttributeValue const & attribute_value, 
     PropertySource property_source,
     typename boost::disable_if_c<
-      traits::attribute_without_parser<AttributeTag>::value
+      boost::is_same<typename traits::attribute_type<ElementTag, AttributeTag>::type, tag::type::string>::value
       || boost::mpl::has_key<passthrough_attributes, AttributeTag>::value>::type * = 0)
   {
     return value_parser<typename traits::attribute_type<ElementTag, AttributeTag>::type, 
@@ -352,7 +351,7 @@ public:
     AttributeTag tag, AttributeValue const & attribute_value, 
     PropertySource property_source,
     typename boost::enable_if_c<
-      traits::attribute_without_parser<AttributeTag>::value
+      boost::is_same<typename traits::attribute_type<ElementTag, AttributeTag>::type, tag::type::string>::value
       || boost::mpl::has_key<passthrough_attributes, AttributeTag>::value>::type * = 0)
   {
     policy::load_value::default_policy<Context>::set(context_, tag, attribute_value, property_source);

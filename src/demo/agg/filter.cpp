@@ -1,12 +1,15 @@
-#define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
+﻿#define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 #define BOOST_MPL_LIMIT_SET_SIZE 40
 #include "filter.hpp"
 
 #include <svgpp/document_traversal.hpp>
+#include <boost/gil/gil_all.hpp>
 #include <boost/mpl/set.hpp>
+#include <boost/noncopyable.hpp>
 #include <boost/variant.hpp>
 
 namespace mpl = boost::mpl;
+namespace gil = boost::gil;
 
 struct ElementWithRegion
 {
@@ -18,13 +21,17 @@ struct FilterInput
   enum source { fiNotSet, fiSourceGraphic, fiSourceAlpha, fiBackgroundImage, 
     fiBackgroundAlpha, fiFillPaint, fiStrokePaint, fiReference };
 
+  FilterInput()
+    : source_(fiNotSet)
+  {}
+
   source source_;
-  std::string reference_;
+  svg_string_t reference_;
 };
 
 struct FilterElementBase: ElementWithRegion
 {
-  std::string result_;
+  svg_string_t result_;
 };
 
 struct feBlend: FilterElementBase
@@ -39,6 +46,10 @@ struct feFunc
 {
   enum type { fIdentity, fTable, fDiscrete, fLinear, fGamma };
 
+  feFunc()
+    : type_(fIdentity)
+  {}
+
   type type_;
   double slope_, intercept_, amplitude_, exponent_, offset_;
   std::vector<double> tableValues_;
@@ -46,13 +57,53 @@ struct feFunc
 
 struct feComponentTransfer: FilterElementBase
 {
-  enum ARGBComponent { argbA, argbR, argbG, argbB };
+  enum ARGBComponent { argbR, argbG, argbB, argbA }; // Must be the same order as channels in GIL color
 
   FilterInput input_;
   feFunc func_[4];
 };
 
-typedef boost::variant<feBlend, feComponentTransfer> FilterElement;
+struct feOffset: FilterElementBase
+{
+  feOffset()
+    : dx_(0), dy_(0)
+  {}
+
+  FilterInput input_;
+  double dx_, dy_;
+};
+
+struct feComposite: FilterElementBase
+{
+  enum Operator { opOver, opIn, opOut, opAtop, opXor, opArithmetic };
+
+  feComposite()
+    : operator_(opOver)
+    , k1_(0), k2_(0), k3_(0), k4_(0)
+  {}
+
+  FilterInput input1_, input2_;
+  Operator operator_;
+  double k1_, k2_, k3_, k4_;
+};
+
+struct feMerge: FilterElementBase
+{
+  std::vector<FilterInput> inputs_;
+};
+
+struct feFlood: FilterElementBase
+{
+  feFlood()
+    : flood_color_(0, 0, 0)
+    , flood_opacity_(1.0)
+  {}
+
+  agg::rgba8 flood_color_;
+  double flood_opacity_;
+};
+
+typedef boost::variant<feBlend, feComponentTransfer, feOffset, feComposite, feMerge, feFlood> FilterElement;
 
 class ElementWithRegionContext
 {
@@ -86,7 +137,6 @@ public:
   ElementWithInputContext(FilterInput & data)
     : data_(data)
   {
-    data_.source_ = FilterInput::fiNotSet;
   }
 
   template<class Input>
@@ -155,7 +205,6 @@ public:
     elements_.push_back(el);
   }
 
-private:
   ElementWithRegion region_;
   bool filterUnitsUseObjectBoundingBox_;
   std::vector<FilterElement> elements_;
@@ -282,6 +331,171 @@ void feFuncContext<ComponentArg>::on_exit_element() const
   parent_.setComponentFunction(ComponentArg, data_);
 }
 
+class feOffsetContext:
+  public FilterElementBaseContext,
+  public ElementWithInputContext<svgpp::tag::attribute::in>
+{
+public:
+  feOffsetContext(FilterContext & parent)
+    : FilterElementBaseContext(data_)
+    , ElementWithInputContext<svgpp::tag::attribute::in>(data_.input_)
+    , parent_(parent)
+  {
+  }
+
+  void on_exit_element() const 
+  {
+    parent_.addElement(data_);
+  }
+
+  using FilterElementBaseContext::set;
+  using ElementWithInputContext<svgpp::tag::attribute::in>::set;
+
+  void set(svgpp::tag::attribute::dx, double val)
+  { data_.dx_ = val; }
+
+  void set(svgpp::tag::attribute::dy, double val)
+  { data_.dy_ = val; }
+
+private:
+  FilterContext & parent_;
+  feOffset data_;
+};
+
+class feCompositeContext: 
+  public FilterElementBaseContext,
+  public ElementWithInputContext<svgpp::tag::attribute::in>,
+  public ElementWithInputContext<svgpp::tag::attribute::in2>
+{
+  typedef mpl::map<
+    mpl::pair< svgpp::tag::value::over,       mpl::integral_c<feComposite::Operator, feComposite::opOver> >,
+    mpl::pair< svgpp::tag::value::in,         mpl::integral_c<feComposite::Operator, feComposite::opIn> >,
+    mpl::pair< svgpp::tag::value::out,        mpl::integral_c<feComposite::Operator, feComposite::opOut> >,
+    mpl::pair< svgpp::tag::value::atop,       mpl::integral_c<feComposite::Operator, feComposite::opAtop> >,
+    mpl::pair< svgpp::tag::value::xor_,       mpl::integral_c<feComposite::Operator, feComposite::opXor> >,
+    mpl::pair< svgpp::tag::value::arithmetic, mpl::integral_c<feComposite::Operator, feComposite::opArithmetic> >
+  > op_to_enum;
+
+public:
+  feCompositeContext(FilterContext & parent)
+    : FilterElementBaseContext(data_)
+    , ElementWithInputContext<svgpp::tag::attribute::in>(data_.input1_)
+    , ElementWithInputContext<svgpp::tag::attribute::in2>(data_.input2_)
+    , parent_(parent)
+  {
+  }
+
+  void on_exit_element() const 
+  {
+    parent_.addElement(data_);
+  }
+
+  using FilterElementBaseContext::set;
+  using ElementWithInputContext<svgpp::tag::attribute::in>::set;
+  using ElementWithInputContext<svgpp::tag::attribute::in2>::set;
+
+  template<class Op>
+  void set(svgpp::tag::attribute::operator_, Op)
+  {
+    data_.operator_ = mpl::at<op_to_enum, Op>::type::value;
+  }
+
+  void set(svgpp::tag::attribute::k1, double val)
+  { data_.k1_ = val; }
+
+  void set(svgpp::tag::attribute::k2, double val)
+  { data_.k2_ = val; }
+
+  void set(svgpp::tag::attribute::k3, double val)
+  { data_.k3_ = val; }
+
+  void set(svgpp::tag::attribute::k4, double val)
+  { data_.k4_ = val; }
+
+private:
+  FilterContext & parent_;
+  feComposite data_;
+};
+
+class feMergeContext: 
+  public FilterElementBaseContext
+{
+public:
+  feMergeContext(FilterContext & parent)
+    : FilterElementBaseContext(data_)
+    , parent_(parent)
+  {
+  }
+
+  void on_exit_element() const 
+  {
+    parent_.addElement(data_);
+  }
+
+private:
+  FilterContext & parent_;
+  feMerge data_;
+
+  friend class feMergeNodeContext;
+};
+
+class feMergeNodeContext:
+  public ElementWithInputContext<svgpp::tag::attribute::in>
+{
+public:
+  feMergeNodeContext(feMergeContext & parent)
+    : ElementWithInputContext<svgpp::tag::attribute::in>(data_)
+    , parent_(parent)
+  {}
+
+  void on_exit_element() const 
+  {
+    parent_.data_.inputs_.push_back(data_);
+  }
+
+private:
+  feMergeContext & parent_;
+  FilterInput data_;
+};
+
+class feFloodContext: 
+  public FilterElementBaseContext
+{
+public:
+  feFloodContext(FilterContext & parent)
+    : FilterElementBaseContext(data_)
+    , parent_(parent)
+  {
+  }
+
+  void on_exit_element() const 
+  {
+    parent_.addElement(data_);
+  }
+
+  using FilterElementBaseContext::set;
+  
+  // TODO: inheriting and 'style' handling for flood-color and flood-opacity
+  void set(svgpp::tag::attribute::flood_color, svgpp::tag::value::inherit)
+  {}
+
+  void set(svgpp::tag::attribute::flood_color, svgpp::tag::value::currentColor)
+  {}
+
+  void set(svgpp::tag::attribute::flood_color, agg::rgba8 color, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
+  { data_.flood_color_ = color; }
+
+  void set(svgpp::tag::attribute::flood_opacity, double val)
+  { data_.flood_opacity_ = val; }
+
+  void set(svgpp::tag::attribute::flood_opacity, svgpp::tag::value::inherit)
+  {}
+
+private:
+  FilterContext & parent_;
+  feFlood data_;
+};
+
 struct context_factories
 {
   template<class ParentContext, class ElementTag>
@@ -301,9 +515,39 @@ struct context_factories::apply<FilterContext, svgpp::tag::element::feBlend>
 };
 
 template<>
+struct context_factories::apply<FilterContext, svgpp::tag::element::feOffset>
+{
+  typedef svgpp::factory::context::on_stack<FilterContext, feOffsetContext> type;
+};
+
+template<>
+struct context_factories::apply<FilterContext, svgpp::tag::element::feComposite>
+{
+  typedef svgpp::factory::context::on_stack<FilterContext, feCompositeContext> type;
+};
+
+template<>
 struct context_factories::apply<FilterContext, svgpp::tag::element::feComponentTransfer>
 {
   typedef svgpp::factory::context::on_stack<FilterContext, feComponentTransferContext> type;
+};
+
+template<>
+struct context_factories::apply<FilterContext, svgpp::tag::element::feMerge>
+{
+  typedef svgpp::factory::context::on_stack<FilterContext, feMergeContext> type;
+};
+
+template<>
+struct context_factories::apply<feMergeContext, svgpp::tag::element::feMergeNode>
+{
+  typedef svgpp::factory::context::on_stack<feMergeContext, feMergeNodeContext> type;
+};
+
+template<>
+struct context_factories::apply<FilterContext, svgpp::tag::element::feFlood>
+{
+  typedef svgpp::factory::context::on_stack<FilterContext, feFloodContext> type;
 };
 
 template<>
@@ -330,25 +574,612 @@ struct context_factories::apply<feComponentTransferContext, svgpp::tag::element:
   typedef svgpp::factory::context::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbB> > type;
 };
 
-void Filters::get(svg_string_t const & id, length_factory_t const &)
+inline gil::bits8 clampChannel(int c)
+{
+  if (c > 255)
+    return 255;
+  if (c < 0)
+    return 0;
+  return static_cast<gil::bits8>(c);
+}
+
+// normal	cr = (1 - qa) * cb + ca
+struct BlendNormalFunc
+{
+  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
+  {
+    return clampChannel(((255 - qa) * cb) / 255 + ca);
+  }
+};
+
+// multiply	cr = (1-qa)*cb + (1-qb)*ca + ca*cb
+struct BlendMultiplyFunc
+{
+  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
+  {
+    return clampChannel(((255 - qa) * cb + (255 - qb) * ca + ca * cb) / 255);
+  }
+};
+
+// screen	cr = cb + ca - ca * cb
+struct BlendScreenFunc
+{
+  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
+  {
+    return clampChannel(cb + ca - ca * cb / 255);
+  }
+};
+
+// darken	cr = Min ((1 - qa) * cb + ca, (1 - qb) * ca + cb)
+struct BlendDarkenFunc
+{
+  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
+  {
+    return clampChannel(std::min((255 - qa) * cb / 255 + ca, (255 - qb) * ca / 255 + cb));
+  }
+};
+
+// lighten	cr = Max ((1 - qa) * cb + ca, (1 - qb) * ca + cb)
+struct BlendLightenFunc
+{
+  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
+  {
+    return clampChannel(std::max((255 - qa) * cb / 255 + ca, (255 - qb) * ca / 255 + cb));
+  }
+};
+
+// qr = 1 - (1-qa)*(1-qb)
+struct BlendAlphaFunc
+{
+  gil::bits8 operator()(int qa, int qb) const
+  {
+    return clampChannel(255 - (255 - qa) * (255 - qb) / 255);
+  }
+};
+
+template<class ColorFn, class AlphaFn>
+struct BlendPixel
+{
+  gil::rgba8_pixel_t operator()(const gil::rgba8_pixel_t & pixa, const gil::rgba8_pixel_t & pixb) const 
+  {
+    gil::bits8 qa = gil::get_color(pixa, gil::alpha_t());
+    gil::bits8 qb = gil::get_color(pixb, gil::alpha_t());
+
+    gil::rgba8_pixel_t dst;
+    ColorFn fn;
+    for(size_t ch = 0; ch < 3; ++ch)
+      dst[ch] = fn(pixa[ch], pixb[ch], qa, qb);
+
+    gil::get_color(dst, gil::alpha_t()) = AlphaFn()(qa, qb);
+    return dst;
+  }
+};
+
+class BlendView: public IFilterView
+{
+public:
+  BlendView(feBlend const & fe, IFilterViewPtr const & in1, IFilterViewPtr const & in2)
+    : fe_(fe)
+    , in1_(in1)
+    , in2_(in2)
+  {}
+
+  virtual gil::rgba8c_view_t view() 
+  {
+    if (in1_)
+    {
+      image_.recreate(in1_->view().dimensions());
+      switch(fe_.mode_)
+      {
+      case feBlend::mNormal:
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<BlendNormalFunc, BlendAlphaFunc>());
+        break;
+      case feBlend::mMultiply:
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<BlendMultiplyFunc, BlendAlphaFunc>());
+        break;
+      case feBlend::mScreen:
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<BlendScreenFunc, BlendAlphaFunc>());
+        break;
+      case feBlend::mDarken:
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<BlendDarkenFunc, BlendAlphaFunc>());
+        break;
+      case feBlend::mLighten:
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<BlendLightenFunc, BlendAlphaFunc>());
+        break;
+      default:
+        BOOST_ASSERT(false);
+      }
+      in1_.reset();
+      in2_.reset();
+    }
+    return gil::const_view(image_);
+  }
+
+private:
+  feBlend const fe_;
+  IFilterViewPtr in1_, in2_;
+  boost::gil::rgba8_image_t image_;
+};
+
+// Dca' = Sca + Dca x (1 - Sa)
+struct CompositeOverColorFunc
+{
+  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
+  {
+    return clampChannel(ca + cb * (255 - qa) / 255);
+  }
+};
+
+// Da'  = Sa + Da - Sa x Da
+struct CompositeOverAlphaFunc
+{
+  gil::bits8 operator()(int qa, int qb) const
+  {
+    return clampChannel(qa + qb - qa * qb / 255);
+  }
+};
+
+// Dca' = Sca x Da
+struct CompositeInColorFunc
+{
+  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
+  {
+    return ca * qb / 255;
+  }
+};
+
+// Da'  = Sa x Da
+struct CompositeInAlphaFunc
+{
+  gil::bits8 operator()(int qa, int qb) const
+  {
+    return qa * qb / 255;
+  }
+};
+
+// Dca' = Sca x (1 - Da)
+struct CompositeOutColorFunc
+{
+  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
+  {
+    return ca * (255 - qb) / 255;
+  }
+};
+
+// Da'  = Sa x (1 - Da)
+struct CompositeOutAlphaFunc
+{
+  gil::bits8 operator()(int qa, int qb) const
+  {
+    return qa * (255 - qb) / 255;
+  }
+};
+
+// Dca' = Sca x Da + Dca x (1 - Sa)
+struct CompositeAtopColorFunc
+{
+  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
+  {
+    return clampChannel((ca * qb + cb * (255 - qa)) / 255);
+  }
+};
+
+// Da'  = Da
+struct CompositeAtopAlphaFunc
+{
+  gil::bits8 operator()(gil::bits8 qa, gil::bits8 qb) const
+  {
+    return qb;
+  }
+};
+
+// Dca' = Sca x (1 - Da) + Dca x (1 - Sa)
+struct CompositeXorColorFunc
+{
+  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
+  {
+    return clampChannel((ca * (255 - qb) + cb * (255 - qa)) / 255);
+  }
+};
+
+// Da'  = Sa + Da - 2 x Sa x Da
+struct CompositeXorAlphaFunc
+{
+  gil::bits8 operator()(int qa, int qb) const
+  {
+    return clampChannel((qa + qb - 2 * qa * qb) / 255);
+  }
+};
+
+struct CompositeArithmeticPixel
+{
+  CompositeArithmeticPixel(double k1, double k2, double k3, double k4)
+    : k1_(k1 * 255), k2_(k2 * 255), k3_(k3 * 255), k4_(k4 * 255)
+  {}
+
+  gil::rgba8_pixel_t operator()(const gil::rgba8_pixel_t & pixa, const gil::rgba8_pixel_t & pixb) const 
+  {
+    gil::rgba8_pixel_t dst;
+    for(size_t ch = 0; ch < 4; ++ch)
+      // result = k1*i1*i2 + k2*i1 + k3*i2 + k4
+      dst[ch] = k1_ * pixa[ch] * pixb[ch] / 65535 + k2_ * pixa[ch] / 255 + k3_ * pixb[ch] / 255 + k4_;
+
+    return dst;
+  }
+
+private:
+  int k1_, k2_, k3_, k4_;
+};
+
+class CompositeView: public IFilterView
+{
+public:
+  CompositeView(feComposite const & fe, IFilterViewPtr const & in1, IFilterViewPtr const & in2)
+    : fe_(fe)
+    , in1_(in1)
+    , in2_(in2)
+  {}
+
+  virtual gil::rgba8c_view_t view() 
+  {
+    if (in1_)
+    {
+      image_.recreate(in1_->view().dimensions());
+      switch(fe_.operator_)
+      {
+      case feComposite::opOver:
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<CompositeOverColorFunc, CompositeOverAlphaFunc>());
+        break;
+      case feComposite::opIn:
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<CompositeInColorFunc, CompositeInAlphaFunc>());
+        break;
+      case feComposite::opOut:
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<CompositeOutColorFunc, CompositeOutAlphaFunc>());
+        break;
+      case feComposite::opAtop:
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<CompositeAtopColorFunc, CompositeAtopAlphaFunc>());
+        break;
+      case feComposite::opXor:
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<CompositeXorColorFunc, CompositeXorAlphaFunc>());
+        break;
+      case feComposite::opArithmetic:
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), 
+          CompositeArithmeticPixel(fe_.k1_, fe_.k2_, fe_.k3_, fe_.k4_));
+        break;
+      default:
+        BOOST_ASSERT(false);
+      }
+      in1_.reset();
+      in2_.reset();
+    }
+    return gil::const_view(image_);
+  }
+
+private:
+  feComposite const fe_;
+  IFilterViewPtr in1_, in2_;
+  boost::gil::rgba8_image_t image_;
+};
+
+typedef boost::array<gil::bits8, 256> ChannelTransferTable;
+
+struct ComponentTransferPixel
+{
+  ComponentTransferPixel(ChannelTransferTable const * tables)
+    : tables_(tables)
+  {}
+
+  gil::rgba8_pixel_t operator()(const gil::rgba8_pixel_t & src) const 
+  {
+    gil::rgba8_pixel_t dst;
+    for(size_t ch = 0; ch < 4; ++ch)
+      dst[ch] = tables_[ch][src[ch]];
+
+    return dst;
+  }
+
+private:
+  ChannelTransferTable const * tables_;
+};
+
+class ComponentTransferView: public IFilterView
+{
+public:
+  ComponentTransferView(feComponentTransfer const & fe, IFilterViewPtr const & in)
+    : fe_(fe)
+    , in_(in)
+  {}
+
+  virtual gil::rgba8c_view_t view() 
+  {
+    if (in_)
+    {
+      image_.recreate(in_->view().dimensions());
+      ChannelTransferTable tables[4];
+      for(int ch = 0; ch < 4; ++ch)
+      {
+        ChannelTransferTable & table = tables[ch];
+        feFunc const & func = fe_.func_[ch];
+        switch(func.type_)
+        {
+        case feFunc::fTable:
+        case feFunc::fDiscrete: // TODO
+        case feFunc::fIdentity:
+          for(int i=0; i<256; ++i)
+            table[i] = i;
+          break;
+        case feFunc::fLinear:
+          // C' = slope * C + intercept
+          for(int i=0; i<256; ++i)
+            table[i] = clampChannel(static_cast<int>(func.slope_ * i + func.intercept_ * 255 + 0.49));
+          break;
+        case feFunc::fGamma:
+          for(int i=0; i<256; ++i)
+            // C' = amplitude * pow(C, exponent) + offset
+            table[i] = clampChannel(static_cast<int>(
+              (func.amplitude_ * std::pow(i / 255.0, func.exponent_) + func.offset_) * 255.0 + 0.49));
+          break;
+        default:
+          BOOST_ASSERT(false);
+        }
+      }
+      gil::transform_pixels(in_->view(), gil::view(image_), ComponentTransferPixel(tables));
+      in_.reset();
+    }
+    return gil::const_view(image_);
+  }
+
+private:
+  feComponentTransfer const fe_;
+  IFilterViewPtr in_;
+  boost::gil::rgba8_image_t image_;
+};
+
+class OffsetView: public IFilterView
+{
+public:
+  OffsetView(feOffset const & fe, IFilterViewPtr const & in)
+    : fe_(fe)
+    , in_(in)
+  {}
+
+  virtual gil::rgba8c_view_t view() 
+  {
+    // TODO: use transform
+    if (in_)
+    {
+      image_.recreate(in_->view().dimensions(), gil::rgba8_pixel_t(0, 0, 0, 0), 0);
+      int w = image_.width() - std::abs(fe_.dx_);
+      int h = image_.height() - std::abs(fe_.dy_);
+      if (w > 0 && h > 0)
+      {
+        gil::copy_pixels(
+          gil::subimage_view(in_->view(),  
+            std::max(0.0, -fe_.dx_), std::max(0.0, -fe_.dy_), w, h),
+          gil::subimage_view(gil::view(image_),  
+            std::max(0.0, fe_.dx_), std::max(0.0, fe_.dy_), w, h));
+      }
+      in_.reset();
+    }
+    return gil::const_view(image_);
+  }
+
+private:
+  feOffset const fe_;
+  IFilterViewPtr in_;
+  boost::gil::rgba8_image_t image_;
+};
+
+class MergeView: public IFilterView
+{
+public:
+  void addNode(IFilterViewPtr const & in)
+  {
+    nodes_.push_back(in);
+  }
+
+  virtual gil::rgba8c_view_t view() 
+  {
+    // TODO: what if empty?
+    if (!nodes_.empty())
+    {
+      image_.recreate(nodes_.front()->view().dimensions());
+      if (nodes_.size() == 1)
+        gil::copy_pixels(nodes_.front()->view(), gil::view(image_));
+      else
+      {
+        gil::transform_pixels(nodes_[0]->view(), nodes_[1]->view(), gil::view(image_), BlendPixel<CompositeOverColorFunc, CompositeOverAlphaFunc>());
+        for(size_t i = 2; i < nodes_.size(); ++i)
+          gil::transform_pixels(gil::view(image_), nodes_[i]->view(), gil::view(image_), BlendPixel<CompositeOverColorFunc, CompositeOverAlphaFunc>());
+      }
+      nodes_.clear();
+    }
+    return gil::const_view(image_);
+  }
+
+private:
+  std::vector<IFilterViewPtr> nodes_;
+  boost::gil::rgba8_image_t image_;
+};
+
+class FloodView: public IFilterView
+{
+public:
+  FloodView(feFlood const & fe)
+    : fe_(fe)
+  {}
+
+  virtual gil::rgba8c_view_t view() 
+  {
+    if (image_.width() == 0)
+    {
+      //image_.recreate(in_->view().dimensions(), gil::rgba8_pixel_t(0, 0, 0, 0), 0);
+    }
+    return gil::const_view(image_);
+  }
+
+private:
+  feFlood const fe_;
+  boost::gil::rgba8_image_t image_;
+};
+
+class AlphaChannelView: public IFilterView
+{
+public:
+  AlphaChannelView(IFilterViewPtr const & in)
+    : in_(in)
+  {}
+
+  virtual gil::rgba8c_view_t view() 
+  {
+    if (in_)
+    {
+      image_.recreate(in_->view().dimensions(), gil::rgba8_pixel_t(0, 0, 0, 0), 0);
+      gil::copy_pixels(
+        gil::kth_channel_view<gil::color_index_type<gil::rgba8_pixel_t, gil::alpha_t>::value>(in_->view()), 
+        gil::kth_channel_view<gil::color_index_type<gil::rgba8_pixel_t, gil::alpha_t>::value>(gil::view(image_)));
+      in_.reset();
+    }
+    return gil::const_view(image_);
+  }
+
+private:
+  IFilterViewPtr in_;
+  boost::gil::rgba8_image_t image_;
+};
+
+struct FilterElementVisitor:
+  public boost::static_visitor<>,
+  boost::noncopyable
+{
+  FilterElementVisitor(Filters::Input const & input)
+    : input_(input)
+  {}
+
+  void operator()(feBlend const & fe)
+  {
+    boost::shared_ptr<BlendView> feView(new BlendView(fe, findInput(fe.input1_), findInput(fe.input2_)));
+    if (!fe.result_.empty())
+      namedFilters_[fe.result_] = feView;
+    lastFilter_ = feView;
+  }
+
+  void operator()(feComponentTransfer const & fe)
+  {
+    boost::shared_ptr<ComponentTransferView> feView(new ComponentTransferView(fe, findInput(fe.input_)));
+    if (!fe.result_.empty())
+      namedFilters_[fe.result_] = feView;
+    lastFilter_ = feView;
+  }
+
+  void operator()(feOffset const & fe)
+  {
+    boost::shared_ptr<OffsetView> feView(new OffsetView(fe, findInput(fe.input_)));
+    if (!fe.result_.empty())
+      namedFilters_[fe.result_] = feView;
+    lastFilter_ = feView;
+  }
+
+  void operator()(feComposite const & fe)
+  {
+    boost::shared_ptr<CompositeView> feView(new CompositeView(fe, findInput(fe.input1_), findInput(fe.input2_)));
+    if (!fe.result_.empty())
+      namedFilters_[fe.result_] = feView;
+    lastFilter_ = feView;
+  }
+
+  void operator()(feMerge const & fe)
+  {
+    boost::shared_ptr<MergeView> feView(new MergeView);
+    for(std::vector<FilterInput>::const_iterator f = fe.inputs_.begin();
+      f != fe.inputs_.end(); ++f)
+      feView->addNode(findInput(*f));
+    if (!fe.result_.empty())
+      namedFilters_[fe.result_] = feView;
+    lastFilter_ = feView;
+  }
+
+  void operator()(feFlood const & fe)
+  {
+    boost::shared_ptr<FloodView> feView(new FloodView(fe));
+    if (!fe.result_.empty())
+      namedFilters_[fe.result_] = feView;
+    lastFilter_ = feView;
+  }
+
+  IFilterViewPtr const & lastFilter() { return lastFilter_; }
+
+private:
+  Filters::Input const & input_;
+  typedef std::map<svg_string_t, IFilterViewPtr> NamedFilters;
+  NamedFilters namedFilters_;
+  IFilterViewPtr lastFilter_;
+  mutable IFilterViewPtr sourceAlphaView_, backgroundAlphaView_;
+
+  IFilterViewPtr findInput(FilterInput const & in) const
+  {
+    switch (in.source_)
+    {
+    case FilterInput::fiReference:
+    {
+      NamedFilters::const_iterator f = namedFilters_.find(in.reference_);
+      if (f == namedFilters_.end())
+        throw std::runtime_error("Can't find filter element");
+      return f->second;
+    }
+    case FilterInput::fiNotSet:
+      if (lastFilter_)
+        return lastFilter_;
+      else
+        return input_.sourceGraphic_;
+    case FilterInput::fiSourceGraphic:
+      return input_.sourceGraphic_;
+    case FilterInput::fiSourceAlpha:
+      if (!sourceAlphaView_)
+        sourceAlphaView_.reset(new AlphaChannelView(input_.sourceGraphic_));
+      return sourceAlphaView_;
+    case FilterInput::fiBackgroundImage:
+      return input_.backgroundImage_;
+    case FilterInput::fiBackgroundAlpha:
+      if (!backgroundAlphaView_)
+        backgroundAlphaView_.reset(new AlphaChannelView(input_.backgroundImage_));
+      return backgroundAlphaView_;
+    case FilterInput::fiFillPaint:
+      return input_.fillPaint_;
+    case FilterInput::fiStrokePaint:
+      return input_.strokePaint_;
+    default:
+      BOOST_ASSERT(false);
+    }
+    return IFilterViewPtr();
+  }
+};
+
+IFilterViewPtr Filters::get(svg_string_t const & id, length_factory_t const &, Input const & input)
 {
   if (XMLElement node = xml_document_.findElementById(id))
   {
-    FilterContext filter_context;
+    FilterContext filterContext;
     svgpp::document_traversal<
       svgpp::context_factories<context_factories>,
+      svgpp::color_factory<color_factory_t>,
       svgpp::processed_elements<
         boost::mpl::set<
           svgpp::tag::element::filter,
+          svgpp::tag::element::feBlend,
+          svgpp::tag::element::feMerge,
           svgpp::tag::element::feMergeNode,
           svgpp::tag::element::feDistantLight,
           svgpp::tag::element::fePointLight,
           svgpp::tag::element::feSpotLight,
           svgpp::tag::element::feComponentTransfer,
+          svgpp::tag::element::feComposite,
+          svgpp::tag::element::feFlood,
           svgpp::tag::element::feFuncA,
           svgpp::tag::element::feFuncB,
           svgpp::tag::element::feFuncG,
-          svgpp::tag::element::feFuncR
+          svgpp::tag::element::feFuncR,
+          svgpp::tag::element::feOffset
         >::type
       >,
       svgpp::processed_attributes<
@@ -370,6 +1201,15 @@ void Filters::get(svg_string_t const & id, length_factory_t const &)
           boost::mpl::pair<svgpp::tag::element::feBlend, svgpp::tag::attribute::mode>,
           boost::mpl::pair<svgpp::tag::element::feColorMatrix, svgpp::tag::attribute::type>,
           boost::mpl::pair<svgpp::tag::element::feColorMatrix, svgpp::tag::attribute::values>,
+          boost::mpl::pair<svgpp::tag::element::feOffset, svgpp::tag::attribute::dx>,
+          boost::mpl::pair<svgpp::tag::element::feOffset, svgpp::tag::attribute::dy>,
+          boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::operator_>,
+          boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k1>,
+          boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k2>,
+          boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k3>,
+          boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k4>,
+          boost::mpl::pair<svgpp::tag::element::feFlood, svgpp::tag::attribute::flood_color>,
+          boost::mpl::pair<svgpp::tag::element::feFlood, svgpp::tag::attribute::flood_opacity>,
 
           // transfer function element attributes
           boost::mpl::pair<svgpp::tag::element::feFuncA, svgpp::tag::attribute::type>,
@@ -386,7 +1226,17 @@ void Filters::get(svg_string_t const & id, length_factory_t const &)
       >
     >::load_referenced_element<
       svgpp::expected_elements<boost::mpl::set1<svgpp::tag::element::filter> >
-    >::load(node, filter_context);
+    >::load(node, filterContext);
+
+    FilterElementVisitor v(input);
+    for(std::vector<FilterElement>::const_iterator fe = filterContext.elements_.begin();
+      fe != filterContext.elements_.end(); ++fe)
+    {
+      boost::apply_visitor(v, *fe);
+    }
+    if (!v.lastFilter())
+      throw std::runtime_error("No filter elements in filter definition");
+    return v.lastFilter();
   }
   else
     throw std::runtime_error("Filter not found");

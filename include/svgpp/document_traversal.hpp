@@ -182,7 +182,7 @@ public:
         load_text_policy::set_text(context, xml_policy_t::get_text(xml_child_element));
       else
       {
-        if (!load_child_xml_element<ExpectedChildElements, is_element_processed, false>(
+        if (!load_child_xml_element<ExpectedChildElements, is_element_processed, void>(
             xml_child_element, context, element_tag))
           return false;
       }
