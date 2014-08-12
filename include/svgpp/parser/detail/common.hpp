@@ -10,24 +10,12 @@
 #include <boost/spirit/include/qi.hpp>
 #include <svgpp/definitions.hpp>
 
-namespace boost { namespace spirit
-{
-  BOOST_SPIRIT_TERMINAL(svgpp_noop_directive)
+namespace svgpp 
+{ 
+  
+BOOST_SPIRIT_TERMINAL(noop_directive)
 
-  ///////////////////////////////////////////////////////////////////////////
-  // Enablers
-  ///////////////////////////////////////////////////////////////////////////
-  template <>
-  struct use_directive<
-      qi::domain, tag::svgpp_noop_directive> // enables encoding
-    : mpl::true_ {};
-
-  template <>
-  struct is_modifier_directive<qi::domain, tag::svgpp_noop_directive>
-    : mpl::true_ {};
-}}
-
-namespace svgpp { namespace detail 
+namespace detail 
 { 
 
 namespace character_encoding_namespace = boost::spirit::ascii;
@@ -118,9 +106,24 @@ inline character_encoding_namespace::no_case_type const & no_case_if_css(tag::so
   return character_encoding_namespace::no_case;
 }
 
-inline boost::spirit::svgpp_noop_directive_type const & no_case_if_css(tag::source::attribute)
+inline noop_directive_type const & no_case_if_css(tag::source::attribute)
 {
-  return boost::spirit::svgpp_noop_directive;
+  return noop_directive;
 }
 
+}}
+
+namespace boost { namespace spirit
+{
+  ///////////////////////////////////////////////////////////////////////////
+  // Enablers
+  ///////////////////////////////////////////////////////////////////////////
+  template <>
+  struct use_directive<
+      qi::domain, svgpp::tag::noop_directive> // enables encoding
+    : mpl::true_ {};
+
+  template <>
+  struct is_modifier_directive<qi::domain, svgpp::tag::noop_directive>
+    : mpl::true_ {};
 }}

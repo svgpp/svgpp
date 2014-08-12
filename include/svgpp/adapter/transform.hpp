@@ -180,20 +180,20 @@ public:
   }
 };
 
-template<class Context, class TransformPolicy, class LoadPolicy>
+template<class Context, class TransformPolicy, class LoadPolicy, class Number>
 struct transform_adapter_base
 {
   typedef typename boost::mpl::if_c<
     TransformPolicy::join_transforms,
       matrix_only_transform_adapter<
-        join_transform_adapter<Context, typename TransformPolicy::number_type, LoadPolicy> 
+        join_transform_adapter<Context, Number, LoadPolicy> 
       >,
       typename boost::mpl::if_c<
         TransformPolicy::only_matrix_transform,
           matrix_only_transform_adapter<
-            passthrough_transform_adapter<Context, typename TransformPolicy::number_type, LoadPolicy> 
+            passthrough_transform_adapter<Context, Number, LoadPolicy> 
           >,
-          passthrough_transform_adapter<Context, typename TransformPolicy::number_type, LoadPolicy>
+          passthrough_transform_adapter<Context, Number, LoadPolicy>
         >::type
       >::type type;
 };
@@ -204,30 +204,32 @@ template<
   class Context, 
   class TransformPolicy = typename policy::transform::by_context<Context>::type,
   class LoadPolicy = policy::load_transform::default_policy<Context>,
+  class Number = double,
   class Enable = void>
 class transform_adapter;
 
 template<
   class Context, 
   class TransformPolicy, 
-  class LoadPolicy>
-class transform_adapter<Context, TransformPolicy, LoadPolicy, 
+  class LoadPolicy,
+  class Number
+>
+class transform_adapter<Context, TransformPolicy, LoadPolicy, Number,
   typename boost::enable_if_c<
        TransformPolicy::no_shorthands 
     || TransformPolicy::only_matrix_transform 
     || TransformPolicy::join_transforms>::type
 >:
-  public detail::transform_adapter_base<Context, TransformPolicy, LoadPolicy>::type
+  public detail::transform_adapter_base<Context, TransformPolicy, LoadPolicy, Number>::type
 {
-  typedef typename detail::transform_adapter_base<Context, TransformPolicy, LoadPolicy>::type base;
+  typedef typename detail::transform_adapter_base<Context, TransformPolicy, LoadPolicy, Number>::type base;
 
 public:
-  typedef typename TransformPolicy::number_type number_type;
+  typedef Number number_type;
 
   transform_adapter(Context & context)
     : base(context)
-  {
-  }
+  {}
 
   using base::append_transform_translate;
   using base::append_transform_scale;
@@ -254,22 +256,23 @@ public:
 template<
   class Context, 
   class TransformPolicy, 
-  class LoadPolicy>
-class transform_adapter<Context, TransformPolicy, LoadPolicy, 
+  class LoadPolicy,
+  class Number
+>
+class transform_adapter<Context, TransformPolicy, LoadPolicy, Number,
   typename boost::disable_if_c<
        TransformPolicy::no_shorthands 
     || TransformPolicy::only_matrix_transform 
     || TransformPolicy::join_transforms>::type
 >:
-  public detail::transform_adapter_base<Context, TransformPolicy, LoadPolicy>::type
+  public detail::transform_adapter_base<Context, TransformPolicy, LoadPolicy, Number>::type
 {
-  typedef typename detail::transform_adapter_base<Context, TransformPolicy, LoadPolicy>::type base;
+  typedef typename detail::transform_adapter_base<Context, TransformPolicy, LoadPolicy, Number>::type base;
 
 public:
   transform_adapter(Context & context)
     : base(context)
-  {
-  }
+  {}
 };
 
 namespace detail
@@ -312,12 +315,14 @@ struct transform_adapter_if_needed<OriginalContext,
 private:
   typedef typename detail::unwrap_context<OriginalContext, tag::transform_policy>::policy transform_policy;
   typedef typename detail::unwrap_context<OriginalContext, tag::load_transform_policy>::policy original_load_transform_policy;
+  typedef typename detail::unwrap_context<OriginalContext, tag::number_type>::policy number_type;
 
 public:
   typedef transform_adapter<
     typename original_load_transform_policy::context_type, 
     transform_policy, 
-    original_load_transform_policy
+    original_load_transform_policy,
+    number_type
   > type;
 
   typedef const adapted_context_wrapper<

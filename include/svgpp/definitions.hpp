@@ -110,6 +110,12 @@ namespace value
 #undef SVGPP_ON_VALUE
 #undef SVGPP_ON_VALUE2
 
+  struct rect                         {}; // Used as shape in 'clip' property
+  struct underline                    {};
+  struct overline                     {};
+  struct line_through                 {};
+  struct blink                        {};
+
   struct meet                         {};
   struct slice                        {};
   struct xMinYMin                     { typedef min_tag x; typedef min_tag y; };

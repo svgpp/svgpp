@@ -233,9 +233,9 @@ private:
     bool found = false;
     while (!found && size_ < 1024)
     {
-      found = false;
       if (deta_ <= boost::math::constants::half_pi<Number>())
       {
+        found = true;
         Number eta1b = eta1_;
         for(int i=0; i<size_; ++i)
         {

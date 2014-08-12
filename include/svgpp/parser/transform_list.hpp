@@ -38,7 +38,7 @@ struct value_parser<tag::type::transform_list, SVGPP_TEMPLATE_ARGS_PASS>
     typedef transform_grammar<
       iterator_t, 
       typename adapted_context_t::type, 
-      typename transform_policy::number_type,
+      typename args_t::number_type,
       typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::load_transform_policy>::policy
     > transform_grammar_t;
 

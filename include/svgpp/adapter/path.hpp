@@ -22,6 +22,8 @@
 namespace svgpp
 {
 
+// TODO: option to request arc by bezier estimation error from user code (now it is set by maximum angle step)
+
 namespace detail
 {
   template<class Coordinate>
@@ -615,6 +617,7 @@ public:
     coordinate_type y, 
     tag::absolute_coordinate tag)
   { 
+    x_axis_rotation *= boost::math::constants::degree<coordinate_type>();
     coordinate_type cx, cy, theta1, theta2;
     arc_endpoint_to_center(current_x, current_y, x, y,
       rx, ry, x_axis_rotation, large_arc_flag, sweep_flag,

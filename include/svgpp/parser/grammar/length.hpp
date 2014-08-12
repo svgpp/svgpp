@@ -18,6 +18,63 @@ namespace svgpp
 
 namespace qi = boost::spirit::qi;
 
+namespace detail
+{
+  struct length_units_symbols
+  {
+    enum type {em, ex, px, in, cm, mm, pt, pc};
+
+    length_units_symbols()
+    {
+      symbols_.add("em", em);
+      symbols_.add("ex", ex);
+      symbols_.add("px", px);
+      symbols_.add("in", in);
+      symbols_.add("cm", cm);
+      symbols_.add("mm", mm);
+      symbols_.add("pt", pt);
+      symbols_.add("pc", pc);
+    }
+
+    qi::symbols<char, type> const & symbols() const { return symbols_; }
+
+    template<class LengthFactory, class Value>
+    static typename LengthFactory::length_type create_length(LengthFactory const & length_factory, Value value, type units)
+    {
+      switch (units)
+      {
+      default:
+        BOOST_ASSERT(false);
+      case em:
+        return length_factory.create_length(value, tag::length_units::em());
+      case ex:
+        return length_factory.create_length(value, tag::length_units::ex());
+      case px:
+        return length_factory.create_length(value, tag::length_units::px());
+      case in:
+        return length_factory.create_length(value, tag::length_units::in());
+      case cm:
+        return length_factory.create_length(value, tag::length_units::cm());
+      case mm:
+        return length_factory.create_length(value, tag::length_units::mm());
+      case pt:
+        return length_factory.create_length(value, tag::length_units::pt());
+      case pc:
+        return length_factory.create_length(value, tag::length_units::pc());
+      }
+    }
+
+  private:
+    qi::symbols<char, type> symbols_;
+  };
+
+  template<class LengthFactory, class Value>
+  inline typename LengthFactory::length_type call_make_length_without_units(LengthFactory const & length_factory, Value value)
+  {
+    return length_factory.create_length(value, tag::length_units::none());
+  }
+}
+
 template <
   class PropertySource, 
   class Iterator, 
@@ -45,38 +102,19 @@ public:
     using qi::_r1;
     rule_ 
         =   number_ [_a = _1] 
-            >>  ( qi::lit("em")
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::em>, _r1, _a)]
-                | qi::lit("ex")
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::ex>, _r1, _a)]
-                | qi::lit("px")
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::px>, _r1, _a)]
-                | qi::lit("in")
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::in>, _r1, _a)]
-                | qi::lit("cm")
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::cm>, _r1, _a)]
-                | qi::lit("mm")
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::mm>, _r1, _a)]
-                | qi::lit("pt")
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::pt>, _r1, _a)]
-                | qi::lit("pc")
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::pc>, _r1, _a)]
+            >>  ( units_symbols_.symbols()
+                      [_val = phx::bind(&detail::length_units_symbols::create_length<LengthFactory, Number>, _r1, _a, _1)]
                 | qi::lit("%")
                       [_val = phx::bind(&length_grammar::call_make_length_percent, _r1, _a)]
                 | qi::eps
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::none>, _r1, _a)]
+                      [_val = phx::bind(&detail::call_make_length_without_units<LengthFactory, Number>, _r1, _a)]
                 );
   }
 
 private:
   typename this_type::start_type rule_; 
   qi::real_parser<Number, detail::number_policies<Number, tag::source::attribute> > number_;
-
-  template<class UnitsTag>
-  static length_type call_make_length(LengthFactory const & length_factory, Number value)
-  {
-    return length_factory.create_length(value, UnitsTag());
-  }
+  detail::length_units_symbols units_symbols_;
 
   static length_type call_make_length_percent(LengthFactory const & length_factory, Number value)
   {
@@ -107,36 +145,20 @@ public:
     using qi::_r1;
     rule_ 
         =   number_ [_a = _1] 
-            >>  ( ( qi::lit("em") | qi::lit("EM") )
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::em>, _r1, _a)]
-                | ( qi::lit("ex") | qi::lit("EX") )
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::ex>, _r1, _a)]
-                | ( qi::lit("px") | qi::lit("PX") )
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::px>, _r1, _a)]
-                | ( qi::lit("in") | qi::lit("IN") )
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::in>, _r1, _a)]
-                | ( qi::lit("cm") | qi::lit("CM") )
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::cm>, _r1, _a)]
-                | ( qi::lit("mm") | qi::lit("MM") )
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::mm>, _r1, _a)]
-                | ( qi::lit("pt") | qi::lit("PT") )
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::pt>, _r1, _a)]
-                | ( qi::lit("pc") | qi::lit("PC") )
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::pc>, _r1, _a)]
+            >>  ( qi::no_case
+                  [
+                    units_symbols_.symbols()
+                        [_val = phx::bind(&detail::length_units_symbols::create_length<LengthFactory, Number>, _r1, _a, _1)]
+                  ]
                 | qi::eps
-                      [_val = phx::bind(&length_grammar::call_make_length<tag::length_units::none>, _r1, _a)]
+                      [_val = phx::bind(&detail::call_make_length_without_units<LengthFactory, Number>, _r1, _a)]
                 );
   }
 
 private:
   typename this_type::start_type rule_; 
   qi::real_parser<Number, detail::number_policies<Number, tag::source::css> > number_;
-
-  template<class UnitsTag>
-  static length_type call_make_length(LengthFactory const & length_factory, Number value)
-  {
-    return length_factory.create_length(value, UnitsTag());
-  }
+  detail::length_units_symbols units_symbols_;
 };
 
 template <
@@ -162,38 +184,22 @@ public:
     using qi::_r1;
     rule_ 
         =   number_ [_a = _1] 
-            >>  ( ( qi::lit("em") | qi::lit("EM") )
-                      [_val = phx::bind(&this_type::call_make_length<tag::length_units::em>, _r1, _a)]
-                | ( qi::lit("ex") | qi::lit("EX") )
-                      [_val = phx::bind(&this_type::call_make_length<tag::length_units::ex>, _r1, _a)]
-                | ( qi::lit("px") | qi::lit("PX") )
-                      [_val = phx::bind(&this_type::call_make_length<tag::length_units::px>, _r1, _a)]
-                | ( qi::lit("in") | qi::lit("IN") )
-                      [_val = phx::bind(&this_type::call_make_length<tag::length_units::in>, _r1, _a)]
-                | ( qi::lit("cm") | qi::lit("CM") )
-                      [_val = phx::bind(&this_type::call_make_length<tag::length_units::cm>, _r1, _a)]
-                | ( qi::lit("mm") | qi::lit("MM") )
-                      [_val = phx::bind(&this_type::call_make_length<tag::length_units::mm>, _r1, _a)]
-                | ( qi::lit("pt") | qi::lit("PT") )
-                      [_val = phx::bind(&this_type::call_make_length<tag::length_units::pt>, _r1, _a)]
-                | ( qi::lit("pc") | qi::lit("PC") )
-                      [_val = phx::bind(&this_type::call_make_length<tag::length_units::pc>, _r1, _a)]
+            >>  ( qi::no_case
+                  [
+                    units_symbols_.symbols()
+                        [_val = phx::bind(&detail::length_units_symbols::create_length<LengthFactory, Number>, _r1, _a, _1)]
+                  ]
                 | qi::lit("%")
                       [_val = phx::bind(&this_type::call_make_length_percent, _r1, _a)]
                 | qi::eps
-                      [_val = phx::bind(&this_type::call_make_length<tag::length_units::none>, _r1, _a)]
+                      [_val = phx::bind(&detail::call_make_length_without_units<LengthFactory, Number>, _r1, _a)]
                 );
   }
 
 private:
   typename this_type::start_type rule_; 
   qi::real_parser<Number, detail::number_policies<Number, tag::source::css> > number_;
-
-  template<class UnitsTag>
-  static length_type call_make_length(LengthFactory const & length_factory, Number value)
-  {
-    return length_factory.create_length(value, UnitsTag());
-  }
+  detail::length_units_symbols units_symbols_;
 
   static length_type call_make_length_percent(LengthFactory const & length_factory, Number value)
   {

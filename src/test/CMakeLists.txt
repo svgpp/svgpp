@@ -70,10 +70,13 @@ add_library(CheckHeadersAutonomy STATIC
   ${CHECK_HEADERS_SOURCES}
 )
 
-add_executable(boost_param_test
-  boost_param_test.cpp 
-)
-
 add_executable(FullParseTest
   full_parse_test.cpp
 )
+
+if (MSVC)
+  set_target_properties(
+    FullParseTest
+    PROPERTIES COMPILE_FLAGS "/bigobj"
+  )
+endif()

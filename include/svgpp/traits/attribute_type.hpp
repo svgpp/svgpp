@@ -379,6 +379,28 @@ template<> struct attribute_type<tag::element::animateMotion, tag::attribute::ro
   typedef tag::type::type_or_literal<tag::type::number, tag::value::auto_, tag::value::auto_reverse> type; 
 };
 
+template<class Element> struct attribute_type<Element, tag::attribute::clip> 
+{ 
+  typedef tag::type::type_or_literal<tag::attribute::clip, tag::value::auto_, tag::value::inherit> type; 
+};
+
+template<class Element> struct attribute_type<Element, tag::attribute::color_profile> 
+{ 
+  // TODO: "auto | sRGB | <name> | <iri> | inherit" we should distinguish <iri> from <name>
+  typedef tag::type::type_or_literal<tag::type::string, tag::value::auto_, tag::value::sRGB, tag::value::inherit> type; 
+};
+
+template<class Element> struct attribute_type<Element, tag::attribute::enable_background> 
+{ 
+  typedef tag::type::type_or_literal<tag::attribute::enable_background, tag::value::accumulate, tag::value::new_, 
+    tag::value::inherit> type; 
+};
+
+template<class Element> struct attribute_type<Element, tag::attribute::text_decoration> 
+{ 
+  typedef tag::type::type_or_literal<tag::attribute::text_decoration, tag::value::none, tag::value::inherit> type; 
+};
+
 template<class ElementTag, class AttributeTag>
 struct attribute_type<ElementTag, AttributeTag,
   typename boost::enable_if_c<

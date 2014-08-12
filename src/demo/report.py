@@ -14,7 +14,9 @@ parser.add_argument('--report_dir', dest='report_dir', default='report',
 
 args = parser.parse_args()
 
-with open("report_templates/record.tmpl", "r") as tmpl_file:
+template_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "report_templates")
+
+with open(os.path.join(template_dir, "record.tmpl"), "r") as tmpl_file:
   record_template=Template(tmpl_file.read())
 
 try:
@@ -28,7 +30,7 @@ for glob_arg in args.files:
     if subprocess.call([args.executable, file, out_image_name]) == 0:
       report_records += record_template.substitute(header=file, raster_file=out_image_name, svg_file=file)
 
-with open("report_templates/report.tmpl", "r") as tmpl_file:
+with open(os.path.join(template_dir, "report.tmpl"), "r") as tmpl_file:
   with open("report.html", "w") as report_file:
     report_file.write(Template(tmpl_file.read()).substitute(records = report_records))
       

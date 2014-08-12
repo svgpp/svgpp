@@ -79,6 +79,21 @@ struct LoadValuePolicy
     UseValue(value3);
     UseValue(value4);
   }
+
+  template<class AttributeTag, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
+  static void set(Context & context, AttributeTag tag, T1 const & value1, T2 const & value2, T3 const & value3, 
+    T4 const & value4, T5 const & value5, T6 const & value6, T7 const & value7, T8 const & value8)
+  {
+    CheckAttributeTag<AttributeTag>();
+    UseValue(value1);
+    UseValue(value2);
+    UseValue(value3);
+    UseValue(value4);
+    UseValue(value5);
+    UseValue(value6);
+    UseValue(value7);
+    UseValue(value8);
+  }
 };
 
 struct LoadTextPolicy
@@ -185,15 +200,10 @@ int main()
     load_text_policy<LoadTextPolicy>,
     load_transform_policy<LoadTransformPolicy>,
     load_path_policy<LoadPathPolicy>,
-    ignored_elements<boost::mpl::set0<> >,
-    //ignored_attributes<boost::mpl::set0<> >
+    ignored_elements<boost::mpl::set1<tag::element::filter> >,
     ignored_attributes<boost::mpl::set<
-      tag::attribute::clip,
-      tag::attribute::color_profile,
       tag::attribute::cursor,
-      tag::attribute::enable_background,
       tag::attribute::font_size,
-      tag::attribute::text_decoration,
       tag::attribute::glyph_name,
       tag::attribute::u1,
       tag::attribute::u2,

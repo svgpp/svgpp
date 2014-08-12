@@ -6,6 +6,7 @@
 // See http://github.com/svgpp/svgpp for library home page.
 
 SVGPP_ON_VALUE(A)
+SVGPP_ON_VALUE(accumulate)
 SVGPP_ON_VALUE(align)
 SVGPP_ON_VALUE(all)
 SVGPP_ON_VALUE(alphabetic)

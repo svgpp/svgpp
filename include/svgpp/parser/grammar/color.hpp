@@ -47,6 +47,8 @@ public:
   {
     namespace phx = boost::phoenix;
     using qi::_1;
+    using qi::_2;
+    using qi::_3;
     using qi::_a;
     using qi::_b;
     using qi::_c;
@@ -79,24 +81,23 @@ public:
                );
 
     components_rule 
-        =       
-               integer [_a = _1] 
+        =   (  integer
             >> comma 
-            >> integer [_b = _1] 
+            >> integer
             >> comma 
-            >> integer 
-              [_val = phx::bind(&color_grammar::absolute_components, _a, _b, _1)];
+            >> integer
+            ) [_val = phx::bind(&color_grammar::absolute_components, _1, _2, _3)];
 
     percentage_rule 
-        =      number [_a = _1] 
+        =   (  number 
             >> '%'
             >> comma 
-            >> number [_b = _1] 
+            >> number 
             >> '%' 
             >> comma 
             >> number 
-              [_val = phx::bind(&color_grammar::percent_components, _a, _b, _1)]
-            >> '%' ;
+            >> '%'
+            ) [_val = phx::bind(&color_grammar::percent_components, _1, _2, _3)];
   }
 
 private:
@@ -105,8 +106,8 @@ private:
   typename this_type::start_type color;
   qi::rule<Iterator> comma;
   qi::rule<Iterator, color_type (), qi::locals<unsigned int> > hex_rule;
-  qi::rule<Iterator, color_type (), qi::locals<unsigned char, unsigned char> > components_rule;
-  qi::rule<Iterator, color_type (), qi::locals<number_type, number_type> > percentage_rule;
+  qi::rule<Iterator, color_type ()> components_rule;
+  qi::rule<Iterator, color_type ()> percentage_rule;
   qi::uint_parser<unsigned char, 10, 1, 3> integer;
   // There was mistake in SVG 1.1 that limits percentage to integer values, while CSS permits floating point numbers.
   // Till fixed version is not released, we will use CSS version of percentage definition.
