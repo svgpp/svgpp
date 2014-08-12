@@ -77,17 +77,17 @@ public:
     otherCoefficient_ = std::sqrt((width * width + height * height) / 2) * 0.01;
   }
 
-  LengthType create_length(NumberType number, tag::length_units::percent, tag::width_length) const 
+  LengthType create_length(NumberType number, tag::length_units::percent, tag::length_dimension::width) const 
   {
     return static_cast<LengthType>(widthCoefficient_ * number);
   }
 
-  LengthType create_length(NumberType number, tag::length_units::percent, tag::height_length) const 
+  LengthType create_length(NumberType number, tag::length_units::percent, tag::length_dimension::height) const 
   {
     return static_cast<LengthType>(heightCoefficient_ * number);
   }
 
-  LengthType create_length(NumberType number, tag::length_units::percent, tag::not_width_nor_height_length) const 
+  LengthType create_length(NumberType number, tag::length_units::percent, tag::length_dimension::not_width_nor_height) const 
   {
     return static_cast<LengthType>(otherCoefficient_ * number);
   }
@@ -184,7 +184,7 @@ public:
   // Optional length_to_user_coordinate interface that may be used when converting
   // basic shapes coordinates to path in some adapters
   typedef LengthType coordinate_type;
-  static coordinate_type length_to_user_coordinate(LengthType length, tag::length_dimension const &) 
+  static coordinate_type length_to_user_coordinate(LengthType length, tag::length_dimension::any const &) 
   {
     return length;
   }

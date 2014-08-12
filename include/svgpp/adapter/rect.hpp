@@ -42,20 +42,20 @@ public:
     typename length_policy_t::length_factory_type::coordinate_type
       x = 0, y = 0, rx = 0, ry = 0, width, height;
     if (x_)
-      x = converter.length_to_user_coordinate(*x_, tag::width_length());
+      x = converter.length_to_user_coordinate(*x_, tag::length_dimension::width());
     if (y_)
-      y = converter.length_to_user_coordinate(*y_, tag::height_length());
-    width = converter.length_to_user_coordinate(width_, tag::width_length());
-    height = converter.length_to_user_coordinate(height_, tag::height_length());
+      y = converter.length_to_user_coordinate(*y_, tag::length_dimension::height());
+    width = converter.length_to_user_coordinate(width_, tag::length_dimension::width());
+    height = converter.length_to_user_coordinate(height_, tag::length_dimension::height());
     if (rx_)
     {
-      rx = converter.length_to_user_coordinate(*rx_, tag::width_length());
+      rx = converter.length_to_user_coordinate(*rx_, tag::length_dimension::width());
       if (!ry_)
         ry = rx;
     }
     if (ry_)
     {
-      ry = converter.length_to_user_coordinate(*ry_, tag::height_length());
+      ry = converter.length_to_user_coordinate(*ry_, tag::length_dimension::height());
       if (!rx_)
         rx = ry;
     }

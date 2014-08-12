@@ -79,7 +79,7 @@ template <
   class PropertySource, 
   class Iterator, 
   class LengthFactory, 
-  class PercentageDirectionTag = tag::not_width_nor_height_length,
+  class PercentageDirectionTag = tag::length_dimension::not_width_nor_height,
   class Number = typename LengthFactory::number_type
 >
 class length_grammar;

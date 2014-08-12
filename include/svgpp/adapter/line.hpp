@@ -35,13 +35,13 @@ public:
     typename length_policy_t::length_factory_type::coordinate_type
       x1 = 0, y1 = 0, x2 = 0, y2 = 0;
     if (x1_)
-      x1 = converter.length_to_user_coordinate(*x1_, tag::width_length());
+      x1 = converter.length_to_user_coordinate(*x1_, tag::length_dimension::width());
     if (x2_)
-      x2 = converter.length_to_user_coordinate(*x2_, tag::width_length());
+      x2 = converter.length_to_user_coordinate(*x2_, tag::length_dimension::width());
     if (y1_)
-      y1 = converter.length_to_user_coordinate(*y1_, tag::height_length());
+      y1 = converter.length_to_user_coordinate(*y1_, tag::length_dimension::height());
     if (y2_)
-      y2 = converter.length_to_user_coordinate(*y2_, tag::height_length());
+      y2 = converter.length_to_user_coordinate(*y2_, tag::length_dimension::height());
 
     typedef detail::unwrap_context<Context, tag::load_basic_shapes_policy> load_basic_shapes;
     load_basic_shapes::policy::set_line(load_basic_shapes::get(context), x1, y1, x2, y2);

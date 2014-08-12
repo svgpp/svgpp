@@ -14,6 +14,8 @@ Contents:
    lesson01
    reference01
    overview
+   length
+   error
 
 
 Indices and tables
@@ -22,4 +24,5 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
 

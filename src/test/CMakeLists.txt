@@ -72,6 +72,8 @@ add_library(CheckHeadersAutonomy STATIC
 
 add_executable(FullParseTest
   full_parse_test.cpp
+  full_parse_test2.cpp
+  full_parse_test_common.hpp
 )
 
 if (MSVC)

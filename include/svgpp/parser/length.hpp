@@ -16,7 +16,7 @@
 #include <svgpp/parser/detail/finite_function_iterator.hpp>
 #include <svgpp/parser/detail/parse_list_iterator.hpp>
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
-#include <svgpp/traits/length_direction_by_attribute.hpp>
+#include <svgpp/traits/length_dimension_by_attribute.hpp>
 
 namespace svgpp 
 { 
@@ -28,7 +28,7 @@ struct value_parser<tag::type::length, SVGPP_TEMPLATE_ARGS_PASS>
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
                                     PropertySource)
   {
-    typedef typename traits::length_direction_by_attribute<AttributeTag>::type direction_t;
+    typedef typename traits::length_dimension_by_attribute<AttributeTag>::type direction_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::parameter::parameters<
@@ -67,7 +67,7 @@ struct value_parser<tag::type::list_of<tag::type::length>, SVGPP_TEMPLATE_ARGS_P
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
                                     PropertySource property_source)
   {
-    typedef typename traits::length_direction_by_attribute<AttributeTag>::type direction_t;
+    typedef typename traits::length_dimension_by_attribute<AttributeTag>::type direction_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     return parseT<
       boost::mpl::bind<

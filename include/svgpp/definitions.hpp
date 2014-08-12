@@ -129,11 +129,14 @@ namespace value
   struct xMaxYMax                     { typedef max_tag x; typedef max_tag y; };
 }
 
-struct length_dimension { protected: length_dimension() {} };
-// Percentage length value should correspond to one of the following to be correctly converted to user coordinate system
-struct width_length: length_dimension {};
-struct height_length: length_dimension {};
-struct not_width_nor_height_length: length_dimension {};
+namespace length_dimension
+{
+  struct any { protected: any() {} };
+  // Percentage length value should correspond to one of the following to be correctly converted to user coordinate system
+  struct width                : any {};
+  struct height               : any {};
+  struct not_width_nor_height : any {};
+}
 
 struct iri_fragment {}; // Prefixes fragment part of IRI in arguments list
 

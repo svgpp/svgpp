@@ -88,13 +88,13 @@ namespace detail
       viewport_width = converter.length_to_user_coordinate(
         viewport_width_
           ? *viewport_width_
-          : converter.create_length(100, tag::length_units::percent(), tag::width_length()),
-        tag::width_length());
+          : converter.create_length(100, tag::length_units::percent(), tag::length_dimension::width()),
+        tag::length_dimension::width());
       viewport_height = converter.length_to_user_coordinate(
         viewport_height_
           ? *viewport_height_
-          : converter.create_length(100, tag::length_units::percent(), tag::height_length()),
-        tag::height_length());
+          : converter.create_length(100, tag::length_units::percent(), tag::length_dimension::height()),
+        tag::length_dimension::height());
     }
 
   private:
@@ -111,11 +111,11 @@ namespace detail
     {
       // Init with defaults first
       viewport_width = converter.length_to_user_coordinate(
-        converter.create_length(100, tag::length_units::percent(), tag::width_length()),
-        tag::width_length());
+        converter.create_length(100, tag::length_units::percent(), tag::length_dimension::width()),
+        tag::length_dimension::width());
       viewport_height = converter.length_to_user_coordinate(
-        converter.create_length(100, tag::length_units::percent(), tag::height_length()),
-        tag::height_length());
+        converter.create_length(100, tag::length_units::percent(), tag::length_dimension::height()),
+        tag::length_dimension::height());
 
       LoadPolicy::get_reference_viewport_size(context, viewport_width, viewport_height);
     }
@@ -265,10 +265,10 @@ public:
 
     Coordinate viewport_x = converter.length_to_user_coordinate(
       viewport_x_ ? *viewport_x_ : converter.create_length(0, tag::length_units::none()),
-      tag::width_length());
+      tag::length_dimension::width());
     Coordinate viewport_y = converter.length_to_user_coordinate(
       viewport_y_ ? *viewport_y_ : converter.create_length(0, tag::length_units::none()),
-      tag::height_length());
+      tag::length_dimension::height());
 
     Coordinate viewport_width = 0, viewport_height = 0;
     base_size_holder::template get_viewport_size<typename load_viewport::policy>(context, converter, viewport_width, viewport_height);

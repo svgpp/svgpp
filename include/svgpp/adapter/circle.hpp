@@ -35,12 +35,12 @@ public:
     typename length_policy_t::length_factory_type::coordinate_type
       cx = 0, cy = 0, r = 0;
     if (cx_)
-      cx = converter.length_to_user_coordinate(*cx_, tag::width_length());
+      cx = converter.length_to_user_coordinate(*cx_, tag::length_dimension::width());
     if (cy_)
-      cy = converter.length_to_user_coordinate(*cy_, tag::height_length());
+      cy = converter.length_to_user_coordinate(*cy_, tag::length_dimension::height());
     if (r_) // required attribute
     {
-      r = converter.length_to_user_coordinate(*r_, tag::not_width_nor_height_length());
+      r = converter.length_to_user_coordinate(*r_, tag::length_dimension::not_width_nor_height());
       if (r < 0)
       {
         typedef detail::unwrap_context<Context, tag::error_policy> error_policy;

@@ -13,7 +13,7 @@
 #include <svgpp/detail/required_attributes_check.hpp>
 #include <svgpp/parser/css_style_iterator.hpp>
 #include <svgpp/policy/error.hpp>
-#include <svgpp/policy/xml_fwd.hpp>
+#include <svgpp/policy/xml/fwd.hpp>
 #include <svgpp/detail/names_dictionary.hpp>
 #include <boost/mpl/if.hpp>
 

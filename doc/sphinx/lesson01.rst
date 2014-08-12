@@ -1,5 +1,11 @@
-﻿Getting started
-=========
+﻿.. _Associative Sequence: http://www.boost.org/doc/libs/1_56_0/libs/mpl/doc/refmanual/associative-sequence.html
+.. _Metafunction Class: http://www.boost.org/doc/libs/1_56_0/libs/mpl/doc/refmanual/metafunction-class.html
+
+Getting started
+================
+
+Handling Shapes Geometry
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 SVG++ headers are included like this::
 
@@ -87,18 +93,17 @@ Let's start learning SVG++ with simple SVG to `WKT <http://en.wikipedia.org/wiki
 
 В большинстве случаев обрабатывать нужно только некоторое подмножество элементов SVG, для этого мы передаем именованный 
 параметр ``processed_elements`` шаблонному классу ``document_traversal``. ``processed_elements`` должен быть моделью 
-`Associative Sequence <http://www.boost.org/doc/libs/1_55_0/libs/mpl/doc/refmanual/associative-sequence.html>`_ в терминах 
-Boost.MPL, например ``boost::mpl::set``. Мы добавляем к последовательности ``traits::shape_elements`` (enumerates SVG 
-`shapes <http://www.w3.org/TR/SVG11/intro.html#TermShape>`_) два structural elements *svg* and *g*.
+`Associative Sequence`_ , например ``boost::mpl::set``. 
+Мы добавляем к последовательности ``traits::shape_elements`` (enumerates SVG 
+`shapes <http://www.w3.org/TR/SVG11/intro.html#TermShape>`_) два structural elements **svg** and **g**.
 
-SVG++ references SVG element types by *tags* from ``svgpp::tag::element`` namespace. Following pseudo-code illustrates tags definition (actual code is in ``svgpp/definitions.hpp``)::
+SVG++ references SVG element types by :ref:`tags <tags-section>`.
 
-struct svgpp::tag::element::any {};
-//...
-struct svgpp::tag::element::rect: svgpp::tag::element::any {};
-//...
-
-Аналогично выбранным для обработки элементам, выбираем подмножество атрибутов и передаем его в параметре ``processed_attributes``. Именованный параметр ``processed_attributes`` тоже должен быть моделью Associative Sequence, но может содержать как тэги атрибутов, так и пары *<element tag, attribute tag>* ``boost::mpl::pair<ElementTag, AttributeTag>``. ``traits::shapes_attributes_by_element`` содержит атрибуты, определяющие геометрию всех shapes ({*x*, *y*, *width*, *height*, *rx* and *ry*} for *rect*, {*d*} for *path* etc). 
+Аналогично выбранным для обработки элементам, выбираем подмножество атрибутов и передаем его в параметре 
+``processed_attributes``. Именованный параметр ``processed_attributes`` тоже должен быть моделью `Associative Sequence`_, 
+но может содержать как тэги атрибутов, так и пары *<element tag, attribute tag>* ``boost::mpl::pair<ElementTag, AttributeTag>``. 
+``traits::shapes_attributes_by_element`` содержит атрибуты, определяющие геометрию всех shapes 
+({**x**, **y**, **width**, **height**, **rx** and **ry**} for **rect**, {**d**} for **path** etc). 
 
 В этом примере один объект-контекст используется для всех элементов SVG, ``on_enter_element(element_tag)`` вызывается при каждом переходе к дочернему элементу, в качестве аргумента передается тэг типа дочернего элемента. ``on_exit_element`` вызывается при выходе из дочернего объекта.
 
@@ -129,8 +134,8 @@ SVG++ по умолчанию использует path-*адаптер*, кот
 
 Another adapter in SVG++ converts `Basic shapes <http://www.w3.org/TR/SVG11/shapes.html>`_ to path.
 
-XML parser
-=========
+XML Parser
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We didn't declare ``xml_element_t`` yet. It can be any.
 Let's use `RapidXML NS <https://github.com/svgpp/rapidxml_ns>`_ library (it is a clone of 
@@ -144,12 +149,12 @@ Then we must include *policy* for XML parser chosen::
 
 XML policies headers don't include parser header because their location and names may differ. Programmer must include appropriate XML parser header herself before including policy header.
 
-Handling transform attribute
-=========
+Handling Transformation 
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Just add ``tag::attribute::transform`` to ``processed_attributes`` list and ``set_transform_matrix`` to ``Context`` class::
 
-  void set_transform_matrix(const boost::array<double, 6> & matrix) {}
+  void set_transform_matrix(const boost::array<double, 6> & matrix);
 
 Passed ``matrix`` array ``[a b c d e f]`` correspond to this matrix:
 
@@ -157,8 +162,69 @@ Passed ``matrix`` array ``[a b c d e f]`` correspond to this matrix:
 
 The default SVG++ behavior is to join all transformations in ``transform`` attribute into single affine transformations matrix.
 
-Creating contexts
-=========
+Creating Contexts
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 До сих пор использовался один экземпляр объекта-контекст для загрузки всех элементов SVG.
-Удобно создавать на стеке экземпляр объекта-контекста для каждого встреченного элемента SVG. Это поведение контролируется фабриками контекстов, передаваемыми в параметре ``context_factories`` класса ``document_traversal``.
+Удобно создавать на стеке экземпляр объекта-контекста для каждого встреченного элемента SVG. Это поведение контролируется 
+фабриками контекстов, передаваемыми в параметре ``context_factories`` класса ``document_traversal``.
+
+Context factories - это `Metafunction Class`_, принимающий в качестве параметров тип родительского контекста и тэг элемента 
+и возвращающий тип фабрики контекста::
+
+  struct ChildContextFactories
+  {
+    template<class ParentContext, class ElementTag>
+    struct apply;
+  };
+
+  document_traversal<
+    /* ... */
+    context_factories<ChildContextFactories>,
+    /* ... */
+  >::load(/*...*/);
+
+В нашем примере обрабатываются structural elements (**svg** и **g**) и shape elements (**path**, **rect**, **circle** etc).
+У structural elements обрабатывается только атрибут **transform**, а у shape elements - и **transform** и attributes 
+describing shape::
+
+  class Transformable
+  {
+  public:
+    Transformable(Transformable const & parent);
+    void on_exit_element() {}
+
+    void set_transform_matrix(const boost::array<double, 6> & matrix);
+  };
+
+  class Shape: public Transformable
+  {
+  public:
+    Shape(Transformable const & parent);
+
+    void path_move_to(double x, double y, tag::absolute_coordinate); 
+    /* ... */
+  };
+
+  struct ChildContextFactories
+  {
+    template<class ParentContext, class ElementTag, class Enable = void>
+    struct apply
+    {
+      // Default definition handles "svg" and "g" elements
+      typedef factory::context::on_stack<Transformable, Transformable> type;
+    };
+  };
+
+  // This specialization handles all shape elements (elements from traits::shape_elements sequence)
+  template<class ElementTag>
+  struct ChildContextFactories::apply<Transformable, ElementTag, 
+    typename boost::enable_if<boost::mpl::has_key<traits::shape_elements, ElementTag> >::type>
+  {
+    typedef factory::context::on_stack<Transformable, Shape> type;
+  };
+
+Factory ``factory::context::on_stack<ParentContext, ChildContext>`` создаёт объект контекста для дочернего элемента
+типа ``ChildContext``, передавая в конструктор ссылку на родительский контекст. Время жизни контекста - до завершения обработки
+element content (child elements and text nodes). ``on_exit_element()`` вызывается перед уничтожением объекта контекста.
+

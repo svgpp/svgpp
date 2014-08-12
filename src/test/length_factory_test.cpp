@@ -26,13 +26,13 @@ TEST(LengthFactory, full)
   EXPECT_NEAR(35.43307, factory.create_length(1, svgpp::tag::length_units::cm()), 1e-5);
   EXPECT_NEAR(90, factory.create_length(1, svgpp::tag::length_units::in()), 1e-8);
 
-  EXPECT_NEAR(125, factory.create_length(50, svgpp::tag::length_units::percent(), svgpp::tag::width_length()), 1e-8);
-  EXPECT_NEAR(60, factory.create_length(50, svgpp::tag::length_units::percent(), svgpp::tag::height_length()), 1e-8);
+  EXPECT_NEAR(125, factory.create_length(50, svgpp::tag::length_units::percent(), svgpp::tag::length_dimension::width()), 1e-8);
+  EXPECT_NEAR(60, factory.create_length(50, svgpp::tag::length_units::percent(), svgpp::tag::length_dimension::height()), 1e-8);
   EXPECT_NEAR(std::sqrt(250. * 250 + 120 * 120)/std::sqrt(2.)/2, 
-    factory.create_length(50, svgpp::tag::length_units::percent(), svgpp::tag::not_width_nor_height_length()), 1e-8);
+    factory.create_length(50, svgpp::tag::length_units::percent(), svgpp::tag::length_dimension::not_width_nor_height()), 1e-8);
 
   factory.set_viewport_size(300, 300);
-  EXPECT_NEAR(270, factory.create_length(90, svgpp::tag::length_units::percent(), svgpp::tag::not_width_nor_height_length()), 1e-8);
+  EXPECT_NEAR(270, factory.create_length(90, svgpp::tag::length_units::percent(), svgpp::tag::length_dimension::not_width_nor_height()), 1e-8);
 
   factory.set_user_units_coefficient(777);
   EXPECT_NEAR(77.7, factory.create_length(0.1, svgpp::tag::length_units::px()), 1e-8);

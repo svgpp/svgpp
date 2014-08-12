@@ -1,37 +1,26 @@
 #include "full_parse_test_common.hpp"
 
-int main()
+void load_filter(rapidxml_ns::xml_node<char> const * svg_element)
 {
-  rapidxml_ns::xml_document<char> doc;
-  rapidxml_ns::xml_node<char> const * svg_element = doc.first_node();
-
   Context context;
   document_traversal<
     viewport_policy<policy::viewport::raw>,
     load_text_policy<LoadTextPolicy>,
     load_transform_policy<LoadTransformPolicy>,
     load_path_policy<LoadPathPolicy>,
-    ignored_elements<boost::mpl::set1<tag::element::filter> >,
+    ignored_elements<boost::mpl::set0<> >,
     ignored_attributes<boost::mpl::set<
       tag::attribute::cursor,
       tag::attribute::font_size,
-      tag::attribute::glyph_name,
-      tag::attribute::u1,
-      tag::attribute::u2,
-      tag::attribute::g1,
-      tag::attribute::g2,
       /*boost::mpl::pair<tag::element::animate, tag::attribute::values>,
       boost::mpl::pair<tag::element::animateColor, tag::attribute::values>,
       boost::mpl::pair<tag::element::animateMotion, tag::attribute::values>,
       boost::mpl::pair<tag::element::animateTransform, tag::attribute::values>,*/
       tag::attribute::values,
       tag::attribute::keyTimes,
-      tag::attribute::keySplines,
-      tag::attribute::unicode_range,
-      tag::attribute::panose_1,
-      tag::attribute::widths
+      tag::attribute::keySplines
     >::type>
-  >::load_document(svg_element, context);
-
-  return 0;
+  >::load_referenced_element<
+    expected_elements<boost::mpl::set1<tag::element::filter> >
+  >::load(svg_element, context);
 }

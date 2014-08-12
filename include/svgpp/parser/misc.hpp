@@ -258,13 +258,13 @@ struct value_parser<tag::attribute::clip, SVGPP_TEMPLATE_ARGS_PASS>
       PropertySource, 
       iterator_t, 
       typename length_policy_t::length_factory_type, 
-      tag::width_length
+      tag::length_dimension::width
     > length_grammar_x;
     SVGPP_STATIC_IF_SAFE const length_grammar<
       PropertySource, 
       iterator_t, 
       typename length_policy_t::length_factory_type, 
-      tag::height_length
+      tag::length_dimension::height
     > length_grammar_y;
 
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);

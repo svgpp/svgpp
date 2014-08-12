@@ -1,7 +1,11 @@
-Организация библиотеки
-=============
+.. _Associative Sequence: http://www.boost.org/doc/libs/1_55_0/libs/mpl/doc/refmanual/associative-sequence.html
 
-Тэги
+Организация библиотеки
+=============================
+
+.. _tags-section:
+
+Tags
 -------
 
 В библиотеке SVG++ для обозначения многих сущностей SVG используется концепция тэгов - пустых структур, которые используются in compile time with overload resolution and metaprogramming techniques. 
@@ -42,8 +46,8 @@
 Traits
 -------
 
-Metafunction class child_element_types
-^^^^^^^^^^^^
+Metafunction child_element_types
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Synopsis
 """""""""""
@@ -67,11 +71,11 @@ Parameter
 Return type
 """""""""""
 
-Associative Sequence (Boost.MPL), containing tags of elements that can be childs of element corresponding to ``ElementTag``.
+`Associative Sequence`_, containing tags of elements that can be childs of element corresponding to ``ElementTag``.
 
 
-Metafunction class element_required_attributes
-^^^^^^^^^^^^
+Metafunction element_required_attributes
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Synopsis
 """""""""""

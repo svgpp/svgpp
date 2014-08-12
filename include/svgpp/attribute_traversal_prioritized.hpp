@@ -14,7 +14,7 @@
 #include <svgpp/traits/attribute_groups.hpp>
 #include <svgpp/attribute_traversal_common.hpp>
 #include <svgpp/policy/error.hpp>
-#include <svgpp/policy/xml_fwd.hpp>
+#include <svgpp/policy/xml/fwd.hpp>
 #include <svgpp/template_parameters.hpp>
 #include <bitset>
 #include <boost/mpl/at.hpp>

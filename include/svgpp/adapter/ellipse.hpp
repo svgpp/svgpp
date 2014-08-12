@@ -36,17 +36,17 @@ public:
     typename length_policy_t::length_factory_type::coordinate_type
       cx = 0, cy = 0, rx = 0, ry = 0;
     if (cx_)
-      cx = converter.length_to_user_coordinate(*cx_, tag::width_length());
+      cx = converter.length_to_user_coordinate(*cx_, tag::length_dimension::width());
     if (cy_)
-      cy = converter.length_to_user_coordinate(*cy_, tag::height_length());
+      cy = converter.length_to_user_coordinate(*cy_, tag::length_dimension::height());
     if (rx_ && ry_) // required attributes
     {
-      rx = converter.length_to_user_coordinate(*rx_, tag::width_length());
+      rx = converter.length_to_user_coordinate(*rx_, tag::length_dimension::width());
       if (rx < 0)
         return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::rx());
       if (rx == 0)
         return true;
-      ry = converter.length_to_user_coordinate(*ry_, tag::height_length());
+      ry = converter.length_to_user_coordinate(*ry_, tag::length_dimension::height());
       if (ry < 0)
         return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::ry());
       if (ry == 0)

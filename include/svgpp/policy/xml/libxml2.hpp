@@ -11,7 +11,7 @@
 
 #include <svgpp/definitions.hpp>
 #include <svgpp/detail/namespace.hpp>
-#include <svgpp/policy/xml_fwd.hpp>
+#include <svgpp/policy/xml/fwd.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/range/as_literal.hpp>
 #include <boost/range/iterator_range.hpp>

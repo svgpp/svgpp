@@ -33,21 +33,21 @@ public:
 
     Coordinate ref_x = converter.length_to_user_coordinate(
       ref_x_ ? *ref_x_ : converter.create_length(0, tag::length_units::none()),
-      tag::width_length());
+      tag::length_dimension::width());
     Coordinate ref_y = converter.length_to_user_coordinate(
       ref_y_ ? *ref_y_ : converter.create_length(0, tag::length_units::none()),
-      tag::height_length());
+      tag::length_dimension::height());
 
     Coordinate marker_width = converter.length_to_user_coordinate(
       marker_width_
         ? *marker_width_
         : converter.create_length(3, tag::length_units::none()),
-      tag::width_length());
+      tag::length_dimension::width());
     Coordinate marker_height = converter.length_to_user_coordinate(
       marker_height_
         ? *marker_height_
         : converter.create_length(3, tag::length_units::none()),
-      tag::height_length());
+      tag::length_dimension::height());
 
     if (marker_width == 0 || marker_height == 0)
       // TODO: disable rendering
