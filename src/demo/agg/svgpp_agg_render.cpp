@@ -31,12 +31,13 @@
 #include <agg_span_gradient.h>
 #include <agg_span_interpolator_linear.h>
 
+#include <stb/stb_image_write.h>
+
 #include <map>
 #include <set>
 #include <fstream>
 #include <numeric>
 
-#include "bmp_header.hpp"
 #include "stylable.hpp"
 #include "gradient.hpp"
 #include "clip_path.hpp"
@@ -310,6 +311,11 @@ inline boost::gil::rgba8_view_t gilView(pixfmt_t & pixfmt)
 class Transformable
 {
 public:
+  Transformable()
+  {
+    transform_ = agg::trans_affine_translation(0.5, 0.5);
+  }
+
   void set_transform_matrix(const boost::array<double, 6> & matrix)
   {
     transform_.premultiply(agg::trans_affine(matrix.data()));
@@ -453,7 +459,7 @@ protected:
 
 void Canvas::applyFilter()
 {
-  if (!style().filter_)
+  //if (!style().filter_)
     return;
 
   struct View: IFilterView
@@ -972,15 +978,15 @@ void Path::strokePath(EffectivePaint const & stroke,
   curved_stroked.line_cap(style().line_cap_);
   curved_stroked.miter_limit(style().miterlimit_);
   curved_stroked.inner_join(agg::inner_round);
-  //curved_stroked.approximation_scale(scl);
+  curved_stroked.approximation_scale(transform().scale());
 
   // If the *visual* line width is considerable we 
   // turn on processing of curve cusps.
   //---------------------
-  /*if(attr.stroke_width * scl > 1.0)
+  if(style().stroke_width_ * transform().scale() > 1.0)
   {
-      m_curved.angle_tolerance(0.2);
-  }*/
+      curved.angle_tolerance(0.2);
+  }
 
   typedef agg::conv_transform<VertexSourceStroked> transformed_t;
   transformed_t curved_stroked_transformed(curved_stroked, transform());
@@ -1196,11 +1202,22 @@ int main(int argc, char * argv[])
   }
   ImageBuffer buffer;
   
+  XMLDocument xmlDoc;
   try
   {
-    XMLDocument xmlDoc;
     xmlDoc.load(argv[1]);
     renderDocument(xmlDoc, buffer);
+  }
+  catch(svgpp::exception_base const & e)
+  {
+    typedef boost::error_info<svgpp::tag::error_info::xml_element, XMLElement const *> element_error_info;
+    std::cerr << "Error reading file " << argv[1];
+#if defined(SVG_PARSER_RAPIDXML_NS)
+    if (XMLElement const * const * element = boost::get_error_info<element_error_info>(e))
+      std::cerr << " in element \"" << std::string((**element)->name(), (**element)->name() + (**element)->name_size())
+        << "\"";
+#endif
+    std::cerr << ": " << e.what() << "\n";
   }
   catch(std::exception const & e)
   {
@@ -1209,16 +1226,12 @@ int main(int argc, char * argv[])
   }
 
   // Saving output
-  std::ofstream file(argc > 2 ? argv[2] : "svgpp.bmp", std::ios::out | std::ios::binary);
-  if (file)
+  if (1 != stbi_write_png(argc > 2 ? argv[2] : "svgpp.png", buffer.pixfmt().width(), buffer.pixfmt().height(), 
+    4, // RGBA
+    reinterpret_cast<const char *>(buffer.pixfmt().row_ptr(0)), 
+    buffer.pixfmt().stride()))
   {
-    bmp::write_32bit_header(file, buffer.pixfmt().width(), buffer.pixfmt().height());
-    file.write(reinterpret_cast<const char *>(buffer.pixfmt().row_ptr(0)), 
-      buffer.pixfmt().width() * buffer.pixfmt().height() * 4);
-  }
-  else
-  {
-    std::cerr << "Can't open file for writing\n";
+    std::cerr << "Error writing to PNG file\n";
     return 1;
   }
   return 0;

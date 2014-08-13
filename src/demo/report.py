@@ -26,7 +26,7 @@ except FileExistsError: pass
 report_records = ''
 for glob_arg in args.files:
   for file in glob.iglob(glob_arg):
-    out_image_name = os.path.join(args.report_dir, os.path.basename(file) + '.bmp')
+    out_image_name = os.path.join(args.report_dir, os.path.basename(file) + '.png')
     if subprocess.call([args.executable, file, out_image_name]) == 0:
       report_records += record_template.substitute(header=file, raster_file=out_image_name, svg_file=file)
 

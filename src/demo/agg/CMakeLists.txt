@@ -20,7 +20,6 @@ source_group("AGG" FILES ${AGG_SOURCES})
 set(AGG_DEMO_SOURCES
   ${AGG_SOURCES}
   svgpp_agg_render.cpp 
-  bmp_header.hpp
   gradient.hpp
   gradient.cpp
   stylable.hpp
@@ -29,6 +28,7 @@ set(AGG_DEMO_SOURCES
   clip_path.cpp
   filter.hpp
   filter.cpp
+  stb.cpp
 )
 
 add_executable(svgpp_agg_render
