@@ -42,9 +42,9 @@ struct rgb_to_luminance_fn<boost::uint8_t, boost::uint8_t, boost::uint8_t, GrayC
   GrayChannelValue operator()(boost::uint8_t red, boost::uint8_t green, boost::uint8_t blue) const 
   {
     return boost::gil::channel_convert<GrayChannelValue>(boost::uint8_t(
-      ((boost::uint32_t(red)   * boost::uint32_t(0.2125 * (1 << 14)) 
+       (boost::uint32_t(red)   * boost::uint32_t(0.2125 * (1 << 14)) 
       + boost::uint32_t(green) * boost::uint32_t(0.7154 * (1 << 14)) 
-      + boost::uint32_t(blue)  * boost::uint32_t(0.0721 * (1 << 14)))) >> 14));
+      + boost::uint32_t(blue)  * boost::uint32_t(0.0721 * (1 << 14))) >> 14));
   }
 };
 

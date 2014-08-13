@@ -9,9 +9,10 @@
 
 #include <svgpp/config.hpp>
 #include <svgpp/definitions.hpp>
-#include <svgpp/parser/value_parser_fwd.hpp>
 #include <svgpp/parser/detail/common.hpp>
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
+#include <svgpp/parser/grammar/length.hpp>
+#include <svgpp/parser/value_parser_fwd.hpp>
 #include <svgpp/policy/load_value.hpp>
 #include <boost/mpl/pair.hpp>
 #include <boost/spirit/include/qi.hpp>

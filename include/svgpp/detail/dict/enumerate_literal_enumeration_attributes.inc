@@ -46,7 +46,6 @@ SVGPP_ON_ELEM_ATTR(animateMotion,     fill,    (freeze)(remove))
 SVGPP_ON_ELEM_ATTR(animateTransform,  fill,    (freeze)(remove))
 SVGPP_ON_ELEM_ATTR(set,               fill,    (freeze)(remove))
 SVGPP_ON_ATTR(filterUnits,                     (userSpaceOnUse)(objectBoundingBox))
-// TODO: font_stretch differ for attribute
 SVGPP_ON_ATTR(gradientUnits,                   (userSpaceOnUse)(objectBoundingBox))
 SVGPP_ON_ATTR(lengthAdjust,                    (spacing)(spacingAndGlyphs))
 SVGPP_ON_ATTR(markerUnits,                     (strokeWidth)(userSpaceOnUse))
@@ -79,7 +78,8 @@ SVGPP_ON_ATTR(yChannelSelector,                (R)(G)(B)(A))
 SVGPP_ON_ATTR(zoomAndPan,                      (disable)(magnify))
 
 SVGPP_ON_ATTR_NS(xml,   space,                 (default_)(preserve))
-SVGPP_ON_ATTR_NS(xlink, actuate,               (onLoad))
+SVGPP_ON_ATTR_NS(        xlink, actuate,       (onLoad))
 SVGPP_ON_ELEM_ATTR_NS(a, xlink, actuate,       (onRequest))
 SVGPP_ON_ATTR_NS(xlink, type,                  (simple))
-SVGPP_ON_ATTR_NS(xlink, show,                  (new_)(replace)(embed)(other)(none)) // TODO: on <a> only 'new' and 'replace' expected
+SVGPP_ON_ATTR_NS(        xlink, show,          (new_)(replace)(embed)(other)(none))
+SVGPP_ON_ELEM_ATTR_NS(a, xlink, show,          (new_)(replace)) 

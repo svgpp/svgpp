@@ -66,7 +66,7 @@ struct length_factory_t
     return length_t(val, tag);
   }
 
-  length_type create_length(double val, percent tag, svgpp::tag::length_dimension const &) const
+  length_type create_length(double val, percent tag, svgpp::tag::length_dimension::any const &) const
   {
     return length_t(val, tag);
   }

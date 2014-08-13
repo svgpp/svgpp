@@ -14,33 +14,12 @@ struct Context
   template<class Range>
   void set(svgpp::tag::attribute::points, Range const & r)
   {
-    for(boost::range_const_iterator<Range>::type it = boost::begin(r); it != boost::end(r); ++it)
+    for(typename boost::range_const_iterator<Range>::type it = boost::begin(r); it != boost::end(r); ++it)
       values_.push_back(*it);
   }
 
   pair_list_t values_;
 };
-
-template<class StringT>
-void valid_testT(StringT const & testStr, int r1, int r2)
-{
-  Context context;
-  EXPECT_TRUE(svgpp::value_parser<tag::attribute::points>::parse(
-    svgpp::tag::attribute::points(),
-    context,
-    testStr,
-    svgpp::tag::source::attribute()
-  ));
-  EXPECT_EQ(context.values_, );
-}
-
-template<class StringT>
-void invalid_testT(StringT const & testStr)
-{
-  typename StringT::const_iterator first = testStr.begin();
-  svgpp::urange_grammar<typename StringT::const_iterator> grammar;
-  EXPECT_TRUE(!qi::parse(first, testStr.end(), grammar) || first != testStr.end());
-}
 
 typedef std::pair<const char *, pair_list_t> valid_case_t;
 

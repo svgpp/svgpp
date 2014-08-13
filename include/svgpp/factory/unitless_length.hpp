@@ -171,14 +171,14 @@ public:
   typename boost::enable_if<boost::mpl::has_key<traits::absolute_length_units, AbsoluteUnits> >::type
   set_em_coefficient(NumberType coeff, AbsoluteUnits unitsTag)
   {
-    em_coefficient_ = coeff * get_absolute_units_coefficient(unitsTag);
+    em_coefficient_ = coeff * this->get_absolute_units_coefficient(unitsTag);
   }
 
   template<class AbsoluteUnits>
   typename boost::enable_if<boost::mpl::has_key<traits::absolute_length_units, AbsoluteUnits> >::type
   set_ex_coefficient(NumberType coeff, AbsoluteUnits unitsTag)
   {
-    ex_coefficient_ = coeff * get_absolute_units_coefficient(unitsTag);
+    ex_coefficient_ = coeff * this->get_absolute_units_coefficient(unitsTag);
   }
 
   // Optional length_to_user_coordinate interface that may be used when converting

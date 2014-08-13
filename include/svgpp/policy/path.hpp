@@ -20,7 +20,7 @@ struct raw
   static const bool arc_as_cubic_bezier = false; 
   // TODO: only not axis aligned ellipse arc as bezier
   // TODO: arc as center and radius
-  static const bool explicit_move_to = false; // TODO: on close path?
+  // TODO: pass explicit move_to on close path?
   // TODO: fix arc errors
 };
 

@@ -7,6 +7,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cmath>
 
 namespace svgpp

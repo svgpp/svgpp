@@ -24,7 +24,10 @@ namespace tag { namespace error_info
   struct xml_attribute;
 }}
 
-class unknown_element_error: public virtual boost::exception, public virtual std::exception
+class exception_base: public virtual boost::exception, public virtual std::exception
+{};
+
+class unknown_element_error: public exception_base
 {
 public:
   unknown_element_error()
@@ -46,7 +49,7 @@ private:
   std::string const message_;
 };
 
-class unexpected_element_error: public virtual boost::exception, public virtual std::exception
+class unexpected_element_error: public exception_base
 {
 public:
   virtual const char * what() const throw()
@@ -55,8 +58,8 @@ public:
   }
 };
 
-// TODO: add namespace information
-class unknown_attribute_error: public virtual boost::exception, public virtual std::exception
+// Exception is thrown only for SVG namespace (or unspecified namespace) attributes
+class unknown_attribute_error: public exception_base
 {
 public:
   unknown_attribute_error()
@@ -78,7 +81,7 @@ private:
   std::string const message_;
 };
 
-class unexpected_attribute_error: public virtual boost::exception, public virtual std::exception
+class unexpected_attribute_error: public exception_base
 {
 public:
   unexpected_attribute_error(const char * name)
@@ -96,7 +99,7 @@ private:
   std::string const message_;
 };
 
-class unknown_css_property_error: public virtual boost::exception, public virtual std::exception
+class unknown_css_property_error: public exception_base
 {
 public:
   unknown_css_property_error()
@@ -118,8 +121,7 @@ private:
   std::string const message_;
 };
 
-// TODO: add information about XML element
-class required_attribute_not_found_error: public virtual boost::exception, public virtual std::exception
+class required_attribute_not_found_error: public exception_base
 {
 public:
   required_attribute_not_found_error(const char * name)
@@ -137,7 +139,7 @@ private:
   std::string const message_;
 };
 
-class negative_value_error: public virtual boost::exception, public virtual std::exception
+class negative_value_error: public exception_base
 {
 public:
   negative_value_error(const char * name)
@@ -173,7 +175,7 @@ namespace detail
 }
 
 template<class Char>
-class invalid_value_error: public virtual boost::exception, public virtual std::exception
+class invalid_value_error: public exception_base
 {
 public:
   typedef std::basic_string<Char> value_type;
@@ -287,7 +289,6 @@ struct raise_exception
   BOOST_ATTRIBUTE_NORETURN static bool unexpected_attribute(Context const &, 
     detail::attribute_id id, tag::source::attribute)
   {
-    // TODO: add attribute name
     throw unexpected_attribute_error(attribute_name<char>::by_id(id));
   }
   
@@ -322,6 +323,18 @@ struct raise_exception
   BOOST_ATTRIBUTE_NORETURN static bool negative_value(Context const &, AttributeTag)
   {
     throw negative_value_error(attribute_name<char>::get<AttributeTag>());
+  }
+
+  typedef boost::exception intercepted_exception_type;
+
+  template<class XMLElement>
+  BOOST_ATTRIBUTE_NORETURN static bool add_element_info(intercepted_exception_type & e, 
+    XMLElement const & element)
+  {
+    typedef boost::error_info<tag::error_info::xml_element, XMLElement const *> error_info;
+    if (boost::get_error_info<error_info>(e) == NULL)
+      e << error_info(&element);
+    throw;
   }
 };
 

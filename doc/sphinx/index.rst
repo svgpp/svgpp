@@ -12,11 +12,13 @@ Contents:
    :maxdepth: 2
 
    lesson01
-   reference01
    overview
+   value
    length
+   transform
+   path
+   color
    error
-
 
 Indices and tables
 ==================

@@ -9,6 +9,7 @@
 
 #include <svgpp/attribute_traversal.hpp>
 #include <svgpp/attribute_dispatcher.hpp>
+#include <svgpp/config.hpp>
 #include <svgpp/factory/context.hpp>
 #include <svgpp/template_parameters.hpp>
 #include <svgpp/detail/element_id_to_tag.hpp>
@@ -20,6 +21,7 @@
 #include <boost/parameter.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/preprocessor.hpp>
+#include <boost/tti/member_type.hpp>
 #include <boost/type_traits.hpp>
 
 namespace svgpp
@@ -33,6 +35,25 @@ struct default_context_factories
     typedef factory::context::same<ParentContext, ElementTag> type;
   };
 };
+
+namespace detail
+{
+  BOOST_TTI_MEMBER_TYPE(intercepted_exception_type)
+
+  struct dummy_exception {};
+
+  template<class ErrorPolicy, class ExceptionType, class XMLElement>
+  inline bool call_add_element_info(ExceptionType & e, XMLElement const & element)
+  {
+    return ErrorPolicy::add_element_info(e, element);
+  }
+
+  template<class ErrorPolicy, class XMLElement>
+  inline bool call_add_element_info(dummy_exception & e, XMLElement const &)
+  {
+    return true;
+  }
+}
 
 BOOST_PARAMETER_TEMPLATE_KEYWORD(context_factories)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(expected_elements)
@@ -81,12 +102,25 @@ public:
   template<class ExpectedChildElements, class ReferencingElement, class XMLElement, class Context, class ElementTag>
   static bool load_element(XMLElement const & xml_element, Context & context, ElementTag element_tag)
   {
-    typedef typename boost::parameter::value_type<args, tag::document_traversal_control_policy, 
-      policy::document_traversal_control::default_policy<Context> >::type traversal_control_policy;
+#ifdef SVGPP_INTERCEPT_EXCEPTIONS
+    typedef typename boost::parameter::value_type<args, tag::error_policy, 
+      policy::error::default_policy<Context> >::type error_policy;
+    try
+#endif
+    {
+      typedef typename boost::parameter::value_type<args, tag::document_traversal_control_policy, 
+        policy::document_traversal_control::default_policy<Context> >::type traversal_control_policy;
 
-    return load_attributes<ReferencingElement>(xml_element, context, element_tag)
-      && (!traversal_control_policy::proceed_to_element_content(context)
-        || load_element_content<ExpectedChildElements>(xml_element, context, element_tag));
+      return load_attributes<ReferencingElement>(xml_element, context, element_tag)
+        && (!traversal_control_policy::proceed_to_element_content(context)
+          || load_element_content<ExpectedChildElements>(xml_element, context, element_tag));
+    }
+#ifdef SVGPP_INTERCEPT_EXCEPTIONS
+    catch(typename detail::member_type_intercepted_exception_type<error_policy, detail::dummy_exception>::type & e)
+    {
+      return detail::call_add_element_info<error_policy>(e, xml_element);
+    }
+#endif
   }
 
   template<class ReferencingElement, class XMLElement, class Context, class ElementTag>
