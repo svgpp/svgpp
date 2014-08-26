@@ -55,8 +55,8 @@ private:
 
 public:
   typedef typename boost::mpl::if_c<
-    element_attribute_traversal_policy::parse_style 
-      && element_attribute_traversal_policy::css_hides_presentation_attribute
+      (element_attribute_traversal_policy::parse_style
+        && element_attribute_traversal_policy::css_hides_presentation_attribute)
       || !boost::mpl::empty<typename element_attribute_traversal_policy::priority_attributes>::value
       || !boost::mpl::empty<typename element_attribute_traversal_policy::deferred_attributes>::value,
     attribute_traversal_prioritized<

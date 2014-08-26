@@ -457,26 +457,26 @@ protected:
   const bool is_switch_child_;
 };
 
+struct SimpleFilterView: IFilterView
+{
+  SimpleFilterView(boost::gil::rgba8c_view_t const & v)
+    : view_(v)
+  {}
+
+  virtual boost::gil::rgba8c_view_t view() { return view_; }
+
+private:
+  boost::gil::rgba8c_view_t view_;
+};
+
 void Canvas::applyFilter()
 {
   //if (!style().filter_)
     return;
 
-  struct View: IFilterView
-  {
-    View(boost::gil::rgba8c_view_t const & v)
-      : view_(v)
-    {}
-
-    virtual boost::gil::rgba8c_view_t view() { return view_; }
-
-  private:
-    boost::gil::rgba8c_view_t view_;
-  };
-
   Filters::Input in;
-  in.sourceGraphic_ = IFilterViewPtr(new View(own_buffer_->gilView()));
-  in.backgroundImage_ = IFilterViewPtr(new View(gilView(parent_pixfmt_())));
+  in.sourceGraphic_ = IFilterViewPtr(new SimpleFilterView(own_buffer_->gilView()));
+  in.backgroundImage_ = IFilterViewPtr(new SimpleFilterView(gilView(parent_pixfmt_())));
   IFilterViewPtr out = document_.filters_.get(*style().filter_, length_factory_, in);
   if (out)
     boost::gil::copy_pixels(out->view(), own_buffer_->gilView());

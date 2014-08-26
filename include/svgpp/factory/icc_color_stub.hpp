@@ -26,6 +26,8 @@ struct stub: boost::noncopyable
   typedef tag::skip_icc_color icc_color_type;
   struct builder_type {};
 
+  stub() {}
+
   template<class Iterator>
   static void set_profile_name(builder_type &, typename boost::iterator_range<Iterator> const &) {}
   template<class Number>

@@ -726,19 +726,19 @@ struct path_adapter_load_path_policy
   template<class AbsoluteOrRelative>
   static void path_move_to(Adapter & context, Coordinate x, Coordinate y, AbsoluteOrRelative absoluteOrRelative)
   { 
-    context.path_move_to<PathPolicy>(x, y, absoluteOrRelative); 
+    context.template path_move_to<PathPolicy>(x, y, absoluteOrRelative);
   }
 
   template<class AbsoluteOrRelative>
   static void path_line_to(Adapter & context, Coordinate x, Coordinate y, AbsoluteOrRelative absoluteOrRelative)
   { 
-    context.path_line_to<PathPolicy>(x, y, absoluteOrRelative); 
+    context.template path_line_to<PathPolicy>(x, y, absoluteOrRelative);
   }
 
   template<class AbsoluteOrRelative>
   static void path_line_to_ortho(Adapter & context, Coordinate coord, bool horizontal, AbsoluteOrRelative absoluteOrRelative)
   { 
-    context.path_line_to_ortho<PathPolicy>(coord, horizontal, absoluteOrRelative); 
+    context.template path_line_to_ortho<PathPolicy>(coord, horizontal, absoluteOrRelative);
   }
 
   template<class AbsoluteOrRelative>
@@ -747,7 +747,7 @@ struct path_adapter_load_path_policy
     Coordinate x, Coordinate y, 
     AbsoluteOrRelative absoluteOrRelative)
   { 
-    context.path_cubic_bezier_to<PathPolicy>(x1, y1, x2, y2, x, y, absoluteOrRelative); 
+    context.template path_cubic_bezier_to<PathPolicy>(x1, y1, x2, y2, x, y, absoluteOrRelative);
   }
 
   template<class AbsoluteOrRelative>
@@ -756,7 +756,7 @@ struct path_adapter_load_path_policy
     Coordinate x, Coordinate y, 
     AbsoluteOrRelative absoluteOrRelative)
   { 
-    context.path_cubic_bezier_to<PathPolicy>(x2, y2, x, y, absoluteOrRelative); 
+    context.template path_cubic_bezier_to<PathPolicy>(x2, y2, x, y, absoluteOrRelative);
   }
 
   template<class AbsoluteOrRelative>
@@ -765,7 +765,7 @@ struct path_adapter_load_path_policy
     Coordinate x, Coordinate y, 
     AbsoluteOrRelative absoluteOrRelative)
   { 
-    context.path_quadratic_bezier_to<PathPolicy>(x1, y1, x, y, absoluteOrRelative); 
+    context.template path_quadratic_bezier_to<PathPolicy>(x1, y1, x, y, absoluteOrRelative);
   }
 
   template<class AbsoluteOrRelative>
@@ -773,7 +773,7 @@ struct path_adapter_load_path_policy
     Coordinate x, Coordinate y, 
     AbsoluteOrRelative absoluteOrRelative)
   { 
-    context.path_quadratic_bezier_to<PathPolicy>(x, y, absoluteOrRelative); 
+    context.template path_quadratic_bezier_to<PathPolicy>(x, y, absoluteOrRelative);
   }
 
   template<class AbsoluteOrRelative>
@@ -783,7 +783,7 @@ struct path_adapter_load_path_policy
     Coordinate x, Coordinate y,
     AbsoluteOrRelative absoluteOrRelative)
   { 
-    context.path_elliptical_arc_to<PathPolicy>(rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, absoluteOrRelative); 
+    context.template path_elliptical_arc_to<PathPolicy>(rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, absoluteOrRelative);
   }
 
   static void path_close_subpath(Adapter & context)

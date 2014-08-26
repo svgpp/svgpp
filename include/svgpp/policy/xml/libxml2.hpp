@@ -21,21 +21,51 @@ namespace svgpp
 
 namespace detail
 {
-  class libxml_string_ptr: boost::noncopyable
+  class libxml_string_ptr
   {
   public:
+    libxml_string_ptr()
+      : str_(NULL)
+    {}
+
     explicit libxml_string_ptr(xmlChar * str)
       : str_(str)
     {}
 
-    ~libxml_string_ptr()
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+    libxml_string_ptr(libxml_string_ptr && src)
+      : str_(src.str_)
     {
-      xmlFree(str_);
+      src.str_ = NULL;
+    }
+#else
+    libxml_string_ptr(libxml_string_ptr && src)
+      : str_(src.str_)
+    {
+      src.str_ = NULL;
     }
 
-    const char * c_str() const
+    ~libxml_string_ptr()
     {
-      return reinterpret_cast<const char *>(str_);
+      if (str_)
+        xmlFree(str_);
+    }
+#endif
+
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+    libxml_string_ptr & operator=(libxml_string_ptr && src)
+    {
+      if (str_)
+        xmlFree(str_);
+      str_ = src.str_;
+      src.str_ = NULL;
+      return *this;
+    }
+#endif
+
+    boost::iterator_range<const char *> get_range() const
+    {
+      return boost::as_literal(reinterpret_cast<const char *>(str_));
     }
 
   private:
@@ -52,12 +82,17 @@ struct attribute_iterator<xmlAttr *>
   typedef xmlAttr * iterator_type;
   typedef boost::iterator_range<char const *> string_type;
   typedef string_type attribute_name_type;
-  typedef string_type attribute_value_type;
+  typedef detail::libxml_string_ptr attribute_value_type;
   typedef xmlAttr * saved_value_type;
 
-  static string_type get_string_range(string_type const & str)
+  static string_type get_string_range(attribute_value_type const & value)
   { 
-    return str;
+    return value.get_range();
+  }
+
+  static string_type get_string_range(attribute_name_type const & name)
+  {
+    return name;
   }
 
   static void advance(iterator_type & xml_attribute)
@@ -93,8 +128,8 @@ struct attribute_iterator<xmlAttr *>
 
   static attribute_value_type get_value(iterator_type xml_attribute)
   {
-    return boost::as_literal(
-      detail::libxml_string_ptr(xmlNodeListGetString(xml_attribute->doc, xml_attribute->children, 1)).c_str());
+    return detail::libxml_string_ptr(
+      xmlNodeListGetString(xml_attribute->doc, xml_attribute->children, 1));
   }
 
   static saved_value_type save_value(iterator_type xml_attribute)
@@ -150,8 +185,8 @@ struct element_iterator<xmlNode *>
 
   static element_text_type get_text(iterator_type xml_element)
   {
-    return boost::as_literal(
-      detail::libxml_string_ptr(xmlNodeListGetString(xml_element->doc, xml_element, 1)).c_str());
+    return detail::libxml_string_ptr(
+      xmlNodeListGetString(xml_element->doc, xml_element, 1)).get_range();
   }
 
   static attribute_enumerator_type get_attributes(iterator_type xml_element)
@@ -195,6 +230,8 @@ private:
       case XML_CDATA_SECTION_NODE:
         if (TextsAlso)
           return;
+        break;
+      default:
         break;
       }
     }

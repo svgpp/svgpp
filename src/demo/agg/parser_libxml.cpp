@@ -1,5 +1,6 @@
 #include "parser_libxml.hpp"
 #include <map>
+#include <stdexcept>
 #include <libxml/parser.h>
 
 namespace

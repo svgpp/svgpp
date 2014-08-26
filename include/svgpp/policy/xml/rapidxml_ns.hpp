@@ -167,6 +167,8 @@ private:
         if (TextsAlso)
           return;
         break;
+      default:
+        break;
       }
     }
   }

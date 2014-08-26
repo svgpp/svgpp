@@ -60,6 +60,8 @@ struct length_factory_t
   typedef double number_type;
   typedef length_t length_type;
 
+  length_factory_t() {}
+
   template<class UnitsTag>
   length_type create_length(double val, UnitsTag tag) const
   {

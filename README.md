@@ -65,6 +65,7 @@ Compilers supported:
 
 * Visual Studio 2010, 2013
 * GCC 4.8.2 in C++03 mode. In C++11 mode it requires Boost 1.56.
+* Clang 3.5
 
 Visual Studio 2008 gives "internal compiler error", probably some workaround is possible.
 

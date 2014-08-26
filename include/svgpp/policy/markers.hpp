@@ -43,10 +43,12 @@ namespace marker_directionality
     {
       directionality_type dir = (in_segment + out_segment) * 0.5;
       if (std::fabs(in_segment - out_segment) > boost::math::constants::pi<directionality_type>())
+      {
         if (dir < 0)
           return dir + boost::math::constants::pi<directionality_type>();
         else
           return dir - boost::math::constants::pi<directionality_type>();
+      }
       return dir;
     }
   };

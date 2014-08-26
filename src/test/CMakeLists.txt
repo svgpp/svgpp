@@ -5,7 +5,8 @@ project(svgpp_test)
 set(GTEST_DIR ../../third_party/gtest)
 
 include_directories(
-  ../..
+  ../../include
+  ../../third_party
   ${GTEST_DIR}
   ${GTEST_DIR}/include
 )
@@ -45,6 +46,12 @@ add_executable( ParserGTest
   ${GTEST_DIR}/src/gtest_main.cc 
   ${GTEST_DIR}/src/gtest-all.cc 
 )
+
+if (UNIX)
+  target_link_libraries(ParserGTest
+    pthread
+  )
+endif()
 
 set(CHECK_HEADERS_DIR check_headers)
 

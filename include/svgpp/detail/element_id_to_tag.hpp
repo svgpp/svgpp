@@ -9,6 +9,7 @@
 
 #include <svgpp/definitions.hpp>
 #include <svgpp/traits/child_element_types.hpp>
+#include <boost/assert.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/mpl/has_key.hpp>
 #include <boost/utility/enable_if.hpp>
@@ -49,6 +50,9 @@ bool id_to_element_tag(element_type_id id, F & fn)
     break;
 #include <svgpp/detail/dict/enumerate_all_elements.inc>
 #undef SVGPP_ON
+  default:
+    BOOST_ASSERT(false);
+    break;
   }
   return false;
 }
