@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to SVG++'s documentation!
+SVG++ documentation
 =================================
 
 Contents:
@@ -13,12 +13,15 @@ Contents:
 
    lesson01
    overview
+   document_traversal
    value
    length
    transform
    path
    color
    error
+   iri
+   value_parser
 
 Indices and tables
 ==================

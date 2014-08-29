@@ -120,13 +120,13 @@ struct LoadPathPolicy
 {
   typedef Context context_type;
 
-  static void path_move_to(Context & context, double x, double y, tag::absolute_coordinate)
+  static void path_move_to(Context & context, double x, double y, tag::coordinate::absolute)
   { 
     UseValue(x);
     UseValue(y);
   }
 
-  static void path_line_to(Context & context, double x, double y, tag::absolute_coordinate)
+  static void path_line_to(Context & context, double x, double y, tag::coordinate::absolute)
   { 
     UseValue(x);
     UseValue(y);
@@ -135,7 +135,7 @@ struct LoadPathPolicy
   static void path_cubic_bezier_to(Context & context, double x1, double y1, 
                                         double x2, double y2, 
                                         double x, double y, 
-                                        tag::absolute_coordinate)
+                                        tag::coordinate::absolute)
   { 
     UseValue(x1);
     UseValue(y1);
@@ -148,7 +148,7 @@ struct LoadPathPolicy
   static void path_quadratic_bezier_to(Context & context, 
                                         double x1, double y1, 
                                         double x, double y, 
-                                        tag::absolute_coordinate)
+                                        tag::coordinate::absolute)
   { 
     UseValue(x);
     UseValue(y);
@@ -160,7 +160,7 @@ struct LoadPathPolicy
                                         double rx, double ry, double x_axis_rotation,
                                         bool large_arc_flag, bool sweep_flag, 
                                         double x, double y,
-                                        tag::absolute_coordinate)
+                                        tag::coordinate::absolute)
   { 
     UseValue(x);
     UseValue(y);
@@ -189,3 +189,4 @@ namespace svgpp { namespace policy { namespace load_value
   {};
 }}}
 
+void parse(rapidxml_ns::xml_node<char> const * svg_element);

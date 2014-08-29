@@ -3,6 +3,8 @@
 #include "filter.hpp"
 
 #include <svgpp/document_traversal.hpp>
+#include <svgpp/utility/gil/blend.hpp>
+#include <svgpp/utility/gil/composite.hpp>
 #include <boost/gil/gil_all.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/noncopyable.hpp>
@@ -574,87 +576,6 @@ struct context_factories::apply<feComponentTransferContext, svgpp::tag::element:
   typedef svgpp::factory::context::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbB> > type;
 };
 
-inline gil::bits8 clampChannel(int c)
-{
-  if (c > 255)
-    return 255;
-  if (c < 0)
-    return 0;
-  return static_cast<gil::bits8>(c);
-}
-
-// normal	cr = (1 - qa) * cb + ca
-struct BlendNormalFunc
-{
-  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
-  {
-    return clampChannel(((255 - qa) * cb) / 255 + ca);
-  }
-};
-
-// multiply	cr = (1-qa)*cb + (1-qb)*ca + ca*cb
-struct BlendMultiplyFunc
-{
-  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
-  {
-    return clampChannel(((255 - qa) * cb + (255 - qb) * ca + ca * cb) / 255);
-  }
-};
-
-// screen	cr = cb + ca - ca * cb
-struct BlendScreenFunc
-{
-  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
-  {
-    return clampChannel(cb + ca - ca * cb / 255);
-  }
-};
-
-// darken	cr = Min ((1 - qa) * cb + ca, (1 - qb) * ca + cb)
-struct BlendDarkenFunc
-{
-  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
-  {
-    return clampChannel(std::min((255 - qa) * cb / 255 + ca, (255 - qb) * ca / 255 + cb));
-  }
-};
-
-// lighten	cr = Max ((1 - qa) * cb + ca, (1 - qb) * ca + cb)
-struct BlendLightenFunc
-{
-  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
-  {
-    return clampChannel(std::max((255 - qa) * cb / 255 + ca, (255 - qb) * ca / 255 + cb));
-  }
-};
-
-// qr = 1 - (1-qa)*(1-qb)
-struct BlendAlphaFunc
-{
-  gil::bits8 operator()(int qa, int qb) const
-  {
-    return clampChannel(255 - (255 - qa) * (255 - qb) / 255);
-  }
-};
-
-template<class ColorFn, class AlphaFn>
-struct BlendPixel
-{
-  gil::rgba8_pixel_t operator()(const gil::rgba8_pixel_t & pixa, const gil::rgba8_pixel_t & pixb) const 
-  {
-    gil::bits8 qa = gil::get_color(pixa, gil::alpha_t());
-    gil::bits8 qb = gil::get_color(pixb, gil::alpha_t());
-
-    gil::rgba8_pixel_t dst;
-    ColorFn fn;
-    for(size_t ch = 0; ch < 3; ++ch)
-      dst[ch] = fn(pixa[ch], pixb[ch], qa, qb);
-
-    gil::get_color(dst, gil::alpha_t()) = AlphaFn()(qa, qb);
-    return dst;
-  }
-};
-
 class BlendView: public IFilterView
 {
 public:
@@ -672,19 +593,24 @@ public:
       switch(fe_.mode_)
       {
       case feBlend::mNormal:
-        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<BlendNormalFunc, BlendAlphaFunc>());
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), 
+          svgpp::gil_utility::blend_pixel<svgpp::tag::value::normal>());
         break;
       case feBlend::mMultiply:
-        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<BlendMultiplyFunc, BlendAlphaFunc>());
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_),
+          svgpp::gil_utility::blend_pixel<svgpp::tag::value::multiply>());
         break;
       case feBlend::mScreen:
-        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<BlendScreenFunc, BlendAlphaFunc>());
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_),
+          svgpp::gil_utility::blend_pixel<svgpp::tag::value::screen>());
         break;
       case feBlend::mDarken:
-        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<BlendDarkenFunc, BlendAlphaFunc>());
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_),
+          svgpp::gil_utility::blend_pixel<svgpp::tag::value::darken>());
         break;
       case feBlend::mLighten:
-        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<BlendLightenFunc, BlendAlphaFunc>());
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), 
+          svgpp::gil_utility::blend_pixel<svgpp::tag::value::lighten>());
         break;
       default:
         BOOST_ASSERT(false);
@@ -699,116 +625,6 @@ private:
   feBlend const fe_;
   IFilterViewPtr in1_, in2_;
   boost::gil::rgba8_image_t image_;
-};
-
-// Dca' = Sca + Dca x (1 - Sa)
-struct CompositeOverColorFunc
-{
-  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
-  {
-    return clampChannel(ca + cb * (255 - qa) / 255);
-  }
-};
-
-// Da'  = Sa + Da - Sa x Da
-struct CompositeOverAlphaFunc
-{
-  gil::bits8 operator()(int qa, int qb) const
-  {
-    return clampChannel(qa + qb - qa * qb / 255);
-  }
-};
-
-// Dca' = Sca x Da
-struct CompositeInColorFunc
-{
-  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
-  {
-    return ca * qb / 255;
-  }
-};
-
-// Da'  = Sa x Da
-struct CompositeInAlphaFunc
-{
-  gil::bits8 operator()(int qa, int qb) const
-  {
-    return qa * qb / 255;
-  }
-};
-
-// Dca' = Sca x (1 - Da)
-struct CompositeOutColorFunc
-{
-  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
-  {
-    return ca * (255 - qb) / 255;
-  }
-};
-
-// Da'  = Sa x (1 - Da)
-struct CompositeOutAlphaFunc
-{
-  gil::bits8 operator()(int qa, int qb) const
-  {
-    return qa * (255 - qb) / 255;
-  }
-};
-
-// Dca' = Sca x Da + Dca x (1 - Sa)
-struct CompositeAtopColorFunc
-{
-  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
-  {
-    return clampChannel((ca * qb + cb * (255 - qa)) / 255);
-  }
-};
-
-// Da'  = Da
-struct CompositeAtopAlphaFunc
-{
-  gil::bits8 operator()(gil::bits8 qa, gil::bits8 qb) const
-  {
-    return qb;
-  }
-};
-
-// Dca' = Sca x (1 - Da) + Dca x (1 - Sa)
-struct CompositeXorColorFunc
-{
-  gil::bits8 operator()(int ca, int cb, int qa, int qb) const
-  {
-    return clampChannel((ca * (255 - qb) + cb * (255 - qa)) / 255);
-  }
-};
-
-// Da'  = Sa + Da - 2 x Sa x Da
-struct CompositeXorAlphaFunc
-{
-  gil::bits8 operator()(int qa, int qb) const
-  {
-    return clampChannel((qa + qb - 2 * qa * qb) / 255);
-  }
-};
-
-struct CompositeArithmeticPixel
-{
-  CompositeArithmeticPixel(double k1, double k2, double k3, double k4)
-    : k1_(k1 * 255), k2_(k2 * 255), k3_(k3 * 255), k4_(k4 * 255)
-  {}
-
-  gil::rgba8_pixel_t operator()(const gil::rgba8_pixel_t & pixa, const gil::rgba8_pixel_t & pixb) const 
-  {
-    gil::rgba8_pixel_t dst;
-    for(size_t ch = 0; ch < 4; ++ch)
-      // result = k1*i1*i2 + k2*i1 + k3*i2 + k4
-      dst[ch] = k1_ * pixa[ch] * pixb[ch] / 65535 + k2_ * pixa[ch] / 255 + k3_ * pixb[ch] / 255 + k4_;
-
-    return dst;
-  }
-
-private:
-  int k1_, k2_, k3_, k4_;
 };
 
 class CompositeView: public IFilterView
@@ -828,23 +644,28 @@ public:
       switch(fe_.operator_)
       {
       case feComposite::opOver:
-        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<CompositeOverColorFunc, CompositeOverAlphaFunc>());
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), 
+          svgpp::gil_utility::composite_pixel<svgpp::tag::value::over>());
         break;
       case feComposite::opIn:
-        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<CompositeInColorFunc, CompositeInAlphaFunc>());
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), 
+          svgpp::gil_utility::composite_pixel<svgpp::tag::value::in>());
         break;
       case feComposite::opOut:
-        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<CompositeOutColorFunc, CompositeOutAlphaFunc>());
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), 
+          svgpp::gil_utility::composite_pixel<svgpp::tag::value::out>());
         break;
       case feComposite::opAtop:
-        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<CompositeAtopColorFunc, CompositeAtopAlphaFunc>());
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), 
+          svgpp::gil_utility::composite_pixel<svgpp::tag::value::atop>());
         break;
       case feComposite::opXor:
-        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), BlendPixel<CompositeXorColorFunc, CompositeXorAlphaFunc>());
+        gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), 
+          svgpp::gil_utility::composite_pixel<svgpp::tag::value::xor_>());
         break;
       case feComposite::opArithmetic:
         gil::transform_pixels(in1_->view(), in2_->view(), gil::view(image_), 
-          CompositeArithmeticPixel(fe_.k1_, fe_.k2_, fe_.k3_, fe_.k4_));
+          svgpp::gil_utility::composite_pixel_arithmetic<boost::gil::rgba8c_view_t::value_type>(fe_.k1_, fe_.k2_, fe_.k3_, fe_.k4_));
         break;
       default:
         BOOST_ASSERT(false);
@@ -911,12 +732,12 @@ public:
         case feFunc::fLinear:
           // C' = slope * C + intercept
           for(int i=0; i<256; ++i)
-            table[i] = clampChannel(static_cast<int>(func.slope_ * i + func.intercept_ * 255 + 0.49));
+            table[i] = svgpp::gil_detail::clamp_channel_bits8(static_cast<int>(func.slope_ * i + func.intercept_ * 255 + 0.49));
           break;
         case feFunc::fGamma:
           for(int i=0; i<256; ++i)
             // C' = amplitude * pow(C, exponent) + offset
-            table[i] = clampChannel(static_cast<int>(
+            table[i] = svgpp::gil_detail::clamp_channel_bits8(static_cast<int>(
               (func.amplitude_ * std::pow(i / 255.0, func.exponent_) + func.offset_) * 255.0 + 0.49));
           break;
         default:
@@ -988,9 +809,11 @@ public:
         gil::copy_pixels(nodes_.front()->view(), gil::view(image_));
       else
       {
-        gil::transform_pixels(nodes_[0]->view(), nodes_[1]->view(), gil::view(image_), BlendPixel<CompositeOverColorFunc, CompositeOverAlphaFunc>());
+        gil::transform_pixels(nodes_[0]->view(), nodes_[1]->view(), gil::view(image_), 
+          svgpp::gil_utility::composite_pixel<svgpp::tag::value::over>());
         for(size_t i = 2; i < nodes_.size(); ++i)
-          gil::transform_pixels(gil::view(image_), nodes_[i]->view(), gil::view(image_), BlendPixel<CompositeOverColorFunc, CompositeOverAlphaFunc>());
+          gil::transform_pixels(gil::view(image_), nodes_[i]->view(), gil::view(image_), 
+            svgpp::gil_utility::composite_pixel<svgpp::tag::value::over>());
       }
       nodes_.clear();
     }
@@ -1157,87 +980,96 @@ private:
 
 IFilterViewPtr Filters::get(svg_string_t const & id, length_factory_t const &, Input const & input)
 {
-  if (XMLElement node = xml_document_.findElementById(id))
+  try
   {
-    FilterContext filterContext;
-    svgpp::document_traversal<
-      svgpp::context_factories<context_factories>,
-      svgpp::color_factory<color_factory_t>,
-      svgpp::processed_elements<
-        boost::mpl::set<
-          svgpp::tag::element::filter,
-          svgpp::tag::element::feBlend,
-          svgpp::tag::element::feMerge,
-          svgpp::tag::element::feMergeNode,
-          svgpp::tag::element::feDistantLight,
-          svgpp::tag::element::fePointLight,
-          svgpp::tag::element::feSpotLight,
-          svgpp::tag::element::feComponentTransfer,
-          svgpp::tag::element::feComposite,
-          svgpp::tag::element::feFlood,
-          svgpp::tag::element::feFuncA,
-          svgpp::tag::element::feFuncB,
-          svgpp::tag::element::feFuncG,
-          svgpp::tag::element::feFuncR,
-          svgpp::tag::element::feOffset
-        >::type
-      >,
-      svgpp::processed_attributes<
-        boost::mpl::set<
-          boost::mpl::pair<svgpp::tag::element::filter, svgpp::tag::attribute::x>,
-          boost::mpl::pair<svgpp::tag::element::filter, svgpp::tag::attribute::y>,
-          boost::mpl::pair<svgpp::tag::element::filter, svgpp::tag::attribute::width>,
-          boost::mpl::pair<svgpp::tag::element::filter, svgpp::tag::attribute::height>,
-          boost::mpl::pair<svgpp::tag::element::filter, svgpp::tag::attribute::filterUnits>,
-          //boost::mpl::pair<svgpp::tag::element::filter, svgpp::tag::attribute::primitiveUnits>,
-
-          svgpp::tag::attribute::result,
-          svgpp::tag::attribute::in,
-          svgpp::tag::attribute::in2,
-          boost::mpl::pair<svgpp::tag::element::feBlend, svgpp::tag::attribute::x>,
-          boost::mpl::pair<svgpp::tag::element::feBlend, svgpp::tag::attribute::y>,
-          boost::mpl::pair<svgpp::tag::element::feBlend, svgpp::tag::attribute::width>,
-          boost::mpl::pair<svgpp::tag::element::feBlend, svgpp::tag::attribute::height>,
-          boost::mpl::pair<svgpp::tag::element::feBlend, svgpp::tag::attribute::mode>,
-          boost::mpl::pair<svgpp::tag::element::feColorMatrix, svgpp::tag::attribute::type>,
-          boost::mpl::pair<svgpp::tag::element::feColorMatrix, svgpp::tag::attribute::values>,
-          boost::mpl::pair<svgpp::tag::element::feOffset, svgpp::tag::attribute::dx>,
-          boost::mpl::pair<svgpp::tag::element::feOffset, svgpp::tag::attribute::dy>,
-          boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::operator_>,
-          boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k1>,
-          boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k2>,
-          boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k3>,
-          boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k4>,
-          boost::mpl::pair<svgpp::tag::element::feFlood, svgpp::tag::attribute::flood_color>,
-          boost::mpl::pair<svgpp::tag::element::feFlood, svgpp::tag::attribute::flood_opacity>,
-
-          // transfer function element attributes
-          boost::mpl::pair<svgpp::tag::element::feFuncA, svgpp::tag::attribute::type>,
-          boost::mpl::pair<svgpp::tag::element::feFuncR, svgpp::tag::attribute::type>,
-          boost::mpl::pair<svgpp::tag::element::feFuncG, svgpp::tag::attribute::type>,
-          boost::mpl::pair<svgpp::tag::element::feFuncB, svgpp::tag::attribute::type>,
-          svgpp::tag::attribute::tableValues,
-          svgpp::tag::attribute::slope, 
-          svgpp::tag::attribute::intercept, 
-          svgpp::tag::attribute::amplitude, 
-          svgpp::tag::attribute::exponent, 
-          svgpp::tag::attribute::offset
-        >::type
-      >
-    >::load_referenced_element<
-      svgpp::expected_elements<boost::mpl::set1<svgpp::tag::element::filter> >
-    >::load(node, filterContext);
-
-    FilterElementVisitor v(input);
-    for(std::vector<FilterElement>::const_iterator fe = filterContext.elements_.begin();
-      fe != filterContext.elements_.end(); ++fe)
+    if (XMLElement node = xml_document_.findElementById(id))
     {
-      boost::apply_visitor(v, *fe);
+      FilterContext filterContext;
+      svgpp::document_traversal<
+        svgpp::context_factories<context_factories>,
+        svgpp::color_factory<color_factory_t>,
+        svgpp::processed_elements<
+          boost::mpl::set<
+            svgpp::tag::element::filter,
+            svgpp::tag::element::feBlend,
+            svgpp::tag::element::feMerge,
+            svgpp::tag::element::feMergeNode,
+            svgpp::tag::element::feDistantLight,
+            svgpp::tag::element::fePointLight,
+            svgpp::tag::element::feSpotLight,
+            svgpp::tag::element::feComponentTransfer,
+            svgpp::tag::element::feComposite,
+            svgpp::tag::element::feFlood,
+            svgpp::tag::element::feFuncA,
+            svgpp::tag::element::feFuncB,
+            svgpp::tag::element::feFuncG,
+            svgpp::tag::element::feFuncR,
+            svgpp::tag::element::feOffset
+          >::type
+        >,
+        svgpp::processed_attributes<
+          boost::mpl::set<
+            boost::mpl::pair<svgpp::tag::element::filter, svgpp::tag::attribute::x>,
+            boost::mpl::pair<svgpp::tag::element::filter, svgpp::tag::attribute::y>,
+            boost::mpl::pair<svgpp::tag::element::filter, svgpp::tag::attribute::width>,
+            boost::mpl::pair<svgpp::tag::element::filter, svgpp::tag::attribute::height>,
+            boost::mpl::pair<svgpp::tag::element::filter, svgpp::tag::attribute::filterUnits>,
+            //boost::mpl::pair<svgpp::tag::element::filter, svgpp::tag::attribute::primitiveUnits>,
+
+            svgpp::tag::attribute::result,
+            svgpp::tag::attribute::in,
+            svgpp::tag::attribute::in2,
+            boost::mpl::pair<svgpp::tag::element::feBlend, svgpp::tag::attribute::x>,
+            boost::mpl::pair<svgpp::tag::element::feBlend, svgpp::tag::attribute::y>,
+            boost::mpl::pair<svgpp::tag::element::feBlend, svgpp::tag::attribute::width>,
+            boost::mpl::pair<svgpp::tag::element::feBlend, svgpp::tag::attribute::height>,
+            boost::mpl::pair<svgpp::tag::element::feBlend, svgpp::tag::attribute::mode>,
+            boost::mpl::pair<svgpp::tag::element::feColorMatrix, svgpp::tag::attribute::type>,
+            boost::mpl::pair<svgpp::tag::element::feColorMatrix, svgpp::tag::attribute::values>,
+            boost::mpl::pair<svgpp::tag::element::feOffset, svgpp::tag::attribute::dx>,
+            boost::mpl::pair<svgpp::tag::element::feOffset, svgpp::tag::attribute::dy>,
+            boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::operator_>,
+            boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k1>,
+            boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k2>,
+            boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k3>,
+            boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k4>,
+            boost::mpl::pair<svgpp::tag::element::feFlood, svgpp::tag::attribute::flood_color>,
+            boost::mpl::pair<svgpp::tag::element::feFlood, svgpp::tag::attribute::flood_opacity>,
+
+            // transfer function element attributes
+            boost::mpl::pair<svgpp::tag::element::feFuncA, svgpp::tag::attribute::type>,
+            boost::mpl::pair<svgpp::tag::element::feFuncR, svgpp::tag::attribute::type>,
+            boost::mpl::pair<svgpp::tag::element::feFuncG, svgpp::tag::attribute::type>,
+            boost::mpl::pair<svgpp::tag::element::feFuncB, svgpp::tag::attribute::type>,
+            svgpp::tag::attribute::tableValues,
+            svgpp::tag::attribute::slope, 
+            svgpp::tag::attribute::intercept, 
+            svgpp::tag::attribute::amplitude, 
+            svgpp::tag::attribute::exponent, 
+            svgpp::tag::attribute::offset
+          >::type
+        >
+      >::load_referenced_element<
+        svgpp::expected_elements<boost::mpl::set1<svgpp::tag::element::filter> >
+      >::load(node, filterContext);
+
+      FilterElementVisitor v(input);
+      for(std::vector<FilterElement>::const_iterator fe = filterContext.elements_.begin();
+        fe != filterContext.elements_.end(); ++fe)
+      {
+        boost::apply_visitor(v, *fe);
+      }
+      if (!v.lastFilter())
+        throw std::runtime_error("No filter elements in filter definition");
+      return v.lastFilter();
     }
-    if (!v.lastFilter())
-      throw std::runtime_error("No filter elements in filter definition");
-    return v.lastFilter();
+    else
+      throw std::runtime_error("Filter not found");
   }
-  else
-    throw std::runtime_error("Filter not found");
+  catch (std::exception const & e)
+  {
+    // Not all filters implemented yet, we will skip such cases
+    std::cerr << e.what() << "\n";
+    return input.sourceGraphic_;
+  }
 }

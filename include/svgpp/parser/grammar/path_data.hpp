@@ -141,25 +141,25 @@ private:
   static void call_move_to(Context & context, Coordinate x, Coordinate y, bool absolute)
   { 
     if (absolute)
-      LoadPolicy::path_move_to(context, x, y, tag::absolute_coordinate()); 
+      LoadPolicy::path_move_to(context, x, y, tag::coordinate::absolute()); 
     else
-      LoadPolicy::path_move_to(context, x, y, tag::relative_coordinate()); 
+      LoadPolicy::path_move_to(context, x, y, tag::coordinate::relative()); 
   }
 
   static void call_line_to(Context & context, Coordinate x, Coordinate y, bool absolute)
   { 
     if (absolute)
-      LoadPolicy::path_line_to(context, x, y, tag::absolute_coordinate()); 
+      LoadPolicy::path_line_to(context, x, y, tag::coordinate::absolute()); 
     else
-      LoadPolicy::path_line_to(context, x, y, tag::relative_coordinate()); 
+      LoadPolicy::path_line_to(context, x, y, tag::coordinate::relative()); 
   }
 
   static void call_line_to_ortho(Context & context, Coordinate coord, bool horizontal, bool absolute)
   { 
     if (absolute)
-      LoadPolicy::path_line_to_ortho(context, coord, horizontal, tag::absolute_coordinate()); 
+      LoadPolicy::path_line_to_ortho(context, coord, horizontal, tag::coordinate::absolute()); 
     else
-      LoadPolicy::path_line_to_ortho(context, coord, horizontal, tag::relative_coordinate()); 
+      LoadPolicy::path_line_to_ortho(context, coord, horizontal, tag::coordinate::relative()); 
   }
 
   static void call_cubic_bezier_to(Context & context, Coordinate x1, Coordinate y1, 
@@ -168,9 +168,9 @@ private:
                                         bool absolute)
   { 
     if (absolute)
-      LoadPolicy::path_cubic_bezier_to(context, x1, y1, x2, y2, x, y, tag::absolute_coordinate()); 
+      LoadPolicy::path_cubic_bezier_to(context, x1, y1, x2, y2, x, y, tag::coordinate::absolute()); 
     else
-      LoadPolicy::path_cubic_bezier_to(context, x1, y1, x2, y2, x, y, tag::relative_coordinate()); 
+      LoadPolicy::path_cubic_bezier_to(context, x1, y1, x2, y2, x, y, tag::coordinate::relative()); 
   }
 
   static void call_cubic_bezier_to(Context & context, 
@@ -179,9 +179,9 @@ private:
                                         bool absolute)
   { 
     if (absolute)
-      LoadPolicy::path_cubic_bezier_to(context, x2, y2, x, y, tag::absolute_coordinate()); 
+      LoadPolicy::path_cubic_bezier_to(context, x2, y2, x, y, tag::coordinate::absolute()); 
     else
-      LoadPolicy::path_cubic_bezier_to(context, x2, y2, x, y, tag::relative_coordinate()); 
+      LoadPolicy::path_cubic_bezier_to(context, x2, y2, x, y, tag::coordinate::relative()); 
   }
 
   static void call_quadratic_bezier_to(Context & context, 
@@ -190,9 +190,9 @@ private:
                                         bool absolute)
   { 
     if (absolute)
-      LoadPolicy::path_quadratic_bezier_to(context, x1, y1, x, y, tag::absolute_coordinate()); 
+      LoadPolicy::path_quadratic_bezier_to(context, x1, y1, x, y, tag::coordinate::absolute()); 
     else
-      LoadPolicy::path_quadratic_bezier_to(context, x1, y1, x, y, tag::relative_coordinate()); 
+      LoadPolicy::path_quadratic_bezier_to(context, x1, y1, x, y, tag::coordinate::relative()); 
   }
 
   static void call_quadratic_bezier_to(Context & context, 
@@ -200,9 +200,9 @@ private:
                                         bool absolute)
   { 
     if (absolute)
-      LoadPolicy::path_quadratic_bezier_to(context, x, y, tag::absolute_coordinate()); 
+      LoadPolicy::path_quadratic_bezier_to(context, x, y, tag::coordinate::absolute()); 
     else
-      LoadPolicy::path_quadratic_bezier_to(context, x, y, tag::relative_coordinate()); 
+      LoadPolicy::path_quadratic_bezier_to(context, x, y, tag::coordinate::relative()); 
   }
 
   static void call_elliptical_arc_to(Context & context, 
@@ -212,9 +212,9 @@ private:
                                         bool absolute)
   { 
     if (absolute)
-      LoadPolicy::path_elliptical_arc_to(context, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, tag::absolute_coordinate()); 
+      LoadPolicy::path_elliptical_arc_to(context, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, tag::coordinate::absolute()); 
     else
-      LoadPolicy::path_elliptical_arc_to(context, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, tag::relative_coordinate()); 
+      LoadPolicy::path_elliptical_arc_to(context, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, tag::coordinate::relative()); 
   }
 
   static void call_close_subpath(Context & context)

@@ -16,15 +16,15 @@ TEST(path_data_grammar, p1)
   std::string pathStr1("M300,200 100 200 h-150za150,151 0 1,0 150,-150z"
     "M100,200 C100,100 250,100 250,200S400,300 400-200");
   test_path_context expected_context;
-  expected_context.path_move_to(300, 200, tag::absolute_coordinate());
-  expected_context.path_line_to(100, 200, tag::absolute_coordinate());
-  expected_context.path_line_to_ortho(-150, true, tag::relative_coordinate());
+  expected_context.path_move_to(300, 200, tag::coordinate::absolute());
+  expected_context.path_line_to(100, 200, tag::coordinate::absolute());
+  expected_context.path_line_to_ortho(-150, true, tag::coordinate::relative());
   expected_context.path_close_subpath();
-  expected_context.path_elliptical_arc_to(150, 151, 0, true, false, 150, -150, tag::relative_coordinate());
+  expected_context.path_elliptical_arc_to(150, 151, 0, true, false, 150, -150, tag::coordinate::relative());
   expected_context.path_close_subpath();
-  expected_context.path_move_to(100, 200, tag::absolute_coordinate());
-  expected_context.path_cubic_bezier_to(100, 100, 250, 100, 250, 200, tag::absolute_coordinate());
-  expected_context.path_cubic_bezier_to(400, 300, 400, -200, tag::absolute_coordinate());
+  expected_context.path_move_to(100, 200, tag::coordinate::absolute());
+  expected_context.path_cubic_bezier_to(100, 100, 250, 100, 250, 200, tag::coordinate::absolute());
+  expected_context.path_cubic_bezier_to(400, 300, 400, -200, tag::coordinate::absolute());
 
   std::string::const_iterator first = pathStr1.begin(), end = pathStr1.end();
   test_path_context test_context;

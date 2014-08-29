@@ -1,10 +1,7 @@
 #include "full_parse_test_common.hpp"
 
-int main()
+void parse(rapidxml_ns::xml_node<char> const * svg_element)
 {
-  rapidxml_ns::xml_document<char> doc;
-  rapidxml_ns::xml_node<char> const * svg_element = doc.first_node();
-
   Context context;
   document_traversal<
     viewport_policy<policy::viewport::raw>,
@@ -20,10 +17,10 @@ int main()
       tag::attribute::u2,
       tag::attribute::g1,
       tag::attribute::g2,
-      /*boost::mpl::pair<tag::element::animate, tag::attribute::values>,
+      boost::mpl::pair<tag::element::animate, tag::attribute::values>,
       boost::mpl::pair<tag::element::animateColor, tag::attribute::values>,
       boost::mpl::pair<tag::element::animateMotion, tag::attribute::values>,
-      boost::mpl::pair<tag::element::animateTransform, tag::attribute::values>,*/
+      boost::mpl::pair<tag::element::animateTransform, tag::attribute::values>,
       tag::attribute::values,
       tag::attribute::keyTimes,
       tag::attribute::keySplines,
@@ -32,6 +29,4 @@ int main()
       tag::attribute::widths
     >::type>
   >::load_document(svg_element, context);
-
-  return 0;
 }

@@ -4,7 +4,7 @@
 #include "common.hpp"
 
 #include <svgpp/document_traversal.hpp>
-#include <svgpp/utility/gil_utility.h>
+#include <svgpp/utility/gil/mask.hpp>
 
 #include <boost/bind.hpp>
 #include <boost/gil/gil_all.hpp>
@@ -471,7 +471,7 @@ private:
 
 void Canvas::applyFilter()
 {
-  //if (!style().filter_)
+  if (!style().filter_)
     return;
 
   Filters::Input in;
@@ -510,12 +510,12 @@ public:
     Canvas::on_exit_element();
   }
 
-  void path_move_to(double x, double y, svgpp::tag::absolute_coordinate const &)
+  void path_move_to(double x, double y, svgpp::tag::coordinate::absolute const &)
   { 
     path_storage_.move_to(x, y);
   }
 
-  void path_line_to(double x, double y, svgpp::tag::absolute_coordinate const &)
+  void path_line_to(double x, double y, svgpp::tag::coordinate::absolute const &)
   { 
     path_storage_.line_to(x, y);
   }
@@ -524,7 +524,7 @@ public:
     double x1, double y1, 
     double x2, double y2, 
     double x, double y, 
-    svgpp::tag::absolute_coordinate const &)
+    svgpp::tag::coordinate::absolute const &)
   { 
     path_storage_.curve4(x1, y1, x2, y2, x, y);
   }
@@ -532,7 +532,7 @@ public:
   void path_quadratic_bezier_to(
     double x1, double y1, 
     double x, double y, 
-    svgpp::tag::absolute_coordinate const &)
+    svgpp::tag::coordinate::absolute const &)
   { 
     path_storage_.curve3(x1, y1, x, y);
   }

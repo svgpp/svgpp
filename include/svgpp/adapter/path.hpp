@@ -162,7 +162,7 @@ public:
   template<class Policy>
   void path_move_to(
     coordinate_type x, 
-    coordinate_type y, tag::absolute_coordinate tag)
+    coordinate_type y, tag::coordinate::absolute tag)
   { 
     LoadPolicy::path_move_to(output_context, x, y, tag);
     non_curve_command();
@@ -176,11 +176,11 @@ public:
   typename boost::enable_if_c<Policy::absolute_coordinates_only>::type
   path_move_to(
     coordinate_type x, 
-    coordinate_type y, tag::relative_coordinate)
+    coordinate_type y, tag::coordinate::relative)
   { 
     current_x += x;
     current_y += y;
-    path_move_to<Policy>(current_x, current_y, tag::absolute_coordinate());
+    path_move_to<Policy>(current_x, current_y, tag::coordinate::absolute());
     non_curve_command();
     subpath_start_x = current_x;
     subpath_start_y = current_y;
@@ -190,7 +190,7 @@ public:
   typename boost::disable_if_c<Policy::absolute_coordinates_only>::type
   path_move_to(
     coordinate_type x, 
-    coordinate_type y, tag::relative_coordinate tag)
+    coordinate_type y, tag::coordinate::relative tag)
   { 
     current_x += x;
     current_y += y;
@@ -203,7 +203,7 @@ public:
   template<class Policy>
   void path_line_to(
     coordinate_type x, 
-    coordinate_type y, tag::absolute_coordinate tag)
+    coordinate_type y, tag::coordinate::absolute tag)
   { 
     current_x = x;
     current_y = y;
@@ -215,11 +215,11 @@ public:
   typename boost::enable_if_c<Policy::absolute_coordinates_only>::type
   path_line_to(
     coordinate_type x, 
-    coordinate_type y, tag::relative_coordinate)
+    coordinate_type y, tag::coordinate::relative)
   {
     current_x += x;
     current_y += y;
-    LoadPolicy::path_line_to(output_context, current_x, current_y, tag::absolute_coordinate());
+    LoadPolicy::path_line_to(output_context, current_x, current_y, tag::coordinate::absolute());
     non_curve_command();
   }
 
@@ -227,7 +227,7 @@ public:
   typename boost::disable_if_c<Policy::absolute_coordinates_only>::type
   path_line_to(
     coordinate_type x, 
-    coordinate_type y, tag::relative_coordinate tag)
+    coordinate_type y, tag::coordinate::relative tag)
   {
     current_x += x;
     current_y += y;
@@ -239,7 +239,7 @@ public:
   typename boost::enable_if_c<Policy::no_ortho_line_to>::type
   path_line_to_ortho(
     coordinate_type coord, 
-    bool horizontal, tag::relative_coordinate tag)
+    bool horizontal, tag::coordinate::relative tag)
   {
     if (horizontal)
       path_line_to<Policy>(coord, 0, tag);
@@ -251,7 +251,7 @@ public:
   typename boost::enable_if_c<Policy::no_ortho_line_to>::type
   path_line_to_ortho(
     coordinate_type coord, 
-    bool horizontal, tag::absolute_coordinate tag)
+    bool horizontal, tag::coordinate::absolute tag)
   {
     if (horizontal)
       path_line_to<Policy>(coord, current_y, tag);
@@ -262,7 +262,7 @@ public:
   template<class Policy>
   typename boost::disable_if_c<Policy::no_ortho_line_to>::type
   path_line_to_ortho(
-    coordinate_type coord, bool horizontal, tag::absolute_coordinate tag)
+    coordinate_type coord, bool horizontal, tag::coordinate::absolute tag)
   {
     if (horizontal)
       current_x = coord;
@@ -275,21 +275,21 @@ public:
   template<class Policy>
   typename boost::enable_if_c<Policy::absolute_coordinates_only && !Policy::no_ortho_line_to>::type
   path_line_to_ortho(
-    coordinate_type coord, bool horizontal, tag::relative_coordinate tag)
+    coordinate_type coord, bool horizontal, tag::coordinate::relative tag)
   {
     if (horizontal)
       current_x += coord;
     else
       current_y += coord;
     LoadPolicy::path_line_to_ortho(output_context, 
-      horizontal ? current_x : current_y, horizontal, tag::absolute_coordinate());
+      horizontal ? current_x : current_y, horizontal, tag::coordinate::absolute());
     non_curve_command();
   }
 
   template<class Policy>
   typename boost::enable_if_c<!Policy::absolute_coordinates_only && !Policy::no_ortho_line_to>::type
   path_line_to_ortho(
-    coordinate_type coord, bool horizontal, tag::relative_coordinate tag)
+    coordinate_type coord, bool horizontal, tag::coordinate::relative tag)
   {
     if (horizontal)
       current_x += coord;
@@ -306,7 +306,7 @@ public:
     coordinate_type y1, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::absolute_coordinate tag)
+    tag::coordinate::absolute tag)
   {
     current_x = x;
     current_y = y;
@@ -321,7 +321,7 @@ public:
     coordinate_type y1, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::relative_coordinate)
+    tag::coordinate::relative)
   {
     x += current_x;
     y += current_y;
@@ -329,7 +329,7 @@ public:
     y1 += current_y;
     current_x = x;
     current_y = y;
-    LoadPolicy::path_quadratic_bezier_to(output_context, x1, y1, x, y, tag::absolute_coordinate());
+    LoadPolicy::path_quadratic_bezier_to(output_context, x1, y1, x, y, tag::coordinate::absolute());
     set_quadratic_cp(x1, y1);
   }
 
@@ -340,7 +340,7 @@ public:
     coordinate_type y1, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::relative_coordinate tag)
+    tag::coordinate::relative tag)
   {
     LoadPolicy::path_quadratic_bezier_to(output_context, x1, y1, x, y, tag);
     set_quadratic_cp(x1 + current_x, y1 + current_y);
@@ -355,7 +355,7 @@ public:
   path_quadratic_bezier_to(
     coordinate_type x, 
     coordinate_type y, 
-    tag::absolute_coordinate tag)
+    tag::coordinate::absolute tag)
   {
     if (this->last_quadratic_bezier_cp_valid)
       path_quadratic_bezier_to<Policy>(
@@ -373,7 +373,7 @@ public:
   path_quadratic_bezier_to(
     coordinate_type x, 
     coordinate_type y, 
-    tag::relative_coordinate tag)
+    tag::coordinate::relative tag)
   {
     if (this->last_quadratic_bezier_cp_valid)
       path_quadratic_bezier_to<Policy>(
@@ -390,7 +390,7 @@ public:
   path_quadratic_bezier_to(
     coordinate_type x, 
     coordinate_type y, 
-    tag::absolute_coordinate tag)
+    tag::coordinate::absolute tag)
   {
     LoadPolicy::path_quadratic_bezier_to(output_context, x, y, tag);
     if (this->last_quadratic_bezier_cp_valid)
@@ -410,11 +410,11 @@ public:
   path_quadratic_bezier_to(
     coordinate_type x, 
     coordinate_type y, 
-    tag::relative_coordinate tag)
+    tag::coordinate::relative tag)
   {
     x += current_x;
     y += current_y;
-    LoadPolicy::path_quadratic_bezier_to(output_context, x, y, tag::absolute_coordinate());
+    LoadPolicy::path_quadratic_bezier_to(output_context, x, y, tag::coordinate::absolute());
     if (this->last_quadratic_bezier_cp_valid)
       set_quadratic_cp(
         2 * current_x - this->last_quadratic_bezier_cp_x,
@@ -432,7 +432,7 @@ public:
   path_quadratic_bezier_to(
     coordinate_type x, 
     coordinate_type y, 
-    tag::relative_coordinate tag)
+    tag::coordinate::relative tag)
   {
     LoadPolicy::path_quadratic_bezier_to(output_context, x, y, tag);
     if (this->last_quadratic_bezier_cp_valid)
@@ -452,7 +452,7 @@ public:
     coordinate_type y1, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::absolute_coordinate tag)
+    tag::coordinate::absolute tag)
   {
     BOOST_STATIC_ASSERT(boost::is_floating_point<coordinate_type>::value);
     const coordinate_type k1 = 1./3.;
@@ -472,7 +472,7 @@ public:
     coordinate_type y1, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::relative_coordinate tag)
+    tag::coordinate::relative tag)
   {
     BOOST_STATIC_ASSERT(boost::is_floating_point<coordinate_type>::value);
     const coordinate_type k1 = 1./3.;
@@ -493,7 +493,7 @@ public:
     coordinate_type y2, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::absolute_coordinate tag)
+    tag::coordinate::absolute tag)
   {
     current_x = x;
     current_y = y;
@@ -510,7 +510,7 @@ public:
     coordinate_type y2, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::relative_coordinate)
+    tag::coordinate::relative)
   {
     x += current_x;
     y += current_y;
@@ -518,7 +518,7 @@ public:
     y1 += current_y;
     x2 += current_x;
     y2 += current_y;
-    LoadPolicy::path_cubic_bezier_to(output_context, x1, y1, x2, y2, x, y, tag::absolute_coordinate());
+    LoadPolicy::path_cubic_bezier_to(output_context, x1, y1, x2, y2, x, y, tag::coordinate::absolute());
     set_cubic_cp(x2, y2);
     current_x = x;
     current_y = y;
@@ -533,7 +533,7 @@ public:
     coordinate_type y2, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::relative_coordinate tag)
+    tag::coordinate::relative tag)
   {
     LoadPolicy::path_cubic_bezier_to(output_context, x1, y1, x2, y2, x, y, tag);
     set_cubic_cp(x2 + current_x, y2 + current_y);
@@ -548,7 +548,7 @@ public:
       coordinate_type y2, 
       coordinate_type x, 
       coordinate_type y, 
-      tag::absolute_coordinate tag)
+      tag::coordinate::absolute tag)
   {
     if (this->last_cubic_bezier_cp_valid)
       path_cubic_bezier_to<Policy>( 
@@ -566,7 +566,7 @@ public:
     coordinate_type y2, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::relative_coordinate tag)
+    tag::coordinate::relative tag)
   {
     if (this->last_cubic_bezier_cp_valid)
       path_cubic_bezier_to<Policy>(
@@ -583,7 +583,7 @@ public:
     coordinate_type y2, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::absolute_coordinate tag)
+    tag::coordinate::absolute tag)
   {
     current_x = x;
     current_y = y;
@@ -598,7 +598,7 @@ public:
     coordinate_type y2, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::relative_coordinate tag)
+    tag::coordinate::relative tag)
   {
     LoadPolicy::path_cubic_bezier_to(output_context, x2, y2, x, y, tag);
     set_cubic_cp(current_x + x2, current_y + y2);
@@ -615,7 +615,7 @@ public:
     bool large_arc_flag, bool sweep_flag, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::absolute_coordinate tag)
+    tag::coordinate::absolute tag)
   { 
     x_axis_rotation *= boost::math::constants::degree<coordinate_type>();
     coordinate_type cx, cy, theta1, theta2;
@@ -642,7 +642,7 @@ public:
         it.p1x(), it.p1y(),
         it.p2x(), it.p2y(),
         it.p3x(), it.p3y(),
-        tag::absolute_coordinate());
+        tag::coordinate::absolute());
   } 
 
   template<class Policy>
@@ -654,7 +654,7 @@ public:
     bool large_arc_flag, bool sweep_flag, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::absolute_coordinate tag)
+    tag::coordinate::absolute tag)
   { 
     LoadPolicy::path_elliptical_arc_to(output_context, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, tag); 
     non_curve_command();
@@ -671,10 +671,10 @@ public:
     bool large_arc_flag, bool sweep_flag, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::relative_coordinate)
+    tag::coordinate::relative)
   { 
     path_elliptical_arc_to<Policy>( 
-      rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x + current_x, y + current_y, tag::absolute_coordinate()); 
+      rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x + current_x, y + current_y, tag::coordinate::absolute()); 
   }
 
   template<class Policy>
@@ -686,7 +686,7 @@ public:
     bool large_arc_flag, bool sweep_flag, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::relative_coordinate tag)
+    tag::coordinate::relative tag)
   { 
     LoadPolicy::path_elliptical_arc_to(output_context, 
       rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, tag); 

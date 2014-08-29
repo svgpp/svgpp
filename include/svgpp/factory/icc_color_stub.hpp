@@ -30,8 +30,7 @@ struct stub: boost::noncopyable
 
   template<class Iterator>
   static void set_profile_name(builder_type &, typename boost::iterator_range<Iterator> const &) {}
-  template<class Number>
-  static void append_component_value(builder_type &, Number) {}
+  static void append_component_value(builder_type &, component_type) {}
 
   static icc_color_type create_icc_color(builder_type const &) { return icc_color_type(); }
 };

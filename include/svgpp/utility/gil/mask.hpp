@@ -98,6 +98,4 @@ struct rgba_to_mask_color_converter
   }
 };
 
-} // namespace gil_utility
-
-}
+}}

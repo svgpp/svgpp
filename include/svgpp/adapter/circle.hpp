@@ -71,9 +71,9 @@ struct circle_to_path_adapter
     typedef detail::unwrap_context<Context, tag::load_path_policy> load_path;
 
     typename load_path::type & path_context = load_path::get(context);
-    load_path::policy::path_move_to(path_context, cx + r, cy, tag::absolute_coordinate());
-    load_path::policy::path_elliptical_arc_to(path_context, r, r, 0, false, true, cx - r, cy, tag::absolute_coordinate());
-    load_path::policy::path_elliptical_arc_to(path_context, r, r, 0, false, true, cx + r, cy, tag::absolute_coordinate());
+    load_path::policy::path_move_to(path_context, cx + r, cy, tag::coordinate::absolute());
+    load_path::policy::path_elliptical_arc_to(path_context, r, r, 0, false, true, cx - r, cy, tag::coordinate::absolute());
+    load_path::policy::path_elliptical_arc_to(path_context, r, r, 0, false, true, cx + r, cy, tag::coordinate::absolute());
     load_path::policy::path_close_subpath(path_context);
     load_path::policy::path_exit(path_context);
   }

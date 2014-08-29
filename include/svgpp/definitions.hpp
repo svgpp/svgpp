@@ -68,8 +68,11 @@ namespace source
   struct css: any {};
 }
 
-struct absolute_coordinate { static const bool absolute = true; };
-struct relative_coordinate { static const bool absolute = false; };
+namespace coordinate
+{
+  struct absolute { static const bool is_absolute = true; };
+  struct relative { static const bool is_absolute = false; };
+}
 
 namespace type
 {

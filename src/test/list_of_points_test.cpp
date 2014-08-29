@@ -27,13 +27,13 @@ using namespace boost::assign;
 
 valid_case_t valid_tests[] = {
   valid_case_t("  ", pair_list_t() ),
-  valid_case_t("1 2", list_of(std::make_pair(1.0, 2.0)) ),
+  valid_case_t("1 2", list_of(std::make_pair(1.0, 2.0)).convert_to_container<pair_list_t>() ),
   valid_case_t("12.3 14.7,34.,176 77-67.3   \n2 ,  \n1 ,-3-4", 
     list_of(std::make_pair(12.3, 14.7))
     (std::make_pair(34, 176))
     (std::make_pair(77, -67.3))
     (std::make_pair(2, 1))
-    (std::make_pair(-3, -4))
+    (std::make_pair(-3, -4)).convert_to_container<pair_list_t>()
     )
 };
 

@@ -28,9 +28,9 @@ struct list_of_points_to_path_adapter<tag::element::polyline>
     typename boost::range_const_iterator<Range>::type it = boost::begin(r), end = boost::end(r);
     if (it != end)
     {
-      load_path::policy::path_move_to(path_context, it->first, it->second, tag::absolute_coordinate());
+      load_path::policy::path_move_to(path_context, it->first, it->second, tag::coordinate::absolute());
       for(++it; it != end; ++it)
-        load_path::policy::path_line_to(path_context, it->first, it->second, tag::absolute_coordinate());
+        load_path::policy::path_line_to(path_context, it->first, it->second, tag::coordinate::absolute());
     }
   }
 };
@@ -47,11 +47,11 @@ struct list_of_points_to_path_adapter<tag::element::polygon>
     typename boost::range_const_iterator<Range>::type it = boost::begin(r), end = boost::end(r);
     if (it != end)
     {
-      load_path::policy::path_move_to(path_context, it->first, it->second, tag::absolute_coordinate());
+      load_path::policy::path_move_to(path_context, it->first, it->second, tag::coordinate::absolute());
       bool line = false;
       for(++it; it != end; ++it)
       {
-        load_path::policy::path_line_to(path_context, it->first, it->second, tag::absolute_coordinate());
+        load_path::policy::path_line_to(path_context, it->first, it->second, tag::coordinate::absolute());
         line = true;
       }
       if (line)

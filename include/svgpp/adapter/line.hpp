@@ -65,8 +65,8 @@ struct line_to_path_adapter
     typedef detail::unwrap_context<Context, tag::load_path_policy> load_path;
 
     typename load_path::type & path_context = load_path::get(context);
-    load_path::policy::path_move_to(path_context, x1, y1, tag::absolute_coordinate());
-    load_path::policy::path_line_to(path_context, x2, y2, tag::absolute_coordinate());
+    load_path::policy::path_move_to(path_context, x1, y1, tag::coordinate::absolute());
+    load_path::policy::path_line_to(path_context, x2, y2, tag::coordinate::absolute());
     load_path::policy::path_exit(path_context);
   }
 };

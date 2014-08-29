@@ -22,11 +22,11 @@ Let's start learning SVG++ with simple SVG to `WKT <http://en.wikipedia.org/wiki
   class Context
   {
   public:
-    void path_move_to(double x, double y, tag::absolute_coordinate)
+    void path_move_to(double x, double y, tag::coordinate::absolute)
     { 
     }
 
-    void path_line_to(double x, double y, tag::absolute_coordinate)
+    void path_line_to(double x, double y, tag::coordinate::absolute)
     { 
     }
 
@@ -34,14 +34,14 @@ Let's start learning SVG++ with simple SVG to `WKT <http://en.wikipedia.org/wiki
       double x1, double y1, 
       double x2, double y2, 
       double x, double y, 
-      tag::absolute_coordinate)
+      tag::coordinate::absolute)
     { 
     }
 
     void path_quadratic_bezier_to(
       double x1, double y1, 
       double x, double y, 
-      tag::absolute_coordinate)
+      tag::coordinate::absolute)
     { 
     }
 
@@ -49,7 +49,7 @@ Let's start learning SVG++ with simple SVG to `WKT <http://en.wikipedia.org/wiki
       double rx, double ry, double x_axis_rotation,
       bool large_arc_flag, bool sweep_flag, 
       double x, double y,
-      tag::absolute_coordinate)
+      tag::coordinate::absolute)
     { 
     }
 
@@ -202,7 +202,7 @@ describing shape::
   public:
     Shape(Transformable const & parent);
 
-    void path_move_to(double x, double y, tag::absolute_coordinate); 
+    void path_move_to(double x, double y, tag::coordinate::absolute); 
     /* ... */
   };
 

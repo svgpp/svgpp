@@ -37,11 +37,11 @@ public:
   {
   }
 
-  void path_move_to(double x, double y, svgpp::tag::absolute_coordinate const &)
+  void path_move_to(double x, double y, svgpp::tag::coordinate::absolute const &)
   { 
   }
 
-  void path_line_to(double x, double y, svgpp::tag::absolute_coordinate const &)
+  void path_line_to(double x, double y, svgpp::tag::coordinate::absolute const &)
   { 
   }
 
@@ -49,7 +49,7 @@ public:
     double x1, double y1, 
     double x2, double y2, 
     double x, double y, 
-    svgpp::tag::absolute_coordinate const &)
+    svgpp::tag::coordinate::absolute const &)
   { 
   }
 

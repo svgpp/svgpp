@@ -86,14 +86,15 @@ struct length_policy
   }
 };
 
-typedef std::pair<const char *, std::vector<length_t> > valid_case_t;
+typedef std::vector<length_t> lengths_t;
+typedef std::pair<const char *, lengths_t> valid_case_t;
 
 valid_case_t valid_tests[] = {
-  valid_case_t("1 2", list_of(length_t(1, none()))(length_t(2, none())) ),
-  valid_case_t("4em 5.0ex", list_of(length_t(4, em()))(length_t(5, ex())) ),
-  valid_case_t("1e-9px, 2e+10pt", list_of(length_t(1e-9, px()))(length_t(2e10, pt())) ),
-  valid_case_t(".59px , 21.0cm", list_of(length_t(.59, px()))(length_t(21, cm())) ),
-  valid_case_t("-56px -77pt", list_of(length_t(-56, px()))(length_t(-77, pt())) ),
+  valid_case_t("1 2", list_of(length_t(1, none()))(length_t(2, none())).convert_to_container<lengths_t>()),
+  valid_case_t("4em 5.0ex", list_of(length_t(4, em()))(length_t(5, ex())).convert_to_container<lengths_t>() ),
+  valid_case_t("1e-9px, 2e+10pt", list_of(length_t(1e-9, px()))(length_t(2e10, pt())).convert_to_container<lengths_t>() ),
+  valid_case_t(".59px , 21.0cm", list_of(length_t(.59, px()))(length_t(21, cm())).convert_to_container<lengths_t>() ),
+  valid_case_t("-56px -77pt", list_of(length_t(-56, px()))(length_t(-77, pt())).convert_to_container<lengths_t>() ),
 };
 
 const char * invalid_tests[] = {

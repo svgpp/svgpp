@@ -74,9 +74,9 @@ struct ellipse_to_path_adapter
     typedef detail::unwrap_context<Context, tag::load_path_policy> load_path;
 
     typename load_path::type & path_context = load_path::get(context);
-    load_path::policy::path_move_to(path_context, cx + rx, cy, tag::absolute_coordinate());
-    load_path::policy::path_elliptical_arc_to(path_context, rx, ry, 0, false, true, cx - rx, cy, tag::absolute_coordinate());
-    load_path::policy::path_elliptical_arc_to(path_context, rx, ry, 0, false, true, cx + rx, cy, tag::absolute_coordinate());
+    load_path::policy::path_move_to(path_context, cx + rx, cy, tag::coordinate::absolute());
+    load_path::policy::path_elliptical_arc_to(path_context, rx, ry, 0, false, true, cx - rx, cy, tag::coordinate::absolute());
+    load_path::policy::path_elliptical_arc_to(path_context, rx, ry, 0, false, true, cx + rx, cy, tag::coordinate::absolute());
     load_path::policy::path_close_subpath(path_context);
     load_path::policy::path_exit(path_context);
   }

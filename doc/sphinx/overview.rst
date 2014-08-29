@@ -3,6 +3,79 @@
 Организация библиотеки
 =============================
 
+Context
+---------
+
+Основная схема разбора SVG с помощью SVG++: программист вызывает какую-то функцию библиотеки, передавая ссылку на *context*
+и XML элемент или XML атрибут, а библиотека вызывает статические методы соответствующего *Load Policy*, 
+передавая этот же *context* и разобранные значения в виде параметров.
+
+*Load Policies* (*Load Value Policy*, *Load Transform Policy*, *Load Path Policy* etc) определяют какой тип должен иметь *context*.
+*Load Policies* по умолчанию используют *context* как объект, вызывая его методы. 
+
+
+
+Компоненты
+-----------------
+
+Перечислим главные компоненты библиотеки SVG++, начиная с нижнего уровня, каждый следующий базируется на предыдущих:
+
+  *Value Parsers*
+    В основе SVG++ лежат *Value Parsers* - функции, преобразующие строковые значения атрибутов и CSS properties
+    в вызовы пользовательских функций с удобными для обработки параметрами.
+
+    Например, значение атрибута **x="16mm"** может быть преобразовано в соответствующее ``double`` значение, 
+    учитывающее единицы измерения, 
+    а **d="M10 10 L15 100"** может стать последовательностью вызовов ``path_move_to(10,10); path_line_to(15, 100);``.
+
+  *Adapters*
+    *Value Parsers* максимально сохраняют структуру данных SVG, что позволяет, например, использовать SVG++ для
+    построения SVG DOM, но в других приложениях эта информация может быть избыточной. 
+    SVG++ предоставляет ряд *Adapters*, которые позволяют упростить программисту обработку данных SVG.
+    *Adapters* конфигурируются посредстовом *policies*.
+
+  *Attribute Dispatcher*
+    Объект *Attribute Dispatcher* создается на время обработки атрибутов одного элемента.
+    Он выбирает и вызывает для каждого атрибута соответствующий *Value Parser*.
+    Кроме того, *Attribute Dispatcher* организует работу адаптеров, обрабатывающих несколько атрибутов
+    одного объекта. Например, адаптер, преобразующий элемент **line** в **path**, должен собрать
+    значения атрибутов **x1**, **y1**, **x2** и **y2** - этим управляет *Attribute Dispatcher*.
+
+  *Attribute Traversal*
+    Объект *Attribute Traversal* создается на время обработки атрибутов одного элемента и вызывает
+    методы *Attribute Dispatcher*. 
+    
+    *Attribute Traversal* определяет по имени атрибута его внутренний числовой идентификатор.
+
+    *Attribute Traversal* осуществляет разбор атрибута **style**, так что в последующем значения атрибутов
+    и значения CSS properties обрабатываются аналогично.
+
+    *Attribute Traversal* проверяет присутствие обязательных атрибутов элемента.
+
+    *Attribute Traversal* "прячет" presentation attribute, если это же property задано в CSS.
+
+    *Attribute Traversal* позволяет задать порядок обработки атрибутов.
+
+  *Document Traversal*
+    Набор статических методов. Осуществляет обход дерева SVG документа, обрабатывая выбранные программистом элементы SVG.
+
+    *Document Traversal* проверяет content model, то есть допустимость появления дочерних элементов.
+
+    *Document Traversal* создает экземпляры и вызывает методы *Attribute Dispatcher* и *Attribute Traversal* для атрибутов элемента.
+
+    *Document Traversal* передает child text nodes тех элементов SVG, которые могут иметь text content, в user code.
+
+
+*Document Traversal* предоставляет удобный доступ ко всем возможностям библиотеки и, в большинстве случаев, его и нужно 
+использовать.
+
+*Value Parsers* имеют простой интерфейс и могут быть легко подключены в приложение, если по каким-то причинам обход 
+дерева SVG, предоставляемый *Document Traversal*, не нужен или достаточно разобрать отдельные атрибуты.
+
+*Attribute Traversal* и *Attribute Dispatcher* не имеют отдельного описания в документации и вряд ли будут использованы извне.
+
+
+
 .. _tags-section:
 
 Tags
@@ -40,75 +113,47 @@ Tags
     }
   }
 
-Каждому элементу SVG соответствует тэг из пространства имен tag::element, а каждому атрибуту SVG - тэг из пространства имен tag::attribute. Атрибутам из XML namespace **xlink** соответствуют тэги in C++ namespace tag::attribute::xlink, а атрибутам из XML namespace **xml** - тэги in C++ namespace tag::attribute::xml. 
+Каждому элементу SVG соответствует тэг из пространства имен ``tag::element``, а каждому атрибуту SVG - тэг из пространства 
+имен ``tag::attribute``. Атрибутам из XML namespace **xlink** соответствуют тэги in C++ namespace ``tag::attribute::xlink``, 
+а атрибутам из XML namespace **xml** - тэги in C++ namespace ``tag::attribute::xml``. 
 Есть и иные тэги, которые описаны в других местах документации.
 
-Traits
--------
 
-Metafunction child_element_types
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. _named-params:
 
-Synopsis
-"""""""""""
+Named Class Template Parameters
+---------------------------------
 
-::
+SVG++ широко использует 
+`named class template parameters <http://www.boost.org/doc/libs/1_56_0/libs/parameter/doc/html/index.html#class-template-parameter-support>`_ 
+для compile-time настройки библиотеки. Заданные named class template parameters передаются между компонентами, например,
+named class template parameters, заданные ``document_traversal``, передаются вплоть до ``value_parser``.
 
-  namespace traits
-  {
-    template<class ElementTag>
-    struct child_element_types
+Конфигурация библиотеки
+--------------------------
+
+*Policies* позволяют настраивать многие аспекты библиотеки. Есть два способа задать *policy*:
+
+1. Передать как named class template parameter. Например::
+  
+    document_traversal<
+      length_policy<UserLengthPolicy>
+    >::load(/* ... */);
+
+2. Задать специализацию класса ``default_policy`` для нужного *context* type в соответствующем C++ namespace::
+
+    namespace svgpp { namespace policy { namespace length
     {
-      typedef boost::mpl::set<...> type;
-    };
-  }
+      template<>
+      struct default_policy<UserContext>: UserLengthPolicy
+      {};
+    }}}
 
-Parameter
-"""""""""""
+CSS Support
+----------------
 
-``ElementTag`` - element tag
+SVG++ разбирает properties in **style** attribute, если обработка **style** разрешена программистом
+(``tag::attribute::style`` входит в список ``processed_attributes`` или не входит в ``ignored_attributes``).
 
-Return type
-"""""""""""
-
-`Associative Sequence`_, containing tags of elements that can be childs of element corresponding to ``ElementTag``.
-
-
-Metafunction element_required_attributes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Synopsis
-"""""""""""
-
-::
-
-  namespace traits
-  {
-    template<class ElementTag>
-    struct element_required_attributes
-    {
-      typedef unspecified type;
-    };
-  }
-
-Parameter
-"""""""""""
-
-``ElementTag`` - element tag
-
-Return type
-"""""""""""
-
-Forward Sequence (Boost.MPL), containing tags of attributes that are required for an element corresponding to ``ElementTag``.
-
-
-В основе разбора SVG лежат функции attribute value parsers, которые преобразуют строковые значения атрибутов SVG в удобные для обработки значения.
-Например, значение атрибута x="16mm" может быть преобразовано в соответствующее ``double`` значение, учитывающее единицы измерения, 
-а d="M10 10 L15 100" может стать последовательностью вызовов ``path_move_to(10,10); path_line_to(15, 100);``
-
-Адаптеры позволяют преобразовывать значения, полученные от value parsers, в более удобное для программиста представление. 
-Например, value parser для *path-data* поддерживает все возможности SVG, включая относительные координаты и shortcuts для горизонтальных и вертикальных линий, адаптер позволяет сократить количество методов, которые должен реализовать пользователь библиотеки, преобразовав такие shortcuts к более общим вызовам.
-
-Экземпляр ``attribute_dispatcher`` создается для обрабатываемого элемента SVG. Он выбирает attribute value parser, соответствующий атрибуту, и вызывает его, кроме того ``attribute_dispatcher`` организует работу *адаптеров*. Например, ``attribute_dispatcher`` для элемента *rect* может собрать значения атрибутов x, y, width, height, rx, ry и преобразовать их в вызовы, соответствующие элементу path.
-
-``attribute_traversal`` перебирает атрибуты SVG элемента, определяет по имени атрибута его внутренний числовой идентификатор, проверяет на наличие обязательных атрибутов.
+SVG++ не реализует CSS cascading и обработку CSS stylesheet в элементе **style** - это, при необходимости, должен 
+делать другой модуль, предоставляя результат в виде атрибутов **style**.

@@ -96,15 +96,15 @@ namespace detail
   {
     rx = std::min(rx, width / 2);
     ry = std::min(ry, height / 2);
-    LoadPolicy::path_move_to(context, x + rx, y, tag::absolute_coordinate());
-    LoadPolicy::path_line_to_ortho(context, x+width-rx, true, tag::absolute_coordinate());
-    LoadPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x+width, y+ry, tag::absolute_coordinate()); 
-    LoadPolicy::path_line_to_ortho(context, y+height-ry, false, tag::absolute_coordinate());
-    LoadPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x+width-rx, y+height, tag::absolute_coordinate()); 
-    LoadPolicy::path_line_to_ortho(context, x+rx, true, tag::absolute_coordinate());
-    LoadPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x, y+height-ry, tag::absolute_coordinate()); 
-    LoadPolicy::path_line_to_ortho(context, y+ry, false, tag::absolute_coordinate());
-    LoadPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x+rx, y, tag::absolute_coordinate()); 
+    LoadPolicy::path_move_to(context, x + rx, y, tag::coordinate::absolute());
+    LoadPolicy::path_line_to_ortho(context, x+width-rx, true, tag::coordinate::absolute());
+    LoadPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x+width, y+ry, tag::coordinate::absolute()); 
+    LoadPolicy::path_line_to_ortho(context, y+height-ry, false, tag::coordinate::absolute());
+    LoadPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x+width-rx, y+height, tag::coordinate::absolute()); 
+    LoadPolicy::path_line_to_ortho(context, x+rx, true, tag::coordinate::absolute());
+    LoadPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x, y+height-ry, tag::coordinate::absolute()); 
+    LoadPolicy::path_line_to_ortho(context, y+ry, false, tag::coordinate::absolute());
+    LoadPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x+rx, y, tag::coordinate::absolute()); 
     LoadPolicy::path_close_subpath(context);
     LoadPolicy::path_exit(context);
   }
@@ -121,10 +121,10 @@ struct rect_to_path_adapter
     typename load_path::type & path_context = load_path::get(context);
     if (rx == 0 || ry == 0)
     {
-      load_path::policy::path_move_to(path_context, x, y, tag::absolute_coordinate());
-      load_path::policy::path_line_to_ortho(path_context, width,  true,  tag::relative_coordinate());
-      load_path::policy::path_line_to_ortho(path_context, height, false, tag::relative_coordinate());
-      load_path::policy::path_line_to_ortho(path_context, -width, true,  tag::relative_coordinate());
+      load_path::policy::path_move_to(path_context, x, y, tag::coordinate::absolute());
+      load_path::policy::path_line_to_ortho(path_context, width,  true,  tag::coordinate::relative());
+      load_path::policy::path_line_to_ortho(path_context, height, false, tag::coordinate::relative());
+      load_path::policy::path_line_to_ortho(path_context, -width, true,  tag::coordinate::relative());
       load_path::policy::path_close_subpath(path_context);
       load_path::policy::path_exit(path_context);
     }
