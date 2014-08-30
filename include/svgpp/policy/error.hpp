@@ -219,7 +219,7 @@ struct raise_exception
   typedef Context context_type;
 
   template<class XMLElement, class ElementName>
-  BOOST_ATTRIBUTE_NORETURN static bool unknown_element(Context const &, 
+  BOOST_NORETURN static bool unknown_element(Context const &, 
     XMLElement const & element, ElementName const & name,
     typename boost::enable_if<typename detail::is_char_range<ElementName>::type>::type * = NULL)
   {
@@ -227,7 +227,7 @@ struct raise_exception
   }
 
   template<class XMLElement, class ElementName>
-  BOOST_ATTRIBUTE_NORETURN static bool unknown_element(Context const &, 
+  BOOST_NORETURN static bool unknown_element(Context const &, 
     XMLElement const & element, ElementName const &,
     typename boost::disable_if<typename detail::is_char_range<ElementName>::type>::type * = NULL)
   {
@@ -265,7 +265,7 @@ struct raise_exception
   }
 
   template<class XMLAttributesIterator, class AttributeName>
-  BOOST_ATTRIBUTE_NORETURN static bool unknown_attribute(Context const &, 
+  BOOST_NORETURN static bool unknown_attribute(Context const &, 
     XMLAttributesIterator const & attribute, 
     AttributeName const & name,
     tag::source::css,
@@ -276,7 +276,7 @@ struct raise_exception
   }
 
   template<class XMLAttributesIterator, class AttributeName>
-  BOOST_ATTRIBUTE_NORETURN static bool unknown_attribute(Context const &, 
+  BOOST_NORETURN static bool unknown_attribute(Context const &, 
     XMLAttributesIterator const & attribute, 
     AttributeName const &,
     tag::source::css,
@@ -286,21 +286,21 @@ struct raise_exception
       << boost::error_info<tag::error_info::xml_attribute, XMLAttributesIterator const *>(&attribute);
   }
 
-  BOOST_ATTRIBUTE_NORETURN static bool unexpected_attribute(Context const &, 
+  BOOST_NORETURN static bool unexpected_attribute(Context const &, 
     detail::attribute_id id, tag::source::attribute)
   {
     throw unexpected_attribute_error(attribute_name<char>::by_id(id));
   }
   
   template<class AttributeTag>
-  BOOST_ATTRIBUTE_NORETURN static bool required_attribute_not_found(Context const &, 
+  BOOST_NORETURN static bool required_attribute_not_found(Context const &, 
     AttributeTag)
   {
     throw required_attribute_not_found_error(attribute_name<char>::get<AttributeTag>());
   }
 
   template<class AttributeTag, class AttributeValue>
-  BOOST_ATTRIBUTE_NORETURN static bool parse_failed(Context const &, AttributeTag,
+  BOOST_NORETURN static bool parse_failed(Context const &, AttributeTag,
     AttributeValue const & value)
   {
     typedef typename boost::remove_const<
@@ -312,7 +312,7 @@ struct raise_exception
   }
 
   template<class XMLElement>
-  BOOST_ATTRIBUTE_NORETURN static bool unexpected_element(Context const &, 
+  BOOST_NORETURN static bool unexpected_element(Context const &, 
     XMLElement const & element)
   {
     throw unexpected_element_error() 
@@ -320,7 +320,7 @@ struct raise_exception
   }
 
   template<class AttributeTag>
-  BOOST_ATTRIBUTE_NORETURN static bool negative_value(Context const &, AttributeTag)
+  BOOST_NORETURN static bool negative_value(Context const &, AttributeTag)
   {
     throw negative_value_error(attribute_name<char>::get<AttributeTag>());
   }
@@ -328,7 +328,7 @@ struct raise_exception
   typedef boost::exception intercepted_exception_type;
 
   template<class XMLElement>
-  BOOST_ATTRIBUTE_NORETURN static bool add_element_info(intercepted_exception_type & e, 
+  BOOST_NORETURN static bool add_element_info(intercepted_exception_type & e, 
     XMLElement const & element)
   {
     typedef boost::error_info<tag::error_info::xml_element, XMLElement const *> error_info;
