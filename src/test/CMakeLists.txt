@@ -84,6 +84,13 @@ add_executable(FullParseTest
   full_parse_test_common.hpp
 )
 
+if (UNIX)
+  target_link_libraries(FullParseTest
+    boost_timer
+    boost_system
+  )
+endif()
+
 if (MSVC)
   set_target_properties(
     FullParseTest

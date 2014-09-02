@@ -9,6 +9,7 @@
 
 #include <svgpp/definitions.hpp>
 #include <svgpp/utility/gil/common.hpp>
+#include <boost/gil/channel_algorithm.hpp>
 #include <boost/gil/color_base_algorithm.hpp>
 
 namespace svgpp 
@@ -36,7 +37,9 @@ struct blend_channel_fn<BlendModeTag, gil::bits8s>
   {
     typedef gil::detail::channel_convert_to_unsigned<gil::bits8s> to_unsigned;
     typedef gil::detail::channel_convert_from_unsigned<gil::bits8s> from_unsigned;
-    return from_unsigned()(to_unsigned()(channel_a), to_unsigned()(channel_b), to_unsigned()(alpha_a), to_unsigned()(alpha_b));
+    blend_channel_fn<BlendModeTag, gil::bits8> converter_unsigned;
+    return from_unsigned()(converter_unsigned(
+      to_unsigned()(channel_a), to_unsigned()(channel_b), to_unsigned()(alpha_a), to_unsigned()(alpha_b)));
   }
 };
 
