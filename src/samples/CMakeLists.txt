@@ -3,7 +3,8 @@ cmake_minimum_required (VERSION 2.6)
 project(svgpp_samples)
 
 include_directories(
-  ../..
+  ../../include
+  ../../third_party
 )
 
 set(SVGPP_INCLUDE ../../include/svgpp)

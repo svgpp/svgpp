@@ -52,12 +52,14 @@ struct NoninheritedStyle
   NoninheritedStyle()
     : opacity_(1.0)
     , display_(true)
+    , overflow_clip_(true) // TODO:
   {}
 
   double opacity_;
   bool display_;
   boost::optional<svg_string_t> mask_fragment_;
   boost::optional<svg_string_t> filter_;
+  bool overflow_clip_;
 };
 
 struct Style: 
@@ -288,8 +290,23 @@ public:
   void set(svgpp::tag::attribute::filter, svgpp::tag::value::none val)
   { style().filter_.reset(); }
 
-  void set(svgpp::tag::attribute::filter, svgpp::tag::value::inherit val)
+  void set(svgpp::tag::attribute::filter, svgpp::tag::value::inherit)
   { style().filter_ = parentStyle_.filter_; }
+
+  void set(svgpp::tag::attribute::overflow, svgpp::tag::value::inherit)
+  { style().overflow_clip_ = parentStyle_.overflow_clip_; }
+
+  void set(svgpp::tag::attribute::overflow, svgpp::tag::value::visible)
+  { style().overflow_clip_ = false; }
+
+  void set(svgpp::tag::attribute::overflow, svgpp::tag::value::auto_)
+  { style().overflow_clip_ = false; }
+
+  void set(svgpp::tag::attribute::overflow, svgpp::tag::value::hidden)
+  { style().overflow_clip_ = true; }
+
+  void set(svgpp::tag::attribute::overflow, svgpp::tag::value::scroll)
+  { style().overflow_clip_ = true; }
 
 private:
   Style style_;

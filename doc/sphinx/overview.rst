@@ -149,6 +149,61 @@ named class template parameters, заданные ``document_traversal``, пер
       {};
     }}}
 
+XML Parser
+-------------
+
+SVG++ использует внешние библиотеки разбора документов XML. 
+Настройка на конкретную библиотеку выполняется путем специализации класса *XML Policy*.
+
+Типы шаблонных параметров ``XMLElement`` и ``XMLAttribute`` служат для автоматического выбора *XML Policy*, 
+соответствующего использумому XML парсеру.
+
+Программист должен сам включить header файлы библиотеки разбора XML, затем поместить директиву включения 
+header file соответствующего *XML Policy* библиотеки SVG++ и только после этого
+включать остальные headers SVG++. Например::
+
+  #include <rapidxml_ns/rapidxml_ns.hpp>
+  #include <svgpp/policy/xml/rapidxml_ns.hpp>
+  #include <svgpp/svgpp.hpp>
+
+Ниже перечислены поддерживаемые XML parsing libraries, соответствующие header файлы с *XML Policy* и типы
+XMLElement и XMLAttribute:
+
++--------------------------+-----------------------------------------------+-------------------------------------------+------------------------------------------------+
+|XML Parser Library        | Policy header                                 | XMLElement template parameter             | XMLAttribute template parameter                |
++==========================+===============================================+===========================================+================================================+
+|RapidXML NS               | <svgpp/policy/xml/rapidxml_ns.hpp>            | ``rapidxml_ns::xml_node<Ch> const *``     | ``rapidxml_ns::xml_attribute<Ch> const *``     |
++--------------------------+-----------------------------------------------+-------------------------------------------+------------------------------------------------+
+|libxml2                   | <svgpp/policy/xml/libxml2.hpp>                | ``xmlNode *``                             | ``xmlAttr *``                                  |
++--------------------------+-----------------------------------------------+-------------------------------------------+------------------------------------------------+
+|MSXML                     | <svgpp/policy/xml/libxml2.hpp>                | ``IXMLDOMElement *``                      | ``IXMLDOMNode *``                              |
++--------------------------+-----------------------------------------------+-------------------------------------------+------------------------------------------------+
+
+
+Строки
+------------
+
+SVG++ поддерживает разную ширину character type. Пока библиотека тестируется с ``char`` и ``wchar_t``, но поддержка других
+типов предусмотрена. Тип character определяется используемой XML parsing library.
+
+Там, где надо передать строковое значение в пользовательский код, используется model of
+`Forward Range <http://www.boost.org/doc/libs/1_56_0/libs/iterator/doc/new-iter-concepts.html#forward-traversal-iterators-lib-forward-traversal-iterators>`_
+concept. Пример обработки::
+
+  struct Context
+  {
+    template<class Range>
+    void set(svgpp::tag::attribute::result, Range const & r)
+    {
+      std::string value;
+      value_.assign(boost::begin(r), boost::end(r));
+    }
+  };
+
+Если шаблонная функция не подходит, можно использовать в качестве типа строкового параметра
+`boost::any_range <http://www.boost.org/doc/libs/1_56_0/libs/range/doc/html/range/reference/ranges/any_range.html>`_.
+
+
 CSS Support
 ----------------
 

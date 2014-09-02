@@ -26,7 +26,7 @@ struct as_transform
   static const bool calculate_marker_viewport = true;
 };
 
-typedef as_transform default_policy;
+typedef raw default_policy;
 
 template<class Context>
 struct by_context

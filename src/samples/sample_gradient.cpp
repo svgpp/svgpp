@@ -1,5 +1,5 @@
-#include <rapidxml/rapidxml.hpp>
-#include <svgpp/xml/rapidxml.hpp>
+#include <rapidxml_ns/rapidxml_ns.hpp>
+#include <svgpp/policy/xml/rapidxml_ns.hpp>
 #include <svgpp/document_traversal.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/make_shared.hpp>
@@ -194,45 +194,44 @@ struct ContextFactories
   template<class ParentContext, class ElementTag>
   struct apply
   {
-    typedef svgpp::child_context_factory_same<ParentContext, ElementTag> type;
+    typedef svgpp::factory::context::same<ParentContext, ElementTag> type;
   };
+};
 
-  template<class ParentContext>
-  struct apply<ParentContext, svgpp::tag::element::linearGradient>
-  {
-    typedef svgpp::child_context_factory_get_ptr_from_parent<ParentContext, svgpp::tag::element::linearGradient, boost::shared_ptr<LinearGradient> > type;
-  };
+template<class ParentContext>
+struct ContextFactories::apply<ParentContext, svgpp::tag::element::linearGradient>
+{
+  typedef svgpp::factory::context::get_ptr_from_parent<ParentContext, svgpp::tag::element::linearGradient, boost::shared_ptr<LinearGradient> > type;
+};
 
-  template<class ParentContext>
-  struct apply<ParentContext, svgpp::tag::element::radialGradient>
-  {
-    typedef svgpp::child_context_factory_get_ptr_from_parent<ParentContext, svgpp::tag::element::radialGradient, boost::shared_ptr<RadialGradient> > type;
-  };
+template<class ParentContext>
+struct ContextFactories::apply<ParentContext, svgpp::tag::element::radialGradient>
+{
+  typedef svgpp::factory::context::get_ptr_from_parent<ParentContext, svgpp::tag::element::radialGradient, boost::shared_ptr<RadialGradient> > type;
+};
 
-  template<class ParentContext>
-  struct apply<ParentContext, svgpp::tag::element::stop>
-  {
-    typedef svgpp::child_context_factory_on_stack<ParentContext, GradientStop> type;
-  };
+template<class ParentContext>
+struct ContextFactories::apply<ParentContext, svgpp::tag::element::stop>
+{
+  typedef svgpp::factory::context::on_stack<ParentContext, GradientStop> type;
 };
 
 int main()
 {
-  char text[] = "<svg/>";
-  rapidxml::xml_document<> doc;    // character type defaults to char
+  char text[] = "<linearGradient/>";
+  rapidxml_ns::xml_document<> doc;    // character type defaults to char
   doc.parse<0>(text);  
-  if (rapidxml::xml_node<> * svg_element = doc.first_node("svg"))
+  if (rapidxml_ns::xml_node<> * gradient_element = doc.first_node())
   {
     Canvas canvas;
     svgpp::document_traversal<
-      svgpp::child_context_factories<ContextFactories>,
+      svgpp::context_factories<ContextFactories>,
       svgpp::processed_elements<
         boost::mpl::set<
-          svgpp::tag::element::svg,
           svgpp::tag::element::linearGradient,
           svgpp::tag::element::radialGradient,
           svgpp::tag::element::stop
-        > 
+        >::type
       >,
       svgpp::processed_attributes<
         boost::mpl::set<
@@ -251,9 +250,11 @@ int main()
           svgpp::tag::attribute::gradientTransform,
           svgpp::tag::attribute::spreadMethod,
           boost::mpl::pair<svgpp::tag::element::stop, svgpp::tag::attribute::offset>
-        >
+        >::type
       >
-    >::load_document(svg_element, canvas);
+    >::load_referenced_element<
+      svgpp::expected_elements<svgpp::traits::gradient_elements>
+    >::load(gradient_element, canvas);
   }
   return 0;
 }

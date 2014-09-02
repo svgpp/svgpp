@@ -254,6 +254,7 @@ typedef boost::mpl::fold<
     svgpp::tag::attribute::stroke_dashoffset,
     svgpp::tag::attribute::opacity,
     svgpp::tag::attribute::orient,
+    svgpp::tag::attribute::overflow,
     boost::mpl::pair<svgpp::tag::element::use_, svgpp::tag::attribute::xlink::href>,
     boost::mpl::pair<svgpp::tag::element::use_, svgpp::tag::attribute::x>,
     boost::mpl::pair<svgpp::tag::element::use_, svgpp::tag::attribute::y>
@@ -412,9 +413,12 @@ public:
     }
     else
     {
-      if (!clip_buffer_.unique())
-        clip_buffer_.reset(new ClipBuffer(*clip_buffer_));
-      clip_buffer_->intersectClipRect(transform(), viewport_x, viewport_y, viewport_width, viewport_height);
+      if (style().overflow_clip_)
+      {
+        if (!clip_buffer_.unique())
+          clip_buffer_.reset(new ClipBuffer(*clip_buffer_));
+        clip_buffer_->intersectClipRect(transform(), viewport_x, viewport_y, viewport_width, viewport_height);
+      }
     }
     length_factory_.set_viewport_size(viewport_width, viewport_height);
   }
@@ -636,7 +640,8 @@ typedef
     svgpp::load_path_policy<svgpp::policy::load_path::forward_to_method<Path> >, // Same as default, but less instantiations
     svgpp::error_policy<svgpp::policy::error::default_policy<Stylable> >, // Type of context isn't used
     svgpp::markers_policy<svgpp::policy::markers::calculate>,
-    svgpp::attribute_traversal_policy<attribute_traversal>
+    svgpp::attribute_traversal_policy<attribute_traversal>,
+    svgpp::viewport_policy<svgpp::policy::viewport::as_transform>
   > document_traversal_main;
 
 class Use: public Canvas

@@ -74,7 +74,8 @@ Let's start learning SVG++ with simple SVG to `WKT <http://en.wikipedia.org/wiki
       boost::mpl::insert<
         boost::mpl::insert<
           traits::shape_elements,
-          tag::element::svg>::type,
+          tag::element::svg
+        >::type,
         tag::element::g
       >::type processed_elements_t;
 
@@ -82,7 +83,7 @@ Let's start learning SVG++ with simple SVG to `WKT <http://en.wikipedia.org/wiki
     document_traversal<
       processed_elements<processed_elements_t>,
       processed_attributes<traits::shapes_attributes_by_element>
-    >::load(xml_root_element, context);
+    >::load_document(xml_root_element, context);
   }
 
 Основной способ использования SVG++ - функциям библиотеки передается объект-контекст, библиотека вызывает функции объекта 
@@ -139,15 +140,21 @@ XML Parser
 
 We didn't declare ``xml_element_t`` yet. It can be any.
 Let's use `RapidXML NS <https://github.com/svgpp/rapidxml_ns>`_ library (it is a clone of 
-`RapidXML <http://rapidxml.sourceforge.net/>`_ with namespace handling added) that comes with SVG++ in ``third_party/rapidxml_ns/rapidxml_ns.hpp`` file. It's a single header library, so we just need to point to its header.::
+`RapidXML <http://rapidxml.sourceforge.net/>`_ with namespace handling added) that comes with SVG++ 
+in ``third_party/rapidxml_ns/rapidxml_ns.hpp`` file. It's a single header library, so we just need to point to its header::
 
-# include <rapidxml_ns/rapidxml_ns.hpp>
+  #include <rapidxml_ns/rapidxml_ns.hpp>
 
 Then we must include *policy* for XML parser chosen::
 
-# include <svgpp/policy/xml/rapidxml_ns.hpp>
+  #include <svgpp/policy/xml/rapidxml_ns.hpp>
 
-XML policies headers don't include parser header because their location and names may differ. Programmer must include appropriate XML parser header herself before including policy header.
+XML policies headers don't include parser header because their location and names may differ. Programmer must include 
+appropriate XML parser header herself before including policy header.
+
+Setting appropriate XML element type for RapidXML NS parser::
+
+  typedef rapidxml_ns::xml_node<> const * xml_element_t;
 
 Handling Transformation 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

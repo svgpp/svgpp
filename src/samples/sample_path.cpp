@@ -1,56 +1,43 @@
-#include <rapidxml/rapidxml.hpp>
-#include <svgpp/xml/rapidxml.hpp>
-#include <svgpp/document_traversal.hpp>
-#include <boost/mpl/set.hpp>
-#include <boost/mpl/transform_view.hpp>
+#include <rapidxml_ns/rapidxml_ns.hpp>
+#include <svgpp/policy/xml/rapidxml_ns.hpp>
+#include <svgpp/svgpp.hpp>
 
-struct basic_shapes_policy
-{
-  typedef boost::mpl::set<
-    svgpp::tag::element::rect,
-    svgpp::tag::element::line,
-    svgpp::tag::element::circle,
-    svgpp::tag::element::ellipse
-  > convert_to_path;
+using namespace svgpp;
 
-  typedef boost::mpl::set<
-  > collect_attributes;
+typedef rapidxml_ns::xml_node<> const * xml_element_t;
 
-  static const bool convert_only_rounded_rect_to_path = true;
-  static const bool viewport_as_transform = true;
-  static const bool calculate_viewport = true;
-  static const bool polyline_as_path = true;
-};
-
-class Canvas: boost::noncopyable
+class Context
 {
 public:
-  void on_enter_element(svgpp::tag::element::any const &)
+  void path_move_to(double x, double y, tag::coordinate::absolute)
   {
   }
 
-  void on_exit_element()
+  void path_line_to(double x, double y, tag::coordinate::absolute)
   {
-  }
-
-  void set_transform_matrix(const boost::array<double, 6> & matrix)
-  {
-  }
-
-  void path_move_to(double x, double y, svgpp::tag::coordinate::absolute const &)
-  { 
-  }
-
-  void path_line_to(double x, double y, svgpp::tag::coordinate::absolute const &)
-  { 
   }
 
   void path_cubic_bezier_to(
-    double x1, double y1, 
-    double x2, double y2, 
-    double x, double y, 
-    svgpp::tag::coordinate::absolute const &)
-  { 
+    double x1, double y1,
+    double x2, double y2,
+    double x, double y,
+    tag::coordinate::absolute)
+  {
+  }
+
+  void path_quadratic_bezier_to(
+    double x1, double y1,
+    double x, double y,
+    tag::coordinate::absolute)
+  {
+  }
+
+  void path_elliptical_arc_to(
+    double rx, double ry, double x_axis_rotation,
+    bool large_arc_flag, bool sweep_flag,
+    double x, double y,
+    tag::coordinate::absolute)
+  {
   }
 
   void path_close_subpath()
@@ -61,58 +48,48 @@ public:
   {
   }
 
-  void set_rect(double, double, double, double) {}
+  void on_enter_element(tag::element::any)
+  {}
+
+  void on_exit_element()
+  {}
 };
+
+void loadSvg(xml_element_t xml_root_element)
+{
+  typedef
+    boost::mpl::insert<
+      boost::mpl::insert<
+        traits::shape_elements,
+        tag::element::svg
+      >::type,
+      tag::element::g
+    >::type processed_elements_t;
+
+  Context context;
+  document_traversal<
+    processed_elements<processed_elements_t>,
+    processed_attributes<traits::shapes_attributes_by_element>
+  >::load_document(xml_root_element, context);
+}
 
 int main()
 {
   char text[] = "<svg/>";
-  rapidxml::xml_document<> doc;    // character type defaults to char
-  doc.parse<0>(text);  
-  if (rapidxml::xml_node<> * svg_element = doc.first_node("svg"))
+  rapidxml_ns::xml_document<> doc;    // character type defaults to char
+  try
   {
-    Canvas canvas;
-    svgpp::document_traversal<
-      svgpp::processed_elements<boost::mpl::set<
-        svgpp::tag::element::svg,
-        svgpp::tag::element::g,
-        svgpp::tag::element::path,
-        svgpp::tag::element::rect,
-        svgpp::tag::element::line,
-        svgpp::tag::element::circle,
-        svgpp::tag::element::ellipse,
-        svgpp::tag::element::polyline
-      > >,
-      svgpp::processed_attributes<
-        boost::mpl::fold<
-          boost::mpl::protect<
-            boost::mpl::joint_view<
-              boost::mpl::transform_view<
-                svgpp::rect_shape_attributes, boost::mpl::pair<svgpp::tag::element::rect, boost::mpl::_1> >,
-              boost::mpl::transform_view<
-                  svgpp::traits::viewport_attributes, boost::mpl::pair<svgpp::tag::element::svg, boost::mpl::_1> >
-            >
-          >,
-          boost::mpl::set<
-            svgpp::tag::attribute::d,
-            svgpp::tag::attribute::transform,
-            svgpp::tag::attribute::points,
-            svgpp::tag::attribute::x1,
-            svgpp::tag::attribute::y1,
-            svgpp::tag::attribute::x2,
-            svgpp::tag::attribute::y2,
-            svgpp::tag::attribute::cx,
-            svgpp::tag::attribute::cy,
-            svgpp::tag::attribute::r,
-            svgpp::tag::attribute::rx,
-            svgpp::tag::attribute::ry
-          >,
-          boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
-        >::type
-      >,
-      svgpp::basic_shapes_policy<basic_shapes_policy>,
-      svgpp::path_policy<svgpp::path_policies_minimal>
-    >::load_document(svg_element, canvas);
+    doc.parse<0>(text);  
+    if (rapidxml_ns::xml_node<> * svg_element = doc.first_node("svg"))
+    {
+      loadSvg(svg_element);
+    }
   }
+  catch (std::exception const & e)
+  {
+    std::cerr << "Error loading SVG: " << e.what() << std::endl;
+    return 1;
+  }
+
   return 0;
 }

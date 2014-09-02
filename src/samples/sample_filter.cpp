@@ -1,8 +1,8 @@
 #define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 #define BOOST_MPL_LIMIT_SET_SIZE 40
 
-#include <rapidxml/rapidxml.hpp>
-#include <svgpp/xml/rapidxml.hpp>
+#include <rapidxml_ns/rapidxml_ns.hpp>
+#include <svgpp/policy/xml/rapidxml_ns.hpp>
 #include <svgpp/document_traversal.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/shared_ptr.hpp>
@@ -243,62 +243,62 @@ struct ContextFactories
   template<class ParentContext, class ElementTag>
   struct apply
   {
-    typedef svgpp::child_context_factory_same<ParentContext, ElementTag> type;
+    typedef svgpp::factory::context::same<ParentContext, ElementTag> type;
   };
 };
 
 template<class ParentContext>
 struct ContextFactories::apply<ParentContext, svgpp::tag::element::filter>
 {
-  typedef svgpp::child_context_factory_get_ptr_from_parent<ParentContext, svgpp::tag::element::filter, boost::shared_ptr<Filter> > type;
+  typedef svgpp::factory::context::get_ptr_from_parent<ParentContext, svgpp::tag::element::filter, boost::shared_ptr<Filter> > type;
 };
 
 template<class ParentContext>
 struct ContextFactories::apply<ParentContext, svgpp::tag::element::feBlend>
 {
-  typedef svgpp::child_context_factory_on_stack<ParentContext, feBlend> type;
+  typedef svgpp::factory::context::on_stack<ParentContext, feBlend> type;
 };
 
 template<class ParentContext>
 struct ContextFactories::apply<ParentContext, svgpp::tag::element::feComponentTransfer>
 {
-  typedef svgpp::child_context_factory_on_stack<ParentContext, feComponentTransfer> type;
+  typedef svgpp::factory::context::on_stack<ParentContext, feComponentTransfer> type;
 };
 
 template<>
 struct ContextFactories::apply<feComponentTransfer, svgpp::tag::element::feFuncA>
 {
-  typedef svgpp::child_context_factory_on_stack<feComponentTransfer, feFuncX<argbA> > type;
+  typedef svgpp::factory::context::on_stack<feComponentTransfer, feFuncX<argbA> > type;
 };
 
 template<>
 struct ContextFactories::apply<feComponentTransfer, svgpp::tag::element::feFuncR>
 {
-  typedef svgpp::child_context_factory_on_stack<feComponentTransfer, feFuncX<argbR> > type;
+  typedef svgpp::factory::context::on_stack<feComponentTransfer, feFuncX<argbR> > type;
 };
 
 template<>
 struct ContextFactories::apply<feComponentTransfer, svgpp::tag::element::feFuncG>
 {
-  typedef svgpp::child_context_factory_on_stack<feComponentTransfer, feFuncX<argbG> > type;
+  typedef svgpp::factory::context::on_stack<feComponentTransfer, feFuncX<argbG> > type;
 };
 
 template<>
 struct ContextFactories::apply<feComponentTransfer, svgpp::tag::element::feFuncB>
 {
-  typedef svgpp::child_context_factory_on_stack<feComponentTransfer, feFuncX<argbB> > type;
+  typedef svgpp::factory::context::on_stack<feComponentTransfer, feFuncX<argbB> > type;
 };
 
 int main()
 {
   char text[] = "<svg/>";
-  rapidxml::xml_document<> doc;    // character type defaults to char
+  rapidxml_ns::xml_document<> doc;    // character type defaults to char
   doc.parse<0>(text);  
-  if (rapidxml::xml_node<> * svg_element = doc.first_node("svg"))
+  if (rapidxml_ns::xml_node<> * svg_element = doc.first_node("svg"))
   {
     Canvas canvas;
     svgpp::document_traversal<
-      svgpp::child_context_factories<ContextFactories>,
+      svgpp::context_factories<ContextFactories>,
       svgpp::processed_elements<
         boost::mpl::set<
           svgpp::tag::element::svg,
@@ -312,7 +312,7 @@ int main()
           svgpp::tag::element::feFuncB,
           svgpp::tag::element::feFuncG,
           svgpp::tag::element::feFuncR
-        >
+        >::type
       >,
       svgpp::processed_attributes<
         boost::mpl::set<
@@ -346,7 +346,7 @@ int main()
           svgpp::tag::attribute::amplitude, 
           svgpp::tag::attribute::exponent, 
           svgpp::tag::attribute::offset
-        >
+        >::type
       >
     >::load_document(svg_element, canvas);
   }

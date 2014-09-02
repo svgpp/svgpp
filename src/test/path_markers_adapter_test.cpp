@@ -74,8 +74,6 @@ namespace
       }
       if (marker_index != log_.size())
       {
-        EXPECT_EQ(svgpp::marker_start, m.get<0>());
-        EXPECT_EQ(svgpp::marker_orient_auto, config_start_);
         log_[marker_index] = m;
       }
       else
@@ -198,20 +196,16 @@ TEST(path_markers_adapter, test5)
 {
   DoConfigTests("M0 0 M 10 10", list_of
     (MarkerInstance(svgpp::marker_start, 0, 0, 0.0))
-    (MarkerInstance(svgpp::marker_start, 10, 10, 0.0))
+    (MarkerInstance(svgpp::marker_end, 10, 10, 0.0))
     );
 }
 
 TEST(path_markers_adapter, test6)
 {
-  DoConfigTests("M0 0 L 10 10 z L 0 20", list_of
-    (MarkerInstance(svgpp::marker_start, 0, 0, 135.0 * deg)) // "the direction of marker is undefined", we check 
-    (MarkerInstance(svgpp::marker_mid, 10, 10, 135.0 * deg)) // the way it is implemented in svgpp
-    (MarkerInstance(svgpp::marker_mid, 0, 0, 135.0 * deg))   //
+  DoConfigTests("M0 0 Z M 10 10 Z", list_of
+    (MarkerInstance(svgpp::marker_start, 0, 0, 0.0))
     (MarkerInstance(svgpp::marker_mid, 0, 0, 0.0))
-    (MarkerInstance(svgpp::marker_mid, 10, 0, 45.0 * deg))
-    (MarkerInstance(svgpp::marker_mid, 10, 10, 135.0 * deg))
-    (MarkerInstance(svgpp::marker_mid, 0, 10, -135.0 * deg))
-    (MarkerInstance(svgpp::marker_end, 0, 0, -45.0 * deg))
+    (MarkerInstance(svgpp::marker_mid, 10, 10, 0.0))
+    (MarkerInstance(svgpp::marker_end, 10, 10, 0.0))
     );
 }

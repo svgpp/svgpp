@@ -70,7 +70,7 @@ class get_ptr_from_parent: boost::noncopyable
 public:
   typedef ChildContext type;
 
-  template<class XMLElement, class LoaderState>
+  template<class XMLElement>
   get_ptr_from_parent(ParentContext & context, XMLElement const &)
     : context_(context.get_child_context(ElementTag()))
   {}
