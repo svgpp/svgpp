@@ -236,6 +236,7 @@ typedef boost::mpl::fold<
     svgpp::tag::attribute::marker_start,
     svgpp::tag::attribute::marker_mid,
     svgpp::tag::attribute::marker_end,
+    svgpp::tag::attribute::marker,
     svgpp::tag::attribute::markerUnits,
     svgpp::tag::attribute::markerWidth,
     svgpp::tag::attribute::markerHeight,

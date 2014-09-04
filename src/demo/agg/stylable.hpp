@@ -248,7 +248,7 @@ public:
   void set(svgpp::tag::attribute::marker_start, svgpp::tag::iri_fragment, IRI const & fragment)
   { style().marker_start_ = svg_string_t(boost::begin(fragment), boost::end(fragment)); }
 
-  void set(svgpp::tag::attribute::marker_start, svgpp::tag::value::none val)
+  void set(svgpp::tag::attribute::marker_start, svgpp::tag::value::none)
   { style().marker_start_.reset(); }
 
   template<class IRI>
@@ -262,7 +262,7 @@ public:
   void set(svgpp::tag::attribute::marker_mid, svgpp::tag::iri_fragment, IRI const & fragment)
   { style().marker_mid_ = svg_string_t(boost::begin(fragment), boost::end(fragment)); }
 
-  void set(svgpp::tag::attribute::marker_mid, svgpp::tag::value::none val)
+  void set(svgpp::tag::attribute::marker_mid, svgpp::tag::value::none)
   { style().marker_mid_.reset(); }
 
   template<class IRI>
@@ -276,8 +276,33 @@ public:
   void set(svgpp::tag::attribute::marker_end, svgpp::tag::iri_fragment, IRI const & fragment)
   { style().marker_end_ = svg_string_t(boost::begin(fragment), boost::end(fragment)); }
 
-  void set(svgpp::tag::attribute::marker_end, svgpp::tag::value::none val)
+  void set(svgpp::tag::attribute::marker_end, svgpp::tag::value::none)
   { style().marker_end_.reset(); }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::marker, IRI const &)
+  { 
+    std::cout << "Non-local references aren't supported\n"; // Not error
+    style().marker_start_.reset();
+    style().marker_mid_.reset();
+    style().marker_end_.reset();
+  }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::marker, svgpp::tag::iri_fragment, IRI const & fragment)
+  { 
+    svg_string_t iri(boost::begin(fragment), boost::end(fragment));
+    style().marker_start_ = iri; 
+    style().marker_mid_   = iri; 
+    style().marker_end_   = iri; 
+  }
+
+  void set(svgpp::tag::attribute::marker, svgpp::tag::value::none)
+  { 
+    style().marker_start_.reset();
+    style().marker_mid_.reset();
+    style().marker_end_.reset();
+  }
 
   template<class IRI>
   void set(svgpp::tag::attribute::filter, IRI const &)
