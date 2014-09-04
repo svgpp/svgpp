@@ -723,6 +723,8 @@ template<
 >
 struct path_adapter_load_path_policy
 {
+  typedef Adapter context_type;
+
   template<class AbsoluteOrRelative>
   static void path_move_to(Adapter & context, Coordinate x, Coordinate y, AbsoluteOrRelative absoluteOrRelative)
   { 

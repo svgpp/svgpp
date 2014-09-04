@@ -191,6 +191,7 @@ namespace detail
 
 template<class Element> struct attribute_type<Element, tag::attribute::clip_path>                       { typedef detail::funciri_or_none_or_inherit type; }; 
 template<class Element> struct attribute_type<Element, tag::attribute::filter>                          { typedef detail::funciri_or_none_or_inherit type; };
+template<class Element> struct attribute_type<Element, tag::attribute::marker>                          { typedef detail::funciri_or_none_or_inherit type; };
 template<class Element> struct attribute_type<Element, tag::attribute::marker_end>                      { typedef detail::funciri_or_none_or_inherit type; };
 template<class Element> struct attribute_type<Element, tag::attribute::marker_mid>                      { typedef detail::funciri_or_none_or_inherit type; };
 template<class Element> struct attribute_type<Element, tag::attribute::marker_start>                    { typedef detail::funciri_or_none_or_inherit type; };
