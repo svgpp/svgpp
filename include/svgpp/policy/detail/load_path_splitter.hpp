@@ -13,6 +13,8 @@ namespace svgpp { namespace detail
 template<class Context, class LoadPathPolicy1, class LoadPathPolicy2>
 struct load_path_splitter
 {
+  typedef Context context_type;
+
   template<class Coordinate, class AbsoluteOrRelative>
   static void path_move_to(Context & context, Coordinate x, Coordinate y, AbsoluteOrRelative absoluteOrRelative)
   { 

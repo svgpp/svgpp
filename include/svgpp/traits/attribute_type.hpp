@@ -281,6 +281,23 @@ template<class Element> struct attribute_type<Element, tag::attribute::dur>
   typedef tag::type::type_or_literal<tag::type::clock_value, tag::value::media, tag::value::indefinite> type; 
 };
 
+template<class Element> struct attribute_type<Element, tag::attribute::font_size> 
+{ 
+  // TODO: percent for font-size must be processed not as relative to viewport
+  typedef tag::type::type_or_literal<tag::type::percentage_or_length, 
+    tag::value::inherit,
+    tag::value::xx_small,
+    tag::value::x_small,
+    tag::value::small,
+    tag::value::medium,
+    tag::value::large,
+    tag::value::x_large,
+    tag::value::xx_large,
+    tag::value::larger,
+    tag::value::smaller
+  > type; 
+};
+
 template<class Element> struct attribute_type<Element, tag::attribute::font_size_adjust> 
 { 
   typedef tag::type::type_or_literal<tag::type::number, 

@@ -547,8 +547,7 @@ public:
   }
 
   void path_exit()
-  {
-  }
+  {}
 
   void marker(svgpp::marker_vertex v, double x, double y, double directionality, unsigned marker_index)
   {

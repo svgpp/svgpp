@@ -66,6 +66,14 @@ namespace markers
     static const bool always_calculate_auto_orient = false; // Doesn't call marker_get_config if true
   };
 
+  struct calculate_always
+  {
+    typedef marker_directionality::radians<> directionality_policy;
+
+    static const bool calculate_markers = true;
+    static const bool always_calculate_auto_orient = true; // Doesn't call marker_get_config if true
+  };
+
   struct default_policy
   {
     static const bool calculate_markers = false;

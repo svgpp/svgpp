@@ -36,6 +36,7 @@ add_executable( ParserGTest
   #path_adapter_test.cpp 
   path_grammar_test.cpp 
   path_markers_adapter_test.cpp 
+  polyline_markers_test.cpp 
   preserveAspectRatio_test.cpp 
   #supported_value_parsers_test.cpp 
   transform_grammar_test.cpp 

@@ -18,6 +18,7 @@ Contents:
    length
    transform
    path
+   basic_shapes
    color
    error
    iri

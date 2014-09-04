@@ -31,6 +31,7 @@ struct list_of_points_to_path_adapter<tag::element::polyline>
       load_path::policy::path_move_to(path_context, it->first, it->second, tag::coordinate::absolute());
       for(++it; it != end; ++it)
         load_path::policy::path_line_to(path_context, it->first, it->second, tag::coordinate::absolute());
+      load_path::policy::path_exit(path_context);
     }
   }
 };
@@ -55,7 +56,10 @@ struct list_of_points_to_path_adapter<tag::element::polygon>
         line = true;
       }
       if (line)
+      {
         load_path::policy::path_close_subpath(path_context);
+        load_path::policy::path_exit(path_context);
+      }
     }
   }
 };

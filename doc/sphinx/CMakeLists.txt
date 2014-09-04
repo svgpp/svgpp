@@ -5,8 +5,9 @@ project(Documentation)
 add_custom_target(
   Documentation ALL 
   SOURCES 
+    basic_shapes.rst 
     color.rst 
-	document_traversal.rst
+    document_traversal.rst
     error.rst 
     index.rst 
     iri.rst 
@@ -16,7 +17,7 @@ add_custom_target(
     path.rst 
     transform.rst 
     value.rst 
-	value_parser.rst 
+    value_parser.rst 
 )
 
 if (WIN32)
