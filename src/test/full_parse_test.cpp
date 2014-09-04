@@ -11,6 +11,7 @@ void parse(rapidxml_ns::xml_node<char> const * svg_element)
     ignored_elements<boost::mpl::set1<tag::element::filter> >,
     ignored_attributes<boost::mpl::set<
       tag::attribute::cursor,
+      tag::attribute::font,
       tag::attribute::glyph_name,
       tag::attribute::u1,
       tag::attribute::u2,

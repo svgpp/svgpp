@@ -11,6 +11,7 @@ void load_filter(rapidxml_ns::xml_node<char> const * svg_element)
     ignored_elements<boost::mpl::set0<> >,
     ignored_attributes<boost::mpl::set<
       tag::attribute::cursor,
+      tag::attribute::font,
       tag::attribute::values,
       tag::attribute::keyTimes,
       tag::attribute::keySplines
