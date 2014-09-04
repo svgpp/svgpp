@@ -542,17 +542,24 @@ struct path_markers_adapter_if_needed<OriginalContext,
     detail::unwrap_context<OriginalContext, tag::markers_policy>::policy::calculate_markers>::type>
 {
   typedef path_bypass_and_markers_adapter<OriginalContext> type;
-  typedef const adapted_context_wrapper<
-    OriginalContext, 
-    typename type::context_type, 
-    tag::load_path_policy, 
-    typename type::load_path_policy
-  > adapted_context;
+  typedef const 
+    adapted_context_wrapper<
+      adapted_policy_context_wrapper<
+        OriginalContext, 
+        tag::path_policy, 
+        policy::path::raw
+      >,
+      typename type::context_type, 
+      tag::load_path_policy, 
+      typename type::load_path_policy
+    > adapted_context;
   typedef adapted_context adapted_context_holder;
 
   static adapted_context adapt_context(OriginalContext & context, type & adapter)
   {
-    return adapted_context(context, adapter.context());
+    return adapted_context(
+      adapt_context_policy<tag::path_policy, policy::path::raw>(context), 
+      adapter.context());
   }
 };
 

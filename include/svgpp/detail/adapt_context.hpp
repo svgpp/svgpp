@@ -188,33 +188,13 @@ struct unwrap_context<bind_context_parameters_wrapper<Context, Parameters>, Poli
 // const specialization
 template<class Context, class Parameters, class PolicyTag>
 struct unwrap_context<const bind_context_parameters_wrapper<Context, Parameters>, PolicyTag>
+  : unwrap_context<bind_context_parameters_wrapper<Context, Parameters>, PolicyTag>
+{};
+
+template<class OriginalContext, class AdaptedPolicyTag, class AdaptedPolicy>
+struct unwrap_context<adapted_policy_context_wrapper<OriginalContext, AdaptedPolicyTag, AdaptedPolicy>, AdaptedPolicyTag>
 {
-  typedef typename unwrap_context<Context, PolicyTag>::type type;
-
-  static typename unwrap_context<Context, PolicyTag>::type & get(
-    const bind_context_parameters_wrapper<Context, Parameters> & wrapper)
-  {
-    return unwrap_context<Context, PolicyTag>::get(wrapper.original_context);
-  }
-
-  template<class PassedParameters>
-  struct bind
-  {
-    typedef typename unwrap_context<Context, PolicyTag>::template bind<Parameters>::type type;
-  };
-
-  typedef typename unwrap_context<Context, PolicyTag>::template bind<Parameters>::type policy;
-};
-
-template<class OriginalContext, class AdaptedContext, class AdaptedPolicyTag, class AdaptedPolicy>
-struct unwrap_context<adapted_context_wrapper<OriginalContext, AdaptedContext, AdaptedPolicyTag, AdaptedPolicy>, AdaptedPolicyTag>
-{
-  typedef AdaptedContext type;
-
-  static AdaptedContext & get(const adapted_context_wrapper<OriginalContext, AdaptedContext, AdaptedPolicyTag, AdaptedPolicy> & wrapper)
-  {
-    return wrapper.adapted_context;
-  }
+  struct type; // Must not be used
 
   template<class Parameters>
   struct bind
@@ -225,9 +205,33 @@ struct unwrap_context<adapted_context_wrapper<OriginalContext, AdaptedContext, A
   typedef AdaptedPolicy policy;
 };
 
+template<class OriginalContext, class AdaptedPolicyTag, class AdaptedPolicy, class PolicyTag>
+struct unwrap_context<adapted_policy_context_wrapper<OriginalContext, AdaptedPolicyTag, AdaptedPolicy>, PolicyTag>
+{
+  typedef typename unwrap_context<OriginalContext, PolicyTag>::type type;
+
+  static type & get(const adapted_policy_context_wrapper<OriginalContext, AdaptedPolicyTag, AdaptedPolicy> & wrapper)
+  {
+    return unwrap_context<OriginalContext, PolicyTag>::get(wrapper.original_context);
+  }
+
+  template<class Parameters>
+  struct bind
+  {
+    typedef typename unwrap_context<OriginalContext, PolicyTag>::template bind<Parameters>::type type;
+  };
+
+  typedef typename unwrap_context<OriginalContext, PolicyTag>::policy policy;
+};
+
 // const specialization
+template<class OriginalContext, class AdaptedPolicyTag, class AdaptedPolicy, class PolicyTag>
+struct unwrap_context<const adapted_policy_context_wrapper<OriginalContext, AdaptedPolicyTag, AdaptedPolicy>, PolicyTag>
+  : unwrap_context<adapted_policy_context_wrapper<OriginalContext, AdaptedPolicyTag, AdaptedPolicy>, PolicyTag>
+{};
+
 template<class OriginalContext, class AdaptedContext, class AdaptedPolicyTag, class AdaptedPolicy>
-struct unwrap_context<const adapted_context_wrapper<OriginalContext, AdaptedContext, AdaptedPolicyTag, AdaptedPolicy>, AdaptedPolicyTag>
+struct unwrap_context<adapted_context_wrapper<OriginalContext, AdaptedContext, AdaptedPolicyTag, AdaptedPolicy>, AdaptedPolicyTag>
 {
   typedef AdaptedContext type;
 
@@ -268,21 +272,7 @@ struct unwrap_context<adapted_context_wrapper<OriginalContext, AdaptedContext, A
 // const specialization
 template<class OriginalContext, class AdaptedContext, class AdaptedPolicyTag, class AdaptedPolicy, class PolicyTag>
 struct unwrap_context<const adapted_context_wrapper<OriginalContext, AdaptedContext, AdaptedPolicyTag, AdaptedPolicy>, PolicyTag>
-{
-  typedef typename unwrap_context<OriginalContext, PolicyTag>::type type;
-
-  static type & get(const adapted_context_wrapper<OriginalContext, AdaptedContext, AdaptedPolicyTag, AdaptedPolicy> & wrapper)
-  {
-    return unwrap_context<OriginalContext, PolicyTag>::get(wrapper.original_context);
-  }
-
-  template<class Parameters>
-  struct bind
-  {
-    typedef typename unwrap_context<OriginalContext, PolicyTag>::template bind<Parameters>::type type;
-  };
-
-  typedef typename unwrap_context<OriginalContext, PolicyTag>::policy policy;
-};
+  : unwrap_context<adapted_context_wrapper<OriginalContext, AdaptedContext, AdaptedPolicyTag, AdaptedPolicy>, PolicyTag>
+{};
 
 }}

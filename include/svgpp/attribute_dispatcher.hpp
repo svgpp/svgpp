@@ -766,4 +766,44 @@ public:
   {}
 };
 
+template<class Context, SVGPP_TEMPLATE_ARGS>
+class attribute_dispatcher<tag::element::path, Context, SVGPP_TEMPLATE_ARGS_PASS>:
+  public attribute_dispatcher_base<tag::element::path, Context, SVGPP_TEMPLATE_ARGS_PASS>
+{
+  typedef attribute_dispatcher_base<tag::element::path, Context, SVGPP_TEMPLATE_ARGS_PASS> base_type;
+
+public:
+  attribute_dispatcher(Context & context)
+    : base_type(context)
+  {}
+
+  using base_type::load_attribute_value; 
+
+  template<class AttributeValue>
+  bool load_attribute_value(tag::attribute::d attribute_tag, AttributeValue const & attribute_value, 
+                       tag::source::attribute property_source)
+  {
+    typedef typename boost::parameter::parameters<
+      boost::parameter::optional<tag::path_policy>,
+      boost::parameter::optional<tag::load_path_policy>,
+      boost::parameter::optional<tag::markers_policy>,
+      boost::parameter::optional<tag::load_markers_policy>
+    >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
+    typedef detail::bind_context_parameters_wrapper<Context, args2_t> context_t;
+    typedef detail::path_adapter_if_needed<context_t> path_adapter_t; 
+    typedef detail::path_markers_adapter_if_needed<typename path_adapter_t::adapted_context> markers_adapter_t;
+
+    context_t bound_context(this->context_);
+    typename path_adapter_t::type path_adapter(detail::unwrap_context<context_t, tag::load_path_policy>::get(bound_context));
+    typename path_adapter_t::adapted_context_holder adapted_path_context(path_adapter_t::adapt_context(bound_context, path_adapter));
+    typename markers_adapter_t::type markers_adapter(adapted_path_context);
+
+    return value_parser<traits::attribute_type<tag::element::path, tag::attribute::d>::type, 
+        SVGPP_TEMPLATE_ARGS_PASS>::parse(
+      attribute_tag, 
+      markers_adapter_t::adapt_context(adapted_path_context, markers_adapter),
+      attribute_value, property_source);
+  }
+};
+
 }
