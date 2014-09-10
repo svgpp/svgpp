@@ -136,6 +136,12 @@ struct attribute_iterator<xmlAttr *>
   {
     return xml_attribute;
   }
+
+  // Used only in Error Policy
+  static iterator_type get_attribute(iterator_type xml_attribute)
+  {
+    return xml_attribute;
+  }
 };
 
 template<>

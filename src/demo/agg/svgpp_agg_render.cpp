@@ -1215,11 +1215,11 @@ int main(int argc, char * argv[])
   }
   catch(svgpp::exception_base const & e)
   {
-    typedef boost::error_info<svgpp::tag::error_info::xml_element, XMLElement const *> element_error_info;
+    typedef boost::error_info<svgpp::tag::error_info::xml_element, XMLElement> element_error_info;
     std::cerr << "Error reading file " << argv[1];
 #if defined(SVG_PARSER_RAPIDXML_NS)
-    if (XMLElement const * const * element = boost::get_error_info<element_error_info>(e))
-      std::cerr << " in element \"" << std::string((**element)->name(), (**element)->name() + (**element)->name_size())
+    if (XMLElement const * element = boost::get_error_info<element_error_info>(e))
+      std::cerr << " in element \"" << std::string((*element)->name(), (*element)->name() + (*element)->name_size())
         << "\"";
 #endif
     std::cerr << ": " << e.what() << "\n";

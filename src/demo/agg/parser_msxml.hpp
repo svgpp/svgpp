@@ -5,6 +5,7 @@
 #endif
 #include <MsXml2.h>
 #include <windows.h>
+#undef small
 #include <svgpp/policy/xml/msxml.hpp>
 #include <boost/noncopyable.hpp>
 

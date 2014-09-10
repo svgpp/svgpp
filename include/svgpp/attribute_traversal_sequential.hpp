@@ -54,7 +54,8 @@ public:
       switch (id)
       {
       case detail::unknown_attribute_id:
-        if (!error_policy::unknown_attribute(dispatcher.context(), xml_attributes_iterator, 
+        if (!error_policy::unknown_attribute(dispatcher.context(), 
+          xml_policy::get_attribute(xml_attributes_iterator), 
           xml_policy::get_string_range(attribute_name), ns, tag::source::attribute()))
           return false;
         break;
@@ -94,7 +95,8 @@ private:
       detail::attribute_id style_id = css_name_to_id_policy::find(it->first);
       if (style_id == detail::unknown_attribute_id)
       {
-        if (!ErrorPolicy::unknown_attribute(dispatcher.context(), xml_attributes_iterator, it->first, tag::source::css()))
+        if (!ErrorPolicy::unknown_attribute(dispatcher.context(), 
+          xml_policy::get_attribute(xml_attributes_iterator), it->first, tag::source::css()))
           return false;
       }
       else

@@ -120,7 +120,7 @@ SVGPP_ON_VALUE(scroll)
 SVGPP_ON_VALUE(simple)
 SVGPP_ON_VALUE(skewX)
 SVGPP_ON_VALUE(skewY)
-SVGPP_ON_VALUE(small)
+SVGPP_ON_VALUE(small)   // Error on Windows may be caused by "small" macro in RpcNdr.h 
 SVGPP_ON_VALUE(smaller)
 SVGPP_ON_VALUE(SourceAlpha)
 SVGPP_ON_VALUE(SourceGraphic)

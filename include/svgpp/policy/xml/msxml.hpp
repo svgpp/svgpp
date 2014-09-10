@@ -260,6 +260,12 @@ struct attribute_iterator<msxml_detail::attribute_iterator>:
   {
     return *xml_attribute;
   }
+
+  // Used only in Error Policy
+  static msxml_detail::attribute_ptr get_attribute(iterator_type const & xml_attribute)
+  {
+    return *xml_attribute;
+  }
 };
 
 template<>
