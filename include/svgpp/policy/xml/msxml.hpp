@@ -98,6 +98,23 @@ public:
     src.str_ = NULL;
     return *this;
   }
+#else
+  bstr_t & operator=(bstr_t & src)
+  {
+    if (str_)
+      ::SysFreeString(str_);
+    str_ = src.str_;
+    src.str_ = NULL;
+    return *this;
+  }
+
+  bstr_t & operator=(ref r)
+  {
+    if (str_)
+      ::SysFreeString(str_);
+    str_ = r.ptr_;
+    return *this;
+  }
 #endif
 
   void assign(BSTR val)

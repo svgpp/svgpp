@@ -96,7 +96,7 @@ private:
       if (style_id == detail::unknown_attribute_id)
       {
         if (!ErrorPolicy::unknown_attribute(dispatcher.context(), 
-          xml_policy::get_attribute(xml_attributes_iterator), it->first, tag::source::css()))
+          XMLPolicy::get_attribute(xml_attributes_iterator), it->first, tag::source::css()))
           return false;
       }
       else

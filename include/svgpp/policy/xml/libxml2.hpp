@@ -39,18 +39,36 @@ namespace detail
       src.str_ = NULL;
     }
 #else
-    libxml_string_ptr(libxml_string_ptr && src)
+    libxml_string_ptr(libxml_string_ptr & src)
       : str_(src.str_)
     {
       src.str_ = NULL;
     }
+
+    struct ref
+    {
+      xmlChar * ptr_;
+
+      explicit ref(xmlChar * ptr): ptr_(ptr) { }
+    };
+
+    libxml_string_ptr(ref __ref) throw()
+      : str_(__ref.ptr_)
+    {}
+
+    operator ref() throw()
+    {
+      xmlChar * str = str_;
+      str_ = NULL;
+      return ref(str);
+    }
+#endif
 
     ~libxml_string_ptr()
     {
       if (str_)
         xmlFree(str_);
     }
-#endif
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     libxml_string_ptr & operator=(libxml_string_ptr && src)
@@ -59,6 +77,23 @@ namespace detail
         xmlFree(str_);
       str_ = src.str_;
       src.str_ = NULL;
+      return *this;
+    }
+#else
+    libxml_string_ptr & operator=(libxml_string_ptr & src)
+    {
+      if (str_)
+        xmlFree(str_);
+      str_ = src.str_;
+      src.str_ = NULL;
+      return *this;
+    }
+
+    libxml_string_ptr & operator=(ref r)
+    {
+      if (str_)
+        xmlFree(str_);
+      str_ = r.ptr_;
       return *this;
     }
 #endif

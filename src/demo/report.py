@@ -1,4 +1,5 @@
 import argparse
+import errno
 import glob
 import subprocess
 import os
@@ -21,7 +22,11 @@ with open(os.path.join(template_dir, "record.tmpl"), "r") as tmpl_file:
 
 try:
  os.makedirs(args.report_dir)
-except FileExistsError: pass
+except OSError as e:
+  if e.errno == errno.EEXIST:
+      pass
+  else:
+      raise
   
 report_records = ''
 for glob_arg in args.files:

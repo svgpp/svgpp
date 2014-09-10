@@ -544,7 +544,7 @@ struct path_markers_adapter_if_needed<OriginalContext,
   typedef path_bypass_and_markers_adapter<OriginalContext> type;
   typedef const 
     adapted_context_wrapper<
-      adapted_policy_context_wrapper<
+      const adapted_policy_context_wrapper<
         OriginalContext, 
         tag::path_policy, 
         policy::path::raw
