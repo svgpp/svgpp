@@ -22,7 +22,7 @@ struct attribute_name<char>
   template<class AttributeTag>
   inline static BOOST_CONSTEXPR const char * get();
 
-  inline static BOOST_CONSTEXPR const char * by_id(detail::attribute_id);
+  inline static const char * by_id(detail::attribute_id);
 };
 
 #define SVGPP_ON_STYLE(name, string) SVGPP_ON(name, string)
@@ -39,7 +39,7 @@ struct attribute_name<char>
 #undef SVGPP_ON_NS
 #undef SVGPP_ON_STYLE
 
-inline BOOST_CONSTEXPR const char * attribute_name<char>::by_id(detail::attribute_id id)
+inline const char * attribute_name<char>::by_id(detail::attribute_id id)
 {
 #define SVGPP_ON_STYLE(name, string) SVGPP_ON(name, string)
 #define SVGPP_ON(name, string) \
