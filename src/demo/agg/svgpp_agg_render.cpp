@@ -812,7 +812,7 @@ public:
         return 0;
       if (val > d)
         return d;
-      return x;
+      return val;
     }
     case GradientBase::spreadReflect:
     {
@@ -885,6 +885,8 @@ private:
   agg::rgba8 colors_[size_];
 };
 
+static const double GradientScale = 100.0;
+
 template<class GradientFunc, class VertexSource>
 void RenderScanlinesGradient(renderer_base_amask_t & renderer, 
   agg::rasterizer_scanline_aa<> & rasterizer,
@@ -902,7 +904,6 @@ void RenderScanlinesGradient(renderer_base_amask_t & renderer,
     ColorFunctionProfile > span_gradient_t;
   typedef agg::span_allocator<typename span_gradient_t::color_type> span_allocator_t;
 
-  static const double GradientScale = 100.0;
   agg::trans_affine tr = agg::trans_affine_scaling(1.0/GradientScale) * gradient_geometry_transform;
 
   if (gradient_base.matrix_)
@@ -964,10 +965,12 @@ void Path::paintScanlines(EffectivePaint const & paint, double opacity, agg::ras
     else
     {
       RadialGradient const & radialGradient = boost::get<RadialGradient>(gradient);
-      agg::gradient_radial_focus gradient_func(radialGradient.r_, 
-        radialGradient.fx_ - radialGradient.cx_, radialGradient.fy_ - radialGradient.cy_);
+      agg::gradient_radial_focus gradient_func(GradientScale, 
+        GradientScale*(radialGradient.fx_ - radialGradient.cx_)/radialGradient.r_, 
+        GradientScale*(radialGradient.fy_ - radialGradient.cy_)/radialGradient.r_);
       agg::trans_affine gradient_geometry_transform = 
-        agg::trans_affine_translation(radialGradient.cx_, radialGradient.cy_);
+        agg::trans_affine_scaling(radialGradient.r_)
+        * agg::trans_affine_translation(radialGradient.cx_, radialGradient.cy_);
       RenderScanlinesGradient(renderer_base, rasterizer,
         gradient_func, radialGradient, transform(), gradient_geometry_transform, opacity, curved);
     }
