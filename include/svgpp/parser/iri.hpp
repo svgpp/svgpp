@@ -24,7 +24,7 @@ struct iri_value_parser
 {
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
   static bool parse(AttributeTag tag, Context & context, 
-    AttributeValue const & attribute_value, PropertySource property_source)
+    AttributeValue const & attribute_value, PropertySource)
   {
     typedef value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::parameter::parameters<

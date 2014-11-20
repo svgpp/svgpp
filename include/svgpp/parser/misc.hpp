@@ -269,7 +269,7 @@ struct value_parser<tag::attribute::clip, SVGPP_TEMPLATE_ARGS_PASS>
     > length_grammar_y;
 
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
-    boost::array<typename length_policy_t::length_factory_type::length_type, 4> rect;
+    typename length_policy_t::length_factory_type::length_type rect[4];
     // Initializing with values for 'auto'
     for(int i=0; i<4; ++i)
       rect[i] = length_factory.create_length(0, tag::length_units::none()); 
@@ -294,7 +294,7 @@ struct value_parser<tag::attribute::clip, SVGPP_TEMPLATE_ARGS_PASS>
       >> *detail::character_encoding_namespace::space >> qi::lit(')');
     if (qi::parse(it, end, rule) && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, tag::value::rect(), rect);
+      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, tag::value::rect(), rect[0], rect[1], rect[2], rect[3]);
       return true;
     }
     else
@@ -323,21 +323,21 @@ struct value_parser<tag::attribute::enable_background, SVGPP_TEMPLATE_ARGS_PASS>
 
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     SVGPP_STATIC_IF_SAFE const qi::real_parser<coordinate_t, detail::number_policies<coordinate_t, PropertySource> > number;
-    boost::array<coordinate_t, 4> rect;
+    coordinate_t x, y, width, height;
     const qi::rule<iterator_t> rule = 
       qi::lit("new") 
       >> +detail::character_encoding_namespace::space 
-      >> number [phx::ref(rect[0]) = qi::_1]
+      >> number [phx::ref(x) = qi::_1]
       >> +detail::character_encoding_namespace::space 
-      >> number [phx::ref(rect[1]) = qi::_1]
+      >> number [phx::ref(y) = qi::_1]
       >> +detail::character_encoding_namespace::space 
-      >> number [phx::ref(rect[2]) = qi::_1]
+      >> number [phx::ref(width) = qi::_1]
       >> +detail::character_encoding_namespace::space 
-      >> number [phx::ref(rect[3]) = qi::_1];
+      >> number [phx::ref(height) = qi::_1];
     // TODO: check for negative values
     if (qi::parse(it, end, rule) && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, tag::value::new_(), rect);
+      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, tag::value::new_(), x, y, width, height);
       return true;
     }
     else

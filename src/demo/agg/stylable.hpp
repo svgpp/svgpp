@@ -57,7 +57,7 @@ struct NoninheritedStyle
 
   double opacity_;
   bool display_;
-  boost::optional<svg_string_t> mask_fragment_;
+  boost::optional<svg_string_t> mask_fragment_, clip_path_fragment_;
   boost::optional<svg_string_t> filter_;
   bool overflow_clip_;
 };
@@ -233,6 +233,20 @@ public:
 
   void set(svgpp::tag::attribute::mask, svgpp::tag::value::inherit val)
   { style().mask_fragment_ = parentStyle_.mask_fragment_; }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::clip_path, IRI const &)
+  { throw std::runtime_error("Non-local references aren't supported"); }
+
+  template<class IRI>
+  void set(svgpp::tag::attribute::clip_path, svgpp::tag::iri_fragment, IRI const & fragment)
+  { style().clip_path_fragment_ = svg_string_t(boost::begin(fragment), boost::end(fragment)); }
+
+  void set(svgpp::tag::attribute::clip_path, svgpp::tag::value::none val)
+  { style().clip_path_fragment_.reset(); }
+
+  void set(svgpp::tag::attribute::clip_path, svgpp::tag::value::inherit val)
+  { style().clip_path_fragment_ = parentStyle_.clip_path_fragment_; }
 
   Style & style() { return style_; }
   Style const & style() const { return style_; }

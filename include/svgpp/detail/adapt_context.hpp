@@ -42,6 +42,8 @@ struct bind_context_parameters_wrapper
   {}
 
   typename context_copy_or_reference<OriginalContext>::type original_context;
+
+  BOOST_DELETED_FUNCTION(bind_context_parameters_wrapper& operator= (bind_context_parameters_wrapper const&))
 };
 
 template<class OriginalContext, class Parameters>
@@ -65,6 +67,8 @@ struct adapted_policy_context_wrapper
   {}
 
   typename context_copy_or_reference<OriginalContext>::type original_context;
+
+  BOOST_DELETED_FUNCTION(adapted_policy_context_wrapper& operator= (adapted_policy_context_wrapper const&))
 };
 
 template<class OriginalContext, class AdaptedPolicyTag, class AdaptedPolicy>
@@ -100,6 +104,8 @@ struct adapted_context_wrapper
 
   typename context_copy_or_reference<OriginalContext>::type original_context;
   typename context_copy_or_reference<AdaptedContext>::type adapted_context;
+
+  BOOST_DELETED_FUNCTION(adapted_context_wrapper& operator= (adapted_context_wrapper const&))
 };
 
 template<class OriginalContext, class AdaptedContext, class AdaptedPolicyTag, class AdaptedPolicy>

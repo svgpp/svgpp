@@ -65,7 +65,7 @@ template<class Number>
 struct number_policies<Number, tag::source::css>: svg_real_policies<Number>
 {
   template <typename Iterator>
-  static BOOST_CONSTEXPR bool parse_exp(Iterator & first, Iterator const &)
+  static BOOST_CONSTEXPR bool parse_exp(Iterator &, Iterator const &)
   {
     return false;
   }

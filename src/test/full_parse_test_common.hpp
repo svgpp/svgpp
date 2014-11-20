@@ -80,6 +80,18 @@ struct LoadValuePolicy
     UseValue(value4);
   }
 
+  template<class AttributeTag, class T1, class T2, class T3, class T4, class T5>
+  static void set(Context & context, AttributeTag tag, T1 const & value1, T2 const & value2, T3 const & value3, 
+    T4 const & value4, T5 const & value5)
+  {
+    CheckAttributeTag<AttributeTag>();
+    UseValue(value1);
+    UseValue(value2);
+    UseValue(value3);
+    UseValue(value4);
+    UseValue(value5);
+  }
+
   template<class AttributeTag, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
   static void set(Context & context, AttributeTag tag, T1 const & value1, T2 const & value2, T3 const & value3, 
     T4 const & value4, T5 const & value5, T6 const & value6, T7 const & value7, T8 const & value8)

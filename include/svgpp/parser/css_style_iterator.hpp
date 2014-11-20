@@ -53,7 +53,7 @@ private:
 
   void increment()
   {
-    while (true)
+    for(;;)
     {
       bool skip = false;
       IteratorT name_begin = end_, name_end;

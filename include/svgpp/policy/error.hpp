@@ -54,6 +54,8 @@ public:
 
 private:
   std::string const message_;
+
+  BOOST_DELETED_FUNCTION(unknown_element_error& operator= (unknown_element_error const&))
 };
 
 class unexpected_element_error: public exception_base
@@ -86,6 +88,8 @@ public:
 
 private:
   std::string const message_;
+
+  BOOST_DELETED_FUNCTION(unknown_attribute_error& operator= (unknown_attribute_error const&))
 };
 
 class unexpected_attribute_error: public exception_base
@@ -104,6 +108,8 @@ public:
 private:
   std::string const name_;
   std::string const message_;
+
+  BOOST_DELETED_FUNCTION(unexpected_attribute_error& operator= (unexpected_attribute_error const&))
 };
 
 class unknown_css_property_error: public exception_base
@@ -126,6 +132,8 @@ public:
 
 private:
   std::string const message_;
+
+  BOOST_DELETED_FUNCTION(unknown_css_property_error& operator= (unknown_css_property_error const&))
 };
 
 class required_attribute_not_found_error: public exception_base
@@ -144,6 +152,8 @@ public:
 private:
   std::string const name_;
   std::string const message_;
+
+  BOOST_DELETED_FUNCTION(required_attribute_not_found_error& operator= (required_attribute_not_found_error const&))
 };
 
 class negative_value_error: public exception_base
@@ -162,6 +172,8 @@ public:
 private:
   std::string const name_;
   std::string const message_;
+
+  BOOST_DELETED_FUNCTION(negative_value_error& operator= (negative_value_error const&))
 };
 
 
@@ -215,6 +227,8 @@ private:
   value_type const value_;
   std::string const attributeOrCSSPropertyName_;
   std::string const message_;
+
+  BOOST_DELETED_FUNCTION(invalid_value_error& operator= (invalid_value_error const&))
 };
 
 namespace policy { namespace error 

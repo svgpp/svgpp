@@ -114,7 +114,7 @@ public:
 
   void path_move_to(
     coordinate_type x, 
-    coordinate_type y, tag::coordinate::absolute tag)
+    coordinate_type y, tag::coordinate::absolute)
   {
     bool first_vertex = first_vertex_;
     if (first_vertex_)
@@ -155,7 +155,7 @@ public:
 
   void path_line_to(
     coordinate_type x, 
-    coordinate_type y, tag::coordinate::absolute tag)
+    coordinate_type y, tag::coordinate::absolute)
   {
     if (config_.no_markers())
       return;
@@ -172,7 +172,7 @@ public:
     coordinate_type y1, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::coordinate::absolute tag)
+    tag::coordinate::absolute)
   {
     if (config_.no_markers())
       return;
@@ -206,7 +206,7 @@ public:
     coordinate_type y2, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::coordinate::absolute tag)
+    tag::coordinate::absolute)
   {
     if (config_.no_markers())
       return;
@@ -251,7 +251,7 @@ public:
     bool large_arc_flag, bool sweep_flag, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::coordinate::absolute tag)
+    tag::coordinate::absolute)
   {
     if (config_.no_markers())
       return;

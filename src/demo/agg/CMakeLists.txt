@@ -25,8 +25,8 @@ set(AGG_DEMO_SOURCES
   gradient.cpp
   stylable.hpp
   common.hpp
-  clip_path.hpp
-  clip_path.cpp
+  clip_buffer.hpp 
+  clip_buffer.cpp 
   filter.hpp
   filter.cpp
   stb.cpp

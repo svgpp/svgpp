@@ -243,7 +243,7 @@ template<class ElementTag, class Context,
 class attribute_dispatcher;
 
 template<class ElementTag, class Context, SVGPP_TEMPLATE_ARGS>
-class attribute_dispatcher_base
+class attribute_dispatcher_base: boost::noncopyable
 {
 public:
   typedef Context context_type;

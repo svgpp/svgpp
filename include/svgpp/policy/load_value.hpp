@@ -16,20 +16,15 @@ namespace svgpp { namespace policy { namespace load_value
 template<class Context>
 struct forward_to_method
 {
+#ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
+  template<class AttributeTag, class... Args>
+  static void set(Context & context, AttributeTag tag, const Args&... args)
+  {
+    context.set(tag, args...);
+  }
+#else
   template<class AttributeTag, class T1>
   static void set(Context & context, AttributeTag tag, T1 const & value)
-  {
-    context.set(tag, value);
-  }
-
-  template<class AttributeTag, class T1>
-  static void set(Context & context, AttributeTag tag, T1 const & value, tag::source::attribute)
-  {
-    context.set(tag, value);
-  }
-
-  template<class AttributeTag, class T1>
-  static void set(Context & context, AttributeTag tag, T1 const & value, tag::source::css)
   {
     context.set(tag, value);
   }
@@ -53,11 +48,31 @@ struct forward_to_method
     context.set(tag, value1, value2, value3, value4);
   }
 
+  template<class AttributeTag, class T1, class T2, class T3, class T4, class T5>
+  static void set(Context & context, AttributeTag tag, T1 const & value1, T2 const & value2, T3 const & value3, 
+    T4 const & value4, T5 const & value5)
+  {
+    context.set(tag, value1, value2, value3, value4);
+  }
+
   template<class AttributeTag, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
   static void set(Context & context, AttributeTag tag, T1 const & value1, T2 const & value2, T3 const & value3, 
     T4 const & value4, T5 const & value5, T6 const & value6, T7 const & value7, T8 const & value8)
   {
     context.set(tag, value1, value2, value3, value4, value5, value6, value7, value8);
+  }
+#endif // BOOST_NO_CXX11_VARIADIC_TEMPLATES
+
+  template<class AttributeTag, class T1>
+  static void set(Context & context, AttributeTag tag, T1 const & value, tag::source::attribute)
+  {
+    context.set(tag, value);
+  }
+
+  template<class AttributeTag, class T1>
+  static void set(Context & context, AttributeTag tag, T1 const & value, tag::source::css)
+  {
+    context.set(tag, value);
   }
 };
 

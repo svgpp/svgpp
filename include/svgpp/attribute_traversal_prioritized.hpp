@@ -439,9 +439,9 @@ private:
   }
 
   template<class XMLPolicy, class ErrorPolicy, class XMLAttributesIterator, class Dispatcher, class FoundAttributes>
-  static bool load_style(XMLAttributesIterator const & xml_attributes_iterator, Dispatcher & dispatcher,
-    typename XMLPolicy::attribute_value_type & style_value,
-    FoundAttributes & found,
+  static bool load_style(XMLAttributesIterator const &, Dispatcher &,
+    typename XMLPolicy::attribute_value_type &,
+    FoundAttributes &,
     typename boost::disable_if_c<AttributeTraversalPolicy::parse_style && (true || boost::is_void<XMLAttributesIterator>::value)>::type * = NULL)
   {
     BOOST_ASSERT(false); // Must not be called

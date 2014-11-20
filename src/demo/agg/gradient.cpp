@@ -251,6 +251,7 @@ boost::optional<Gradient> Gradients::get(
         svgpp::color_factory<color_factory_t>,
         svgpp::attribute_traversal_policy<attribute_traversal>,
         svgpp::length_policy<svgpp::policy::length::forward_to_method<GradientBaseContext, const length_factory_t> >,
+        svgpp::load_transform_policy<svgpp::policy::load_transform::forward_to_method<GradientBaseContext> >, // Same as default, but less instantiations
         svgpp::processed_elements<
           boost::mpl::set<
             svgpp::tag::element::linearGradient,

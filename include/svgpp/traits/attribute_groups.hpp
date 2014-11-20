@@ -14,80 +14,13 @@
 
 namespace svgpp { namespace traits {
 
-// TODO: use single sequence
-typedef 
-  boost::mpl::joint_view<
-  boost::mpl::vector<
-    tag::attribute::alignment_baseline,            
-    tag::attribute::baseline_shift,
-    tag::attribute::clip_path, 
-    tag::attribute::clip_rule,
-    tag::attribute::clip,
-    tag::attribute::color_interpolation_filters,
-    tag::attribute::color_interpolation,
-    tag::attribute::color_profile,
-    tag::attribute::color_rendering,
-    tag::attribute::color>,
-  boost::mpl::joint_view<
-  boost::mpl::vector<
-    tag::attribute::cursor,
-    tag::attribute::direction,
-    tag::attribute::display,
-    tag::attribute::dominant_baseline,
-    tag::attribute::enable_background,
-    tag::attribute::fill_opacity,
-    tag::attribute::fill_rule,
-    tag::attribute::fill,
-    tag::attribute::filter,
-    tag::attribute::flood_color>,
-  boost::mpl::joint_view<
-  boost::mpl::vector<
-    tag::attribute::flood_opacity,
-    tag::attribute::font_family,
-    tag::attribute::font_size_adjust,
-    tag::attribute::font_size,
-    tag::attribute::font_stretch,
-    tag::attribute::font_style,
-    tag::attribute::font_variant,
-    tag::attribute::font_weight,
-    tag::attribute::glyph_orientation_horizontal,
-    tag::attribute::glyph_orientation_vertical>,
-  boost::mpl::joint_view<
-  boost::mpl::vector<
-    tag::attribute::image_rendering, 
-    tag::attribute::kerning, 
-    tag::attribute::letter_spacing, 
-    tag::attribute::lighting_color, 
-    tag::attribute::marker_end, 
-    tag::attribute::marker_mid, 
-    tag::attribute::marker_start, 
-    tag::attribute::mask, 
-    tag::attribute::opacity, 
-    tag::attribute::overflow>, 
-  boost::mpl::joint_view<
-  boost::mpl::vector<
-    tag::attribute::pointer_events, 
-    tag::attribute::shape_rendering, 
-    tag::attribute::stop_color, 
-    tag::attribute::stop_opacity, 
-    tag::attribute::stroke_dasharray, 
-    tag::attribute::stroke_dashoffset, 
-    tag::attribute::stroke_linecap, 
-    tag::attribute::stroke_linejoin, 
-    tag::attribute::stroke_miterlimit, 
-    tag::attribute::stroke_opacity>, 
-  boost::mpl::vector<
-    tag::attribute::stroke_width, 
-    tag::attribute::stroke, 
-    tag::attribute::text_anchor, 
-    tag::attribute::text_decoration, 
-    tag::attribute::text_rendering, 
-    tag::attribute::unicode_bidi, 
-    tag::attribute::visibility, 
-    tag::attribute::word_spacing,
-    tag::attribute::writing_mode,
-    tag::attribute::font>
-  > > > > > presentation_attributes;
+template<class AttributeTag>
+struct is_presentation_attribute: boost::mpl::false_ {};
+
+#define SVGPP_ON(attributeTag) \
+  template<> struct is_presentation_attribute<tag::attribute::attributeTag>: boost::mpl::true_ {};
+#include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+#undef SVGPP_ON
 
 typedef boost::mpl::set8<
   tag::attribute::font_family, 
@@ -153,26 +86,26 @@ typedef boost::mpl::set3<
   > animation_event_attributes;
 
 typedef boost::mpl::set<
-    boost::mpl::pair<tag::element::path, tag::attribute::d>,
-    boost::mpl::pair<tag::element::rect, tag::attribute::x>,
-    boost::mpl::pair<tag::element::rect, tag::attribute::y>,
-    boost::mpl::pair<tag::element::rect, tag::attribute::width>, 
-    boost::mpl::pair<tag::element::rect, tag::attribute::height>,
-    boost::mpl::pair<tag::element::rect, tag::attribute::rx>,
-    boost::mpl::pair<tag::element::rect, tag::attribute::ry>,
-    boost::mpl::pair<tag::element::circle, tag::attribute::cx>,
-    boost::mpl::pair<tag::element::circle, tag::attribute::cy>,
-    boost::mpl::pair<tag::element::circle, tag::attribute::r>,
-    boost::mpl::pair<tag::element::ellipse, tag::attribute::cx>,
-    boost::mpl::pair<tag::element::ellipse, tag::attribute::cy>,
-    boost::mpl::pair<tag::element::ellipse, tag::attribute::rx>,
-    boost::mpl::pair<tag::element::ellipse, tag::attribute::ry>,
-    boost::mpl::pair<tag::element::line, tag::attribute::x1>,
-    boost::mpl::pair<tag::element::line, tag::attribute::y1>,
-    boost::mpl::pair<tag::element::line, tag::attribute::x2>,
-    boost::mpl::pair<tag::element::line, tag::attribute::y2>,
-    boost::mpl::pair<tag::element::polyline, tag::attribute::points>,
-    boost::mpl::pair<tag::element::polygon, tag::attribute::points>
+  boost::mpl::pair<tag::element::path, tag::attribute::d>,
+  boost::mpl::pair<tag::element::rect, tag::attribute::x>,
+  boost::mpl::pair<tag::element::rect, tag::attribute::y>,
+  boost::mpl::pair<tag::element::rect, tag::attribute::width>, 
+  boost::mpl::pair<tag::element::rect, tag::attribute::height>,
+  boost::mpl::pair<tag::element::rect, tag::attribute::rx>,
+  boost::mpl::pair<tag::element::rect, tag::attribute::ry>,
+  boost::mpl::pair<tag::element::circle, tag::attribute::cx>,
+  boost::mpl::pair<tag::element::circle, tag::attribute::cy>,
+  boost::mpl::pair<tag::element::circle, tag::attribute::r>,
+  boost::mpl::pair<tag::element::ellipse, tag::attribute::cx>,
+  boost::mpl::pair<tag::element::ellipse, tag::attribute::cy>,
+  boost::mpl::pair<tag::element::ellipse, tag::attribute::rx>,
+  boost::mpl::pair<tag::element::ellipse, tag::attribute::ry>,
+  boost::mpl::pair<tag::element::line, tag::attribute::x1>,
+  boost::mpl::pair<tag::element::line, tag::attribute::y1>,
+  boost::mpl::pair<tag::element::line, tag::attribute::x2>,
+  boost::mpl::pair<tag::element::line, tag::attribute::y2>,
+  boost::mpl::pair<tag::element::polyline, tag::attribute::points>,
+  boost::mpl::pair<tag::element::polygon, tag::attribute::points>
   >::type shapes_attributes_by_element;
 
 }}

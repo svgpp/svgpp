@@ -27,11 +27,9 @@ struct value_parser<tag::type::transform_list, SVGPP_TEMPLATE_ARGS_PASS>
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::transform_policy>,
       boost::parameter::optional<tag::load_transform_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef detail::bind_context_parameters_wrapper<Context, args2_t> context_t;
-    typedef typename detail::unwrap_context<context_t, tag::transform_policy>::policy transform_policy;
     typedef typename detail::unwrap_context<context_t, tag::load_transform_policy> load_transform_context;
     typedef typename load_transform_context::policy load_transform_policy;
     typedef detail::transform_adapter_if_needed<context_t> adapted_context_t; 

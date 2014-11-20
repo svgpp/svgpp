@@ -21,7 +21,7 @@ struct value_parser<tag::type::angle, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
-                                    PropertySource property_source)
+                                    PropertySource)
   {
     namespace qi = boost::spirit::qi;
 

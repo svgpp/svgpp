@@ -505,12 +505,6 @@ struct context_factories
 };
 
 template<>
-struct context_factories::apply<FilterContext, svgpp::tag::element::filter>
-{
-  typedef svgpp::factory::context::same<FilterContext, svgpp::tag::element::filter> type;
-};
-
-template<>
 struct context_factories::apply<FilterContext, svgpp::tag::element::feBlend>
 {
   typedef svgpp::factory::context::on_stack<FilterContext, feBlendContext> type;
@@ -1049,9 +1043,7 @@ IFilterViewPtr Filters::get(svg_string_t const & id, length_factory_t const &, I
             svgpp::tag::attribute::offset
           >::type
         >
-      >::load_referenced_element<
-        svgpp::expected_elements<boost::mpl::set1<svgpp::tag::element::filter> >
-      >::load(node, filterContext);
+      >::load_referenced_element<>::load(node, filterContext, svgpp::tag::element::filter());
 
       FilterElementVisitor v(input);
       for(std::vector<FilterElement>::const_iterator fe = filterContext.elements_.begin();

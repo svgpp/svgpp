@@ -31,11 +31,9 @@ struct value_parser<tag::type::path_data, SVGPP_TEMPLATE_ARGS_PASS>
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
 
     typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::path_policy>,
       boost::parameter::optional<tag::load_path_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef detail::bind_context_parameters_wrapper<Context, args2_t> context_t;
-    typedef typename detail::unwrap_context<context_t, tag::path_policy>::policy path_policy;
     typedef typename detail::unwrap_context<context_t, tag::load_path_policy> load_path_context;
     typedef detail::path_adapter_if_needed<context_t> adapted_context_t; 
     typedef path_data_grammar<

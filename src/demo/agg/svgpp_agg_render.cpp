@@ -40,7 +40,7 @@
 
 #include "stylable.hpp"
 #include "gradient.hpp"
-#include "clip_path.hpp"
+#include "clip_buffer.hpp"
 #include "filter.hpp"
 
 class Transformable;
@@ -53,8 +53,7 @@ class Mask;
 class Marker;
 
 typedef agg::pixfmt_rgba32 pixfmt_t;
-typedef agg::pixfmt_amask_adaptor<pixfmt_t, ClipBuffer::alpha_mask_t> pixfmt_amask_adaptor_t;
-typedef agg::renderer_base<pixfmt_amask_adaptor_t> renderer_base_amask_t;
+typedef agg::renderer_base<pixfmt_t> renderer_base_t;
 
 struct Document
 {
@@ -168,23 +167,11 @@ struct child_context_factories::apply<ReferencedSymbolOrSvg, ElementTag, void>: 
 {};
 
 // 'mask'
-template<>
-struct child_context_factories::apply<Mask, svgpp::tag::element::mask, void>
-{
-  typedef svgpp::factory::context::same<Mask, svgpp::tag::element::mask> type;
-};
-
 template<class ElementTag>
 struct child_context_factories::apply<Mask, ElementTag, void>: apply<Canvas, ElementTag>
 {};
 
 // 'marker'
-template<>
-struct child_context_factories::apply<Marker, svgpp::tag::element::marker, void>
-{
-  typedef svgpp::factory::context::same<Marker, svgpp::tag::element::marker> type;
-};
-
 template<class ElementTag>
 struct child_context_factories::apply<Marker, ElementTag, void>: child_context_factories::apply<Canvas, ElementTag>
 {};
@@ -228,6 +215,7 @@ typedef boost::mpl::fold<
   boost::mpl::set<
     svgpp::tag::attribute::display,
     svgpp::tag::attribute::transform,
+    svgpp::tag::attribute::clip_path,
     svgpp::tag::attribute::color,
     svgpp::tag::attribute::fill,
     svgpp::tag::attribute::fill_opacity,
@@ -332,6 +320,25 @@ private:
 
 typedef boost::function<pixfmt_t&()> lazy_pixfmt_t;
 
+namespace
+{
+  template<class GrayMask>
+  void blend_image_with_mask(boost::gil::rgba8_view_t & rgbaView, GrayMask const & maskView)
+  {
+    boost::gil::rgba8_view_t::iterator o = rgbaView.begin();
+    for(GrayMask::iterator m = maskView.begin(); m != maskView.end(); ++m, ++o)
+    {
+      using namespace boost::gil;
+      get_color(*o, alpha_t()) = 
+        channel_multiply(
+          get_color(*o, alpha_t()),
+          get_color(*m, gray_color_t())
+        );
+    }
+    BOOST_ASSERT(o == rgbaView.end());
+  }
+}
+
 class Canvas: 
   public Stylable,
   public Transformable
@@ -375,6 +382,17 @@ public:
     if (!own_buffer_.get())
       return;
     applyFilter();
+
+    if (style().clip_path_fragment_)
+    {
+      if (!clip_buffer_.unique())
+        clip_buffer_.reset(new ClipBuffer(*clip_buffer_));
+      clip_buffer_->intersectClipPath(document().xml_document_, *style().clip_path_fragment_, transform());
+    }
+
+    if (clip_buffer_)
+      blend_image_with_mask(own_buffer_->gilView(), clip_buffer_->gilView());
+
     if (style().mask_fragment_)
     {
       pixfmt_t & parent_pixfmt = parent_pixfmt_();
@@ -388,18 +406,7 @@ public:
       mask_view_t mask_view = boost::gil::color_converted_view<boost::gil::gray8_pixel_t>(
         mask_buffer.gilView(), svgpp::gil_utility::rgba_to_mask_color_converter<>());
 
-      boost::gil::rgba8_view_t own_view = own_buffer_->gilView();
-      boost::gil::rgba8_view_t::iterator o = own_view.begin();
-      for(mask_view_t::iterator m = mask_view.begin(); m !=mask_view.end(); ++m, ++o)
-      {
-        using namespace boost::gil;
-        get_color(*o, alpha_t()) = 
-          channel_multiply(
-            get_color(*o, alpha_t()),
-            get_color(*m, gray_color_t())
-          );
-      }
-      BOOST_ASSERT(o == own_view.end());
+      blend_image_with_mask(own_buffer_->gilView(), mask_view);
     }
     agg::renderer_base<pixfmt_t> renderer_base(parent_pixfmt_());
     renderer_base.blend_from(own_buffer_->pixfmt(), NULL, 0, 0, unsigned(style().opacity_ * 255));
@@ -446,7 +453,10 @@ protected:
   {
     pixfmt_t & parent_pixfmt = parent_pixfmt_();
 
-    if (style().opacity_ < 0.999 || style().mask_fragment_ || style().filter_)
+    if (style().opacity_ < 0.999 
+      || style().mask_fragment_ 
+      || style().clip_path_fragment_ 
+      || style().filter_)
     {
       if (!own_buffer_.get())
         own_buffer_.reset(new ImageBuffer(parent_pixfmt.width(), parent_pixfmt.height()));
@@ -782,9 +792,7 @@ void Canvas::loadMask(ImageBuffer & mask_buffer) const
     Document::FollowRef lock(document(), element);
 
     Mask mask(document_, mask_buffer, *this);
-    document_traversal_main::load_referenced_element<
-      svgpp::expected_elements<boost::mpl::set1<svgpp::tag::element::mask> > 
-    >::load(element, mask);
+    document_traversal_main::load_referenced_element<>::load(element, mask, svgpp::tag::element::mask());
   }
   else
     throw std::runtime_error("Element referenced by 'mask' not found");
@@ -888,7 +896,7 @@ private:
 static const double GradientScale = 100.0;
 
 template<class GradientFunc, class VertexSource>
-void RenderScanlinesGradient(renderer_base_amask_t & renderer, 
+void RenderScanlinesGradient(renderer_base_t & renderer, 
   agg::rasterizer_scanline_aa<> & rasterizer,
   GradientFunc const & gradient_func, GradientBase const & gradient_base, 
   agg::trans_affine const & user_transform, agg::trans_affine const & gradient_geometry_transform,
@@ -934,14 +942,13 @@ template<class VertexSource>
 void Path::paintScanlines(EffectivePaint const & paint, double opacity, agg::rasterizer_scanline_aa<> & rasterizer,
   VertexSource & curved) 
 {
-  pixfmt_amask_adaptor_t amask_adaptor(getPixfmt(), clipBuffer().alphaMask());
-  renderer_base_amask_t renderer_base(amask_adaptor);
+  renderer_base_t renderer_base(getPixfmt());
   // TODO: pass bounding box function instead of curved
   if (agg::rgba8 const * paintColor = boost::get<agg::rgba8>(&paint))
   {
     agg::rgba8 color(*paintColor);
     color.opacity(opacity);
-    typedef agg::renderer_scanline_aa_solid<renderer_base_amask_t> renderer_solid_t;
+    typedef agg::renderer_scanline_aa_solid<renderer_base_t> renderer_solid_t;
     renderer_solid_t renderer_solid(renderer_base);
     renderer_solid.color(color);
     agg::scanline_p8 scanline;
@@ -1143,9 +1150,7 @@ void Path::drawMarker(svg_string_t const & id, double x, double y, double dir)
     Document::FollowRef lock(document(), element);
 
     Marker markerContext(*this, style().stroke_width_, x, y, dir);
-    document_traversal_main::load_referenced_element<
-      svgpp::expected_elements<boost::mpl::set1<svgpp::tag::element::marker> >
-    >::load(element, markerContext);
+    document_traversal_main::load_referenced_element<>::load(element, markerContext, svgpp::tag::element::marker());
   }
 }
 
