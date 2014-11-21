@@ -5,10 +5,13 @@
 #include <svgpp/document_traversal.hpp>
 #include <svgpp/utility/gil/blend.hpp>
 #include <svgpp/utility/gil/composite.hpp>
+#include <svgpp/utility/gil/color_matrix.hpp>
+#include <svgpp/utility/gil/mask.hpp>
 #include <boost/gil/gil_all.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/variant.hpp>
+#include <boost/math/constants/constants.hpp>
 
 namespace mpl = boost::mpl;
 namespace gil = boost::gil;
@@ -46,13 +49,13 @@ struct feBlend: FilterElementBase
 
 struct feFunc
 {
-  enum type { fIdentity, fTable, fDiscrete, fLinear, fGamma };
+  enum Type { fIdentity, fTable, fDiscrete, fLinear, fGamma };
 
   feFunc()
     : type_(fIdentity)
   {}
 
-  type type_;
+  Type type_;
   double slope_, intercept_, amplitude_, exponent_, offset_;
   std::vector<double> tableValues_;
 };
@@ -105,7 +108,22 @@ struct feFlood: FilterElementBase
   double flood_opacity_;
 };
 
-typedef boost::variant<feBlend, feComponentTransfer, feOffset, feComposite, feMerge, feFlood> FilterElement;
+struct feColorMatrix: FilterElementBase
+{
+  enum Type { mMatrix, mSaturate, mHueRotate, mLuminanceToAlpha };
+
+  feColorMatrix()
+    : type_(mMatrix)
+  {}
+
+  FilterInput input_;
+  Type type_;
+  boost::optional<std::vector<double> > values_;
+};
+
+
+typedef boost::variant<feBlend, feComponentTransfer, feOffset, feComposite, feMerge, feFlood, 
+  feColorMatrix> FilterElement;
 
 class ElementWithRegionContext
 {
@@ -260,11 +278,11 @@ template<feComponentTransfer::ARGBComponent ComponentArg>
 class feFuncContext
 {
   typedef mpl::map<
-    mpl::pair<svgpp::tag::value::identity,   mpl::integral_c<feFunc::type, feFunc::fIdentity> >,
-    mpl::pair<svgpp::tag::value::table,      mpl::integral_c<feFunc::type, feFunc::fTable> >,
-    mpl::pair<svgpp::tag::value::discrete,   mpl::integral_c<feFunc::type, feFunc::fDiscrete> >,
-    mpl::pair<svgpp::tag::value::linear,     mpl::integral_c<feFunc::type, feFunc::fLinear> >,
-    mpl::pair<svgpp::tag::value::gamma,      mpl::integral_c<feFunc::type, feFunc::fGamma> >
+    mpl::pair<svgpp::tag::value::identity,   mpl::integral_c<feFunc::Type, feFunc::fIdentity> >,
+    mpl::pair<svgpp::tag::value::table,      mpl::integral_c<feFunc::Type, feFunc::fTable> >,
+    mpl::pair<svgpp::tag::value::discrete,   mpl::integral_c<feFunc::Type, feFunc::fDiscrete> >,
+    mpl::pair<svgpp::tag::value::linear,     mpl::integral_c<feFunc::Type, feFunc::fLinear> >,
+    mpl::pair<svgpp::tag::value::gamma,      mpl::integral_c<feFunc::Type, feFunc::fGamma> >
   > type_to_enum;
 
 public:
@@ -498,6 +516,50 @@ private:
   feFlood data_;
 };
 
+class feColorMatrixContext: 
+  public FilterElementBaseContext,
+  public ElementWithInputContext<svgpp::tag::attribute::in>
+{
+  typedef mpl::map<
+    mpl::pair< svgpp::tag::value::matrix,           mpl::integral_c<feColorMatrix::Type, feColorMatrix::mMatrix> >,
+    mpl::pair< svgpp::tag::value::saturate,         mpl::integral_c<feColorMatrix::Type, feColorMatrix::mSaturate> >,
+    mpl::pair< svgpp::tag::value::hueRotate,        mpl::integral_c<feColorMatrix::Type, feColorMatrix::mHueRotate> >,
+    mpl::pair< svgpp::tag::value::luminanceToAlpha, mpl::integral_c<feColorMatrix::Type, feColorMatrix::mLuminanceToAlpha> >
+  > type_to_enum;
+
+public:
+  feColorMatrixContext(FilterContext & parent)
+    : FilterElementBaseContext(data_)
+    , ElementWithInputContext<svgpp::tag::attribute::in>(data_.input_)
+    , parent_(parent)
+  {
+  }
+
+  void on_exit_element() const 
+  {
+    parent_.addElement(data_);
+  }
+
+  using FilterElementBaseContext::set;
+  using ElementWithInputContext<svgpp::tag::attribute::in>::set;
+
+  template<class Type>
+  void set(svgpp::tag::attribute::type, Type)
+  {
+    data_.type_ = mpl::at<type_to_enum, Type>::type::value;
+  }
+
+  template<class Values>
+  void set(svgpp::tag::attribute::values, Values const & values)
+  {
+    data_.values_ = std::vector<double>(boost::begin(values), boost::end(values));
+  }
+
+private:
+  FilterContext & parent_;
+  feColorMatrix data_;
+};
+
 struct context_factories
 {
   template<class ParentContext, class ElementTag>
@@ -544,6 +606,12 @@ template<>
 struct context_factories::apply<FilterContext, svgpp::tag::element::feFlood>
 {
   typedef svgpp::factory::context::on_stack<FilterContext, feFloodContext> type;
+};
+
+template<>
+struct context_factories::apply<FilterContext, svgpp::tag::element::feColorMatrix>
+{
+  typedef svgpp::factory::context::on_stack<FilterContext, feColorMatrixContext> type;
 };
 
 template<>
@@ -840,6 +908,75 @@ private:
   boost::gil::rgba8_image_t image_;
 };
 
+class ColorMatrixView: public IFilterView
+{
+public:
+  ColorMatrixView(feColorMatrix const & fe, IFilterViewPtr const & input)
+    : fe_(fe)
+    , in_(input)
+  {}
+
+  virtual gil::rgba8c_view_t view() 
+  {
+    if (in_)
+    {
+      typedef svgpp::gil_utility::color_matrix_transform<boost::gil::rgba8c_view_t::value_type> transform_t;
+      image_.recreate(in_->view().dimensions());
+      switch(fe_.type_)
+      {
+      case feColorMatrix::mMatrix:
+      {
+        if (fe_.values_ && fe_.values_->size() != 20)
+          throw std::runtime_error("For feColorMatrix type=\"matrix\", 'values' must be a list of 20 values");
+        boost::multi_array<double, 2> m(boost::extents[4][5]);
+        if (fe_.values_)
+          m.assign(fe_.values_->begin(), fe_.values_->end());
+        else
+          for(int i=0; i<4; ++i)
+            m[i][i] = 1;
+        gil::transform_pixels(in_->view(), gil::view(image_), transform_t(m));
+      }
+      break;
+      case feColorMatrix::mSaturate:
+      {
+        if (fe_.values_ && fe_.values_->size() != 1)
+          throw std::runtime_error("For feColorMatrix type=\"saturate\", 'values' must be single real number");
+        double saturate = fe_.values_ ? fe_.values_->front() : 1;
+        saturate = std::min(1.0, std::max(0.0, saturate));
+        gil::transform_pixels(in_->view(), gil::view(image_), 
+          transform_t(svgpp::gil_utility::get_saturate_matrix(saturate)));
+      }
+      break;
+      case feColorMatrix::mHueRotate:
+      {
+        if (fe_.values_ && fe_.values_->size() != 1)
+          throw std::runtime_error("For feColorMatrix type=\"hueRotate\", 'values' must be single real number");
+        double angle = fe_.values_ ? fe_.values_->front() : 0;
+        gil::transform_pixels(in_->view(), gil::view(image_), 
+          transform_t(svgpp::gil_utility::get_hue_rotate_matrix(angle * boost::math::constants::degree<double>())));
+      }
+      break;
+      case feColorMatrix::mLuminanceToAlpha:
+      {
+        gil::copy_pixels(
+          gil::color_converted_view<gil::rgba8_pixel_t>(
+            in_->view(),
+            svgpp::gil_utility::rgba_to_mask_color_converter<boost::gil::alpha_t>()
+          ),
+          gil::view(image_));
+      }
+      break;
+      }
+    }
+    return gil::const_view(image_);
+  }
+
+private:
+  IFilterViewPtr in_;
+  feColorMatrix const fe_;
+  boost::gil::rgba8_image_t image_;
+};
+
 class AlphaChannelView: public IFilterView
 {
 public:
@@ -924,6 +1061,14 @@ struct FilterElementVisitor:
     lastFilter_ = feView;
   }
 
+  void operator()(feColorMatrix const & fe)
+  {
+    boost::shared_ptr<ColorMatrixView> feView(new ColorMatrixView(fe, findInput(fe.input_)));
+    if (!fe.result_.empty())
+      namedFilters_[fe.result_] = feView;
+    lastFilter_ = feView;
+  }
+
   IFilterViewPtr const & lastFilter() { return lastFilter_; }
 
 private:
@@ -991,6 +1136,7 @@ IFilterViewPtr Filters::get(svg_string_t const & id, length_factory_t const &, I
             svgpp::tag::element::feDistantLight,
             svgpp::tag::element::fePointLight,
             svgpp::tag::element::feSpotLight,
+            svgpp::tag::element::feColorMatrix,
             svgpp::tag::element::feComponentTransfer,
             svgpp::tag::element::feComposite,
             svgpp::tag::element::feFlood,
