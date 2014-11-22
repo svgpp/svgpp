@@ -8,6 +8,8 @@
 #pragma once
 
 #include <cmath>
+#include <boost/gil/color_base_algorithm.hpp>
+#include <boost/gil/rgba.hpp>
 #include <boost/multi_array.hpp>
 
 namespace svgpp { namespace gil_utility {
@@ -34,6 +36,7 @@ public:
   Color operator()(const Color & color) const 
   {
     // TODO integer optimization
+    namespace gil = boost::gil;
     Color result;
     typename gil::color_element_type<Color, gil::red_t>::type 
       r = gil::get_color(color, gil::red_t()),

@@ -323,10 +323,10 @@ typedef boost::function<pixfmt_t&()> lazy_pixfmt_t;
 namespace
 {
   template<class GrayMask>
-  void blend_image_with_mask(boost::gil::rgba8_view_t & rgbaView, GrayMask const & maskView)
+  void blend_image_with_mask(boost::gil::rgba8_view_t const & rgbaView, GrayMask const & maskView)
   {
     boost::gil::rgba8_view_t::iterator o = rgbaView.begin();
-    for(GrayMask::iterator m = maskView.begin(); m != maskView.end(); ++m, ++o)
+    for(typename GrayMask::iterator m = maskView.begin(); m != maskView.end(); ++m, ++o)
     {
       using namespace boost::gil;
       get_color(*o, alpha_t()) = 
