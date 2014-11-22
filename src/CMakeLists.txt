@@ -1,13 +1,15 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 2.8)
 
 project(svgpp)
 
+find_package(Boost REQUIRED)
+
 include_directories(
-  # Here should be path to Boost root if not in system-wide paths
+  ${Boost_INCLUDE_DIRS}
 )
 
 link_directories(
-  # Here should be path to Boost libraries dir (stage/lib) if not in system-wide paths
+  ${Boost_LIBRARY_DIRS}
 )
 
 if (MSVC)

@@ -54,33 +54,38 @@ if (WIN32)
   )
 endif()
 
-add_executable(svgpp_agg_render_libxml
-  ${AGG_DEMO_SOURCES}
-  parser_libxml.hpp
-  parser_libxml.cpp
-)
-
-target_compile_definitions(svgpp_agg_render_libxml
-  PRIVATE SVG_PARSER_LIBXML
-)
-
-if (WIN32)
-  set_property(TARGET svgpp_agg_render_libxml
-    APPEND PROPERTY INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/../../../third_party/libxml2/include"
-  )
-else()
-  set_property(TARGET svgpp_agg_render_libxml
-    APPEND PROPERTY INCLUDE_DIRECTORIES "/usr/include/libxml2"
-  )
-  target_link_libraries(svgpp_agg_render_libxml
-    xml2
-  )
-endif()
-
 if (MSVC)
   set_target_properties(
-    svgpp_agg_render svgpp_agg_render_msxml svgpp_agg_render_libxml 
+    svgpp_agg_render svgpp_agg_render_msxml
     PROPERTIES COMPILE_FLAGS "/bigobj"
   )
 endif()
+
+find_package(LibXml2)
+
+if (LIBXML2_FOUND)
+  add_executable(svgpp_agg_render_libxml
+    ${AGG_DEMO_SOURCES}
+    parser_libxml.hpp
+    parser_libxml.cpp
+  )
+
+  target_compile_definitions(svgpp_agg_render_libxml
+    PRIVATE SVG_PARSER_LIBXML
+  )
+
+  set_property(TARGET svgpp_agg_render_libxml
+    APPEND PROPERTY INCLUDE_DIRECTORIES ${LIBXML2_INCLUDE_DIR}
+  )
+  target_link_libraries(svgpp_agg_render_libxml
+    ${LIBXML2_LIBRARIES}
+  )
+
+  if (MSVC)
+    set_target_properties(
+      svgpp_agg_render_libxml PROPERTIES COMPILE_FLAGS "/bigobj"
+    )
+  endif()
+endif()
+
   
