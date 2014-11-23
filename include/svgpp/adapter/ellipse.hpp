@@ -51,8 +51,8 @@ public:
         return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::ry());
       if (ry == 0)
         return true;
-      typedef detail::unwrap_context<Context, tag::load_basic_shapes_policy> load_basic_shapes;
-      load_basic_shapes::policy::set_ellipse(load_basic_shapes::get(context), cx, cy, rx, ry);
+      typedef detail::unwrap_context<Context, tag::basic_shapes_events_policy> basic_shapes_events;
+      basic_shapes_events::policy::set_ellipse(basic_shapes_events::get(context), cx, cy, rx, ry);
     }
     return true;
   }
@@ -71,14 +71,14 @@ struct ellipse_to_path_adapter
   template<class Context, class Coordinate>
   static void set_ellipse(Context & context, Coordinate cx, Coordinate cy, Coordinate rx, Coordinate ry)
   {
-    typedef detail::unwrap_context<Context, tag::load_path_policy> load_path;
+    typedef detail::unwrap_context<Context, tag::path_events_policy> path_events;
 
-    typename load_path::type & path_context = load_path::get(context);
-    load_path::policy::path_move_to(path_context, cx + rx, cy, tag::coordinate::absolute());
-    load_path::policy::path_elliptical_arc_to(path_context, rx, ry, 0, false, true, cx - rx, cy, tag::coordinate::absolute());
-    load_path::policy::path_elliptical_arc_to(path_context, rx, ry, 0, false, true, cx + rx, cy, tag::coordinate::absolute());
-    load_path::policy::path_close_subpath(path_context);
-    load_path::policy::path_exit(path_context);
+    typename path_events::type & path_context = path_events::get(context);
+    path_events::policy::path_move_to(path_context, cx + rx, cy, tag::coordinate::absolute());
+    path_events::policy::path_elliptical_arc_to(path_context, rx, ry, 0, false, true, cx - rx, cy, tag::coordinate::absolute());
+    path_events::policy::path_elliptical_arc_to(path_context, rx, ry, 0, false, true, cx + rx, cy, tag::coordinate::absolute());
+    path_events::policy::path_close_subpath(path_context);
+    path_events::policy::path_exit(path_context);
   }
 };
 

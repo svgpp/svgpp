@@ -10,7 +10,7 @@
 #include <svgpp/adapter/path.hpp>
 #include <svgpp/definitions.hpp>
 #include <svgpp/detail/adapt_context.hpp>
-#include <svgpp/policy/detail/load_path_splitter.hpp>
+#include <svgpp/policy/detail/path_events_splitter.hpp>
 #include <svgpp/policy/markers.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
@@ -33,24 +33,24 @@ namespace tag
 
 namespace detail
 {
-  template<class LoadMarkersPolicy, bool AlwaysCalculateAutoOrient>
+  template<class MarkerEventsPolicy, bool AlwaysCalculateAutoOrient>
   struct path_markers_adapter_config;
 
-  template<class LoadMarkersPolicy>
-  struct path_markers_adapter_config<LoadMarkersPolicy, false>
+  template<class MarkerEventsPolicy>
+  struct path_markers_adapter_config<MarkerEventsPolicy, false>
   {
   public:
     template<class Context>
     void request_config(Context & context)
     {
-      LoadMarkersPolicy::marker_get_config(context, config_start_, config_mid_, config_end_);
+      MarkerEventsPolicy::marker_get_config(context, config_start_, config_mid_, config_end_);
     }
 
     template<class Context, class Coordinate>
     static void call_marker_orient_fixed(Context & context, marker_vertex v, 
       Coordinate x, Coordinate y, unsigned marker_index)
     {
-      LoadMarkersPolicy::marker(context, v, x, y, tag::orient_fixed(), marker_index);
+      MarkerEventsPolicy::marker(context, v, x, y, tag::orient_fixed(), marker_index);
     }
 
     marker_config start() const { return config_start_; }
@@ -68,8 +68,8 @@ namespace detail
     marker_config config_start_, config_mid_, config_end_;
   };
 
-  template<class LoadMarkersPolicy>
-  struct path_markers_adapter_config<LoadMarkersPolicy, true>
+  template<class MarkerEventsPolicy>
+  struct path_markers_adapter_config<MarkerEventsPolicy, true>
   {
   public:
     template<class Context>
@@ -94,7 +94,7 @@ template<
   class OutputContext, 
   class MarkersPolicy = policy::markers::calculate,
   class Coordinate = typename number_type_by_context<OutputContext>::type, 
-  class LoadMarkersPolicy = policy::load_markers::forward_to_method<OutputContext> 
+  class MarkerEventsPolicy = policy::marker_events::forward_to_method<OutputContext> 
 >
 class path_markers_adapter: boost::noncopyable
 {
@@ -333,7 +333,7 @@ private:
 
     if (config_.mid() == marker_orient_auto)
       for(; points_without_directionality_ > 0; --points_without_directionality_)
-        LoadMarkersPolicy::marker(context_, marker_mid, last_x_, last_y_, subpath_end_directionality, 
+        MarkerEventsPolicy::marker(context_, marker_mid, last_x_, last_y_, subpath_end_directionality, 
           next_marker_index_++);
 
     if (!(subpath_first_segment_ && subpath_start_.is_first_vertex_))
@@ -347,7 +347,7 @@ private:
         if (subpath_first_segment_)
           subpath_start_.marker_index_ = next_marker_index_++;
         else
-          LoadMarkersPolicy::marker(context_, path_end ? marker_end : marker_mid, last_x_, last_y_, 
+          MarkerEventsPolicy::marker(context_, path_end ? marker_end : marker_mid, last_x_, last_y_, 
             by_close_path ? subpath_start_marker_directionality : subpath_end_directionality, 
             next_marker_index_++);
         break;
@@ -367,7 +367,7 @@ private:
         subpath_start_config = (subpath_first_segment_ && path_end) ? config_.end() : config_.mid();
       }
       if (subpath_start_config == marker_orient_auto)
-        LoadMarkersPolicy::marker(context_, 
+        MarkerEventsPolicy::marker(context_, 
           subpath_start_vertex,
           subpath_start_.x_, subpath_start_.y_, 
           subpath_start_marker_directionality, 
@@ -427,7 +427,7 @@ private:
             directionality = subpath_start_directionality;
 
           for(++points_without_directionality_; points_without_directionality_ > 0; --points_without_directionality_)
-            LoadMarkersPolicy::marker(context_, marker_mid, last_x_, last_y_, directionality, 
+            MarkerEventsPolicy::marker(context_, marker_mid, last_x_, last_y_, directionality, 
               next_marker_index_++);
         }
         break;
@@ -449,7 +449,7 @@ private:
   }
 
   OutputContext & context_;
-  detail::path_markers_adapter_config<LoadMarkersPolicy, MarkersPolicy::always_calculate_auto_orient> config_;
+  detail::path_markers_adapter_config<MarkerEventsPolicy, MarkersPolicy::always_calculate_auto_orient> config_;
 
   bool first_vertex_;
   bool in_subpath_;
@@ -475,38 +475,38 @@ template<class OriginalContext>
 class path_bypass_and_markers_adapter
 {
   typedef typename detail::unwrap_context<OriginalContext, tag::markers_policy>::policy markers_policy;
-  typedef typename detail::unwrap_context<OriginalContext, tag::load_markers_policy>::policy load_markers_policy;
+  typedef typename detail::unwrap_context<OriginalContext, tag::marker_events_policy>::policy marker_events_policy;
   typedef typename detail::unwrap_context<OriginalContext, tag::number_type>::policy number_type;
-  typedef typename detail::unwrap_context<OriginalContext, tag::load_path_policy>::policy original_load_path_policy;
+  typedef typename detail::unwrap_context<OriginalContext, tag::path_events_policy>::policy original_path_events_policy;
 
   typedef path_markers_adapter<
-    typename detail::unwrap_context<OriginalContext, tag::load_markers_policy>::type, 
+    typename detail::unwrap_context<OriginalContext, tag::marker_events_policy>::type, 
     markers_policy, 
     number_type, 
-    load_markers_policy
+    marker_events_policy
   > markers_adapter_t;
 
   typedef path_adapter<
     markers_adapter_t, 
     policy::path::no_shorthands, 
     number_type, 
-    policy::load_path::forward_to_method<markers_adapter_t>
+    policy::path_events::forward_to_method<markers_adapter_t>
   > path_adapter_t;
 
-  typedef path_adapter_load_path_policy<path_adapter_t, policy::path::no_shorthands, number_type> path_adapter_load_path_policy_t;
+  typedef path_adapter_path_events_policy<path_adapter_t, policy::path::no_shorthands, number_type> path_adapter_path_events_policy_t;
 
-  typedef std::pair<path_adapter_t &, typename detail::unwrap_context<OriginalContext, tag::load_path_policy>::type &> splitter_context_t;
+  typedef std::pair<path_adapter_t &, typename detail::unwrap_context<OriginalContext, tag::path_events_policy>::type &> splitter_context_t;
 
-  typedef load_path_splitter<splitter_context_t, path_adapter_load_path_policy_t, original_load_path_policy> splitter_policy_t;
+  typedef path_events_splitter<splitter_context_t, path_adapter_path_events_policy_t, original_path_events_policy> splitter_policy_t;
 
 public:
   path_bypass_and_markers_adapter(OriginalContext & original_context)
-    : markers_adapter_(detail::unwrap_context<OriginalContext, tag::load_markers_policy>::get(original_context))
+    : markers_adapter_(detail::unwrap_context<OriginalContext, tag::marker_events_policy>::get(original_context))
     , path_adapter_(markers_adapter_)
-    , splitter_context_(path_adapter_, detail::unwrap_context<OriginalContext, tag::load_path_policy>::get(original_context))
+    , splitter_context_(path_adapter_, detail::unwrap_context<OriginalContext, tag::path_events_policy>::get(original_context))
   {}
 
-  typedef splitter_policy_t load_path_policy;
+  typedef splitter_policy_t path_events_policy;
   typedef splitter_context_t context_type;
   context_type & context() { return splitter_context_; }
 
@@ -550,8 +550,8 @@ struct path_markers_adapter_if_needed<OriginalContext,
         policy::path::raw
       >,
       typename type::context_type, 
-      tag::load_path_policy, 
-      typename type::load_path_policy
+      tag::path_events_policy, 
+      typename type::path_events_policy
     > adapted_context;
   typedef adapted_context adapted_context_holder;
 

@@ -87,7 +87,7 @@ namespace markers
 
 } // namespace markers
   
-namespace load_markers
+namespace marker_events
 {
 
   template<class Context>
@@ -112,6 +112,6 @@ namespace load_markers
   struct default_policy: forward_to_method<Context>
   {};
 
-} // namespace load_markers
+} // namespace marker_events
 
 }}

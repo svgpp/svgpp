@@ -30,7 +30,7 @@ struct value_parser<tag::type::clock_value, SVGPP_TEMPLATE_ARGS_PASS>
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     /*if (qi::parse(it, end, color_rule, color) && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, color);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, color);
       return true;
     }
     else

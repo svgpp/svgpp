@@ -37,7 +37,7 @@ struct value_parser<tag::type::number, SVGPP_TEMPLATE_ARGS_PASS>
     coordinate_t value;
     if (qi::parse(it, end, number, value) && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, value);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, value);
       return true;
     }
     else
@@ -70,7 +70,7 @@ struct value_parser<tag::type::list_of<tag::type::number>, SVGPP_TEMPLATE_ARGS_P
       boost::begin(attribute_value), boost::end(attribute_value), 
       number_grammar, separator_grammar);
 
-    args_t::load_value_policy::set(args_t::load_value_context::get(context), tag,
+    args_t::value_events_policy::set(args_t::value_events_context::get(context), tag,
       boost::make_iterator_range(output_iterator_t(parse_list), output_iterator_t()));
     if (parse_list.error())
     {
@@ -110,9 +110,9 @@ struct value_parser<tag::type::number_optional_number, SVGPP_TEMPLATE_ARGS_PASS>
       ) && it == end)
     {
       if (two_values)
-        args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, value1, value2);
+        args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, value1, value2);
       else
-        args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, value1);
+        args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, value1);
       return true;
     }
     else

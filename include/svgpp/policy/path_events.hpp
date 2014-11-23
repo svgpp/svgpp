@@ -7,7 +7,7 @@
 
 #pragma once
 
-namespace svgpp { namespace policy { namespace load_path
+namespace svgpp { namespace policy { namespace path_events
 {
 
 template<class Context>

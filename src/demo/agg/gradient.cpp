@@ -79,7 +79,7 @@ public:
     data_.stops_.push_back(stop);
   }
 
-  void set_transform_matrix(const boost::array<double, 6> & matrix)
+  void transform_matrix(const boost::array<double, 6> & matrix)
   { data_.matrix_ = matrix; }
 
   template<class StringRange>
@@ -251,7 +251,7 @@ boost::optional<Gradient> Gradients::get(
         svgpp::color_factory<color_factory_t>,
         svgpp::attribute_traversal_policy<attribute_traversal>,
         svgpp::length_policy<svgpp::policy::length::forward_to_method<GradientBaseContext, const length_factory_t> >,
-        svgpp::load_transform_policy<svgpp::policy::load_transform::forward_to_method<GradientBaseContext> >, // Same as default, but less instantiations
+        svgpp::transform_events_policy<svgpp::policy::transform_events::forward_to_method<GradientBaseContext> >, // Same as default, but less instantiations
         svgpp::processed_elements<
           boost::mpl::set<
             svgpp::tag::element::linearGradient,

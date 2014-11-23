@@ -38,11 +38,11 @@ struct iri_value_parser
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (qi::parse(it, end, iri_rule, iri) && it == end)
     {
-      typedef typename load_value_with_iri_policy<
-        typename args_t::load_value_policy, 
+      typedef typename value_events_with_iri_policy<
+        typename args_t::value_events_policy, 
         iri_policy_t
-      >::type load_value_policy_t;
-      load_value_policy_t::set(args_t::load_value_context::get(context), tag, iri);
+      >::type value_events_policy_t;
+      value_events_policy_t::set(args_t::value_events_context::get(context), tag, iri);
       return true;
     }
     else

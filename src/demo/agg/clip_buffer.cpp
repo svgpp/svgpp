@@ -121,7 +121,7 @@ namespace
     void set(svgpp::tag::attribute::clip_rule, svgpp::tag::value::evenodd)
     { nonzero_clip_rule_ = false; }
 
-    void set_transform_matrix(const boost::array<double, 6> & matrix)
+    void transform_matrix(const boost::array<double, 6> & matrix)
     {
       transform_.premultiply(agg::trans_affine(matrix.data()));
     }

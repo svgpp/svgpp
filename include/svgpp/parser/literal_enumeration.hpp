@@ -28,7 +28,7 @@ template<
   class Dictionary, 
   class AttributeTag, 
   class Context, 
-  class LoadValuePolicy, 
+  class ValueEventsPolicy, 
   class ValueRange, 
   bool CaseSensitive
 >
@@ -46,7 +46,7 @@ struct literal_enumeration_type_visitor: boost::noncopyable
     if (!found_ && boost::algorithm::equals(range_, Dictionary::template get_name<T>(), 
       typename boost::mpl::if_c<CaseSensitive, boost::algorithm::is_equal, boost::algorithm::is_iequal>::type()))
     {
-      LoadValuePolicy::set(context_, AttributeTag(), value_tag);
+      ValueEventsPolicy::set(context_, AttributeTag(), value_tag);
       found_ = true;
     }
   }
@@ -76,11 +76,11 @@ struct value_parser<tag::type::literal_enumeration<LiteralsList>, SVGPP_TEMPLATE
     detail::literal_enumeration_type_visitor<
       dictionary_t, 
       AttributeTag, 
-      typename args_t::load_value_context::type, 
-      typename args_t::load_value_policy,
+      typename args_t::value_events_context::type, 
+      typename args_t::value_events_policy,
       ValueRange,
       boost::is_same<PropertySource, tag::source::attribute>::value
-    > fn(args_t::load_value_context::get(context), attribute_value);
+    > fn(args_t::value_events_context::get(context), attribute_value);
 
     boost::mpl::for_each<LiteralsList>(boost::ref(fn));
     if (fn.found())

@@ -47,7 +47,7 @@ struct value_parser<tag::attribute::points, SVGPP_TEMPLATE_ARGS_PASS>
       boost::begin(attribute_value), boost::end(attribute_value), 
       pair_grammar, separator_grammar, detail::character_encoding_namespace::space);
 
-    args_t::load_value_policy::set(args_t::load_value_context::get(context), tag,
+    args_t::value_events_policy::set(args_t::value_events_context::get(context), tag,
       boost::make_iterator_range(output_iterator_t(parse_list), output_iterator_t()));
     if (parse_list.error())
       return args_t::error_policy::parse_failed(args_t::error_policy_context::get(context), tag, attribute_value);

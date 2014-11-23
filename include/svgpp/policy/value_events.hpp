@@ -10,7 +10,7 @@
 #include <svgpp/definitions.hpp>
 #include <svgpp/traits/inherited_property.hpp>
 
-namespace svgpp { namespace policy { namespace load_value 
+namespace svgpp { namespace policy { namespace value_events 
 {
 
 template<class Context>

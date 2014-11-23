@@ -5,9 +5,9 @@ void load_filter(rapidxml_ns::xml_node<char> const * svg_element)
   Context context;
   document_traversal<
     viewport_policy<policy::viewport::raw>,
-    load_text_policy<LoadTextPolicy>,
-    load_transform_policy<LoadTransformPolicy>,
-    load_path_policy<LoadPathPolicy>,
+    text_events_policy<TextEventsPolicy>,
+    transform_events_policy<TransformEventsPolicy>,
+    path_events_policy<PathEventsPolicy>,
     ignored_elements<boost::mpl::set0<> >,
     ignored_attributes<boost::mpl::set<
       tag::attribute::cursor,

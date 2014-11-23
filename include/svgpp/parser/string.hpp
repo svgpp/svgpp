@@ -10,7 +10,7 @@
 #include <svgpp/definitions.hpp>
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
-#include <svgpp/policy/load_value.hpp>
+#include <svgpp/policy/value_events.hpp>
 
 namespace svgpp 
 {
@@ -23,7 +23,7 @@ struct value_parser<tag::type::string, SVGPP_TEMPLATE_ARGS_PASS>
                                     PropertySource)
   {
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
-    args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, attribute_value);
+    args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, attribute_value);
     return true;
   }
 };

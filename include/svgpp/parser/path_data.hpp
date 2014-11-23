@@ -31,25 +31,25 @@ struct value_parser<tag::type::path_data, SVGPP_TEMPLATE_ARGS_PASS>
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
 
     typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::load_path_policy>
+      boost::parameter::optional<tag::path_events_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef detail::bind_context_parameters_wrapper<Context, args2_t> context_t;
-    typedef typename detail::unwrap_context<context_t, tag::load_path_policy> load_path_context;
+    typedef typename detail::unwrap_context<context_t, tag::path_events_policy> path_events_context;
     typedef detail::path_adapter_if_needed<context_t> adapted_context_t; 
     typedef path_data_grammar<
       iterator_t, 
-      typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::load_path_policy>::type,
+      typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::path_events_policy>::type,
       coordinate_t,
-      typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::load_path_policy>::policy
+      typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::path_events_policy>::policy
     > path_data_grammar;
 
     context_t bound_context(context);
-    typename adapted_context_t::type path_adapter(load_path_context::get(bound_context));
+    typename adapted_context_t::type path_adapter(path_events_context::get(bound_context));
     typename adapted_context_t::adapted_context_holder adapted_path_context(adapted_context_t::adapt_context(bound_context, path_adapter));
     SVGPP_STATIC_IF_SAFE const path_data_grammar grammar;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (qi::phrase_parse(it, end, grammar(boost::phoenix::ref(
-        detail::unwrap_context<typename adapted_context_t::adapted_context, tag::load_path_policy>::get(
+        detail::unwrap_context<typename adapted_context_t::adapted_context, tag::path_events_policy>::get(
           adapted_path_context))), 
         typename path_data_grammar::skipper_type()) 
       && it == end)

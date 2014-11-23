@@ -23,7 +23,7 @@ public:
   template<class Context>
   bool on_exit_attributes(Context & context) const
   {
-    typedef typename detail::unwrap_context<Context, tag::load_viewport_policy> load_viewport;
+    typedef typename detail::unwrap_context<Context, tag::viewport_events_policy> viewport_events;
     typedef typename detail::unwrap_context<Context, tag::error_policy> error_policy;
     typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
     typedef typename length_policy_context::policy length_policy_t;
@@ -74,11 +74,11 @@ public:
         this->align_, this->meetOrSlice_);
       Coordinate dx = -ref_x * scale_x - translate_x;
       Coordinate dy = -ref_y * scale_y - translate_y;
-      load_viewport::policy::set_viewport(load_viewport::get(context), dx, dy, marker_width, marker_height);
-      load_viewport::policy::set_viewbox_transform(load_viewport::get(context), translate_x, translate_y, scale_x, scale_y, this->defer_);
+      viewport_events::policy::set_viewport(viewport_events::get(context), dx, dy, marker_width, marker_height);
+      viewport_events::policy::set_viewbox_transform(viewport_events::get(context), translate_x, translate_y, scale_x, scale_y, this->defer_);
     }
     else
-      load_viewport::policy::set_viewport(load_viewport::get(context), -ref_x, -ref_y, marker_width, marker_height);
+      viewport_events::policy::set_viewport(viewport_events::get(context), -ref_x, -ref_y, marker_width, marker_height);
     return true;
   }
 

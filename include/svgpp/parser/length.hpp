@@ -50,7 +50,7 @@ struct value_parser<tag::type::length, SVGPP_TEMPLATE_ARGS_PASS>
     if (boost::spirit::qi::parse(it, end, length_grammar(boost::phoenix::cref(length_factory)), value) 
       && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, value);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, value);
       return true;
     }
     else
@@ -115,7 +115,7 @@ protected:
       length_rule,
       separator_grammar);
 
-    args_t::load_value_policy::set(args_t::load_value_context::get(context), tag,
+    args_t::value_events_policy::set(args_t::value_events_context::get(context), tag,
       boost::make_iterator_range(output_iterator_t(parse_list), output_iterator_t()));
     if (parse_list.error())
     {

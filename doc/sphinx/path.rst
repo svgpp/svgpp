@@ -3,16 +3,16 @@
 Path
 ==========
 
-Path parsing is controlled by *Path Policy* и *Load Path Policy*. *Path Policy* задает настройки адаптера, который упрощает для 
+Path parsing is controlled by *Path Policy* и *Path Events Policy*. *Path Policy* задает настройки адаптера, который упрощает для 
 приложения работу с paths (например, адаптер может заменять относительные координаты на абсолютные, избавив программиста от
-этой работы). *Load Path Policy* определяет, как разобранные данные передаются объекту контекста.
+этой работы). *Path Events Policy* определяет, как разобранные данные передаются объекту контекста.
 
-Load Path Policy Concept
+Path Events Policy Concept
 --------------------------
 
 ::
 
-  struct load_path_concept
+  struct path_events_concept
   {
     typedef /*...*/ context_type;
 
@@ -50,8 +50,8 @@ Load Path Policy Concept
 В зависимости от *Path Policy*, не все перечисленные методы могут использоваться и, соответственно, не все может быть необходимо
 реализовывать.
 
-*Load Path Policy* по умолчанию (``policy::load_path::forward_to_method``) переадресует вызовы статических методов 
-к методам объекта ``context``::
+*Path Events Policy* по умолчанию (``policy::path_events::forward_to_method``) переадресует вызовы статических методов 
+методам объекта ``context``::
 
   struct forward_to_method
   {
@@ -66,7 +66,7 @@ Load Path Policy Concept
     /*...*/
   };
 
-:ref:`Named class template parameter <named-params>` for *Load Path Policy* is ``load_path_policy``.
+:ref:`Named class template parameter <named-params>` for *Path Events Policy* is ``path_events_policy``.
 
 Path Policy Concept
 ------------------------
@@ -89,7 +89,7 @@ Path Policy Concept
 
   ``absolute_coordinates_only = true`` 
     Относительные координаты заменяются на соответствующие им абсолютные. 
-    Соответственно, методы *Load Path Policy* с параметром ``tag::coordinate::relative`` не используются.
+    Соответственно, методы *Path Events Policy* с параметром ``tag::coordinate::relative`` не используются.
 
   ``no_ortho_line_to = true`` 
     Вместо ``path_line_to_ortho`` с одной координатой используется соответствующий 
@@ -107,16 +107,16 @@ Path Policy Concept
     ``path_quadratic_bezier_to`` заменяется на соответствующие вызовы ``path_cubic_bezier_to``.
 
   ``arc_as_cubic_bezier = true`` 
-    Уlliptical arc аппроксимируется кубической кривой Bézier. Вызов ``path_elliptical_arc_to`` 
+    Elliptical arc аппроксимируется кубической кривой Bézier. Вызов ``path_elliptical_arc_to`` 
     заменяется серией вызовов ``path_cubic_bezier_to``.
 
 :ref:`Named class template parameter <named-params>` for *Path Policy* is ``path_policy``.
 
 В файле ``svgpp/policy/path.hpp`` определены несколько predefined вариантов *Path Policy*. Используемый по умолчанию
-``policy::path::no_shorthands`` максимально сокращает интерфейс *Load Path Policy*, но не использует аппроксимацию.
-Для него *Load Path Policy* имеет вид::
+``policy::path::no_shorthands`` максимально сокращает интерфейс *Path Events Policy*, но не использует аппроксимацию.
+Для него *Path Events Policy* имеет вид::
 
-  struct load_path_no_shorthands_concept
+  struct path_events_no_shorthands_concept
   {
     typedef /*...*/ context_type;
 

@@ -159,9 +159,9 @@ Setting appropriate XML element type for RapidXML NS parser::
 Handling Transformation 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Just add ``tag::attribute::transform`` to ``processed_attributes`` list and ``set_transform_matrix`` to ``Context`` class::
+Just add ``tag::attribute::transform`` to ``processed_attributes`` list and ``transform_matrix`` to ``Context`` class::
 
-  void set_transform_matrix(const boost::array<double, 6> & matrix);
+  void transform_matrix(const boost::array<double, 6> & matrix);
 
 Passed ``matrix`` array ``[a b c d e f]`` correspond to this matrix:
 
@@ -201,7 +201,7 @@ describing shape::
     Transformable(Transformable const & parent);
     void on_exit_element() {}
 
-    void set_transform_matrix(const boost::array<double, 6> & matrix);
+    void transform_matrix(const boost::array<double, 6> & matrix);
   };
 
   class Shape: public Transformable

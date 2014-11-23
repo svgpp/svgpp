@@ -29,7 +29,7 @@ inline void CheckCall()
   ++i;
 }
 
-struct LoadValuePolicy
+struct ValueEventsPolicy
 {
   template<class AttributeTag, class T1>
   static void set(Context & context, AttributeTag tag, T1 const & value)
@@ -108,7 +108,7 @@ struct LoadValuePolicy
   }
 };
 
-struct LoadTextPolicy
+struct TextEventsPolicy
 {
   template<class T>
   static void set_text(Context & context, T const & value)
@@ -117,18 +117,18 @@ struct LoadTextPolicy
   }
 };
 
-struct LoadTransformPolicy
+struct TransformEventsPolicy
 {
   typedef Context context_type;
 
-  static void set_transform_matrix(Context & context, const boost::array<double, 6> & matrix)
+  static void transform_matrix(Context & context, const boost::array<double, 6> & matrix)
   {
     for(int i=0; i<6; ++i)
       UseValue(matrix[i]);
   }
 };
 
-struct LoadPathPolicy
+struct PathEventsPolicy
 {
   typedef Context context_type;
 
@@ -194,10 +194,10 @@ struct LoadPathPolicy
   }
 };
 
-namespace svgpp { namespace policy { namespace load_value 
+namespace svgpp { namespace policy { namespace value_events 
 {
   template<>
-  struct default_policy<Context>: LoadValuePolicy
+  struct default_policy<Context>: ValueEventsPolicy
   {};
 }}}
 

@@ -71,8 +71,8 @@ public:
     if (width == 0 || height == 0)
       return true;
 
-    typedef detail::unwrap_context<Context, tag::load_basic_shapes_policy> load_basic_shapes;
-    load_basic_shapes::policy::set_rect(load_basic_shapes::get(context), x, y, width, height, rx, ry);
+    typedef detail::unwrap_context<Context, tag::basic_shapes_events_policy> basic_shapes_events;
+    basic_shapes_events::policy::set_rect(basic_shapes_events::get(context), x, y, width, height, rx, ry);
     return true;
   }
 
@@ -90,23 +90,23 @@ private:
 
 namespace detail
 {
-  template<class LoadPolicy, class Context, class Coordinate>
+  template<class EventsPolicy, class Context, class Coordinate>
   inline void context_set_rounded_rect(Context & context, Coordinate x, Coordinate y, Coordinate width, Coordinate height,
     Coordinate rx, Coordinate ry)
   {
     rx = std::min(rx, width / 2);
     ry = std::min(ry, height / 2);
-    LoadPolicy::path_move_to(context, x + rx, y, tag::coordinate::absolute());
-    LoadPolicy::path_line_to_ortho(context, x+width-rx, true, tag::coordinate::absolute());
-    LoadPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x+width, y+ry, tag::coordinate::absolute()); 
-    LoadPolicy::path_line_to_ortho(context, y+height-ry, false, tag::coordinate::absolute());
-    LoadPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x+width-rx, y+height, tag::coordinate::absolute()); 
-    LoadPolicy::path_line_to_ortho(context, x+rx, true, tag::coordinate::absolute());
-    LoadPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x, y+height-ry, tag::coordinate::absolute()); 
-    LoadPolicy::path_line_to_ortho(context, y+ry, false, tag::coordinate::absolute());
-    LoadPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x+rx, y, tag::coordinate::absolute()); 
-    LoadPolicy::path_close_subpath(context);
-    LoadPolicy::path_exit(context);
+    EventsPolicy::path_move_to(context, x + rx, y, tag::coordinate::absolute());
+    EventsPolicy::path_line_to_ortho(context, x+width-rx, true, tag::coordinate::absolute());
+    EventsPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x+width, y+ry, tag::coordinate::absolute()); 
+    EventsPolicy::path_line_to_ortho(context, y+height-ry, false, tag::coordinate::absolute());
+    EventsPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x+width-rx, y+height, tag::coordinate::absolute()); 
+    EventsPolicy::path_line_to_ortho(context, x+rx, true, tag::coordinate::absolute());
+    EventsPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x, y+height-ry, tag::coordinate::absolute()); 
+    EventsPolicy::path_line_to_ortho(context, y+ry, false, tag::coordinate::absolute());
+    EventsPolicy::path_elliptical_arc_to(context, rx, ry, Coordinate(0), false, true, x+rx, y, tag::coordinate::absolute()); 
+    EventsPolicy::path_close_subpath(context);
+    EventsPolicy::path_exit(context);
   }
 }
 
@@ -116,21 +116,21 @@ struct rect_to_path_adapter
   static void set_rect(Context & context, Coordinate x, Coordinate y, Coordinate width, Coordinate height,
     Coordinate rx, Coordinate ry)
   {
-    typedef detail::unwrap_context<Context, tag::load_path_policy> load_path;
+    typedef detail::unwrap_context<Context, tag::path_events_policy> path_events;
 
-    typename load_path::type & path_context = load_path::get(context);
+    typename path_events::type & path_context = path_events::get(context);
     if (rx == 0 || ry == 0)
     {
-      load_path::policy::path_move_to(path_context, x, y, tag::coordinate::absolute());
-      load_path::policy::path_line_to_ortho(path_context, width,  true,  tag::coordinate::relative());
-      load_path::policy::path_line_to_ortho(path_context, height, false, tag::coordinate::relative());
-      load_path::policy::path_line_to_ortho(path_context, -width, true,  tag::coordinate::relative());
-      load_path::policy::path_close_subpath(path_context);
-      load_path::policy::path_exit(path_context);
+      path_events::policy::path_move_to(path_context, x, y, tag::coordinate::absolute());
+      path_events::policy::path_line_to_ortho(path_context, width,  true,  tag::coordinate::relative());
+      path_events::policy::path_line_to_ortho(path_context, height, false, tag::coordinate::relative());
+      path_events::policy::path_line_to_ortho(path_context, -width, true,  tag::coordinate::relative());
+      path_events::policy::path_close_subpath(path_context);
+      path_events::policy::path_exit(path_context);
     }
     else
     {
-      detail::context_set_rounded_rect<typename load_path::policy>(path_context, x, y, width, height, rx, ry);
+      detail::context_set_rounded_rect<typename path_events::policy>(path_context, x, y, width, height, rx, ry);
     }
   }
 };
@@ -143,13 +143,13 @@ struct rounded_rect_to_path_adapter
   {
     if (rx == 0 || ry == 0)
     {
-      typedef typename detail::unwrap_context<Context, tag::load_basic_shapes_policy> load_basic_shapes;
-      load_basic_shapes::policy::set_rect(load_basic_shapes::get(context), x, y, width, height);
+      typedef typename detail::unwrap_context<Context, tag::basic_shapes_events_policy> basic_shapes_events;
+      basic_shapes_events::policy::set_rect(basic_shapes_events::get(context), x, y, width, height);
     }
     else
     {
-      typedef typename detail::unwrap_context<Context, tag::load_path_policy> load_path;
-      detail::context_set_rounded_rect<load_path::policy>(load_path::get(context), x, y, width, height, rx, ry);
+      typedef typename detail::unwrap_context<Context, tag::path_events_policy> path_events;
+      detail::context_set_rounded_rect<path_events::policy>(path_events::get(context), x, y, width, height, rx, ry);
     }
   }
 };

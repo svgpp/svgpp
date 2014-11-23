@@ -135,16 +135,16 @@ template<class OriginalContext, class AdapterContext>
 const adapted_context_wrapper<
   OriginalContext, 
   AdapterContext, 
-  tag::load_value_policy, 
-  policy::load_value::default_policy<AdapterContext> 
+  tag::value_events_policy, 
+  policy::value_events::default_policy<AdapterContext> 
 > 
-adapt_context_load_value(OriginalContext & original_context, AdapterContext & adapter_context)
+adapt_context_value_events(OriginalContext & original_context, AdapterContext & adapter_context)
 {
   return adapted_context_wrapper<
     OriginalContext, 
     AdapterContext, 
-    tag::load_value_policy, 
-    policy::load_value::default_policy<AdapterContext> 
+    tag::value_events_policy, 
+    policy::value_events::default_policy<AdapterContext> 
   >(original_context, adapter_context);
 }
 

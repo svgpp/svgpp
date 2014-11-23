@@ -306,7 +306,7 @@ public:
     transform_ = agg::trans_affine_translation(0.5, 0.5);
   }
 
-  void set_transform_matrix(const boost::array<double, 6> & matrix)
+  void transform_matrix(const boost::array<double, 6> & matrix)
   {
     transform_.premultiply(agg::trans_affine(matrix.data()));
   }
@@ -646,8 +646,8 @@ typedef
     svgpp::processed_attributes<processed_attributes>,
     svgpp::path_policy<path_policy>,
     svgpp::document_traversal_control_policy<DocumentTraversalControl>,
-    svgpp::load_transform_policy<svgpp::policy::load_transform::forward_to_method<Transformable> >, // Same as default, but less instantiations
-    svgpp::load_path_policy<svgpp::policy::load_path::forward_to_method<Path> >, // Same as default, but less instantiations
+    svgpp::transform_events_policy<svgpp::policy::transform_events::forward_to_method<Transformable> >, // Same as default, but less instantiations
+    svgpp::path_events_policy<svgpp::policy::path_events::forward_to_method<Path> >, // Same as default, but less instantiations
     svgpp::error_policy<svgpp::policy::error::default_policy<Stylable> >, // Type of context isn't used
     svgpp::markers_policy<svgpp::policy::markers::calculate>,
     svgpp::attribute_traversal_policy<attribute_traversal>,

@@ -14,7 +14,7 @@
 #include <svgpp/template_parameters.hpp>
 #include <svgpp/detail/element_id_to_tag.hpp>
 #include <svgpp/policy/document_traversal_control.hpp>
-#include <svgpp/policy/load_text.hpp>
+#include <svgpp/policy/text_events.hpp>
 #include <svgpp/traits/child_element_types.hpp>
 #include <svgpp/traits/element_with_text_content.hpp>
 #include <boost/utility/enable_if.hpp>
@@ -58,7 +58,7 @@ namespace detail
 BOOST_PARAMETER_TEMPLATE_KEYWORD(context_factories)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(expected_elements)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(xml_element_policy)
-BOOST_PARAMETER_TEMPLATE_KEYWORD(load_text_policy)
+BOOST_PARAMETER_TEMPLATE_KEYWORD(text_events_policy)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(ignored_elements)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(processed_elements)
 BOOST_PARAMETER_TEMPLATE_KEYWORD(document_traversal_control_policy)
@@ -70,7 +70,7 @@ protected:
   typedef typename boost::parameter::parameters<
       boost::parameter::optional<tag::context_factories>
     , boost::parameter::optional<tag::xml_element_policy>
-    , boost::parameter::optional<tag::load_text_policy>
+    , boost::parameter::optional<tag::text_events_policy>
     , boost::parameter::optional<tag::error_policy>
     , boost::parameter::optional<tag::ignored_elements, boost::mpl::is_sequence<boost::mpl::_> >
     , boost::parameter::optional<tag::processed_elements, boost::mpl::is_sequence<boost::mpl::_> >
@@ -229,8 +229,8 @@ public:
   {
     typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
       policy::xml::element_iterator<XMLElement> >::type xml_policy_t;
-    typedef typename boost::parameter::value_type<args, tag::load_text_policy, 
-      policy::load_text::default_policy<Context> >::type load_text_policy;
+    typedef typename boost::parameter::value_type<args, tag::text_events_policy, 
+      policy::text_events::default_policy<Context> >::type text_events_policy;
     typedef typename boost::parameter::value_type<args, tag::document_traversal_control_policy, 
       policy::document_traversal_control::default_policy<Context> >::type traversal_control_policy;
     
@@ -238,7 +238,7 @@ public:
       !xml_policy_t::is_end(xml_child_element); xml_policy_t::advance_element_or_text(xml_child_element))
     {
       if (xml_policy_t::is_text(xml_child_element))
-        load_text_policy::set_text(context, xml_policy_t::get_text(xml_child_element));
+        text_events_policy::set_text(context, xml_policy_t::get_text(xml_child_element));
       else
       {
         if (!load_child_xml_element<ExpectedChildElements, is_element_processed, void>(

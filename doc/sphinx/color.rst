@@ -1,3 +1,5 @@
+.. _color-section:
+
 Color
 ========
 
@@ -34,6 +36,7 @@ Integer Color Factory
 -------------------------
 
 
+.. _icc-color-factory-section:
 
 ICC Color Factory Concept
 ---------------------------

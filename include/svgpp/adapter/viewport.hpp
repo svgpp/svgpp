@@ -81,7 +81,7 @@ namespace detail
     void set(tag::attribute::height,        Length const & val) { viewport_height_ = val; }
 
   protected:
-    template<class LoadPolicy, class Context, class LengthToUserCoordinatesConverter>
+    template<class EventsPolicy, class Context, class LengthToUserCoordinatesConverter>
     void get_viewport_size(Context & context, LengthToUserCoordinatesConverter const & converter,
       Coordinate & viewport_width, Coordinate & viewport_height) const
     {
@@ -105,7 +105,7 @@ namespace detail
   class calculate_viewport_adapter_size_holder<Length, Coordinate, tag::viewport_size_source::use_reference>
   {
   protected:
-    template<class LoadPolicy, class Context, class LengthToUserCoordinatesConverter>
+    template<class EventsPolicy, class Context, class LengthToUserCoordinatesConverter>
     void get_viewport_size(Context & context, LengthToUserCoordinatesConverter const & converter,
       Coordinate & viewport_width, Coordinate & viewport_height) const
     {
@@ -117,7 +117,7 @@ namespace detail
         converter.create_length(100, tag::length_units::percent(), tag::length_dimension::height()),
         tag::length_dimension::height());
 
-      LoadPolicy::get_reference_viewport_size(context, viewport_width, viewport_height);
+      EventsPolicy::get_reference_viewport_size(context, viewport_width, viewport_height);
     }
 
     struct some_dummy_type;
@@ -130,15 +130,15 @@ namespace detail
     : public calculate_viewport_adapter_size_holder<Length, Coordinate, tag::viewport_size_source::use_own>
   {
   protected:
-    template<class LoadPolicy, class Context, class LengthToUserCoordinatesConverter>
+    template<class EventsPolicy, class Context, class LengthToUserCoordinatesConverter>
     void get_viewport_size(Context & context, LengthToUserCoordinatesConverter const & converter,
       Coordinate & viewport_width, Coordinate & viewport_height) const
     {
       calculate_viewport_adapter_size_holder<Length, Coordinate, tag::viewport_size_source::use_own>
-        ::template get_viewport_size<LoadPolicy>(context, converter, viewport_width, viewport_height);
+        ::template get_viewport_size<EventsPolicy>(context, converter, viewport_width, viewport_height);
       // get_reference_viewport_size must only set values which was specified for referenced element
       // and keep values from current element if referenced element lacks them
-      LoadPolicy::get_reference_viewport_size(context, viewport_width, viewport_height);
+      EventsPolicy::get_reference_viewport_size(context, viewport_width, viewport_height);
     }
   };
 
@@ -255,7 +255,7 @@ public:
   template<class Context>
   bool on_exit_attributes(Context & context) const
   {
-    typedef detail::unwrap_context<Context, tag::load_viewport_policy> load_viewport;
+    typedef detail::unwrap_context<Context, tag::viewport_events_policy> viewport_events;
     typedef detail::unwrap_context<Context, tag::error_policy> error_policy;
     typedef detail::unwrap_context<Context, tag::length_policy> length_policy_context;
     typedef typename length_policy_context::policy length_policy_t;
@@ -271,7 +271,7 @@ public:
       tag::length_dimension::height());
 
     Coordinate viewport_width = 0, viewport_height = 0;
-    base_size_holder::template get_viewport_size<typename load_viewport::policy>(context, converter, viewport_width, viewport_height);
+    base_size_holder::template get_viewport_size<typename viewport_events::policy>(context, converter, viewport_width, viewport_height);
 
     if (viewport_width == 0 || viewport_height == 0)
       // TODO: disable rendering
@@ -282,7 +282,7 @@ public:
     if (viewport_height < 0)
       return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::height());
 
-    load_viewport::policy::set_viewport(load_viewport::get(context), viewport_x, viewport_y, viewport_width, viewport_height);
+    viewport_events::policy::set_viewport(viewport_events::get(context), viewport_x, viewport_y, viewport_width, viewport_height);
 
     if (this->viewbox_)
     {
@@ -298,7 +298,7 @@ public:
           viewport_width, viewport_height,
           translate_x, translate_y, scale_x, scale_y), 
         this->align_, this->meetOrSlice_);
-      load_viewport::policy::set_viewbox_transform(load_viewport::get(context), 
+      viewport_events::policy::set_viewbox_transform(viewport_events::get(context), 
         translate_x, translate_y, scale_x, scale_y, this->defer_);
     }
     return true;
@@ -319,29 +319,29 @@ struct viewport_transform_adapter
   static void set_viewbox_transform(Context & context, Coordinate translate_x, Coordinate translate_y, 
     Coordinate scale_x, Coordinate scale_y, bool)
   {
-    typedef detail::unwrap_context<Context, tag::load_transform_policy> load_transform;
+    typedef detail::unwrap_context<Context, tag::transform_events_policy> transform_events;
 
-    load_transform::policy::append_transform_translate(load_transform::get(context), translate_x, translate_y);
-    load_transform::policy::append_transform_scale(load_transform::get(context), scale_x, scale_y);
+    transform_events::policy::transform_translate(transform_events::get(context), translate_x, translate_y);
+    transform_events::policy::transform_scale(transform_events::get(context), scale_x, scale_y);
   }
 
   template<class Context, class Coordinate>
   static void set_viewport(Context & context, Coordinate viewport_x, Coordinate viewport_y, 
     Coordinate viewport_width, Coordinate viewport_height)
   {
-    typedef detail::unwrap_context<Context, tag::load_viewport_policy> load_viewport;
-    typedef detail::unwrap_context<Context, tag::load_transform_policy> load_transform;
+    typedef detail::unwrap_context<Context, tag::viewport_events_policy> viewport_events;
+    typedef detail::unwrap_context<Context, tag::transform_events_policy> transform_events;
 
-    load_viewport::policy::set_viewport(load_viewport::get(context), viewport_x, viewport_y, viewport_width, viewport_height);
-    load_transform::policy::append_transform_translate(load_transform::get(context), viewport_x, viewport_y);
+    viewport_events::policy::set_viewport(viewport_events::get(context), viewport_x, viewport_y, viewport_width, viewport_height);
+    transform_events::policy::transform_translate(transform_events::get(context), viewport_x, viewport_y);
   }
 
   template<class Context, class Coordinate>
   static void get_reference_viewport_size(Context & context, Coordinate & viewport_width, Coordinate & viewport_height) 
   {
-    typedef detail::unwrap_context<Context, tag::load_viewport_policy> load_viewport;
+    typedef detail::unwrap_context<Context, tag::viewport_events_policy> viewport_events;
 
-    load_viewport::policy::get_reference_viewport_size(load_viewport::get(context), viewport_width, viewport_height);
+    viewport_events::policy::get_reference_viewport_size(viewport_events::get(context), viewport_width, viewport_height);
   }
 };
 

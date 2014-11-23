@@ -35,11 +35,11 @@ struct value_parser<
     detail::literal_enumeration_type_visitor<
       dictionary, 
       AttributeTag, 
-      typename args_t::load_value_context::type, 
-      typename args_t::load_value_policy,
+      typename args_t::value_events_context::type, 
+      typename args_t::value_events_policy,
       AttributeValue,
       boost::is_same<PropertySource, tag::source::attribute>::value
-    > fn(args_t::load_value_context::get(context), attribute_value);
+    > fn(args_t::value_events_context::get(context), attribute_value);
     boost::mpl::for_each<tag_list>(boost::ref(fn));
     if (!fn.found())
       return inner_parser::parse(tag, context, attribute_value, property_source);

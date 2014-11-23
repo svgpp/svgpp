@@ -16,7 +16,7 @@
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
 #include <svgpp/detail/adapt_context.hpp>
-#include <svgpp/policy/load_transform.hpp>
+#include <svgpp/policy/transform_events.hpp>
 #include <svgpp/policy/transform.hpp>
 
 namespace svgpp
@@ -25,7 +25,7 @@ namespace svgpp
 namespace detail
 {
 
-template<class Context, class Number, class LoadPolicy>
+template<class Context, class Number, class EventsPolicy>
 class passthrough_transform_adapter
 {
 public:
@@ -42,56 +42,56 @@ public:
   {
   }
 
-  void append_transform_matrix(const boost::array<number_type, 6> & matrix)
+  void transform_matrix(const boost::array<number_type, 6> & matrix)
   {
-    LoadPolicy::append_transform_matrix(context, matrix);
+    EventsPolicy::transform_matrix(context, matrix);
   }
 
-  void append_transform_translate(number_type tx, number_type ty)
+  void transform_translate(number_type tx, number_type ty)
   {
-    LoadPolicy::append_transform_translate(context, tx, ty);
+    EventsPolicy::transform_translate(context, tx, ty);
   }
 
-  void append_transform_translate(number_type tx)
+  void transform_translate(number_type tx)
   {
-    LoadPolicy::append_transform_translate(context, tx);
+    EventsPolicy::transform_translate(context, tx);
   }
 
-  void append_transform_scale(number_type sx, number_type sy)
+  void transform_scale(number_type sx, number_type sy)
   {
-    LoadPolicy::append_transform_scale(context, sx, sy);
+    EventsPolicy::transform_scale(context, sx, sy);
   }
 
-  void append_transform_scale(number_type scale)
+  void transform_scale(number_type scale)
   {
-    LoadPolicy::append_transform_scale(context, scale);
+    EventsPolicy::transform_scale(context, scale);
   }
 
-  void append_transform_rotate(number_type angle)
+  void transform_rotate(number_type angle)
   {
-    LoadPolicy::append_transform_rotate(context, angle);
+    EventsPolicy::transform_rotate(context, angle);
   }
 
-  void append_transform_rotate(number_type angle, number_type cx, number_type cy)
+  void transform_rotate(number_type angle, number_type cx, number_type cy)
   {
-    LoadPolicy::append_transform_rotate(context, angle, cx, cy);
+    EventsPolicy::transform_rotate(context, angle, cx, cy);
   }
 
-  void append_transform_skew_x(number_type angle)
+  void transform_skew_x(number_type angle)
   {
-    LoadPolicy::append_transform_skew_x(context, angle);
+    EventsPolicy::transform_skew_x(context, angle);
   }
 
-  void append_transform_skew_y(number_type angle)
+  void transform_skew_y(number_type angle)
   {
-    LoadPolicy::append_transform_skew_y(context, angle);
+    EventsPolicy::transform_skew_y(context, angle);
   }
 
 protected:
   Context & context;
 };
 
-template<class Context, class Number, class LoadPolicy>
+template<class Context, class Number, class EventsPolicy>
 class join_transform_adapter: boost::noncopyable
 {
 public:
@@ -108,10 +108,10 @@ public:
 
   void on_exit_attribute() const
   {
-    LoadPolicy::set_transform_matrix(context, matrix);
+    EventsPolicy::transform_matrix(context, matrix);
   }
 
-  void append_transform_matrix(const boost::array<number_type, 6> &matrix2)
+  void transform_matrix(const boost::array<number_type, 6> &matrix2)
   {
     boost::array<number_type, 6> new_matrix;
     for(size_t i = 0; i < 2; ++i)
@@ -142,58 +142,58 @@ public:
   {
   }
 
-  void append_transform_translate(number_type tx, number_type ty)
+  void transform_translate(number_type tx, number_type ty)
   {
     const boost::array<number_type, 6> matrix = {{1, 0, 0, 1, tx, ty}};
-    this->append_transform_matrix(matrix);
+    this->transform_matrix(matrix);
   }
 
-  void append_transform_scale(number_type sx, number_type sy)
+  void transform_scale(number_type sx, number_type sy)
   {
     const boost::array<number_type, 6> matrix = {{sx, 0, 0, sy, 0, 0}};
-    this->append_transform_matrix(matrix);
+    this->transform_matrix(matrix);
   }
 
-  void append_transform_rotate(number_type angle)
+  void transform_rotate(number_type angle)
   {
     BOOST_STATIC_ASSERT(boost::is_floating_point<number_type>::value);
     number_type cosa = std::cos(angle * boost::math::constants::degree<number_type>()), 
       sina = std::sin(angle * boost::math::constants::degree<number_type>());
     const boost::array<number_type, 6> matrix = {{cosa, sina, -sina, cosa, 0, 0}};
-    this->append_transform_matrix(matrix);
+    this->transform_matrix(matrix);
   }
 
-  void append_transform_skew_x(number_type angle)
+  void transform_skew_x(number_type angle)
   {
     BOOST_STATIC_ASSERT(boost::is_floating_point<number_type>::value);
     const boost::array<number_type, 6> matrix = 
       {{1, 0, std::tan(angle * boost::math::constants::degree<number_type>()), 1, 0, 0}};
-    this->append_transform_matrix(matrix);
+    this->transform_matrix(matrix);
   }
 
-  void append_transform_skew_y(number_type angle)
+  void transform_skew_y(number_type angle)
   {
     BOOST_STATIC_ASSERT(boost::is_floating_point<number_type>::value);
     const boost::array<number_type, 6> matrix = 
       {{1, std::tan(angle * boost::math::constants::degree<number_type>()), 0, 1, 0, 0}};
-    this->append_transform_matrix(matrix);
+    this->transform_matrix(matrix);
   }
 };
 
-template<class Context, class TransformPolicy, class LoadPolicy, class Number>
+template<class Context, class TransformPolicy, class EventsPolicy, class Number>
 struct transform_adapter_base
 {
   typedef typename boost::mpl::if_c<
     TransformPolicy::join_transforms,
       matrix_only_transform_adapter<
-        join_transform_adapter<Context, Number, LoadPolicy> 
+        join_transform_adapter<Context, Number, EventsPolicy> 
       >,
       typename boost::mpl::if_c<
         TransformPolicy::only_matrix_transform,
           matrix_only_transform_adapter<
-            passthrough_transform_adapter<Context, Number, LoadPolicy> 
+            passthrough_transform_adapter<Context, Number, EventsPolicy> 
           >,
-          passthrough_transform_adapter<Context, Number, LoadPolicy>
+          passthrough_transform_adapter<Context, Number, EventsPolicy>
         >::type
       >::type type;
 };
@@ -203,7 +203,7 @@ struct transform_adapter_base
 template<
   class Context, 
   class TransformPolicy = typename policy::transform::by_context<Context>::type,
-  class LoadPolicy = policy::load_transform::default_policy<Context>,
+  class EventsPolicy = policy::transform_events::default_policy<Context>,
   class Number = double,
   class Enable = void>
 class transform_adapter;
@@ -211,18 +211,18 @@ class transform_adapter;
 template<
   class Context, 
   class TransformPolicy, 
-  class LoadPolicy,
+  class EventsPolicy,
   class Number
 >
-class transform_adapter<Context, TransformPolicy, LoadPolicy, Number,
+class transform_adapter<Context, TransformPolicy, EventsPolicy, Number,
   typename boost::enable_if_c<
        TransformPolicy::no_shorthands 
     || TransformPolicy::only_matrix_transform 
     || TransformPolicy::join_transforms>::type
 >:
-  public detail::transform_adapter_base<Context, TransformPolicy, LoadPolicy, Number>::type
+  public detail::transform_adapter_base<Context, TransformPolicy, EventsPolicy, Number>::type
 {
-  typedef typename detail::transform_adapter_base<Context, TransformPolicy, LoadPolicy, Number>::type base;
+  typedef typename detail::transform_adapter_base<Context, TransformPolicy, EventsPolicy, Number>::type base;
 
 public:
   typedef Number number_type;
@@ -231,43 +231,43 @@ public:
     : base(context)
   {}
 
-  using base::append_transform_translate;
-  using base::append_transform_scale;
-  using base::append_transform_rotate;
+  using base::transform_translate;
+  using base::transform_scale;
+  using base::transform_rotate;
 
-  void append_transform_translate(number_type tx)
+  void transform_translate(number_type tx)
   {
-    append_transform_translate(tx, 0);
+    transform_translate(tx, 0);
   }
 
-  void append_transform_scale(number_type scale)
+  void transform_scale(number_type scale)
   {
-    append_transform_scale(scale, scale);
+    transform_scale(scale, scale);
   }
 
-  void append_transform_rotate(number_type angle, number_type cx, number_type cy)
+  void transform_rotate(number_type angle, number_type cx, number_type cy)
   {
-    append_transform_translate(cx, cy);
-    append_transform_rotate(angle);
-    append_transform_translate(-cx, -cy);
+    transform_translate(cx, cy);
+    transform_rotate(angle);
+    transform_translate(-cx, -cy);
   }
 };
 
 template<
   class Context, 
   class TransformPolicy, 
-  class LoadPolicy,
+  class EventsPolicy,
   class Number
 >
-class transform_adapter<Context, TransformPolicy, LoadPolicy, Number,
+class transform_adapter<Context, TransformPolicy, EventsPolicy, Number,
   typename boost::disable_if_c<
        TransformPolicy::no_shorthands 
     || TransformPolicy::only_matrix_transform 
     || TransformPolicy::join_transforms>::type
 >:
-  public detail::transform_adapter_base<Context, TransformPolicy, LoadPolicy, Number>::type
+  public detail::transform_adapter_base<Context, TransformPolicy, EventsPolicy, Number>::type
 {
-  typedef typename detail::transform_adapter_base<Context, TransformPolicy, LoadPolicy, Number>::type base;
+  typedef typename detail::transform_adapter_base<Context, TransformPolicy, EventsPolicy, Number>::type base;
 
 public:
   transform_adapter(Context & context)
@@ -314,22 +314,22 @@ struct transform_adapter_if_needed<OriginalContext,
 {
 private:
   typedef typename detail::unwrap_context<OriginalContext, tag::transform_policy>::policy transform_policy;
-  typedef typename detail::unwrap_context<OriginalContext, tag::load_transform_policy>::policy original_load_transform_policy;
+  typedef typename detail::unwrap_context<OriginalContext, tag::transform_events_policy>::policy original_transform_events_policy;
   typedef typename detail::unwrap_context<OriginalContext, tag::number_type>::policy number_type;
 
 public:
   typedef transform_adapter<
-    typename original_load_transform_policy::context_type, 
+    typename original_transform_events_policy::context_type, 
     transform_policy, 
-    original_load_transform_policy,
+    original_transform_events_policy,
     number_type
   > type;
 
   typedef const adapted_context_wrapper<
     OriginalContext, 
     type, 
-    tag::load_transform_policy, 
-    policy::load_transform::forward_to_method<type>
+    tag::transform_events_policy, 
+    policy::transform_events::forward_to_method<type>
   > adapted_context;
 
   static adapted_context adapt_context(OriginalContext & context, type & adapter)

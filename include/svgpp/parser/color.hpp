@@ -37,7 +37,7 @@ struct value_parser<tag::type::color, SVGPP_TEMPLATE_ARGS_PASS>
     typename color_factory_t::color_type color;
     if (qi::parse(it, end, color_rule, color) && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, color);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, color);
       return true;
     }
     else
@@ -75,9 +75,9 @@ struct value_parser<tag::type::color_optional_icc_color, SVGPP_TEMPLATE_ARGS_PAS
     if (qi::parse(it, end, color_rule(boost::phoenix::ref(icc_color_factory)), color) && it == end)
     {
       if (color.template get<1>())
-        args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, color.template get<0>(), *color.template get<1>());
+        args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, color.template get<0>(), *color.template get<1>());
       else
-        args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, color.template get<0>());
+        args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, color.template get<0>());
       return true;
     }
     else

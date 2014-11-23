@@ -15,7 +15,7 @@
 #include <svgpp/policy/path.hpp>
 #include <svgpp/definitions.hpp>
 #include <svgpp/detail/adapt_context.hpp>
-#include <svgpp/policy/load_path.hpp>
+#include <svgpp/policy/path_events.hpp>
 #include <svgpp/utility/arc_endpoint_to_center.hpp>
 #include <svgpp/utility/arc_to_bezier.hpp>
 
@@ -111,7 +111,7 @@ template<
   class OutputContext, 
   class PathPolicy = typename policy::path::by_context<OutputContext>::type, 
   class Coordinate = typename number_type_by_context<OutputContext>::type,
-  class LoadPolicy = policy::load_path::default_policy<OutputContext> >
+  class EventsPolicy = policy::path_events::default_policy<OutputContext> >
 class path_adapter: 
   boost::noncopyable,
   private boost::mpl::if_c<PathPolicy::no_cubic_bezier_shorthand, 
@@ -164,7 +164,7 @@ public:
     coordinate_type x, 
     coordinate_type y, tag::coordinate::absolute tag)
   { 
-    LoadPolicy::path_move_to(output_context, x, y, tag);
+    EventsPolicy::path_move_to(output_context, x, y, tag);
     non_curve_command();
     current_x = x;
     current_y = y;
@@ -207,7 +207,7 @@ public:
   { 
     current_x = x;
     current_y = y;
-    LoadPolicy::path_line_to(output_context, x, y, tag);
+    EventsPolicy::path_line_to(output_context, x, y, tag);
     non_curve_command();
   }
 
@@ -219,7 +219,7 @@ public:
   {
     current_x += x;
     current_y += y;
-    LoadPolicy::path_line_to(output_context, current_x, current_y, tag::coordinate::absolute());
+    EventsPolicy::path_line_to(output_context, current_x, current_y, tag::coordinate::absolute());
     non_curve_command();
   }
 
@@ -231,7 +231,7 @@ public:
   {
     current_x += x;
     current_y += y;
-    LoadPolicy::path_line_to(output_context, x, y, tag);
+    EventsPolicy::path_line_to(output_context, x, y, tag);
     non_curve_command();
   }
 
@@ -268,7 +268,7 @@ public:
       current_x = coord;
     else
       current_y = coord;
-    LoadPolicy::path_line_to_ortho(output_context, coord, horizontal, tag);
+    EventsPolicy::path_line_to_ortho(output_context, coord, horizontal, tag);
     non_curve_command();
   }
 
@@ -281,7 +281,7 @@ public:
       current_x += coord;
     else
       current_y += coord;
-    LoadPolicy::path_line_to_ortho(output_context, 
+    EventsPolicy::path_line_to_ortho(output_context, 
       horizontal ? current_x : current_y, horizontal, tag::coordinate::absolute());
     non_curve_command();
   }
@@ -295,7 +295,7 @@ public:
       current_x += coord;
     else
       current_y += coord;
-    LoadPolicy::path_line_to_ortho(output_context, coord, horizontal, tag);
+    EventsPolicy::path_line_to_ortho(output_context, coord, horizontal, tag);
     non_curve_command();
   }
 
@@ -310,7 +310,7 @@ public:
   {
     current_x = x;
     current_y = y;
-    LoadPolicy::path_quadratic_bezier_to(output_context, x1, y1, x, y, tag);
+    EventsPolicy::path_quadratic_bezier_to(output_context, x1, y1, x, y, tag);
     set_quadratic_cp(x1, y1);
   }
 
@@ -329,7 +329,7 @@ public:
     y1 += current_y;
     current_x = x;
     current_y = y;
-    LoadPolicy::path_quadratic_bezier_to(output_context, x1, y1, x, y, tag::coordinate::absolute());
+    EventsPolicy::path_quadratic_bezier_to(output_context, x1, y1, x, y, tag::coordinate::absolute());
     set_quadratic_cp(x1, y1);
   }
 
@@ -342,7 +342,7 @@ public:
     coordinate_type y, 
     tag::coordinate::relative tag)
   {
-    LoadPolicy::path_quadratic_bezier_to(output_context, x1, y1, x, y, tag);
+    EventsPolicy::path_quadratic_bezier_to(output_context, x1, y1, x, y, tag);
     set_quadratic_cp(x1 + current_x, y1 + current_y);
     current_x += x;
     current_y += y;
@@ -392,7 +392,7 @@ public:
     coordinate_type y, 
     tag::coordinate::absolute tag)
   {
-    LoadPolicy::path_quadratic_bezier_to(output_context, x, y, tag);
+    EventsPolicy::path_quadratic_bezier_to(output_context, x, y, tag);
     if (this->last_quadratic_bezier_cp_valid)
       set_quadratic_cp(
         2 * current_x - this->last_quadratic_bezier_cp_x,
@@ -414,7 +414,7 @@ public:
   {
     x += current_x;
     y += current_y;
-    LoadPolicy::path_quadratic_bezier_to(output_context, x, y, tag::coordinate::absolute());
+    EventsPolicy::path_quadratic_bezier_to(output_context, x, y, tag::coordinate::absolute());
     if (this->last_quadratic_bezier_cp_valid)
       set_quadratic_cp(
         2 * current_x - this->last_quadratic_bezier_cp_x,
@@ -434,7 +434,7 @@ public:
     coordinate_type y, 
     tag::coordinate::relative tag)
   {
-    LoadPolicy::path_quadratic_bezier_to(output_context, x, y, tag);
+    EventsPolicy::path_quadratic_bezier_to(output_context, x, y, tag);
     if (this->last_quadratic_bezier_cp_valid)
       set_quadratic_cp(
       2 * current_x - this->last_quadratic_bezier_cp_x,
@@ -497,7 +497,7 @@ public:
   {
     current_x = x;
     current_y = y;
-    LoadPolicy::path_cubic_bezier_to(output_context, x1, y1, x2, y2, x, y, tag);
+    EventsPolicy::path_cubic_bezier_to(output_context, x1, y1, x2, y2, x, y, tag);
     set_cubic_cp(x2, y2);
   }
 
@@ -518,7 +518,7 @@ public:
     y1 += current_y;
     x2 += current_x;
     y2 += current_y;
-    LoadPolicy::path_cubic_bezier_to(output_context, x1, y1, x2, y2, x, y, tag::coordinate::absolute());
+    EventsPolicy::path_cubic_bezier_to(output_context, x1, y1, x2, y2, x, y, tag::coordinate::absolute());
     set_cubic_cp(x2, y2);
     current_x = x;
     current_y = y;
@@ -535,7 +535,7 @@ public:
     coordinate_type y, 
     tag::coordinate::relative tag)
   {
-    LoadPolicy::path_cubic_bezier_to(output_context, x1, y1, x2, y2, x, y, tag);
+    EventsPolicy::path_cubic_bezier_to(output_context, x1, y1, x2, y2, x, y, tag);
     set_cubic_cp(x2 + current_x, y2 + current_y);
     current_x += x;
     current_y += y;
@@ -587,7 +587,7 @@ public:
   {
     current_x = x;
     current_y = y;
-    LoadPolicy::path_cubic_bezier_to(output_context, x2, y2, x, y, tag);
+    EventsPolicy::path_cubic_bezier_to(output_context, x2, y2, x, y, tag);
     set_cubic_cp(x2, y2);
   }
 
@@ -600,7 +600,7 @@ public:
     coordinate_type y, 
     tag::coordinate::relative tag)
   {
-    LoadPolicy::path_cubic_bezier_to(output_context, x2, y2, x, y, tag);
+    EventsPolicy::path_cubic_bezier_to(output_context, x2, y2, x, y, tag);
     set_cubic_cp(current_x + x2, current_y + y2);
     current_x += x;
     current_y += y;
@@ -656,7 +656,7 @@ public:
     coordinate_type y, 
     tag::coordinate::absolute tag)
   { 
-    LoadPolicy::path_elliptical_arc_to(output_context, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, tag); 
+    EventsPolicy::path_elliptical_arc_to(output_context, rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, tag); 
     non_curve_command();
     current_x = x;
     current_y = y;
@@ -688,7 +688,7 @@ public:
     coordinate_type y, 
     tag::coordinate::relative tag)
   { 
-    LoadPolicy::path_elliptical_arc_to(output_context, 
+    EventsPolicy::path_elliptical_arc_to(output_context, 
       rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y, tag); 
     non_curve_command();
     current_x += x;
@@ -698,7 +698,7 @@ public:
   template<class Policy>
   void path_close_subpath()
   {
-    LoadPolicy::path_close_subpath(output_context);
+    EventsPolicy::path_close_subpath(output_context);
     non_curve_command();
     current_x = subpath_start_x;
     current_y = subpath_start_y;
@@ -707,7 +707,7 @@ public:
   template<class Policy>
   void path_exit()
   {
-    LoadPolicy::path_exit(output_context);
+    EventsPolicy::path_exit(output_context);
   }
 };
 
@@ -721,7 +721,7 @@ template<
   class PathPolicy, 
   class Coordinate
 >
-struct path_adapter_load_path_policy
+struct path_adapter_path_events_policy
 {
   typedef Adapter context_type;
 
@@ -834,21 +834,21 @@ struct path_adapter_if_needed<OriginalContext,
 {
 private:
   typedef typename detail::unwrap_context<OriginalContext, tag::path_policy>::policy path_policy;
-  typedef typename detail::unwrap_context<OriginalContext, tag::load_path_policy>::policy original_load_path_policy;
+  typedef typename detail::unwrap_context<OriginalContext, tag::path_events_policy>::policy original_path_events_policy;
   typedef typename detail::unwrap_context<OriginalContext, tag::number_type>::policy number_type;
 
 public:
   typedef path_adapter<
-    typename original_load_path_policy::context_type, 
+    typename original_path_events_policy::context_type, 
     path_policy, 
     number_type, 
-    original_load_path_policy
+    original_path_events_policy
   > type;
   typedef const adapted_context_wrapper<
     OriginalContext, 
     type, 
-    tag::load_path_policy, 
-    path_adapter_load_path_policy<type, path_policy, number_type>
+    tag::path_events_policy, 
+    path_adapter_path_events_policy<type, path_policy, number_type>
   > adapted_context;
   typedef adapted_context adapted_context_holder;
 

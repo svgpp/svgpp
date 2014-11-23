@@ -15,7 +15,7 @@
 #include <svgpp/parser/grammar/color_optional_icc_color.hpp>
 #include <svgpp/parser/grammar/iri.hpp>
 #include <svgpp/policy/iri.hpp>
-#include <svgpp/policy/load_value.hpp>
+#include <svgpp/policy/value_events.hpp>
 
 namespace svgpp
 {
@@ -73,45 +73,45 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (qi::parse(it, end, rule) && it == end)
     {
-      typedef typename args_t::load_value_policy load_value_policy_t;
-      typename args_t::load_value_context::type & load_value_context = args_t::load_value_context::get(context);
-      typedef typename detail::load_value_with_iri_policy<load_value_policy_t, iri_policy_t>::type 
-        load_value_with_iri_policy_t;
+      typedef typename args_t::value_events_policy value_events_policy_t;
+      typename args_t::value_events_context::type & value_events_context = args_t::value_events_context::get(context);
+      typedef typename detail::value_events_with_iri_policy<value_events_policy_t, iri_policy_t>::type 
+        value_events_with_iri_policy_t;
 
       switch (main_option)
       {
       case opt_none:
-        load_value_policy_t::set(load_value_context, tag, tag::value::none());
+        value_events_policy_t::set(value_events_context, tag, tag::value::none());
         break;
       case opt_currentColor:
-        load_value_policy_t::set(load_value_context, tag, tag::value::currentColor());
+        value_events_policy_t::set(value_events_context, tag, tag::value::currentColor());
         break;
       case opt_inherit:
-        load_value_policy_t::set(load_value_context, tag, tag::value::inherit());
+        value_events_policy_t::set(value_events_context, tag, tag::value::inherit());
         break;
       case opt_color:
         if (color.template get<1>())
-          load_value_policy_t::set(load_value_context, tag, color.template get<0>(), *color.template get<1>());
+          value_events_policy_t::set(value_events_context, tag, color.template get<0>(), *color.template get<1>());
         else
-          load_value_policy_t::set(load_value_context, tag, color.template get<0>());
+          value_events_policy_t::set(value_events_context, tag, color.template get<0>());
         break;
       case opt_funciri:
         switch (funciri_suboption)
         {
         case opt_not_set:
-          load_value_with_iri_policy_t::set(load_value_context, tag, iri);
+          value_events_with_iri_policy_t::set(value_events_context, tag, iri);
           break;
         case opt_none:
-          load_value_with_iri_policy_t::set(load_value_context, tag, iri, tag::value::none());
+          value_events_with_iri_policy_t::set(value_events_context, tag, iri, tag::value::none());
           break;
         case opt_currentColor:
-          load_value_with_iri_policy_t::set(load_value_context, tag, iri, tag::value::currentColor());
+          value_events_with_iri_policy_t::set(value_events_context, tag, iri, tag::value::currentColor());
           break;
         case opt_color:
           if (color.template get<1>())
-            load_value_with_iri_policy_t::set(load_value_context, tag, iri, color.template get<0>(), *color.template get<1>());
+            value_events_with_iri_policy_t::set(value_events_context, tag, iri, color.template get<0>(), *color.template get<1>());
           else
-            load_value_with_iri_policy_t::set(load_value_context, tag, iri, color.template get<0>());
+            value_events_with_iri_policy_t::set(value_events_context, tag, iri, color.template get<0>());
           break;
         }
         break;

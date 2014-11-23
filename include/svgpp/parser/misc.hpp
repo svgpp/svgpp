@@ -13,7 +13,7 @@
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
 #include <svgpp/parser/grammar/length.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
-#include <svgpp/policy/load_value.hpp>
+#include <svgpp/policy/value_events.hpp>
 #include <boost/mpl/pair.hpp>
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
@@ -37,7 +37,7 @@ struct value_parser<tag::type::integer, SVGPP_TEMPLATE_ARGS_PASS>
     int value;
     if (qi::parse(it, end, qi::int_, value) && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, value);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, value);
       return true;
     }
     else
@@ -72,7 +72,7 @@ struct value_parser<tag::attribute::viewBox, SVGPP_TEMPLATE_ARGS_PASS>
       number[ref(w) = _1] >> comma_wsp >>
       number[ref(h) = _1]) && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, x, y, w, h);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, x, y, w, h);
       return true;
     }
     else
@@ -106,7 +106,7 @@ struct value_parser<tag::attribute::bbox, SVGPP_TEMPLATE_ARGS_PASS>
       number[ref(hi_x) = _1] >> qi::lit(',') >>
       number[ref(hi_y) = _1]) && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, lo_x, lo_y, hi_x, hi_y);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, lo_x, lo_y, hi_x, hi_y);
       return true;
     }
     else
@@ -166,24 +166,24 @@ struct value_parser<tag::attribute::preserveAspectRatio, SVGPP_TEMPLATE_ARGS_PAS
   static void call_set_value(Context & context, bool defer, int align, bool slice)
   {
     typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::load_value_policy>
+      boost::parameter::optional<tag::value_events_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
-    typedef typename detail::unwrap_context<Context, tag::load_value_policy> unwrap_load_value_policy_t;
-    typedef typename unwrap_load_value_policy_t::template bind<args2_t>::type load_value_policy_t;
+    typedef typename detail::unwrap_context<Context, tag::value_events_policy> unwrap_value_events_policy_t;
+    typedef typename unwrap_value_events_policy_t::template bind<args2_t>::type value_events_policy_t;
     switch (align)
     {
     case 1:
-      load_value_policy_t::set(unwrap_load_value_policy_t::get(context), 
+      value_events_policy_t::set(unwrap_value_events_policy_t::get(context), 
         tag::attribute::preserveAspectRatio(), 
         defer, tag::value::none());
       break;
 #define SVGPP_CASE(value_tag) \
       if (slice) \
-        load_value_policy_t::set(unwrap_load_value_policy_t::get(context), \
+        value_events_policy_t::set(unwrap_value_events_policy_t::get(context), \
           tag::attribute::preserveAspectRatio(), \
           defer, tag::value::value_tag(), tag::value::slice()); \
       else \
-        load_value_policy_t::set(unwrap_load_value_policy_t::get(context), \
+        value_events_policy_t::set(unwrap_value_events_policy_t::get(context), \
           tag::attribute::preserveAspectRatio(), \
           defer, tag::value::value_tag(), tag::value::meet()); \
       break;
@@ -223,7 +223,7 @@ struct value_parser<boost::mpl::pair<tag::element::stop, tag::attribute::offset>
     bool percentage = false;
     if (qi::parse(it, end, number[ref(value) = _1] >> -(qi::lit('%')[ref(percentage) = true])) && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, percentage ? value / 100 : value);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, percentage ? value / 100 : value);
       return true;
     }
     else
@@ -294,7 +294,7 @@ struct value_parser<tag::attribute::clip, SVGPP_TEMPLATE_ARGS_PASS>
       >> *detail::character_encoding_namespace::space >> qi::lit(')');
     if (qi::parse(it, end, rule) && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, tag::value::rect(), rect[0], rect[1], rect[2], rect[3]);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, tag::value::rect(), rect[0], rect[1], rect[2], rect[3]);
       return true;
     }
     else
@@ -337,7 +337,7 @@ struct value_parser<tag::attribute::enable_background, SVGPP_TEMPLATE_ARGS_PASS>
     // TODO: check for negative values
     if (qi::parse(it, end, rule) && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, tag::value::new_(), x, y, width, height);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, tag::value::new_(), x, y, width, height);
       return true;
     }
     else
@@ -374,7 +374,7 @@ struct value_parser<tag::attribute::text_decoration, SVGPP_TEMPLATE_ARGS_PASS>
     const qi::rule<iterator_t> rule = value % +detail::character_encoding_namespace::space;
     if (qi::parse(it, end, rule) && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, 
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, 
         tag::value::underline(), underline,
         tag::value::overline(), overline,
         tag::value::line_through(), line_through,

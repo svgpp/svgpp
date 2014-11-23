@@ -20,9 +20,15 @@ Length Factory Concept
     typedef /* ... */ length_type;
     typedef /* ... */ number_type;
 
+    length_type create_length(number_type number, tag::length_units::em) const;
+    length_type create_length(number_type number, tag::length_units::ex) const;
     length_type create_length(number_type number, tag::length_units::px) const;
+    length_type create_length(number_type number, tag::length_units::in) const;
     length_type create_length(number_type number, tag::length_units::cm) const;
-    /* ... */
+    length_type create_length(number_type number, tag::length_units::mm) const;
+    length_type create_length(number_type number, tag::length_units::pt) const;
+    length_type create_length(number_type number, tag::length_units::pc) const;
+    length_type create_length(number_type number, tag::length_units::none) const;
 
     length_type create_length(number_type number, tag::length_units::percent, tag::length_dimension::width) const; 
     length_type create_length(number_type number, tag::length_units::percent, tag::length_dimension::height) const; 
@@ -32,7 +38,7 @@ Length Factory Concept
 ``create_length`` method receives number and length tag and returns corresponding length value of type ``length_type``.
 
 Lengths, заданные в percent units, могут `обрабатываться <http://www.w3.org/TR/SVG/coords.html#Units_viewport_percentage>`_ 
-по разному, в зависимости от того длине или ширине соответствует значение. Для этого ``create_length`` передается третий
+по разному, в зависимости от того, длине или ширине соответствует значение. Для этого ``create_length`` передается третий
 параметр - один из трёх тэгов ``tag::length_dimension::width``, ``tag::length_dimension::height`` 
 или ``tag::length_dimension::not_width_nor_height``.
 
@@ -57,7 +63,7 @@ Unitless Length Factory
   class unitless
   {
   public:
-    /* Skipping Length Factory methods */
+    /* Skipped Length Factory methods */
 
     template<class AbsoluteUnits>
     void set_absolute_units_coefficient(NumberType coeff, AbsoluteUnits);
@@ -90,7 +96,7 @@ Length Policy Concept
     static length_factory_type & length_factory(context_type & context);
   };
 
-  *Length Policy* по умолчанию возвращает константную ссылку на общий экземпляр ``factory::length::default_factory`` независимо от
+*Length Policy* по умолчанию возвращает константную ссылку на общий экземпляр ``factory::length::default_factory`` независимо от
 контекста.
 
 :ref:`Named class template parameter <named-params>` for *Length Policy* is ``length_policy``.

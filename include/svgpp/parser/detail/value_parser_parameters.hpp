@@ -26,8 +26,8 @@ private:
 public:
   typedef typename detail::unwrap_context<Context, tag::number_type>::template bind<args>::type number_type;
 
-  typedef typename detail::unwrap_context<Context, tag::load_value_policy> load_value_context;
-  typedef typename load_value_context::template bind<args>::type load_value_policy;
+  typedef typename detail::unwrap_context<Context, tag::value_events_policy> value_events_context;
+  typedef typename value_events_context::template bind<args>::type value_events_policy;
 
   typedef typename detail::unwrap_context<Context, tag::error_policy> error_policy_context;
   typedef typename error_policy_context::template bind<args>::type error_policy;

@@ -143,10 +143,10 @@ public:
   bool on_exit_attributes(Context & context)
   {
     typedef path_adapter_if_needed<Context> path_adapter_t; 
-    typename path_adapter_t::type path_adapter(detail::unwrap_context<Context, tag::load_path_policy>::get(context));
+    typename path_adapter_t::type path_adapter(detail::unwrap_context<Context, tag::path_events_policy>::get(context));
 
     return collector_.on_exit_attributes(
-      detail::adapt_context<tag::load_basic_shapes_policy, ShapeToPathAdapter>(context, path_adapter_t::adapt_context(context, path_adapter)));
+      detail::adapt_context<tag::basic_shapes_events_policy, ShapeToPathAdapter>(context, path_adapter_t::adapt_context(context, path_adapter)));
   }
 };
 
@@ -164,12 +164,12 @@ public:
   {
     typedef path_adapter_if_needed<Context> path_adapter_t; 
     typedef path_markers_adapter_if_needed<typename path_adapter_t::adapted_context> markers_adapter_t;
-    typename path_adapter_t::type path_adapter(detail::unwrap_context<Context, tag::load_path_policy>::get(context));
+    typename path_adapter_t::type path_adapter(detail::unwrap_context<Context, tag::path_events_policy>::get(context));
     typename path_adapter_t::adapted_context_holder adapted_path_context(path_adapter_t::adapt_context(context, path_adapter));
     typename markers_adapter_t::type markers_adapter(adapted_path_context);
 
     return collector_.on_exit_attributes(
-      detail::adapt_context<tag::load_basic_shapes_policy, ShapeToPathAdapter>(context, markers_adapter_t::adapt_context(adapted_path_context, markers_adapter)));
+      detail::adapt_context<tag::basic_shapes_events_policy, ShapeToPathAdapter>(context, markers_adapter_t::adapt_context(adapted_path_context, markers_adapter)));
   }
 };
 
@@ -189,10 +189,10 @@ public:
   {
     typedef transform_adapter_if_needed<Context> transform_adapter_t; 
     typename transform_adapter_t::type transform_adapter(
-      detail::unwrap_context<Context, tag::load_transform_policy>::get(context));
+      detail::unwrap_context<Context, tag::transform_events_policy>::get(context));
 
     if (!base_type::on_exit_attributes(
-      detail::adapt_context<tag::load_viewport_policy, viewport_transform_adapter>(
+      detail::adapt_context<tag::viewport_events_policy, viewport_transform_adapter>(
         context, 
         transform_adapter_t::adapt_context(context, transform_adapter))))
       return false;
@@ -217,9 +217,9 @@ public:
       boost::parameter::optional<tag::error_policy>,
       boost::parameter::optional<tag::length_policy>,
       boost::parameter::optional<tag::path_policy>,
-      boost::parameter::optional<tag::load_path_policy>,
+      boost::parameter::optional<tag::path_events_policy>,
       boost::parameter::optional<tag::markers_policy>,
-      boost::parameter::optional<tag::load_markers_policy>
+      boost::parameter::optional<tag::marker_events_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args_t;
 
     result_ = state.on_exit_attributes(detail::bind_context_parameters<args_t>(context_)) 
@@ -354,7 +354,7 @@ public:
       boost::is_same<typename traits::attribute_type<ElementTag, AttributeTag>::type, tag::type::string>::value
       || boost::mpl::has_key<passthrough_attributes, AttributeTag>::value>::type * = 0)
   {
-    policy::load_value::default_policy<Context>::set(context_, tag, attribute_value, property_source);
+    policy::value_events::default_policy<Context>::set(context_, tag, attribute_value, property_source);
     return true;
   }
 
@@ -423,7 +423,7 @@ public:
     return value_parser<typename traits::attribute_type<ElementTag, AttributeTag>::type, 
         SVGPP_TEMPLATE_ARGS_PASS>::parse(
       attribute_tag, 
-      detail::adapt_context_load_value(this->context_, boost::fusion::at_c<0>(states_)), // TODO: change 0 for some meaningful value
+      detail::adapt_context_value_events(this->context_, boost::fusion::at_c<0>(states_)), // TODO: change 0 for some meaningful value
       attribute_value, property_source);
   }
 
@@ -525,7 +525,7 @@ public:
     return value_parser<typename traits::attribute_type<tag::element::marker, AttributeTag>::type, 
         SVGPP_TEMPLATE_ARGS_PASS>::parse(
       attribute_tag, 
-      detail::adapt_context_load_value(this->context_, boost::fusion::at_c<0>(states_)), // TODO: change 0 for some meaningful value
+      detail::adapt_context_value_events(this->context_, boost::fusion::at_c<0>(states_)), // TODO: change 0 for some meaningful value
       attribute_value, property_source);
   }
 
@@ -632,7 +632,7 @@ public:
       >::parse(
         attribute_tag, 
         //boost::fusion::at_key<collect_attributes_adapter>(states_), 
-        detail::adapt_context_load_value(this->context_, boost::fusion::at_c<0>(states_).get_own_context()), // TODO: change 0 for some meaningful value
+        detail::adapt_context_value_events(this->context_, boost::fusion::at_c<0>(states_).get_own_context()), // TODO: change 0 for some meaningful value
         attribute_value, property_source);
   }
 };
@@ -719,23 +719,23 @@ public:
   {
     typedef typename boost::parameter::parameters<
       boost::parameter::optional<tag::path_policy>,
-      boost::parameter::optional<tag::load_path_policy>,
+      boost::parameter::optional<tag::path_events_policy>,
       boost::parameter::optional<tag::markers_policy>,
-      boost::parameter::optional<tag::load_markers_policy>
+      boost::parameter::optional<tag::marker_events_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef bind_context_parameters_wrapper<Context, args2_t> context_t;
     typedef path_adapter_if_needed<context_t> path_adapter_t; 
     typedef path_markers_adapter_if_needed<typename path_adapter_t::adapted_context> markers_adapter_t;
 
     context_t bound_context(this->context_);
-    typename path_adapter_t::type path_adapter(detail::unwrap_context<context_t, tag::load_path_policy>::get(bound_context));
+    typename path_adapter_t::type path_adapter(detail::unwrap_context<context_t, tag::path_events_policy>::get(bound_context));
     typename path_adapter_t::adapted_context_holder adapted_path_context(path_adapter_t::adapt_context(bound_context, path_adapter));
     typename markers_adapter_t::type markers_adapter(adapted_path_context);
 
     return value_parser<traits::attribute_type<tag::element::polyline, tag::attribute::points>::type, 
         SVGPP_TEMPLATE_ARGS_PASS>::parse(
       attribute_tag, 
-      adapt_context<tag::load_value_policy, list_of_points_to_path_adapter<ElementTag> >(adapted_path_context, markers_adapter_t::adapt_context(adapted_path_context, markers_adapter)),
+      adapt_context<tag::value_events_policy, list_of_points_to_path_adapter<ElementTag> >(adapted_path_context, markers_adapter_t::adapt_context(adapted_path_context, markers_adapter)),
       attribute_value, property_source);
   }
 };
@@ -785,16 +785,16 @@ public:
   {
     typedef typename boost::parameter::parameters<
       boost::parameter::optional<tag::path_policy>,
-      boost::parameter::optional<tag::load_path_policy>,
+      boost::parameter::optional<tag::path_events_policy>,
       boost::parameter::optional<tag::markers_policy>,
-      boost::parameter::optional<tag::load_markers_policy>
+      boost::parameter::optional<tag::marker_events_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef detail::bind_context_parameters_wrapper<Context, args2_t> context_t;
     typedef detail::path_adapter_if_needed<context_t> path_adapter_t; 
     typedef detail::path_markers_adapter_if_needed<typename path_adapter_t::adapted_context> markers_adapter_t;
 
     context_t bound_context(this->context_);
-    typename path_adapter_t::type path_adapter(detail::unwrap_context<context_t, tag::load_path_policy>::get(bound_context));
+    typename path_adapter_t::type path_adapter(detail::unwrap_context<context_t, tag::path_events_policy>::get(bound_context));
     typename path_adapter_t::adapted_context_holder adapted_path_context(path_adapter_t::adapt_context(bound_context, path_adapter));
     typename markers_adapter_t::type markers_adapter(adapted_path_context);
 

@@ -43,7 +43,7 @@ struct value_parser<tag::type::percentage_or_length, SVGPP_TEMPLATE_ARGS_PASS>
     if (boost::spirit::qi::parse(it, end, length_grammar(boost::phoenix::ref(length_factory)), value) 
       && it == end)
     {
-      args_t::load_value_policy::set(args_t::load_value_context::get(context), tag, value);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, value);
       return true;
     }
     else

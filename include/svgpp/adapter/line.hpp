@@ -43,8 +43,8 @@ public:
     if (y2_)
       y2 = converter.length_to_user_coordinate(*y2_, tag::length_dimension::height());
 
-    typedef detail::unwrap_context<Context, tag::load_basic_shapes_policy> load_basic_shapes;
-    load_basic_shapes::policy::set_line(load_basic_shapes::get(context), x1, y1, x2, y2);
+    typedef detail::unwrap_context<Context, tag::basic_shapes_events_policy> basic_shapes_events;
+    basic_shapes_events::policy::set_line(basic_shapes_events::get(context), x1, y1, x2, y2);
     return true;
   }
 
@@ -62,12 +62,12 @@ struct line_to_path_adapter
   template<class Context, class Coordinate>
   static void set_line(Context & context, Coordinate x1, Coordinate y1, Coordinate x2, Coordinate y2)
   {
-    typedef detail::unwrap_context<Context, tag::load_path_policy> load_path;
+    typedef detail::unwrap_context<Context, tag::path_events_policy> path_events;
 
-    typename load_path::type & path_context = load_path::get(context);
-    load_path::policy::path_move_to(path_context, x1, y1, tag::coordinate::absolute());
-    load_path::policy::path_line_to(path_context, x2, y2, tag::coordinate::absolute());
-    load_path::policy::path_exit(path_context);
+    typename path_events::type & path_context = path_events::get(context);
+    path_events::policy::path_move_to(path_context, x1, y1, tag::coordinate::absolute());
+    path_events::policy::path_line_to(path_context, x2, y2, tag::coordinate::absolute());
+    path_events::policy::path_exit(path_context);
   }
 };
 

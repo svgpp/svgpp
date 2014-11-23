@@ -14,11 +14,11 @@
 #include <svgpp/policy/icc_color.hpp>
 #include <svgpp/policy/iri.hpp>
 #include <svgpp/policy/length.hpp>
-#include <svgpp/policy/load_basic_shapes.hpp>
-#include <svgpp/policy/load_path.hpp>
-#include <svgpp/policy/load_transform.hpp>
-#include <svgpp/policy/load_value.hpp>
-#include <svgpp/policy/load_viewport.hpp>
+#include <svgpp/policy/basic_shapes_events.hpp>
+#include <svgpp/policy/path_events.hpp>
+#include <svgpp/policy/transform_events.hpp>
+#include <svgpp/policy/value_events.hpp>
+#include <svgpp/policy/viewport_events.hpp>
 #include <svgpp/policy/markers.hpp>
 #include <svgpp/policy/path.hpp>
 #include <svgpp/policy/transform.hpp>
@@ -49,21 +49,21 @@ struct get_default_policy<Context, tag::error_policy>
 };
 
 template<class Context>
-struct get_default_policy<Context, tag::load_value_policy>
+struct get_default_policy<Context, tag::value_events_policy>
 {
-  typedef policy::load_value::default_policy<Context> type;
+  typedef policy::value_events::default_policy<Context> type;
 };
 
 template<class Context>
-struct get_default_policy<Context, tag::load_viewport_policy>
+struct get_default_policy<Context, tag::viewport_events_policy>
 {
-  typedef policy::load_viewport::default_policy<Context> type;
+  typedef policy::viewport_events::default_policy<Context> type;
 };
 
 template<class Context>
-struct get_default_policy<Context, tag::load_basic_shapes_policy>
+struct get_default_policy<Context, tag::basic_shapes_events_policy>
 {
-  typedef policy::load_basic_shapes::default_policy<Context> type;
+  typedef policy::basic_shapes_events::default_policy<Context> type;
 };
 
 template<class Context>
@@ -79,9 +79,9 @@ struct get_default_policy<Context, tag::markers_policy>
 };
 
 template<class Context>
-struct get_default_policy<Context, tag::load_markers_policy>
+struct get_default_policy<Context, tag::marker_events_policy>
 {
-  typedef typename policy::load_markers::default_policy<Context> type;
+  typedef typename policy::marker_events::default_policy<Context> type;
 };
 
 template<class Context>
@@ -91,9 +91,9 @@ struct get_default_policy<Context, tag::path_policy>
 };
 
 template<class Context>
-struct get_default_policy<Context, tag::load_path_policy>
+struct get_default_policy<Context, tag::path_events_policy>
 {
-  typedef policy::load_path::default_policy<Context> type;
+  typedef policy::path_events::default_policy<Context> type;
 };
 
 template<class Context>
@@ -103,9 +103,9 @@ struct get_default_policy<Context, tag::transform_policy>
 };
 
 template<class Context>
-struct get_default_policy<Context, tag::load_transform_policy>
+struct get_default_policy<Context, tag::transform_events_policy>
 {
-  typedef policy::load_transform::default_policy<Context> type;
+  typedef policy::transform_events::default_policy<Context> type;
 };
 
 template<class Context>

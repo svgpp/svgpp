@@ -11,7 +11,7 @@
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix.hpp>
 #include <svgpp/parser/detail/common.hpp>
-#include <svgpp/policy/load_transform.hpp>
+#include <svgpp/policy/transform_events.hpp>
 
 namespace svgpp 
 { 
@@ -22,10 +22,10 @@ template <
   class Iterator, 
   class Context, 
   class Number = double, 
-  class LoadPolicy = policy::load_transform::default_policy<Context> >
+  class EventsPolicy = policy::transform_events::default_policy<Context> >
 class transform_grammar: public qi::grammar<Iterator, void (Context &), detail::character_encoding_namespace::space_type>
 {
-  typedef transform_grammar<Iterator, Context, Number, LoadPolicy> this_type;
+  typedef transform_grammar<Iterator, Context, Number, EventsPolicy> this_type;
 public:
   transform_grammar()
     : this_type::base_type(transforms)
@@ -121,47 +121,47 @@ private:
   static void call_matrix(Context & context, Number a, Number b, Number c, Number d, Number e, Number f)
   {
     boost::array<Number, 6> const matrix = {{a, b, c, d, e, f}};
-    LoadPolicy::append_transform_matrix(context, matrix);
+    EventsPolicy::transform_matrix(context, matrix);
   }
 
   static void call_translate(Context & context, Number tx, Number ty)
   {
-    LoadPolicy::append_transform_translate(context, tx, ty);
+    EventsPolicy::transform_translate(context, tx, ty);
   }
 
   static void call_translate(Context & context, Number tx)
   {
-    LoadPolicy::append_transform_translate(context, tx);
+    EventsPolicy::transform_translate(context, tx);
   }
 
   static void call_scale(Context & context, Number sx, Number sy)
   {
-    LoadPolicy::append_transform_scale(context, sx, sy);
+    EventsPolicy::transform_scale(context, sx, sy);
   }
 
   static void call_scale(Context & context, Number scale)
   {
-    LoadPolicy::append_transform_scale(context, scale);
+    EventsPolicy::transform_scale(context, scale);
   }
 
   static void call_rotate(Context & context, Number angle)
   {
-    LoadPolicy::append_transform_rotate(context, angle);
+    EventsPolicy::transform_rotate(context, angle);
   }
 
   static void call_rotate(Context & context, Number angle, Number cx, Number cy)
   {
-    LoadPolicy::append_transform_rotate(context, angle, cx, cy);
+    EventsPolicy::transform_rotate(context, angle, cx, cy);
   }
 
   static void call_skew_x(Context & context, Number angle)
   {
-    LoadPolicy::append_transform_skew_x(context, angle);
+    EventsPolicy::transform_skew_x(context, angle);
   }
 
   static void call_skew_y(Context & context, Number angle)
   {
-    LoadPolicy::append_transform_skew_y(context, angle);
+    EventsPolicy::transform_skew_y(context, angle);
   }
 };
 

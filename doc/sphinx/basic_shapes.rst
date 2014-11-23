@@ -19,16 +19,19 @@ Basic Shapes Policy Concept
     static const bool convert_only_rounded_rect_to_path = /* true or false */;
   };
 
-Тип ``convert_to_path`` - это `Associative Sequence`_ (например, ``boost::mpl::set``), содержащая тэги элементов
-SVG, которые будут преобразованы в **path**.  Генерируемые **path** используют настройки *Path Policy* и *Load Path Policy*.
+``convert_to_path``
+  `Associative Sequence`_ (например, ``boost::mpl::set``), содержащая тэги *basic shapes* элементов
+  SVG, которые будут преобразованы в **path**.  Генерируемые **path** используют настройки *Path Policy* и *Path Events Policy*.
 
-Тип ``collect_attributes`` - это `Associative Sequence`_, содержащая тэги элементов 
-**rect**, **circle**, **ellipse** и **line**, геометрия которых будет передана одним вызовом, вместо того, чтобы
-передавать значения атрибутов по отдельности.
+``collect_attributes``
+  `Associative Sequence`_, содержащая тэги элементов 
+  **rect**, **circle**, **ellipse** и **line**, геометрия которых будет передана одним вызовом, вместо того, чтобы
+  передавать значения атрибутов по отдельности.
 
-Если static member constant ``convert_only_rounded_rect_to_path`` имеет значение ``true`` и 
-``tag::element::rect`` входит в ``convert_to_path``, то преобразованы в **path* будут только rounded rectangles,
-а обычные прямоугольники будут обработаны как будто ``tag::element::rect`` входит в ``collect_attributes``.
+``convert_only_rounded_rect_to_path``
+  Если static member constant ``convert_only_rounded_rect_to_path`` имеет значение ``true`` и 
+  ``tag::element::rect`` входит в ``convert_to_path``, то преобразованы в **path** будут только rounded rectangles,
+  а обычные прямоугольники будут обработаны как будто ``tag::element::rect`` входит в ``collect_attributes``.
 
 В ``document_traversal`` должны быть разрешена обработка атрибутов, описывающих геометрию *basic shapes* (**x**, **y**,
 **r** и т. д.), т. е. они должны быть включены в ``processed_elements`` или не включены в ``ignored_elements``.
@@ -37,12 +40,12 @@ SVG, которые будут преобразованы в **path**.  Гене
 :ref:`Named class template parameter <named-params>` for *Basic Shapes Policy* is ``basic_shapes_policy``.
 
 
-Load Basic Shapes Policy Concept
+Basic Shapes Events Policy Concept
 -------------------------------------
 
 ::
 
-  struct load_basic_shapes_policy
+  struct basic_shapes_events_policy
   {
     static void set_rect(Context & context, Coordinate x, Coordinate y, Coordinate width, Coordinate height,
       Coordinate rx, Coordinate ry);
@@ -52,18 +55,18 @@ Load Basic Shapes Policy Concept
     static void set_ellipse(Context & context, Coordinate cx, Coordinate cy, Coordinate rx, Coordinate ry);
   };
 
-*Load Basic Shapes Policy* используется для тех элементов *basic shapes* (кроме **polyline** и **polygon**), 
+*Basic Shapes Events Policy* используется для тех элементов *basic shapes* (кроме **polyline** и **polygon**), 
 тэги которых перечислены в ``collect_attributes`` *Basic Shapes Policy*.
 
 Адаптеры, реализующие эти преобразования, используют метод ``length_to_user_coordinate`` *Length Factory*,
 чтобы получить численные *user coordinates* из *length*. Эти адаптеры передают значения по умолчанию при отсутствии
 атрибута и проверяют корректность значений атрибутов. Если значение disables rendering of the element
-в соответствии со стандартом SVG, то функция *Load Basic Shapes Policy* не вызывается, если атрибут
-имеет отрицательное значение ошибка для этого элемента в соответствии со стандартом, то вызывается 
+в соответствии со стандартом SVG, то функция *Basic Shapes Events Policy* не вызывается, а если 
+отрицательное значение недопустимо для этого атрибута в соответствии со стандартом, то вызывается 
 функция ``negative_value`` *Error Policy*.
 
-*Load Basic Shapes Policy* по умолчанию (``policy::load_basic_shapes::forward_to_method``) переадресует вызовы 
-статических методов к методам объекта ``context``::
+*Basic Shapes Events Policy* по умолчанию (``policy::basic_shapes_events::forward_to_method``) переадресует вызовы 
+статических методов методам объекта ``context``::
 
   struct forward_to_method
   {
@@ -77,4 +80,4 @@ Load Basic Shapes Policy Concept
     /*...*/
   };
 
-:ref:`Named class template parameter <named-params>` for *Load Basic Shapes Policy* is ``load_basic_shapes_policy``.
+:ref:`Named class template parameter <named-params>` for *Basic Shapes Events Policy* is ``basic_shapes_events_policy``.

@@ -47,7 +47,7 @@ public:
   {
   }
 
-  void set_transform_matrix(const boost::array<double, 6> & matrix)
+  void transform_matrix(const boost::array<double, 6> & matrix)
   {
     matrix_ = matrix;
   }

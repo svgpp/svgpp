@@ -7,7 +7,7 @@
 
 #pragma once
 
-namespace svgpp { namespace policy { namespace load_viewport
+namespace svgpp { namespace policy { namespace viewport_events
 {
 
 template<class Context>

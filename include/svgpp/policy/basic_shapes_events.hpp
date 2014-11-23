@@ -7,7 +7,7 @@
 
 #pragma once
 
-namespace svgpp { namespace policy { namespace load_basic_shapes
+namespace svgpp { namespace policy { namespace basic_shapes_events
 {
 
 template<class Context>

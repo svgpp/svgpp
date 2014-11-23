@@ -27,21 +27,21 @@ struct value_parser<tag::type::transform_list, SVGPP_TEMPLATE_ARGS_PASS>
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::load_transform_policy>
+      boost::parameter::optional<tag::transform_events_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef detail::bind_context_parameters_wrapper<Context, args2_t> context_t;
-    typedef typename detail::unwrap_context<context_t, tag::load_transform_policy> load_transform_context;
-    typedef typename load_transform_context::policy load_transform_policy;
+    typedef typename detail::unwrap_context<context_t, tag::transform_events_policy> transform_events_context;
+    typedef typename transform_events_context::policy transform_events_policy;
     typedef detail::transform_adapter_if_needed<context_t> adapted_context_t; 
     typedef transform_grammar<
       iterator_t, 
       typename adapted_context_t::type, 
       typename args_t::number_type,
-      typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::load_transform_policy>::policy
+      typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::transform_events_policy>::policy
     > transform_grammar_t;
 
     context_t bound_context(context);
-    typename adapted_context_t::type transform_adapter(load_transform_context::get(bound_context));
+    typename adapted_context_t::type transform_adapter(transform_events_context::get(bound_context));
     SVGPP_STATIC_IF_SAFE const transform_grammar_t grammar;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (boost::spirit::qi::phrase_parse(it, end, 
