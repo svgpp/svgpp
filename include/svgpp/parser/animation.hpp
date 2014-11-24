@@ -10,6 +10,7 @@
 #include <svgpp/config.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
+#include <svgpp/parser/grammar/clock_value.hpp>
 #include <boost/spirit/include/qi.hpp>
 
 namespace svgpp
@@ -28,16 +29,18 @@ struct value_parser<tag::type::clock_value, SVGPP_TEMPLATE_ARGS_PASS>
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
 
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
-    /*if (qi::parse(it, end, color_rule, color) && it == end)
+    // TODO: own type for clock_value
+    SVGPP_STATIC_IF_SAFE const clock_value_grammar<iterator_t, args_t::number_type> grammar;
+    args_t::number_type value;
+    if (qi::parse(it, end, grammar, color) && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, color);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, value);
       return true;
     }
     else
     {
       return args_t::error_policy::parse_failed(args_t::error_policy_context::get(context), tag, attribute_value);
-    }*/
-    // TODO:
+    }
     return true;
   }
 };
