@@ -32,7 +32,7 @@ struct value_parser<tag::type::clock_value, SVGPP_TEMPLATE_ARGS_PASS>
     // TODO: own type for clock_value
     SVGPP_STATIC_IF_SAFE const clock_value_grammar<iterator_t, args_t::number_type> grammar;
     args_t::number_type value;
-    if (qi::parse(it, end, grammar, color) && it == end)
+    if (qi::parse(it, end, grammar, value) && it == end)
     {
       args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, value);
       return true;

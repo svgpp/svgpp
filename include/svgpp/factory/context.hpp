@@ -59,6 +59,28 @@ private:
   type context_;
 };
 
+template<class ParentContext, class ChildContext>
+class on_stack_with_xml_element: boost::noncopyable
+{
+public:
+  typedef ChildContext type;
+
+  template<class XMLElement>
+  on_stack_with_xml_element(ParentContext & context, XMLElement const & xml_element)
+    : context_(context, xml_element)
+  {}
+
+  type & get() { return context_; }
+
+  void on_exit_element() 
+  {
+    context_.on_exit_element();
+  }
+
+private:
+  type context_;
+};
+
 template<
   class ParentContext, 
   class ElementTag, 

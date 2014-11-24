@@ -21,6 +21,6 @@ add_executable( SampleFilter
   sample_filter.cpp 
 )
 
-#add_executable( svg_dom_sample
-#  svg_dom_sample.cpp
-#)
+add_executable( SampleAnimation
+  sample_animation.cpp 
+)
