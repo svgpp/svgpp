@@ -24,3 +24,9 @@ add_executable( SampleFilter
 add_executable( SampleAnimation
   sample_animation.cpp 
 )
+
+if (MSVC)
+    set_target_properties(
+      SampleAnimation PROPERTIES COMPILE_FLAGS "/bigobj"
+    )
+  endif()

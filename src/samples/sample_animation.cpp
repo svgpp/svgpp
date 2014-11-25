@@ -23,7 +23,10 @@ struct BaseContext
   void set(tag::attribute::attributeType, tag::value::auto_) {}
 
   template<class StringRange>
-  void set(tag::attribute::attributeName, StringRange const &) {}
+  void set(tag::attribute::attributeName, StringRange const & range) 
+  {
+    std::string name(boost::begin(range), boost::end(range));
+  }
 
   void set(tag::attribute::dur, tag::value::media) {}
   void set(tag::attribute::dur, tag::value::indefinite) {}
