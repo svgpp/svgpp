@@ -30,8 +30,8 @@ struct value_parser<tag::type::clock_value, SVGPP_TEMPLATE_ARGS_PASS>
 
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     // TODO: own type for clock_value
-    SVGPP_STATIC_IF_SAFE const clock_value_grammar<iterator_t, args_t::number_type> grammar;
-    args_t::number_type value;
+    SVGPP_STATIC_IF_SAFE const clock_value_grammar<iterator_t, typename args_t::number_type> grammar;
+    typename args_t::number_type value;
     if (qi::parse(it, end, grammar, value) && it == end)
     {
       args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, value);
