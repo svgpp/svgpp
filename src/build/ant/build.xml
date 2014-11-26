@@ -1,0 +1,28 @@
+<project default="compile" basedir="..">
+
+  <property name="build_dir" location="_build"/>
+  <property name="configuration" value="Release"/>
+  <property name="src_dir" location=".."/>
+
+  <target name="init">
+    <mkdir dir="${build_dir}"/>
+  </target>
+
+  <target name="clean">
+    <delete dir="${build_dir}"/>
+  </target>
+  
+  <target name="run_cmake" depends="init">
+    <exec executable="cmake" dir="${build_dir}" failonerror="true">
+      <arg line="-DCMAKE_BUILD_TYPE=${configuration} ${src_dir}"/>
+    </exec>
+  </target>
+    
+  <target name="compile" depends="run_cmake">
+    <exec executable="make" dir="${build_dir}" failonerror="true"/>
+  </target>
+  
+  <target name="rebuild" depends="clean, compile">
+  </target>
+
+</project>
