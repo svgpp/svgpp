@@ -41,13 +41,11 @@
     </exec>
     <delete dir="${render_test_results_dir}"/>
     <mkdir dir="${render_test_results_dir}"/>
-    <apply executable="${build_dir}/bin/svgpp_agg_render" failonerror="false">
+    <apply executable="${build_dir}/bin/svgpp_agg_render" dest="${render_test_results_dir}" failonerror="false">
       <srcfile/>
       <targetfile/>
       <fileset dir="${render_test_source_dir}" includes="*.svg"/>
-      <mapper type="glob"
-        from="${render_test_source_dir}/*.svg"
-        to="${render_test_results_dir}/*.png"/>
+      <mapper type="glob" from="*.svg" to="*.png"/>
     </apply>
     <tar destfile="render-report.tar" basedir="${render_test_results_dir}"/>
   </target>
