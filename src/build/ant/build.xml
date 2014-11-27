@@ -3,6 +3,9 @@
   <property name="build_dir" location="_build"/>
   <property name="configuration" value="Release"/>
   <property name="src_dir" location=".."/>
+  <property name="unittest_results_dir" location="test-reports"/>
+  <property name="render_test_source_dir" location="../../test/SVGTestSuite/svg"/>
+  <property name="render_test_results_dir" location="render-reports"/>
 
   <target name="init">
     <mkdir dir="${build_dir}"/>
@@ -22,7 +25,38 @@
     <exec executable="make" dir="${build_dir}" failonerror="true"/>
   </target>
   
-  <target name="rebuild" depends="clean, compile">
+  <target name="unittests" depends="run_cmake">
+    <exec executable="make" dir="${build_dir}" failonerror="true">
+      <arg line="ParserGTest"/>
+    </exec>
+    <delete dir="${unittest_results_dir}"/>
+    <exec executable="${build_dir}/bin/ParserGTest" failonerror="true">
+      <env key="GTEST_OUTPUT" value="xml:${unittest_results_dir}/"/>
+    </exec>
+  </target>
+
+  <target name="create_images" depends="run_cmake">
+    <exec executable="make" dir="${build_dir}" failonerror="true">
+      <arg line="svgpp_agg_render"/>
+    </exec>
+    <delete dir="${render_test_results_dir}"/>
+    <mkdir dir="${render_test_results_dir}"/>
+    <for param="file">
+      <fileset dir="${render_test_source_dir}" includes="*.svg"/>
+      <sequential>
+        <var name="file.name" unset="true"/>
+        <basename property="file.name" file="@{file}" suffix=".svg"/>
+
+        <exec executable="${build_dir}/bin/svgpp_agg_render" failonerror="false">
+          <arg line="@{file}"/>
+          <arg line="${render_test_results_dir}/${file.name}.png"/>
+        </exec>
+      </sequential>
+    </for>
+    <tar destfile="render-reports.tar" basedir="${render_test_results_dir}"/>
+  </target>
+  
+  <target name="rebuild" depends="clean unittests create_images compile">
   </target>
 
 </project>
