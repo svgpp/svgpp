@@ -53,10 +53,10 @@
         </exec>
       </sequential>
     </for>
-    <tar destfile="render-reports.tar" basedir="${render_test_results_dir}"/>
+    <tar destfile="render-report.tar" basedir="${render_test_results_dir}"/>
   </target>
   
-  <target name="rebuild" depends="clean unittests create_images compile">
+  <target name="rebuild" depends="clean, unittests, create_images, compile">
   </target>
 
 </project>
