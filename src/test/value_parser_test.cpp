@@ -2,6 +2,7 @@
 
 #include <limits>
 #include <boost/optional.hpp>
+#include <boost/optional/optional_io.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <gtest/gtest.h>
 
