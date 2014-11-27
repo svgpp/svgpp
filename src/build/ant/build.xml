@@ -30,7 +30,7 @@
       <arg line="ParserGTest"/>
     </exec>
     <delete dir="${unittest_results_dir}"/>
-    <exec executable="${build_dir}/bin/ParserGTest" failonerror="true">
+    <exec executable="${build_dir}/bin/ParserGTest" failonerror="false">
       <env key="GTEST_OUTPUT" value="xml:${unittest_results_dir}/"/>
     </exec>
   </target>
