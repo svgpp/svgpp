@@ -41,18 +41,14 @@
     </exec>
     <delete dir="${render_test_results_dir}"/>
     <mkdir dir="${render_test_results_dir}"/>
-    <for param="file">
+    <apply executable="${build_dir}/bin/svgpp_agg_render" failonerror="false">
+      <srcfile/>
+      <targetfile/>
       <fileset dir="${render_test_source_dir}" includes="*.svg"/>
-      <sequential>
-        <var name="file.name" unset="true"/>
-        <basename property="file.name" file="@{file}" suffix=".svg"/>
-
-        <exec executable="${build_dir}/bin/svgpp_agg_render" failonerror="false">
-          <arg line="@{file}"/>
-          <arg line="${render_test_results_dir}/${file.name}.png"/>
-        </exec>
-      </sequential>
-    </for>
+      <mapper type="glob"
+        from="${render_test_source_dir}/*.svg"
+        to="${render_test_results_dir}/*.png"/>
+    </apply>
     <tar destfile="render-report.tar" basedir="${render_test_results_dir}"/>
   </target>
   
