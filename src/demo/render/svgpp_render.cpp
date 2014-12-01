@@ -13,6 +13,7 @@
 #include <boost/optional.hpp>
 #include <boost/scope_exit.hpp>
 
+#if defined(RENDERER_AGG)
 #include <agg_bounding_rect.h>
 #include <agg_rasterizer_scanline_aa.h>
 #include <agg_rendering_buffer.h>
@@ -30,8 +31,8 @@
 #include <agg_span_allocator.h>
 #include <agg_span_gradient.h>
 #include <agg_span_interpolator_linear.h>
-
 #include <stb/stb_image_write.h>
+#endif
 
 #include <map>
 #include <set>
@@ -51,9 +52,6 @@ class Switch;
 class ReferencedSymbolOrSvg;
 class Mask;
 class Marker;
-
-typedef agg::pixfmt_rgba32 pixfmt_t;
-typedef agg::renderer_base<pixfmt_t> renderer_base_t;
 
 struct Document
 {
@@ -251,6 +249,11 @@ typedef boost::mpl::fold<
   boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
 >::type processed_attributes;
 
+#if defined(RENDERER_AGG)
+typedef agg::pixfmt_rgba32 pixfmt_t;
+typedef agg::renderer_base<pixfmt_t> renderer_base_t;
+#endif
+
 class ImageBuffer: boost::noncopyable
 {
 public:
@@ -258,67 +261,94 @@ public:
   {}
 
   ImageBuffer(int width, int height)
-    : buffer_(width * height * pixfmt_t::pix_width)
-    , rbuf_(&buffer_[0], width, height, width * pixfmt_t::pix_width)
-    , pixfmt_(rbuf_)
   {
-    agg::renderer_base<pixfmt_t> renderer_base(pixfmt_);
-    renderer_base.clear(pixfmt_t::color_type(0, 0, 0, 0));
+    setSize(width, height, TransparentBlackColor());
   }
 
+#if defined(RENDERER_AGG)
+  int width() const { return pixfmt_.width(); }
+  int height() const { return pixfmt_.height(); }
   pixfmt_t & pixfmt() { return pixfmt_; }
+#elif defined(RENDERER_GDIPLUS)
+  int width() const { return bitmap_->GetWidth(); }
+  int height() const { return bitmap_->GetHeight(); }
+  Gdiplus::Bitmap & bitmap() { return *bitmap_; }
+#endif
 
   bool isSizeSet() const { return !buffer_.empty(); }
 
-  void setSize(int width, int height, pixfmt_t::color_type const & fill_color)
+  void setSize(int width, int height, color_t const & fill_color)
   {
     BOOST_ASSERT(buffer_.empty());
+#if defined(RENDERER_AGG)
     buffer_.resize(width * height * pixfmt_t::pix_width);
     rbuf_.attach(&buffer_[0], width, height, width * pixfmt_t::pix_width);
     pixfmt_.attach(rbuf_);
     agg::renderer_base<pixfmt_t> renderer_base(pixfmt_);
     renderer_base.clear(fill_color);
+#elif defined(RENDERER_GDIPLUS)
+    buffer_.resize(width * height * 4);
+    bitmap_.reset(new Gdiplus::Bitmap(width, height, width * 4, PixelFormat32bppARGB, &buffer_[0]));
+#endif
   }
 
   boost::gil::rgba8_view_t gilView()
   {
-    return boost::gil::interleaved_view(rbuf_.width(), rbuf_.height(), 
-      reinterpret_cast<boost::gil::rgba8_pixel_t*>(&buffer_[0]), rbuf_.stride());
+#if defined(RENDERER_AGG)
+    return boost::gil::interleaved_view(pixfmt_.width(), pixfmt_.height(), 
+      reinterpret_cast<boost::gil::rgba8_pixel_t*>(pixfmt_.row_ptr(0)), pixfmt_.stride());
+#elif defined(RENDERER_GDIPLUS)
+    return boost::gil::interleaved_view(bitmap_->GetWidth(), bitmap_->GetHeight(), 
+      reinterpret_cast<boost::gil::rgba8_pixel_t*>(&buffer_[0]), bitmap_->GetWidth() * 4);
+#endif
   }
 
 private:
+#if defined(RENDERER_AGG)
   std::vector<unsigned char> buffer_;
   agg::rendering_buffer rbuf_;
   pixfmt_t pixfmt_;
+#elif defined(RENDERER_GDIPLUS)
+  std::vector<BYTE> buffer_;
+  std::unique_ptr<Gdiplus::Bitmap> bitmap_;
+#endif
 };
-
-inline boost::gil::rgba8_view_t gilView(pixfmt_t & pixfmt)
-{
-  return boost::gil::interleaved_view(pixfmt.width(), pixfmt.height(), 
-    reinterpret_cast<boost::gil::rgba8_pixel_t*>(pixfmt.row_ptr(0)), pixfmt.stride());
-}
 
 class Transformable
 {
 public:
   Transformable()
   {
+#if defined(RENDERER_AGG)
     transform_ = agg::trans_affine_translation(0.5, 0.5);
+#endif
   }
+
+#if defined(RENDERER_GDIPLUS)
+  Transformable(Transformable const & src)
+  {
+    AssignMatrix(transform_, src.transform_);
+  }
+#endif
 
   void transform_matrix(const boost::array<double, 6> & matrix)
   {
-    transform_.premultiply(agg::trans_affine(matrix.data()));
+#if defined(RENDERER_AGG)
+    transform_.premultiply(transform_t(matrix.data()));
+#elif defined(RENDERER_GDIPLUS)
+    transform_.Multiply(
+      &Gdiplus::Matrix(matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]));
+#endif
   }
 
-  agg::trans_affine       & transform()       { return transform_; }
-  agg::trans_affine const & transform() const { return transform_; }
+  transform_t       & transform()       { return transform_; }
+  transform_t const & transform() const { return transform_; }
 
 private:
-  agg::trans_affine transform_;
+  transform_t transform_;
 };
 
-typedef boost::function<pixfmt_t&()> lazy_pixfmt_t;
+typedef boost::function<ImageBuffer&()> lazy_buffer_t;
 
 namespace
 {
@@ -348,12 +378,12 @@ public:
 
   Canvas(Document & document, ImageBuffer & image_buffer)
     : document_(document)
-    , parent_pixfmt_(boost::bind(&ImageBuffer::pixfmt, boost::ref(image_buffer)))
+    , parent_buffer_(boost::bind(&Canvas::getPassedImageBuffer, this))
     , image_buffer_(&image_buffer)
     , is_switch_child_(false)
   {
     if (image_buffer.isSizeSet())
-      clip_buffer_.reset(new ClipBuffer(image_buffer_->pixfmt().width(), image_buffer_->pixfmt().height()));
+      clip_buffer_.reset(new ClipBuffer(image_buffer_->width(), image_buffer_->height()));
   }
 
   Canvas(Canvas & parent)
@@ -361,7 +391,7 @@ public:
     , Stylable(parent)
     , document_(parent.document_)
     , image_buffer_(NULL)
-    , parent_pixfmt_(boost::bind(&Canvas::getPixfmt, &parent))
+    , parent_buffer_(boost::bind(&Canvas::getImageBuffer, &parent))
     , is_switch_child_(parent.isSwitchElement())
     , length_factory_(parent.length_factory_)
     , clip_buffer_(parent.clip_buffer_)
@@ -371,7 +401,7 @@ public:
     : Transformable(parent)
     , document_(parent.document_)
     , image_buffer_(NULL)
-    , parent_pixfmt_(boost::bind(&Canvas::getPixfmt, &parent))
+    , parent_buffer_(boost::bind(&Canvas::getImageBuffer, &parent))
     , is_switch_child_(false)
     , length_factory_(parent.length_factory_)
     , clip_buffer_(parent.clip_buffer_)
@@ -395,8 +425,8 @@ public:
 
     if (style().mask_fragment_)
     {
-      pixfmt_t & parent_pixfmt = parent_pixfmt_();
-      ImageBuffer mask_buffer(parent_pixfmt.width(), parent_pixfmt.height());
+      ImageBuffer & parent_buffer = parent_buffer_();
+      ImageBuffer mask_buffer(parent_buffer.width(), parent_buffer.height());
       loadMask(mask_buffer);
       typedef boost::gil::color_converted_view_type<
         boost::gil::rgba8_view_t, 
@@ -408,16 +438,35 @@ public:
 
       blend_image_with_mask(own_buffer_->gilView(), mask_view);
     }
-    agg::renderer_base<pixfmt_t> renderer_base(parent_pixfmt_());
+#if defined(RENDERER_AGG)
+    agg::renderer_base<pixfmt_t> renderer_base(parent_buffer_().pixfmt());
     renderer_base.blend_from(own_buffer_->pixfmt(), NULL, 0, 0, unsigned(style().opacity_ * 255));
+#elif defined(RENDERER_GDIPLUS)
+    {
+      Gdiplus::ColorMatrix color_matrix[] = { 
+        1.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, style().opacity_, 0.0f,
+        0.0f, 0.0f, 0.0f, 0.0f, 1.0f };
+      Gdiplus::ImageAttributes ImgAttr;
+      ImgAttr.SetColorMatrix(color_matrix, Gdiplus::ColorMatrixFlagsDefault, Gdiplus::ColorAdjustTypeBitmap);
+      Gdiplus::Graphics graphics(&parent_buffer_().bitmap());
+      graphics.DrawImage(
+        &own_buffer_->bitmap(), 
+        Gdiplus::Rect(0, 0, own_buffer_->width(),own_buffer_->height()), 
+        0, 0, own_buffer_->width(),own_buffer_->height(),
+        Gdiplus::UnitPixel, &ImgAttr);
+    }
+#endif
   }
 
   void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height)
   {
     if (image_buffer_) // If topmost SVG element
     {
-      image_buffer_->setSize(viewport_width + 1.0, viewport_height + 1.0, pixfmt_t::color_type(255, 255, 255, 0));
-      clip_buffer_.reset(new ClipBuffer(image_buffer_->pixfmt().width(), image_buffer_->pixfmt().height()));
+      image_buffer_->setSize(viewport_width + 1.0, viewport_height + 1.0, TransparentWhiteColor());
+      clip_buffer_.reset(new ClipBuffer(image_buffer_->width(), image_buffer_->height()));
     }
     else
     {
@@ -440,18 +489,19 @@ public:
 private:
   Document & document_;
   ImageBuffer * const image_buffer_; // Non-NULL only for topmost SVG element
-  lazy_pixfmt_t parent_pixfmt_;
+  lazy_buffer_t parent_buffer_;
   std::auto_ptr<ImageBuffer> own_buffer_;
   boost::shared_ptr<ClipBuffer> clip_buffer_;
   length_factory_t length_factory_;
 
   void loadMask(ImageBuffer &) const;
   void applyFilter();
+  ImageBuffer & getPassedImageBuffer() { return *image_buffer_; }
 
 protected:
-  pixfmt_t & getPixfmt()
+  ImageBuffer & getImageBuffer()
   {
-    pixfmt_t & parent_pixfmt = parent_pixfmt_();
+    ImageBuffer & parent_buffer = parent_buffer_();
 
     if (style().opacity_ < 0.999 
       || style().mask_fragment_ 
@@ -459,10 +509,10 @@ protected:
       || style().filter_)
     {
       if (!own_buffer_.get())
-        own_buffer_.reset(new ImageBuffer(parent_pixfmt.width(), parent_pixfmt.height()));
-      return own_buffer_->pixfmt();
+        own_buffer_.reset(new ImageBuffer(parent_buffer.width(), parent_buffer.height()));
+      return *own_buffer_;
     }
-    return parent_pixfmt;
+    return parent_buffer;
   }
 
   Document & document() const { return document_; }
@@ -491,7 +541,7 @@ void Canvas::applyFilter()
 
   Filters::Input in;
   in.sourceGraphic_ = IFilterViewPtr(new SimpleFilterView(own_buffer_->gilView()));
-  in.backgroundImage_ = IFilterViewPtr(new SimpleFilterView(gilView(parent_pixfmt_())));
+  in.backgroundImage_ = IFilterViewPtr(new SimpleFilterView(parent_buffer_().gilView()));
   IFilterViewPtr out = document_.filters_.get(*style().filter_, length_factory_, in);
   if (out)
     boost::gil::copy_pixels(out->view(), own_buffer_->gilView());
@@ -507,7 +557,11 @@ public:
   virtual bool isSwitchElement() const { return true; }
 };
 
-class Path: public Canvas
+class Path: 
+  public Canvas
+#if defined(RENDERER_GDIPLUS)
+, public PathStorage
+#endif
 {
 public:
   Path(Canvas & parent)
@@ -518,13 +572,13 @@ public:
   {
     if (style().display_)
     {
-      if (path_storage_.total_vertices() > 0)
-        drawPath();
+      drawPath();
       drawMarkers();
     }
     Canvas::on_exit_element();
   }
 
+#if defined(RENDERER_AGG)
   void path_move_to(double x, double y, svgpp::tag::coordinate::absolute const &)
   { 
     path_storage_.move_to(x, y);
@@ -559,6 +613,7 @@ public:
 
   void path_exit()
   {}
+#endif
 
   void marker(svgpp::marker_vertex v, double x, double y, double directionality, unsigned marker_index)
   {
@@ -584,7 +639,9 @@ public:
   }
 
 private:
+#if defined(RENDERER_AGG)
   agg::path_storage path_storage_;
+#endif
 
   struct MarkerPos
   {
@@ -610,12 +667,14 @@ private:
     }
   }
 
-  typedef boost::variant<svgpp::tag::value::none, agg::rgba8, Gradient> EffectivePaint;
+  typedef boost::variant<svgpp::tag::value::none, color_t, Gradient> EffectivePaint;
+#if defined(RENDERER_AGG)
   template<class VertexSource>
   void paintScanlines(EffectivePaint const & paint, double opacity, agg::rasterizer_scanline_aa<> & rasterizer,
     VertexSource & curved);
   template<class VertexSourceStroked, class VertexSourceCurved>
   void strokePath(EffectivePaint const & stroke, VertexSourceStroked & curved_stroked, VertexSourceCurved & curved);
+#endif
   void drawPath();
   void drawMarkers();
   void drawMarker(svg_string_t const & id, double x, double y, double dir);
@@ -670,7 +729,11 @@ public:
     if (XMLElement element = document().xml_document_.findElementById(fragment_id_))
     {
       Document::FollowRef lock(document(), element);
+#if defined(RENDERER_AGG)
       transform().premultiply(agg::trans_affine_translation(x_, y_));
+#elif defined(RENDERER_GDIPLUS)
+      transform().Translate(x_, y_);
+#endif
       document_traversal_main::load_referenced_element<
         svgpp::referencing_element<svgpp::tag::element::use_>,
         svgpp::expected_elements<svgpp::traits::reusable_elements>,
@@ -745,7 +808,11 @@ public:
     , maskUseObjectBoundingBox_(true)
     , maskContentUseObjectBoundingBox_(false)
   {
+#if defined(RENDERER_AGG)
     transform() = referenced.transform();
+#elif defined(RENDERER_GDIPLUS)
+    AssignMatrix(transform(), referenced.transform());
+#endif
   }
 
   void on_enter_element(svgpp::tag::element::mask) 
@@ -844,6 +911,7 @@ private:
   GradientBase::SpreadMethod const method_;
 };
 
+#if defined(RENDERER_AGG)
 struct ColorFunctionProfile
 {
   static const unsigned size_ = 256;
@@ -899,7 +967,7 @@ template<class GradientFunc, class VertexSource>
 void RenderScanlinesGradient(renderer_base_t & renderer, 
   agg::rasterizer_scanline_aa<> & rasterizer,
   GradientFunc const & gradient_func, GradientBase const & gradient_base, 
-  agg::trans_affine const & user_transform, agg::trans_affine const & gradient_geometry_transform,
+  transform_t const & user_transform, transform_t const & gradient_geometry_transform,
   double opacity,
   VertexSource & curved)
 {
@@ -912,10 +980,10 @@ void RenderScanlinesGradient(renderer_base_t & renderer,
     ColorFunctionProfile > span_gradient_t;
   typedef agg::span_allocator<typename span_gradient_t::color_type> span_allocator_t;
 
-  agg::trans_affine tr = agg::trans_affine_scaling(1.0/GradientScale) * gradient_geometry_transform;
+  transform_t tr = agg::trans_affine_scaling(1.0/GradientScale) * gradient_geometry_transform;
 
   if (gradient_base.matrix_)
-    tr *= agg::trans_affine(gradient_base.matrix_->data());
+    tr *= transform_t(gradient_base.matrix_->data());
 
   if (gradient_base.useObjectBoundingBox_)
   {
@@ -924,7 +992,7 @@ void RenderScanlinesGradient(renderer_base_t & renderer,
     if (min_x >= max_x || min_y >= max_y)
       return;
     else
-      tr *= agg::trans_affine(max_x - min_x, 0, 0, max_y - min_y, min_x, min_y);
+      tr *= transform_t(max_x - min_x, 0, 0, max_y - min_y, min_x, min_y);
   }
 
   tr *= user_transform;
@@ -942,7 +1010,7 @@ template<class VertexSource>
 void Path::paintScanlines(EffectivePaint const & paint, double opacity, agg::rasterizer_scanline_aa<> & rasterizer,
   VertexSource & curved) 
 {
-  renderer_base_t renderer_base(getPixfmt());
+  renderer_base_t renderer_base(getImageBuffer().pixfmt());
   // TODO: pass bounding box function instead of curved
   if (agg::rgba8 const * paintColor = boost::get<agg::rgba8>(&paint))
   {
@@ -962,7 +1030,7 @@ void Path::paintScanlines(EffectivePaint const & paint, double opacity, agg::ras
       agg::gradient_x gradient_func;
       double dx = linearGradient->x2_ - linearGradient->x1_;
       double dy = linearGradient->y2_ - linearGradient->y1_;
-      agg::trans_affine gradient_geometry_transform = 
+      transform_t gradient_geometry_transform = 
         agg::trans_affine_scaling(std::sqrt(dx * dx + dy * dy))
         * agg::trans_affine_rotation(std::atan2(dy, dx))
         * agg::trans_affine_translation(linearGradient->x1_, linearGradient->y1_);
@@ -975,7 +1043,7 @@ void Path::paintScanlines(EffectivePaint const & paint, double opacity, agg::ras
       agg::gradient_radial_focus gradient_func(GradientScale, 
         GradientScale*(radialGradient.fx_ - radialGradient.cx_)/radialGradient.r_, 
         GradientScale*(radialGradient.fy_ - radialGradient.cy_)/radialGradient.r_);
-      agg::trans_affine gradient_geometry_transform = 
+      transform_t gradient_geometry_transform = 
         agg::trans_affine_scaling(radialGradient.r_)
         * agg::trans_affine_translation(radialGradient.cx_, radialGradient.cy_);
       RenderScanlinesGradient(renderer_base, rasterizer,
@@ -1010,9 +1078,13 @@ void Path::strokePath(EffectivePaint const & stroke,
   rasterizer.add_path(curved_stroked_transformed);
   paintScanlines(stroke, style().stroke_opacity_, rasterizer, curved);
 }
+#endif
 
 void Path::drawPath()
 {
+#if defined(RENDERER_AGG)
+  if (path_storage_.total_vertices() == 0)
+    return;
   typedef agg::conv_curve<agg::path_storage> curved_t;
   typedef agg::conv_transform<curved_t> curved_transformed_t;
   typedef agg::conv_contour<curved_transformed_t> curved_transformed_contour_t;
@@ -1069,6 +1141,48 @@ void Path::drawPath()
       strokePath(stroke, curved_stroked, curved);
     }
   }
+#elif defined(RENDERER_GDIPLUS)
+  if (path_points_.empty())
+    return;
+  Gdiplus::Graphics graphics(&getImageBuffer().bitmap());
+  graphics.SetSmoothingMode(Gdiplus::SmoothingModeHighQuality);
+  graphics.SetTransform(&transform());
+  Gdiplus::GraphicsPath path(&path_points_[0], &path_types_[0], path_types_.size(), 
+    style().nonzero_fill_rule_ ? Gdiplus::FillModeWinding : Gdiplus::FillModeAlternate);
+  EffectivePaint fill = getEffectivePaint(style().fill_paint_);
+  if (boost::get<svgpp::tag::value::none>(&fill) == NULL)
+  {
+    if (color_t const * color = boost::get<color_t>(&fill))
+      graphics.FillPath(&Gdiplus::SolidBrush(Gdiplus::Color(style().fill_opacity_ * 255, 
+        color->GetR(), color->GetG(), color->GetB())), &path);
+    // TODO: gradient
+  }
+  EffectivePaint stroke = getEffectivePaint(style().stroke_paint_);
+  if (boost::get<svgpp::tag::value::none>(&stroke) == NULL)
+  {
+    if (color_t const * color = boost::get<color_t>(&stroke))
+    {
+      Gdiplus::Pen pen(Gdiplus::Color(style().stroke_opacity_ * 255, 
+          color->GetR(), color->GetG(), color->GetB()), 
+        style().stroke_width_);
+      pen.SetStartCap(style().line_cap_);
+      pen.SetEndCap(style().line_cap_);
+      pen.SetLineJoin(style().line_join_);
+      pen.SetMiterLimit(style().miterlimit_);
+      std::vector<double> const & dasharray = style().stroke_dasharray_;
+      if (!dasharray.empty())
+      {
+        std::vector<Gdiplus::REAL> dashes(dasharray.begin(), dasharray.end());
+        if (dasharray.size() % 2 == 1)
+          dashes.insert(dashes.end(), dasharray.begin(), dasharray.end());
+        pen.SetDashPattern(&dashes[0], dashes.size());
+        pen.SetDashOffset(style().stroke_dashoffset_);
+      }
+      graphics.DrawPath(&pen, &path);
+    }
+    // TODO: gradient
+  }
+#endif
 }
 
 class Marker: 
@@ -1084,7 +1198,11 @@ public:
     , orient_(0.0)
     , strokeWidthUnits_(true)
   {
+#if defined(RENDERER_AGG)
     transform().premultiply(agg::trans_affine_translation(x, y));
+#elif defined(RENDERER_GDIPLUS)
+    transform().Translate(x, y);
+#endif
   }
 
   void on_enter_element(svgpp::tag::element::marker) {}
@@ -1096,9 +1214,16 @@ public:
     if (strokeWidthUnits_)
     {
       length_factory() = length_factory_t();
+#if defined(RENDERER_AGG)
       transform().premultiply(agg::trans_affine_scaling(strokeWidth_));
     }
     transform().premultiply(agg::trans_affine_rotation(orient_));
+#elif defined(RENDERER_GDIPLUS)
+      transform().Scale(strokeWidth_, strokeWidth_);
+    }
+    transform().Rotate(orient_);
+#endif
+
     return true;
   }
 
@@ -1196,7 +1321,7 @@ Path::EffectivePaint Path::getEffectivePaint(Paint const & paint) const
     return svgpp::tag::value::none();
   if (boost::get<svgpp::tag::value::currentColor>(solidPaint))
     return style().color_;
-  return boost::get<agg::rgba8>(*solidPaint);
+  return boost::get<color_t>(*solidPaint);
 }
 
 void renderDocument(XMLDocument & xmlDocument, ImageBuffer & buffer)
@@ -1213,39 +1338,61 @@ int main(int argc, char * argv[])
     std::cout << "Usage: " << argv[0] << " <svg file name> [<output BMP file name>]\n";
     return 1;
   }
-  ImageBuffer buffer;
-  
-  XMLDocument xmlDoc;
-  try
-  {
-    xmlDoc.load(argv[1]);
-    renderDocument(xmlDoc, buffer);
-  }
-  catch(svgpp::exception_base const & e)
-  {
-    typedef boost::error_info<svgpp::tag::error_info::xml_element, XMLElement> element_error_info;
-    std::cerr << "Error reading file " << argv[1];
-#if defined(SVG_PARSER_RAPIDXML_NS)
-    if (XMLElement const * element = boost::get_error_info<element_error_info>(e))
-      std::cerr << " in element \"" << std::string((*element)->name(), (*element)->name() + (*element)->name_size())
-        << "\"";
-#endif
-    std::cerr << ": " << e.what() << "\n";
-  }
-  catch(std::exception const & e)
-  {
-    std::cerr << "Error reading file " << argv[1] << ": " << e.what() << "\n";
-    return 1;
-  }
 
-  // Saving output
-  if (1 != stbi_write_png(argc > 2 ? argv[2] : "svgpp.png", buffer.pixfmt().width(), buffer.pixfmt().height(), 
-    4, // RGBA
-    reinterpret_cast<const char *>(buffer.pixfmt().row_ptr(0)), 
-    buffer.pixfmt().stride()))
+#if defined(RENDERER_GDIPLUS)
+  Gdiplus::GdiplusStartupInput gdiplusStartupInput;
+  ULONG_PTR gdiplusToken;
+  Gdiplus::GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
+#endif
+
   {
-    std::cerr << "Error writing to PNG file\n";
-    return 1;
-  }
+    ImageBuffer buffer;
+  
+    XMLDocument xmlDoc;
+    try
+    {
+      xmlDoc.load(argv[1]);
+      renderDocument(xmlDoc, buffer);
+    }
+    catch(svgpp::exception_base const & e)
+    {
+      typedef boost::error_info<svgpp::tag::error_info::xml_element, XMLElement> element_error_info;
+      std::cerr << "Error reading file " << argv[1];
+#if defined(SVG_PARSER_RAPIDXML_NS)
+      if (XMLElement const * element = boost::get_error_info<element_error_info>(e))
+        std::cerr << " in element \"" << std::string((*element)->name(), (*element)->name() + (*element)->name_size())
+          << "\"";
+#endif
+      std::cerr << ": " << e.what() << "\n";
+    }
+    catch(std::exception const & e)
+    {
+      std::cerr << "Error reading file " << argv[1] << ": " << e.what() << "\n";
+      return 1;
+    }
+
+    // Saving output
+    const char * out_file_name = argc > 2 ? argv[2] : "svgpp.png";
+#if defined(RENDERER_AGG)
+    if (1 != stbi_write_png(out_file_name, buffer.pixfmt().width(), buffer.pixfmt().height(), 
+      4, // RGBA
+      reinterpret_cast<const char *>(buffer.pixfmt().row_ptr(0)), 
+      buffer.pixfmt().stride()))
+    {
+      std::cerr << "Error writing to PNG file\n";
+      return 1;
+    }
+#elif defined(RENDERER_GDIPLUS)
+    // {C2510B29-9212-4866-A354-6EA79710636C}
+    static const GUID PNGEncoderCLSID = 
+      { 0x557cf406, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e } };
+    buffer.bitmap().Save(std::wstring(out_file_name, out_file_name + strlen(out_file_name)).c_str(), 
+      &PNGEncoderCLSID, NULL);
+#endif
+}
+#if defined(RENDERER_GDIPLUS)
+  Gdiplus::GdiplusShutdown(gdiplusToken);
+#endif
+
   return 0;
 }

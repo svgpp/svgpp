@@ -22,6 +22,6 @@ if (MSVC)
   ) 
 endif()
 
-add_subdirectory(demo/agg)
+add_subdirectory(demo/render)
 add_subdirectory(samples)
 add_subdirectory(test)

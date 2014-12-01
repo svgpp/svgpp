@@ -2,10 +2,9 @@
 
 #include <boost/optional.hpp>
 #include <boost/variant.hpp>
-#include <agg_color_rgba.h>
 #include "common.hpp"
 
-typedef boost::variant<svgpp::tag::value::none, svgpp::tag::value::currentColor, agg::rgba8> SolidPaint;
+typedef boost::variant<svgpp::tag::value::none, svgpp::tag::value::currentColor, color_t> SolidPaint;
 struct IRIPaint
 {
   IRIPaint(svg_string_t const & fragment, boost::optional<SolidPaint> const & fallback = boost::optional<SolidPaint>())
@@ -26,21 +25,31 @@ struct InheritedStyle
     , stroke_opacity_(1.0)
     , fill_opacity_(1.0)
     , nonzero_fill_rule_(true)
+#if defined(RENDERER_AGG)
     , line_cap_(agg::butt_cap)
     , line_join_(agg::miter_join)
+#elif defined(RENDERER_GDIPLUS)
+    , line_cap_(Gdiplus::LineCapSquare)
+    , line_join_(Gdiplus::LineJoinMiterClipped)
+#endif
     , miterlimit_(4.0)
-    , fill_paint_(agg::rgba8(0, 0, 0))
+    , fill_paint_(BlackColor())
     , stroke_paint_(svgpp::tag::value::none())
     , stroke_dashoffset_(0)
   {}
 
-  agg::rgba8 color_;
+  color_t color_;
   Paint fill_paint_, stroke_paint_;
   double stroke_width_;
   double stroke_opacity_, fill_opacity_;
   bool nonzero_fill_rule_;
+#if defined(RENDERER_AGG)
   agg::line_cap_e line_cap_;
   agg::line_join_e line_join_;
+#elif defined(RENDERER_GDIPLUS)
+  Gdiplus::LineCap line_cap_;
+  Gdiplus::LineJoin line_join_;
+#endif 
   double miterlimit_;
   std::vector<double> stroke_dasharray_;
   double stroke_dashoffset_;
@@ -90,7 +99,7 @@ public:
   void set(AttributeTag, svgpp::tag::value::currentColor)
   { paint_ = svgpp::tag::value::currentColor(); }
 
-  void set(AttributeTag, agg::rgba8 color, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
+  void set(AttributeTag, color_t color, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
   { paint_ = color; }
 
   template<class IRI>
@@ -120,11 +129,11 @@ public:
   { paint_ = IRIPaint(svg_string_t(boost::begin(fragment), boost::end(fragment)), boost::optional<SolidPaint>(val)); }
 
   template<class IRI>
-  void set(AttributeTag tag, IRI const &, agg::rgba8 val, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
+  void set(AttributeTag tag, IRI const &, color_t val, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
   { set(tag, val); }
 
   template<class IRI>
-  void set(AttributeTag tag, svgpp::tag::iri_fragment, IRI const & fragment, agg::rgba8 val, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
+  void set(AttributeTag tag, svgpp::tag::iri_fragment, IRI const & fragment, color_t val, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
   { paint_ = IRIPaint(svg_string_t(boost::begin(fragment), boost::end(fragment)), boost::optional<SolidPaint>(val)); }
   
 protected:
@@ -163,7 +172,7 @@ public:
   void set(svgpp::tag::attribute::display, ValueTag)
   { style().display_ = true; }
 
-  void set(svgpp::tag::attribute::color, agg::rgba8 val)
+  void set(svgpp::tag::attribute::color, color_t val)
   { style().color_ = val; }
 
   void set(svgpp::tag::attribute::stroke_width, double val)
@@ -188,22 +197,46 @@ public:
   { style().nonzero_fill_rule_ = false; }
 
   void set(svgpp::tag::attribute::stroke_linecap, svgpp::tag::value::butt)
+#if defined(RENDERER_AGG)
   { style().line_cap_ = agg::butt_cap; }
+#elif defined(RENDERER_GDIPLUS)
+  { style().line_cap_ = Gdiplus::LineCapFlat; }
+#endif
 
   void set(svgpp::tag::attribute::stroke_linecap, svgpp::tag::value::round)
+#if defined(RENDERER_AGG)
   { style().line_cap_ = agg::round_cap; }
+#elif defined(RENDERER_GDIPLUS)
+  { style().line_cap_ = Gdiplus::LineCapRound; }
+#endif
 
   void set(svgpp::tag::attribute::stroke_linecap, svgpp::tag::value::square)
+#if defined(RENDERER_AGG)
   { style().line_cap_ = agg::square_cap; }
+#elif defined(RENDERER_GDIPLUS)
+  { style().line_cap_ = Gdiplus::LineCapSquare; }
+#endif
 
   void set(svgpp::tag::attribute::stroke_linejoin, svgpp::tag::value::miter)
+#if defined(RENDERER_AGG)
   { style().line_join_ = agg::miter_join; }
+#elif defined(RENDERER_GDIPLUS)
+  { style().line_join_ = Gdiplus::LineJoinMiterClipped; }
+#endif
 
   void set(svgpp::tag::attribute::stroke_linejoin, svgpp::tag::value::round)
+#if defined(RENDERER_AGG)
   { style().line_join_ = agg::round_join; }
+#elif defined(RENDERER_GDIPLUS)
+  { style().line_join_ = Gdiplus::LineJoinRound; }
+#endif
 
   void set(svgpp::tag::attribute::stroke_linejoin, svgpp::tag::value::bevel)
+#if defined(RENDERER_AGG)
   { style().line_join_ = agg::bevel_join; }
+#elif defined(RENDERER_GDIPLUS)
+  { style().line_join_ = Gdiplus::LineJoinBevel; }
+#endif
 
   void set(svgpp::tag::attribute::stroke_miterlimit, double val)
   { style().miterlimit_ = val; }

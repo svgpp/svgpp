@@ -18,9 +18,8 @@ set(AGG_SOURCES
 )
 source_group("AGG" FILES ${AGG_SOURCES})
 
-set(AGG_DEMO_SOURCES
-  ${AGG_SOURCES}
-  svgpp_agg_render.cpp 
+set(DEMO_SOURCES
+  svgpp_render.cpp 
   gradient.hpp
   gradient.cpp
   stylable.hpp
@@ -29,6 +28,11 @@ set(AGG_DEMO_SOURCES
   clip_buffer.cpp 
   filter.hpp
   filter.cpp
+)
+
+set(AGG_DEMO_SOURCES
+  ${AGG_SOURCES}
+  ${DEMO_SOURCES}
   stb.cpp
 )
 
@@ -39,7 +43,7 @@ add_executable(svgpp_agg_render
 )
 
 target_compile_definitions(svgpp_agg_render
-  PRIVATE SVG_PARSER_RAPIDXML_NS
+  PRIVATE SVG_PARSER_RAPIDXML_NS;RENDERER_AGG
 )
 
 if (WIN32)
@@ -50,7 +54,7 @@ if (WIN32)
   )
 
   target_compile_definitions(svgpp_agg_render_msxml
-    PRIVATE SVG_PARSER_MSXML
+    PRIVATE SVG_PARSER_MSXML;RENDERER_AGG
   )
 endif()
 
@@ -71,7 +75,7 @@ if (LIBXML2_FOUND)
   )
 
   target_compile_definitions(svgpp_agg_render_libxml
-    PRIVATE SVG_PARSER_LIBXML
+    PRIVATE SVG_PARSER_LIBXML;RENDERER_AGG
   )
 
   set_property(TARGET svgpp_agg_render_libxml
@@ -88,4 +92,24 @@ if (LIBXML2_FOUND)
   endif()
 endif()
 
-  
+if (WIN32)
+  add_executable(svgpp_gdip_render_msxml
+    ${DEMO_SOURCES}
+    parser_msxml.hpp
+    parser_msxml.cpp
+  )
+
+  target_link_libraries(svgpp_gdip_render_msxml
+    gdiplus.lib
+  )
+
+  target_compile_definitions(svgpp_gdip_render_msxml
+    PRIVATE SVG_PARSER_MSXML;RENDERER_GDIPLUS
+  )
+
+  if (MSVC)
+    set_target_properties(
+      svgpp_gdip_render_msxml PROPERTIES COMPILE_FLAGS "/bigobj"
+    )
+  endif()
+endif()

@@ -1,5 +1,7 @@
 #include "clip_buffer.hpp"
 
+#if defined(RENDERER_AGG)
+#include <agg_alpha_mask_u8.h>
 #include <agg_conv_curve.h>
 #include <agg_path_storage.h>
 #include <agg_pixfmt_amask_adaptor.h>
@@ -8,26 +10,38 @@
 #include <agg_renderer_base.h>
 #include <agg_renderer_scanline.h>
 #include <agg_scanline_p.h>
+#endif
+
 #include <svgpp/svgpp.hpp>
 
+#if defined(RENDERER_AGG)
 typedef agg::pixfmt_gray8 pixfmt_t;
 typedef agg::renderer_base<pixfmt_t> renderer_base_t;
+#endif
 
 ClipBuffer::ClipBuffer(int width, int height)
   : buffer_(width * height, 0xff)
-  , rbuf_(&buffer_[0], width, height, width)
+  , width_(width), height_(height)
 {}
 
 ClipBuffer::ClipBuffer(ClipBuffer const & src)
   : buffer_(src.buffer_)
-  , rbuf_(&buffer_[0], src.rbuf_.width(), src.rbuf_.height(), src.rbuf_.width())
+  , width_(src.width_), height_(src.height_)
 {}
 
-void ClipBuffer::intersectClipRect(agg::trans_affine const & transform, double x, double y, double width, double height)
+boost::gil::gray8c_view_t ClipBuffer::gilView() const
 {
+  return boost::gil::interleaved_view(width_, height_, 
+    reinterpret_cast<const boost::gil::gray8_pixel_t *>(&buffer_[0]), width_);
+}
+
+void ClipBuffer::intersectClipRect(transform_t const & transform, double x, double y, double width, double height)
+{
+#if defined(RENDERER_AGG)
   typedef agg::renderer_scanline_aa_solid<renderer_base_t> renderer_t;
 
-  pixfmt_t pixfmt(rbuf_);
+  agg::rendering_buffer rbuf(&buffer_[0], width, height, width);
+  pixfmt_t pixfmt(rbuf);
   renderer_base_t renderer_base(pixfmt);
   agg::scanline_p8 scanline;
 
@@ -55,6 +69,9 @@ void ClipBuffer::intersectClipRect(agg::trans_affine const & transform, double x
   rasterizer.close_polygon();
 
   agg::render_scanlines_aa_solid(rasterizer, scanline, renderer_base, agg::gray8(0));
+#elif defined(RENDERER_GDIPLUS)
+
+#endif
 }
 
 namespace 
@@ -87,23 +104,37 @@ namespace
   public:
     ElementBase(
       XMLDocument & xml_document,
+#if defined(RENDERER_AGG)
       agg::rendering_buffer & rbuf, 
-      agg::trans_affine const & transform
+#endif
+      transform_t const & transform
       )
       : xml_document_(xml_document)
+#if defined(RENDERER_AGG)
       , rbuf_(rbuf)
       , transform_(transform)
+#endif
       , display_(true)
       , nonzero_clip_rule_(true)
-    {}
+    {
+#if defined(RENDERER_GDIPLUS)
+      AssignMatrix(transform_, transform);
+#endif
+    }
 
     ElementBase(ElementBase const & parent)
       : xml_document_(parent.xml_document_)
+#if defined(RENDERER_AGG)
       , rbuf_(parent.rbuf_)
       , transform_(parent.transform_)
+#endif
       , display_(parent.display_)
       , nonzero_clip_rule_(parent.nonzero_clip_rule_)
-    {}
+    {
+#if defined(RENDERER_GDIPLUS)
+      AssignMatrix(transform_, parent.transform_);
+#endif
+    }
 
     void set(svgpp::tag::attribute::display, svgpp::tag::value::none)
     { display_ = false; }
@@ -123,24 +154,35 @@ namespace
 
     void transform_matrix(const boost::array<double, 6> & matrix)
     {
+#if defined(RENDERER_AGG)
       transform_.premultiply(agg::trans_affine(matrix.data()));
+#elif defined(RENDERER_GDIPLUS)
+      transform_.Multiply(&Gdiplus::Matrix(matrix[0], matrix[2], matrix[1], matrix[3], matrix[4], matrix[5]));
+#endif
     }
 
   protected:
     XMLDocument & xml_document_;
+#if defined(RENDERER_AGG)
     agg::rendering_buffer & rbuf_;
-    agg::trans_affine transform_;
+#endif
+    transform_t transform_;
     bool display_;
     bool nonzero_clip_rule_;
   };
 
-  class Path: public ElementBase
+  class Path: 
+    public ElementBase
+#if defined(RENDERER_GDIPLUS)
+  , public PathStorage
+#endif
   {
   public:
     Path(ElementBase const & parent)
       : ElementBase(parent)
     {}
 
+#if defined(RENDERER_AGG)
     void path_move_to(double x, double y, svgpp::tag::coordinate::absolute const &)
     { 
       path_storage_.move_to(x, y);
@@ -175,9 +217,11 @@ namespace
 
     void path_exit()
     {}
+#endif
 
     void on_exit_element()
     {
+#if defined(RENDERER_AGG)
       if (display_ && path_storage_.total_vertices() > 0)
       {
         typedef agg::conv_curve<agg::path_storage> curved_t;
@@ -196,10 +240,15 @@ namespace
         rasterizer.add_path(curved_transformed);
         agg::render_scanlines_aa_solid(rasterizer, scanline, renderer_base, agg::gray8(0));
       }
+#elif defined(RENDERER_GDIPLUS)
+
+#endif
     }
 
   private:
+#if defined(RENDERER_AGG)
     agg::path_storage path_storage_;
+#endif
   };
 
   class Use: public ElementBase
@@ -263,7 +312,11 @@ namespace
       return;
     if (XMLElement element = xml_document_.findElementById(fragment_id_))
     {
+#if defined(RENDERER_AGG)
       transform_.premultiply(agg::trans_affine_translation(x_, y_));
+#elif defined(RENDERER_GDIPLUS)
+      transform_.Translate(x_, y_);
+#endif
       document_traversal::load_referenced_element<
         svgpp::referencing_element<svgpp::tag::element::use_>,
         svgpp::expected_elements<svgpp::traits::shape_elements>
@@ -274,24 +327,27 @@ namespace
   }
 }
 
-void ClipBuffer::intersectClipPath(XMLDocument & xml_document, svg_string_t const & id, agg::trans_affine const & transform)
+void ClipBuffer::intersectClipPath(XMLDocument & xml_document, svg_string_t const & id, transform_t const & transform)
 {
   if (XMLElement node = xml_document.findElementById(id))
   {
     try
     {
-      std::vector<unsigned char> clip_path_buffer(rbuf_.width() * rbuf_.height(), 0xff);
-      agg::rendering_buffer clip_path_rbuf(&clip_path_buffer[0], rbuf_.width(), rbuf_.height(), rbuf_.width());
+#if defined(RENDERER_AGG)
+      std::vector<unsigned char> clip_path_buffer(width_ * height_, 0xff);
+      agg::rendering_buffer clip_path_rbuf(&clip_path_buffer[0], width_, height_, width_);
       ElementBase root_context(xml_document, clip_path_rbuf, transform);
       document_traversal::load_expected_element<void>(node, root_context, svgpp::tag::element::clipPath());
 
       typedef agg::amask_no_clip_gray8 alpha_mask_t;
       alpha_mask_t clip_path_alpha_mask(clip_path_rbuf);
-      pixfmt_t buffer_pixfmt(rbuf_);
+      agg::rendering_buffer rbuf(&buffer_[0], width_, height_, width_);
+      pixfmt_t buffer_pixfmt(rbuf);
       typedef agg::pixfmt_amask_adaptor<pixfmt_t, alpha_mask_t> pixfmt_masked_t;
       pixfmt_masked_t pixfmt_masked(buffer_pixfmt, clip_path_alpha_mask);
       agg::renderer_base<pixfmt_masked_t> renderer_base(pixfmt_masked);
       renderer_base.clear(agg::gray8(0));
+#endif
     } 
     catch (std::exception const & e)
     {

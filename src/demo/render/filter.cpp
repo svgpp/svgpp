@@ -104,7 +104,7 @@ struct feFlood: FilterElementBase
     , flood_opacity_(1.0)
   {}
 
-  agg::rgba8 flood_color_;
+  color_t flood_color_;
   double flood_opacity_;
 };
 
@@ -502,7 +502,7 @@ public:
   void set(svgpp::tag::attribute::flood_color, svgpp::tag::value::currentColor)
   {}
 
-  void set(svgpp::tag::attribute::flood_color, agg::rgba8 color, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
+  void set(svgpp::tag::attribute::flood_color, color_t color, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
   { data_.flood_color_ = color; }
 
   void set(svgpp::tag::attribute::flood_opacity, double val)

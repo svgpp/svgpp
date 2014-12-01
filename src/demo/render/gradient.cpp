@@ -44,7 +44,7 @@ public:
   void set(svgpp::tag::attribute::stop_color, svgpp::tag::value::currentColor)
   {} // TODO
 
-  void set(svgpp::tag::attribute::stop_color, agg::rgba8 color, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
+  void set(svgpp::tag::attribute::stop_color, color_t color, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
   { data_.color_ = color; }
 
   void set(svgpp::tag::attribute::stop_opacity, double val)
@@ -121,7 +121,11 @@ protected:
 
 void GradientStopContext::on_exit_element()
 {
+#if defined(RENDERER_AGG)
   data_.color_.opacity(opacity_);
+#elif defined(RENDERER_GDIPLUS)
+  data_.color_ = Gdiplus::Color(opacity_ * 255, data_.color_.GetR(), data_.color_.GetG(), data_.color_.GetB());
+#endif
   parent_.addStop(data_);
 }
 

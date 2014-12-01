@@ -5,17 +5,16 @@
 #include <boost/optional.hpp>
 #include <map>
 #include <vector>
-#include <agg_color_rgba.h>
 #include "common.hpp"
 
 struct GradientStop
 {
   GradientStop()
-    : color_(0, 0, 0)
+    : color_(BlackColor())
   {}
 
   double offset_;
-  agg::rgba8 color_;
+  color_t color_;
 };
 
 typedef std::vector<GradientStop> GradientStops;
