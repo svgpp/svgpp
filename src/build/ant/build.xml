@@ -30,7 +30,7 @@
       <arg line="ParserGTest"/>
     </exec>
     <delete dir="${unittest_results_dir}"/>
-    <exec executable="${build_dir}/bin/ParserGTest" failonerror="false">
+    <exec executable="${build_dir}/bin/ParserGTest" failonerror="false" taskname="unittests">
       <env key="GTEST_OUTPUT" value="xml:${unittest_results_dir}/"/>
     </exec>
   </target>
@@ -41,7 +41,7 @@
     </exec>
     <delete dir="${render_test_results_dir}"/>
     <mkdir dir="${render_test_results_dir}"/>
-    <apply executable="${build_dir}/bin/svgpp_agg_render" dest="${render_test_results_dir}" failonerror="false">
+    <apply executable="${build_dir}/bin/svgpp_agg_render" dest="${render_test_results_dir}" failonerror="false" force="true" taskname="render">
       <srcfile/>
       <targetfile/>
       <fileset dir="${render_test_source_dir}" includes="*.svg"/>
