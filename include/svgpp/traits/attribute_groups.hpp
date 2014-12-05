@@ -16,7 +16,7 @@ namespace svgpp { namespace traits {
 
 template<class AttributeTag>
 struct is_presentation_attribute: 
-  boost::mpl::bool_<AttributeTag::attribute_id <= svgpp::detail::attribute_id::last_styling_attribute> {};
+  boost::mpl::bool_<AttributeTag::attribute_id <= ::svgpp::detail::last_styling_attribute> {};
 
 typedef boost::mpl::set8<
   tag::attribute::font_family, 

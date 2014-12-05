@@ -65,7 +65,7 @@ namespace
   {
     typedef boost::mpl::always<
       boost::mpl::joint_view<
-          typename boost::mpl::joint_view<
+          boost::mpl::joint_view<
             svgpp::traits::viewport_attributes, 
             boost::mpl::single_view<svgpp::notify_context<after_viewport_attributes_tag> > 
           >::type,
