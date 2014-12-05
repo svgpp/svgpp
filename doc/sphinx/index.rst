@@ -22,6 +22,9 @@ Contents:
    color
    error
    iri
+   markers
+   viewport
+   text
    value_parser
 
 Indices and tables

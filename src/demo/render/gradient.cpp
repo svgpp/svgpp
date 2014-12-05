@@ -210,19 +210,19 @@ struct gradient_context_factories
 template<>
 struct gradient_context_factories::apply<GradientContext, svgpp::tag::element::linearGradient>
 {
-  typedef svgpp::factory::context::on_stack<GradientContext, LinearGradientContext> type;
+  typedef svgpp::factory::context::on_stack<LinearGradientContext> type;
 };
 
 template<>
 struct gradient_context_factories::apply<GradientContext, svgpp::tag::element::radialGradient>
 {
-  typedef svgpp::factory::context::on_stack<GradientContext, RadialGradientContext> type;
+  typedef svgpp::factory::context::on_stack<RadialGradientContext> type;
 };
 
 template<class ParentContext>
 struct gradient_context_factories::apply<ParentContext, svgpp::tag::element::stop>
 {
-  typedef svgpp::factory::context::on_stack<ParentContext, GradientStopContext> type;
+  typedef svgpp::factory::context::on_stack<GradientStopContext> type;
 };
 
 }

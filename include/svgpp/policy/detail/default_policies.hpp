@@ -20,6 +20,7 @@
 #include <svgpp/policy/value_events.hpp>
 #include <svgpp/policy/viewport_events.hpp>
 #include <svgpp/policy/markers.hpp>
+#include <svgpp/policy/marker_events.hpp>
 #include <svgpp/policy/path.hpp>
 #include <svgpp/policy/transform.hpp>
 #include <svgpp/template_parameters.hpp>

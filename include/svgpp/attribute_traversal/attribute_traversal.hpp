@@ -7,8 +7,8 @@
 
 #pragma once
 
-#include <svgpp/attribute_traversal_prioritized.hpp>
-#include <svgpp/attribute_traversal_sequential.hpp>
+#include <svgpp/attribute_traversal/prioritized.hpp>
+#include <svgpp/attribute_traversal/sequential.hpp>
 #include <svgpp/policy/attribute_traversal.hpp>
 #include <boost/mpl/empty.hpp>
 

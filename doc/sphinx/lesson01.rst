@@ -219,7 +219,7 @@ describing shape::
     struct apply
     {
       // Default definition handles "svg" and "g" elements
-      typedef factory::context::on_stack<Transformable, Transformable> type;
+      typedef factory::context::on_stack<Transformable> type;
     };
   };
 
@@ -228,10 +228,10 @@ describing shape::
   struct ChildContextFactories::apply<Transformable, ElementTag, 
     typename boost::enable_if<boost::mpl::has_key<traits::shape_elements, ElementTag> >::type>
   {
-    typedef factory::context::on_stack<Transformable, Shape> type;
+    typedef factory::context::on_stack<Shape> type;
   };
 
-Factory ``factory::context::on_stack<ParentContext, ChildContext>`` создаёт объект контекста для дочернего элемента
+Factory ``factory::context::on_stack<ChildContext>`` создаёт объект контекста для дочернего элемента
 типа ``ChildContext``, передавая в конструктор ссылку на родительский контекст. Время жизни контекста - до завершения обработки
 element content (child elements and text nodes). ``on_exit_element()`` вызывается перед уничтожением объекта контекста.
 

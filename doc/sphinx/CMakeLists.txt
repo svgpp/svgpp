@@ -13,11 +13,14 @@ add_custom_target(
     iri.rst 
     length.rst 
     lesson01.rst 
+	markers.rst 
     overview.rst 
     path.rst 
+	text.rst
     transform.rst 
     value.rst 
     value_parser.rst 
+	viewport.rst 
 )
 
 if (WIN32)

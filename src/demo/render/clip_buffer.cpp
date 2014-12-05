@@ -290,20 +290,21 @@ namespace
   template<>
   struct context_factories::apply<ElementBase, svgpp::tag::element::use_>
   {
-    typedef svgpp::factory::context::on_stack<ElementBase, Use> type;
+    typedef svgpp::factory::context::on_stack<Use> type;
   };
 
   template<class ElementTag>
   struct context_factories::apply<ElementBase, ElementTag>
   {
-    typedef svgpp::factory::context::on_stack<ElementBase, Path> type;
+    typedef svgpp::factory::context::on_stack<Path> type;
   };
 
   typedef svgpp::document_traversal<
     svgpp::context_factories<context_factories>,
 		svgpp::processed_elements<processed_elements>,
 		svgpp::processed_attributes<processed_attributes>,
-    svgpp::path_policy<path_policy>
+    svgpp::path_policy<path_policy>,
+    svgpp::transform_events_policy<svgpp::policy::transform_events::forward_to_method<ElementBase> >
   > document_traversal;
 
   void Use::on_exit_element()
@@ -337,7 +338,7 @@ void ClipBuffer::intersectClipPath(XMLDocument & xml_document, svg_string_t cons
       std::vector<unsigned char> clip_path_buffer(width_ * height_, 0xff);
       agg::rendering_buffer clip_path_rbuf(&clip_path_buffer[0], width_, height_, width_);
       ElementBase root_context(xml_document, clip_path_rbuf, transform);
-      document_traversal::load_expected_element<void>(node, root_context, svgpp::tag::element::clipPath());
+      document_traversal::load_expected_element(node, root_context, svgpp::tag::element::clipPath());
 
       typedef agg::amask_no_clip_gray8 alpha_mask_t;
       alpha_mask_t clip_path_alpha_mask(clip_path_rbuf);

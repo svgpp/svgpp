@@ -12,6 +12,7 @@
 #include <svgpp/detail/adapt_context.hpp>
 #include <svgpp/policy/detail/path_events_splitter.hpp>
 #include <svgpp/policy/markers.hpp>
+#include <svgpp/policy/marker_events.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/optional.hpp>
 #include <boost/math/constants/constants.hpp>
@@ -141,7 +142,7 @@ public:
       switch (config_.start())
       {
       case marker_none: break;
-      case marker_orient_ignore: 
+      case marker_orient_fixed: 
         config_.call_marker_orient_fixed(context_, marker_start, x, y, next_marker_index_++);
         break;
       case marker_orient_auto:
@@ -340,7 +341,7 @@ private:
       switch (path_end ? config_.end() : config_.mid())
       {
       case marker_none: break;
-      case marker_orient_ignore:
+      case marker_orient_fixed:
         config_.call_marker_orient_fixed(context_, path_end ? marker_end : marker_mid, last_x_, last_y_, next_marker_index_++);
         break;
       case marker_orient_auto:
@@ -387,7 +388,7 @@ private:
       switch (config_.mid())
       {
       case marker_none: break;
-      case marker_orient_ignore:
+      case marker_orient_fixed:
         config_.call_marker_orient_fixed(context_, marker_mid, last_x_, last_y_, next_marker_index_++);
         break;
       case marker_orient_auto:
@@ -411,7 +412,7 @@ private:
       switch (config_.mid())
       {
       case marker_none: break;
-      case marker_orient_ignore:
+      case marker_orient_fixed:
         config_.call_marker_orient_fixed(context_, marker_mid, last_x_, last_y_, next_marker_index_++);
         break;
       case marker_orient_auto:

@@ -139,7 +139,7 @@ named class template parameters, заданные ``document_traversal``, пер
   
     document_traversal<
       length_policy<UserLengthPolicy>
-    >::load(/* ... */);
+    >::load_document(/* ... */);
 
 2. Задать специализацию класса ``default_policy`` для нужного *context* type в соответствующем C++ namespace::
 

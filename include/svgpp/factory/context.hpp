@@ -37,13 +37,13 @@ private:
   type & context_;
 };
 
-template<class ParentContext, class ChildContext>
+template<class ChildContext>
 class on_stack: boost::noncopyable
 {
 public:
   typedef ChildContext type;
 
-  template<class XMLElement>
+  template<class ParentContext, class XMLElement>
   on_stack(ParentContext & context, XMLElement const &)
     : context_(context)
   {}
@@ -59,13 +59,13 @@ private:
   type context_;
 };
 
-template<class ParentContext, class ChildContext>
+template<class ChildContext>
 class on_stack_with_xml_element: boost::noncopyable
 {
 public:
   typedef ChildContext type;
 
-  template<class XMLElement>
+  template<class ParentContext, class XMLElement>
   on_stack_with_xml_element(ParentContext & context, XMLElement const & xml_element)
     : context_(context, xml_element)
   {}
@@ -82,7 +82,6 @@ private:
 };
 
 template<
-  class ParentContext, 
   class ElementTag, 
   class ChildContextPtr, 
   class ChildContext = typename boost::pointee<ChildContextPtr>::type 
@@ -92,7 +91,7 @@ class get_ptr_from_parent: boost::noncopyable
 public:
   typedef ChildContext type;
 
-  template<class XMLElement>
+  template<class ParentContext, class XMLElement>
   get_ptr_from_parent(ParentContext & context, XMLElement const &)
     : context_(context.get_child_context(ElementTag()))
   {}

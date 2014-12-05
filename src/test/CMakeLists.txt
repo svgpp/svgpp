@@ -79,6 +79,7 @@ add_library(CheckHeadersAutonomy STATIC
   ${CHECK_HEADERS_SOURCES}
 )
 
+if (0)
 add_executable(FullParseTest
   full_parse_main.cpp
   full_parse_test.cpp
@@ -98,4 +99,5 @@ if (MSVC)
     FullParseTest
     PROPERTIES COMPILE_FLAGS "/bigobj"
   )
+endif()
 endif()

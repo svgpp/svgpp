@@ -101,31 +101,31 @@ struct ContextFactories
 template<>
 struct ContextFactories::apply<NotAnimateElementContext, svgpp::tag::element::animate>
 {
-  typedef svgpp::factory::context::on_stack_with_xml_element<NotAnimateElementContext, AnimateContext> type;
+  typedef svgpp::factory::context::on_stack_with_xml_element<AnimateContext> type;
 };
 
 template<>
 struct ContextFactories::apply<NotAnimateElementContext, svgpp::tag::element::animateColor>
 {
-  typedef svgpp::factory::context::on_stack_with_xml_element<NotAnimateElementContext, AnimateContext> type;
+  typedef svgpp::factory::context::on_stack_with_xml_element<AnimateContext> type;
 };
 
 template<>
 struct ContextFactories::apply<NotAnimateElementContext, svgpp::tag::element::animateMotion>
 {
-  typedef svgpp::factory::context::on_stack_with_xml_element<NotAnimateElementContext, AnimateContext> type;
+  typedef svgpp::factory::context::on_stack_with_xml_element<AnimateContext> type;
 };
 
 template<>
 struct ContextFactories::apply<NotAnimateElementContext, svgpp::tag::element::animateTransform>
 {
-  typedef svgpp::factory::context::on_stack_with_xml_element<NotAnimateElementContext, AnimateContext> type;
+  typedef svgpp::factory::context::on_stack_with_xml_element<AnimateContext> type;
 };
 
 template<>
 struct ContextFactories::apply<NotAnimateElementContext, svgpp::tag::element::set>
 {
-  typedef svgpp::factory::context::on_stack_with_xml_element<NotAnimateElementContext, AnimateContext> type;
+  typedef svgpp::factory::context::on_stack_with_xml_element<AnimateContext> type;
 };
 
 void parse(rapidxml_ns::xml_node<char> const * svg_element)

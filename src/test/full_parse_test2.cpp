@@ -16,5 +16,5 @@ void load_filter(rapidxml_ns::xml_node<char> const * svg_element)
       tag::attribute::keyTimes,
       tag::attribute::keySplines
     >::type>
-  >::load_referenced_element<>::load(svg_element, context, tag::element::filter());
+  >::load_expected_element(svg_element, context, tag::element::filter());
 }

@@ -63,7 +63,7 @@ namespace dispatcher_detail
 
   public:
     typedef typename boost::mpl::if_c<
-      (viewport_policy::viewport_as_transform || viewport_policy::calculate_viewport)
+      viewport_policy::calculate_viewport
       && boost::mpl::has_key<
           viewport_adapter_needs_to_know_referencing_element, 
           boost::mpl::pair<ReferencingElementTag, ElementTag>
@@ -413,8 +413,8 @@ public:
   using base_type::load_attribute_value; 
 
   template<class AttributeTag, class AttributeValue>
-  typename boost::enable_if_c<(viewport_policy::viewport_as_transform
-      || viewport_policy::calculate_viewport)
+  typename boost::enable_if_c<
+    viewport_policy::calculate_viewport
     && boost::mpl::has_key<traits::viewport_attributes, AttributeTag>::value, bool>::type
   load_attribute_value(AttributeTag attribute_tag, AttributeValue const & attribute_value, 
                        tag::source::attribute property_source)
@@ -453,15 +453,18 @@ private:
     typename base_type::length_factory_type::length_type, 
     typename base_type::coordinate_type
   > viewport_adapter;
-  typedef typename boost::mpl::if_c< 
-    viewport_policy::viewport_as_transform,
-    boost::mpl::single_view<
-      detail::viewport_transform_state<viewport_adapter> 
-    >,
-    typename boost::mpl::if_c<viewport_policy::calculate_viewport,
-      boost::mpl::single_view<viewport_adapter>,
-      boost::mpl::empty_sequence>::type
-  >::type state_types_sequence;
+  typedef 
+    typename boost::mpl::if_c<
+      viewport_policy::calculate_viewport,
+      typename boost::mpl::if_c< 
+        viewport_policy::viewport_as_transform,
+        boost::mpl::single_view<
+          detail::viewport_transform_state<viewport_adapter> 
+        >,
+        boost::mpl::single_view<viewport_adapter>
+      >::type,
+      boost::mpl::empty_sequence
+    >::type state_types_sequence;
   typedef typename boost::fusion::result_of::as_vector<state_types_sequence>::type state_types;
 
   state_types states_;
@@ -515,8 +518,8 @@ public:
   using base_type::load_attribute_value; 
 
   template<class AttributeTag, class AttributeValue>
-  typename boost::enable_if_c<(viewport_policy::marker_viewport_as_transform
-      || viewport_policy::calculate_marker_viewport)
+  typename boost::enable_if_c<
+    viewport_policy::calculate_marker_viewport
     && boost::mpl::has_key<traits::marker_viewport_attributes, AttributeTag>::value, bool>::type
   load_attribute_value(AttributeTag attribute_tag, AttributeValue const & attribute_value, 
                        tag::source::attribute property_source)
@@ -553,15 +556,18 @@ private:
     typename base_type::length_factory_type::length_type, 
     typename base_type::coordinate_type
   > viewport_adapter;
-  typedef typename boost::mpl::if_c< 
-    viewport_policy::marker_viewport_as_transform,
-    boost::mpl::single_view<
-      detail::viewport_transform_state<viewport_adapter> 
-    >,
-    typename boost::mpl::if_c<viewport_policy::calculate_marker_viewport,
-      boost::mpl::single_view<viewport_adapter>,
-      boost::mpl::empty_sequence>::type
-  >::type state_types_sequence;
+  typedef 
+    typename boost::mpl::if_c<
+      viewport_policy::calculate_marker_viewport,
+      typename boost::mpl::if_c< 
+        viewport_policy::viewport_as_transform,
+        boost::mpl::single_view<
+          detail::viewport_transform_state<viewport_adapter> 
+        >,
+        boost::mpl::single_view<viewport_adapter>
+      >::type,
+      boost::mpl::empty_sequence
+    >::type state_types_sequence;
   typedef typename boost::fusion::result_of::as_vector<state_types_sequence>::type state_types;
 
   state_types states_;

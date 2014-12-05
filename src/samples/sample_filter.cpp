@@ -250,43 +250,43 @@ struct ContextFactories
 template<class ParentContext>
 struct ContextFactories::apply<ParentContext, svgpp::tag::element::filter>
 {
-  typedef svgpp::factory::context::get_ptr_from_parent<ParentContext, svgpp::tag::element::filter, boost::shared_ptr<Filter> > type;
+  typedef svgpp::factory::context::get_ptr_from_parent<svgpp::tag::element::filter, boost::shared_ptr<Filter> > type;
 };
 
 template<class ParentContext>
 struct ContextFactories::apply<ParentContext, svgpp::tag::element::feBlend>
 {
-  typedef svgpp::factory::context::on_stack<ParentContext, feBlend> type;
+  typedef svgpp::factory::context::on_stack<feBlend> type;
 };
 
 template<class ParentContext>
 struct ContextFactories::apply<ParentContext, svgpp::tag::element::feComponentTransfer>
 {
-  typedef svgpp::factory::context::on_stack<ParentContext, feComponentTransfer> type;
+  typedef svgpp::factory::context::on_stack<feComponentTransfer> type;
 };
 
 template<>
 struct ContextFactories::apply<feComponentTransfer, svgpp::tag::element::feFuncA>
 {
-  typedef svgpp::factory::context::on_stack<feComponentTransfer, feFuncX<argbA> > type;
+  typedef svgpp::factory::context::on_stack<feFuncX<argbA> > type;
 };
 
 template<>
 struct ContextFactories::apply<feComponentTransfer, svgpp::tag::element::feFuncR>
 {
-  typedef svgpp::factory::context::on_stack<feComponentTransfer, feFuncX<argbR> > type;
+  typedef svgpp::factory::context::on_stack<feFuncX<argbR> > type;
 };
 
 template<>
 struct ContextFactories::apply<feComponentTransfer, svgpp::tag::element::feFuncG>
 {
-  typedef svgpp::factory::context::on_stack<feComponentTransfer, feFuncX<argbG> > type;
+  typedef svgpp::factory::context::on_stack<feFuncX<argbG> > type;
 };
 
 template<>
 struct ContextFactories::apply<feComponentTransfer, svgpp::tag::element::feFuncB>
 {
-  typedef svgpp::factory::context::on_stack<feComponentTransfer, feFuncX<argbB> > type;
+  typedef svgpp::factory::context::on_stack<feFuncX<argbB> > type;
 };
 
 int main()

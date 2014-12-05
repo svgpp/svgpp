@@ -8,7 +8,7 @@
 #pragma once
 
 #include <svgpp/template_parameters.hpp>
-#include <svgpp/attribute_traversal_common.hpp>
+#include <svgpp/attribute_traversal/common.hpp>
 #include <svgpp/detail/attribute_name_to_id.hpp>
 #include <svgpp/detail/required_attributes_check.hpp>
 #include <svgpp/parser/css_style_iterator.hpp>
@@ -30,7 +30,7 @@ private:
       boost::parameter::optional<tag::css_name_to_id_policy>
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
   typedef typename boost::parameter::value_type<args, tag::css_name_to_id_policy, 
-    css_name_to_id_policy_default>::type css_name_to_id_policy;
+    policy::css_name_to_id::default_policy>::type css_name_to_id_policy;
 
 public:
   template<class XMLAttributesIterator, class Dispatcher>

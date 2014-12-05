@@ -12,7 +12,7 @@
 #include <svgpp/detail/attribute_name_to_id.hpp>
 #include <svgpp/detail/names_dictionary.hpp>
 #include <svgpp/traits/attribute_groups.hpp>
-#include <svgpp/attribute_traversal_common.hpp>
+#include <svgpp/attribute_traversal/common.hpp>
 #include <svgpp/policy/error.hpp>
 #include <svgpp/policy/xml/fwd.hpp>
 #include <svgpp/template_parameters.hpp>
@@ -323,7 +323,7 @@ struct attribute_traversal_prioritized
       boost::parameter::optional<tag::css_name_to_id_policy>
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
   typedef typename boost::parameter::value_type<args, tag::css_name_to_id_policy, 
-    css_name_to_id_policy_default>::type css_name_to_id_policy;
+    policy::css_name_to_id::default_policy>::type css_name_to_id_policy;
 
   template<class XMLAttributesIterator, class Dispatcher>
   static bool load(XMLAttributesIterator xml_attributes_iterator, Dispatcher & dispatcher)

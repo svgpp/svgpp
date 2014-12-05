@@ -569,73 +569,73 @@ struct context_factories
 template<>
 struct context_factories::apply<FilterContext, svgpp::tag::element::feBlend>
 {
-  typedef svgpp::factory::context::on_stack<FilterContext, feBlendContext> type;
+  typedef svgpp::factory::context::on_stack<feBlendContext> type;
 };
 
 template<>
 struct context_factories::apply<FilterContext, svgpp::tag::element::feOffset>
 {
-  typedef svgpp::factory::context::on_stack<FilterContext, feOffsetContext> type;
+  typedef svgpp::factory::context::on_stack<feOffsetContext> type;
 };
 
 template<>
 struct context_factories::apply<FilterContext, svgpp::tag::element::feComposite>
 {
-  typedef svgpp::factory::context::on_stack<FilterContext, feCompositeContext> type;
+  typedef svgpp::factory::context::on_stack<feCompositeContext> type;
 };
 
 template<>
 struct context_factories::apply<FilterContext, svgpp::tag::element::feComponentTransfer>
 {
-  typedef svgpp::factory::context::on_stack<FilterContext, feComponentTransferContext> type;
+  typedef svgpp::factory::context::on_stack<feComponentTransferContext> type;
 };
 
 template<>
 struct context_factories::apply<FilterContext, svgpp::tag::element::feMerge>
 {
-  typedef svgpp::factory::context::on_stack<FilterContext, feMergeContext> type;
+  typedef svgpp::factory::context::on_stack<feMergeContext> type;
 };
 
 template<>
 struct context_factories::apply<feMergeContext, svgpp::tag::element::feMergeNode>
 {
-  typedef svgpp::factory::context::on_stack<feMergeContext, feMergeNodeContext> type;
+  typedef svgpp::factory::context::on_stack<feMergeNodeContext> type;
 };
 
 template<>
 struct context_factories::apply<FilterContext, svgpp::tag::element::feFlood>
 {
-  typedef svgpp::factory::context::on_stack<FilterContext, feFloodContext> type;
+  typedef svgpp::factory::context::on_stack<feFloodContext> type;
 };
 
 template<>
 struct context_factories::apply<FilterContext, svgpp::tag::element::feColorMatrix>
 {
-  typedef svgpp::factory::context::on_stack<FilterContext, feColorMatrixContext> type;
+  typedef svgpp::factory::context::on_stack<feColorMatrixContext> type;
 };
 
 template<>
 struct context_factories::apply<feComponentTransferContext, svgpp::tag::element::feFuncA>
 {
-  typedef svgpp::factory::context::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbA> > type;
+  typedef svgpp::factory::context::on_stack<feFuncContext<feComponentTransfer::argbA> > type;
 };
 
 template<>
 struct context_factories::apply<feComponentTransferContext, svgpp::tag::element::feFuncR>
 {
-  typedef svgpp::factory::context::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbR> > type;
+  typedef svgpp::factory::context::on_stack<feFuncContext<feComponentTransfer::argbR> > type;
 };
 
 template<>
 struct context_factories::apply<feComponentTransferContext, svgpp::tag::element::feFuncG>
 {
-  typedef svgpp::factory::context::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbG> > type;
+  typedef svgpp::factory::context::on_stack<feFuncContext<feComponentTransfer::argbG> > type;
 };
 
 template<>
 struct context_factories::apply<feComponentTransferContext, svgpp::tag::element::feFuncB>
 {
-  typedef svgpp::factory::context::on_stack<feComponentTransferContext, feFuncContext<feComponentTransfer::argbB> > type;
+  typedef svgpp::factory::context::on_stack<feFuncContext<feComponentTransfer::argbB> > type;
 };
 
 class BlendView: public IFilterView
@@ -1189,7 +1189,7 @@ IFilterViewPtr Filters::get(svg_string_t const & id, length_factory_t const &, I
             svgpp::tag::attribute::offset
           >::type
         >
-      >::load_referenced_element<>::load(node, filterContext, svgpp::tag::element::filter());
+      >::load_expected_element(node, filterContext, svgpp::tag::element::filter());
 
       FilterElementVisitor v(input);
       for(std::vector<FilterElement>::const_iterator fe = filterContext.elements_.begin();

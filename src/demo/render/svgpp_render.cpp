@@ -106,25 +106,25 @@ struct child_context_factories
 template<>
 struct child_context_factories::apply<Canvas, svgpp::tag::element::svg, void>
 {
-  typedef svgpp::factory::context::on_stack<Canvas, Canvas> type;
+  typedef svgpp::factory::context::on_stack<Canvas> type;
 };
 
 template<>
 struct child_context_factories::apply<Canvas, svgpp::tag::element::g, void>
 {
-  typedef svgpp::factory::context::on_stack<Canvas, Canvas> type;
+  typedef svgpp::factory::context::on_stack<Canvas> type;
 };
 
 template<>
 struct child_context_factories::apply<Canvas, svgpp::tag::element::a, void>
 {
-  typedef svgpp::factory::context::on_stack<Canvas, Canvas> type;
+  typedef svgpp::factory::context::on_stack<Canvas> type;
 };
 
 template<>
 struct child_context_factories::apply<Canvas, svgpp::tag::element::switch_, void>
 {
-  typedef svgpp::factory::context::on_stack<Canvas, Switch> type;
+  typedef svgpp::factory::context::on_stack<Switch> type;
 };
 
 template<class ElementTag>
@@ -134,26 +134,26 @@ struct child_context_factories::apply<Switch, ElementTag, void>: apply<Canvas, E
 template<>
 struct child_context_factories::apply<Canvas, svgpp::tag::element::use_, void>
 {
-  typedef svgpp::factory::context::on_stack<Canvas, Use> type;
+  typedef svgpp::factory::context::on_stack<Use> type;
 };
 
 template<class ElementTag>
 struct child_context_factories::apply<Canvas, ElementTag, typename boost::enable_if<boost::mpl::has_key<svgpp::traits::shape_elements, ElementTag> >::type>
 {
-  typedef svgpp::factory::context::on_stack<Canvas, Path> type;
+  typedef svgpp::factory::context::on_stack<Path> type;
 };
 
 // For referenced by 'use' elements
 template<>
 struct child_context_factories::apply<Use, svgpp::tag::element::svg, void>
 {
-  typedef svgpp::factory::context::on_stack<Use, ReferencedSymbolOrSvg> type;
+  typedef svgpp::factory::context::on_stack<ReferencedSymbolOrSvg> type;
 };
 
 template<>
 struct child_context_factories::apply<Use, svgpp::tag::element::symbol, void>
 {
-  typedef svgpp::factory::context::on_stack<Use, ReferencedSymbolOrSvg> type;
+  typedef svgpp::factory::context::on_stack<ReferencedSymbolOrSvg> type;
 };
 
 template<class ElementTag>
@@ -859,7 +859,7 @@ void Canvas::loadMask(ImageBuffer & mask_buffer) const
     Document::FollowRef lock(document(), element);
 
     Mask mask(document_, mask_buffer, *this);
-    document_traversal_main::load_referenced_element<>::load(element, mask, svgpp::tag::element::mask());
+    document_traversal_main::load_expected_element(element, mask, svgpp::tag::element::mask());
   }
   else
     throw std::runtime_error("Element referenced by 'mask' not found");
@@ -1193,8 +1193,6 @@ public:
     : Canvas(parent, dontInheritStyle())
     , autoOrient_(autoOrient)
     , strokeWidth_(strokeWidth)
-    , refX_(0)
-    , refY_(0)
     , orient_(0.0)
     , strokeWidthUnits_(true)
   {
@@ -1235,12 +1233,6 @@ public:
   void set(svgpp::tag::attribute::markerUnits, svgpp::tag::value::userSpaceOnUse)
   { strokeWidthUnits_ = false; }
 
-  void set(svgpp::tag::attribute::refX, double val)
-  { refX_ = val; }
-
-  void set(svgpp::tag::attribute::refY, double val)
-  { refY_ = val; }
-
   void set(svgpp::tag::attribute::orient, double val)
   { orient_ = val * boost::math::constants::degree<double>(); }
 
@@ -1251,7 +1243,6 @@ private:
   double const strokeWidth_;
   double const autoOrient_;
   bool strokeWidthUnits_;
-  double refX_, refY_;
   double orient_;
 };
 
@@ -1275,7 +1266,7 @@ void Path::drawMarker(svg_string_t const & id, double x, double y, double dir)
     Document::FollowRef lock(document(), element);
 
     Marker markerContext(*this, style().stroke_width_, x, y, dir);
-    document_traversal_main::load_referenced_element<>::load(element, markerContext, svgpp::tag::element::marker());
+    document_traversal_main::load_expected_element(element, markerContext, svgpp::tag::element::marker());
   }
 }
 

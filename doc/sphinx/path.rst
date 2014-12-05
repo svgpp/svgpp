@@ -75,12 +75,12 @@ Path Policy Concept
 
   struct path_policy_concept
   {
-    static const bool absolute_coordinates_only = /* true or false */;
-    static const bool no_ortho_line_to = /* true or false */;
+    static const bool absolute_coordinates_only     = /* true or false */;
+    static const bool no_ortho_line_to              = /* true or false */;
     static const bool no_quadratic_bezier_shorthand = /* true or false */;
-    static const bool no_cubic_bezier_shorthand = /* true or false */;
-    static const bool quadratic_bezier_as_cubic = /* true or false */;
-    static const bool arc_as_cubic_bezier = /* true or false */; 
+    static const bool no_cubic_bezier_shorthand     = /* true or false */;
+    static const bool quadratic_bezier_as_cubic     = /* true or false */;
+    static const bool arc_as_cubic_bezier           = /* true or false */; 
   };
 
 Как видно, *Path Policy* - это класс с набором статических member constants типа bool. Если все они имеют значение ``false``

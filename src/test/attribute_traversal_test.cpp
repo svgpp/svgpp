@@ -1,4 +1,4 @@
-#include <svgpp/attribute_traversal.hpp>
+#include <svgpp/attribute_traversal/attribute_traversal.hpp>
 #include <rapidxml_ns/rapidxml_ns.hpp>
 #include <svgpp/policy/xml/rapidxml_ns.hpp>
 

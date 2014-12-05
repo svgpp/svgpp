@@ -122,7 +122,7 @@ namespace
             switch (c[idx])
             {
             case svgpp::marker_none: break;
-            case svgpp::marker_orient_ignore:
+            case svgpp::marker_orient_fixed:
             {
               MarkerInstance m2 = *m;
               m2.get<3>().reset();

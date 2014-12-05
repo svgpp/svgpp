@@ -201,19 +201,19 @@ struct ContextFactories
 template<class ParentContext>
 struct ContextFactories::apply<ParentContext, svgpp::tag::element::linearGradient>
 {
-  typedef svgpp::factory::context::get_ptr_from_parent<ParentContext, svgpp::tag::element::linearGradient, boost::shared_ptr<LinearGradient> > type;
+  typedef svgpp::factory::context::get_ptr_from_parent<svgpp::tag::element::linearGradient, boost::shared_ptr<LinearGradient> > type;
 };
 
 template<class ParentContext>
 struct ContextFactories::apply<ParentContext, svgpp::tag::element::radialGradient>
 {
-  typedef svgpp::factory::context::get_ptr_from_parent<ParentContext, svgpp::tag::element::radialGradient, boost::shared_ptr<RadialGradient> > type;
+  typedef svgpp::factory::context::get_ptr_from_parent<svgpp::tag::element::radialGradient, boost::shared_ptr<RadialGradient> > type;
 };
 
 template<class ParentContext>
 struct ContextFactories::apply<ParentContext, svgpp::tag::element::stop>
 {
-  typedef svgpp::factory::context::on_stack<ParentContext, GradientStop> type;
+  typedef svgpp::factory::context::on_stack<GradientStop> type;
 };
 
 int main()

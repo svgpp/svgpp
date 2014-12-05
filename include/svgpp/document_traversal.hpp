@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <svgpp/attribute_traversal.hpp>
+#include <svgpp/attribute_traversal/attribute_traversal.hpp>
 #include <svgpp/attribute_dispatcher.hpp>
 #include <svgpp/config.hpp>
 #include <svgpp/factory/context.hpp>
@@ -95,10 +95,10 @@ public:
   template<class XMLElement, class Context>
   static bool load_document(XMLElement const & xml_element_svg, Context & context)
   {
-    return load_expected_element<void>(xml_element_svg, context, tag::element::svg());
+    return load_expected_element(xml_element_svg, context, tag::element::svg());
   }
 
-  template<class ReferencingElement, class XMLElement, class Context, class ElementTag>
+  template<class XMLElement, class Context, class ElementTag>
   static bool load_expected_element(XMLElement const & xml_element, Context & context, ElementTag expected_element)
   {
     typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
@@ -115,7 +115,7 @@ public:
         return 
           load_element<
             typename traits::child_element_types<ElementTag>::type, 
-            ReferencingElement
+            void
           >(xml_element, context, expected_element);
       else
         return error_policy::unexpected_element(context, xml_element);
@@ -238,7 +238,10 @@ public:
       !xml_policy_t::is_end(xml_child_element); xml_policy_t::advance_element_or_text(xml_child_element))
     {
       if (xml_policy_t::is_text(xml_child_element))
-        text_events_policy::set_text(context, xml_policy_t::get_text(xml_child_element));
+      {
+        xml_policy_t::element_text_type text = xml_policy_t::get_text(xml_child_element);
+        text_events_policy::set_text(context, xml_policy_t::get_string_range(text));
+      }
       else
       {
         if (!load_child_xml_element<ExpectedChildElements, is_element_processed, void>(
@@ -297,22 +300,6 @@ public:
         >(xml_element, parent_context, 
           boost::mpl::void_()); // ParentElementTag parameter can be of any type, it shouldn't be used for
                                 // any element except 'a'
-    }
-
-    template<class XMLElement, class Context, class ElementTag>
-    static bool load(XMLElement const & xml_element, Context & context, ElementTag expected_element)
-    {
-      typedef typename boost::parameter::parameters<
-          boost::parameter::optional<tag::referencing_element>
-      >::template bind<BOOST_PP_ENUM_PARAMS(6, ArgRef)>::type args;
-      typedef typename boost::parameter::value_type<args, tag::referencing_element, void>::type referencing_element;
-
-      // The 'a' element may contain any element that its parent may contain, except itself.
-      // So we can't handle 'a' without knowing its parent.
-      BOOST_MPL_ASSERT_NOT((boost::is_same<ElementTag, tag::element::a>));
-
-      return document_traversal::load_expected_element<referencing_element>
-        (xml_element, context, expected_element);
     }
   };
 
