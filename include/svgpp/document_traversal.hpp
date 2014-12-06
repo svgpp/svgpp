@@ -239,7 +239,7 @@ public:
     {
       if (xml_policy_t::is_text(xml_child_element))
       {
-        xml_policy_t::element_text_type text = xml_policy_t::get_text(xml_child_element);
+        typename xml_policy_t::element_text_type text = xml_policy_t::get_text(xml_child_element);
         text_events_policy::set_text(context, xml_policy_t::get_string_range(text));
       }
       else
