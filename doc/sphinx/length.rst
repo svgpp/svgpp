@@ -37,8 +37,9 @@ Length Factory Concept
 
 ``create_length`` method receives number and length tag and returns corresponding length value of type ``length_type``.
 
-Lengths, заданные в percent units, могут `обрабатываться <http://www.w3.org/TR/SVG/coords.html#Units_viewport_percentage>`_ 
-по разному, в зависимости от того, длине или ширине соответствует значение. Для этого ``create_length`` передается третий
+Lengths, заданные в percent units, могут обрабатываться 
+`по разному <http://www.w3.org/TR/SVG/coords.html#Units_viewport_percentage>`_, 
+в зависимости от того, длине или ширине соответствует значение. Для этого ``create_length`` передается третий
 параметр - один из трёх тэгов ``tag::length_dimension::width``, ``tag::length_dimension::height`` 
 или ``tag::length_dimension::not_width_nor_height``.
 
@@ -49,7 +50,8 @@ Lengths, заданные в percent units, могут `обрабатывать
 Unitless Length Factory
 --------------------------
 
-*Unitless Length Factory* ``factory::length::unitless`` - это model of *Length Factory*, предоставляемая SVG++ library. Unitless в названии означает,
+*Unitless Length Factory* ``factory::length::unitless`` - это model of *Length Factory*, предоставляемая SVG++ library. 
+Unitless в названии означает,
 что lengths, создаваемые фабрикой, просто числа, не имеющие размерности. Информация о единицах измерения 
 используется *Unitless Length Factory* для выбора коэффициента.
 
@@ -83,6 +85,28 @@ Unitless Length Factory
     void set_ex_coefficient(NumberType coeff, UnitsTag unitsTag);
   };
 
+``set_absolute_units_coefficient``
+  Позволяет задать коэффициент, на который будет умножаться значение, заданное в абсолютных единицах измерения
+  (*in*, *cm*, *mm*, *pt* или *pc*), для получения длины.
+  Метод достаточно вызвать для любой абсолютной единицы измерения, коэффициенты для остальных абсолютных единиц будут вычисленны
+  автоматически. Например::
+
+    svgpp::factory::length::unitless<> factory;
+    // Let our length value be a pixel. Set 'in' coefficient to 90 (90 Dots per inch)
+    factory.set_absolute_units_coefficient(90, svgpp::tag::length_units::in());
+    // Coefficient for 'pc' (pica = 1/6 inch) will be 90/6 = 15
+    assert(factory.get_absolute_units_coefficient(svgpp::tag::length_units::pc()) == 15);
+
+``set_user_units_coefficient``
+  Позволяет задать коэффициент, на который будет умножаться значение, заданное в user units (заданное без единиц измерения
+  или в *px*). По умолчанию коэффициент = 1.
+
+``set_viewport_size``
+  Задает ширину и высоту viewport для преобразования percentage values that are defined to be relative to the size of viewport.
+
+``set_em_coefficient`` и ``set_ex_coefficient``
+  Позволяют задать коэффициенты для единиц измерения *em* и *ex*, учитывающих размер выбранного фонта.
+
 Length Policy Concept
 --------------------------
 
@@ -90,7 +114,6 @@ Length Policy Concept
 
   struct length_policy
   {
-    typedef /* ... */ context_type;
     typedef /* ... */ length_factory_type;
 
     static length_factory_type & length_factory(context_type & context);

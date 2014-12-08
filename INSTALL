@@ -1,0 +1,11 @@
+As SVG++ is a header-only library, no installation is required. Just add path to 'include' subfolder to your project include dirs.
+Boost includes should also be avaiable.
+
+'src' folder contains tests, demos and samples. To build them you need:
+	1. Get CMake installed (http://www.cmake.org/). 
+	2. Run 'cmake -G  <generator-name> -D BOOST_ROOT=<path to Boost root> <path to svgpp/src>' from folder that will contain
+	build files.
+	<generator-name> may be "Unix Makefiles" for GCC, Clang etc and "Visual Studio 12" for Visual Studio 2013. See CMake reference for 
+	details about generators.
+	3a. For make-based build run 'make'
+	3b. For Visual Studio build open created .sln file and build solution.

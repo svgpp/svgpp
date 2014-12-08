@@ -10,6 +10,10 @@ include_directories(
   ${AGG_PATH}/include
 )
 
+if (MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+endif()
+
 set(AGG_SOURCES
   ${AGG_PATH}/src/agg_curves.cpp 
   ${AGG_PATH}/src/agg_trans_affine.cpp 
@@ -58,13 +62,6 @@ if (WIN32)
   )
 endif()
 
-if (MSVC)
-  set_target_properties(
-    svgpp_agg_render svgpp_agg_render_msxml
-    PROPERTIES COMPILE_FLAGS "/bigobj"
-  )
-endif()
-
 find_package(LibXml2)
 
 if (LIBXML2_FOUND)
@@ -84,12 +81,6 @@ if (LIBXML2_FOUND)
   target_link_libraries(svgpp_agg_render_libxml
     ${LIBXML2_LIBRARIES}
   )
-
-  if (MSVC)
-    set_target_properties(
-      svgpp_agg_render_libxml PROPERTIES COMPILE_FLAGS "/bigobj"
-    )
-  endif()
 endif()
 
 if (WIN32)
@@ -106,10 +97,4 @@ if (WIN32)
   target_compile_definitions(svgpp_gdip_render_msxml
     PRIVATE SVG_PARSER_MSXML;RENDERER_GDIPLUS
   )
-
-  if (MSVC)
-    set_target_properties(
-      svgpp_gdip_render_msxml PROPERTIES COMPILE_FLAGS "/bigobj"
-    )
-  endif()
 endif()

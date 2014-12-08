@@ -27,11 +27,3 @@ Contents:
    text
    value_parser
 
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-

@@ -7,26 +7,23 @@ include_directories(
   ../../third_party
 )
 
-set(SVGPP_INCLUDE ../../include/svgpp)
-
-add_executable( SamplePath
-  sample_path.cpp 
-)
-
-add_executable( SampleGradient
-  sample_gradient.cpp 
-)
-
-add_executable( SampleFilter
-  sample_filter.cpp 
-)
-
-add_executable( SampleAnimation
-  sample_animation.cpp 
-)
-
 if (MSVC)
-    set_target_properties(
-      SampleAnimation PROPERTIES COMPILE_FLAGS "/bigobj"
-    )
-  endif()
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj")
+endif()
+
+add_executable( Sample01a sample01a.cpp )
+add_executable( Sample01b sample01b.cpp )
+add_executable( Sample01c sample01c.cpp )
+add_executable( Sample01d sample01d.cpp )
+add_executable( Sample01e sample01e.cpp )
+add_executable( Sample01f sample01f.cpp )
+add_executable( Sample01g sample01g.cpp )
+add_executable( Sample01h sample01h.cpp )
+add_executable( Sample01i sample01i.cpp )
+
+add_executable( SampleGradient sample_gradient.cpp )
+add_executable( SampleFilter sample_filter.cpp )
+add_executable( SampleAnimation sample_animation.cpp )
+add_executable( SampleIRI sample_iri.cpp )
+add_executable( SampleTransform01 sample_transform01.cpp )
+add_executable( SampleTransform02 sample_transform02.cpp )

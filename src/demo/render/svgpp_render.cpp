@@ -143,7 +143,7 @@ struct child_context_factories::apply<Canvas, ElementTag, typename boost::enable
   typedef svgpp::factory::context::on_stack<Path> type;
 };
 
-// For referenced by 'use' elements
+// Elements referenced by 'use' element
 template<>
 struct child_context_factories::apply<Use, svgpp::tag::element::svg, void>
 {
@@ -242,9 +242,7 @@ typedef boost::mpl::fold<
     svgpp::tag::attribute::opacity,
     svgpp::tag::attribute::orient,
     svgpp::tag::attribute::overflow,
-    boost::mpl::pair<svgpp::tag::element::use_, svgpp::tag::attribute::xlink::href>,
-    boost::mpl::pair<svgpp::tag::element::use_, svgpp::tag::attribute::x>,
-    boost::mpl::pair<svgpp::tag::element::use_, svgpp::tag::attribute::y>
+    boost::mpl::pair<svgpp::tag::element::use_, svgpp::tag::attribute::xlink::href>
   >::type,
   boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
 >::type processed_attributes;
@@ -380,7 +378,6 @@ public:
     : document_(document)
     , parent_buffer_(boost::bind(&Canvas::getPassedImageBuffer, this))
     , image_buffer_(&image_buffer)
-    , is_switch_child_(false)
   {
     if (image_buffer.isSizeSet())
       clip_buffer_.reset(new ClipBuffer(image_buffer_->width(), image_buffer_->height()));
@@ -392,7 +389,6 @@ public:
     , document_(parent.document_)
     , image_buffer_(NULL)
     , parent_buffer_(boost::bind(&Canvas::getImageBuffer, &parent))
-    , is_switch_child_(parent.isSwitchElement())
     , length_factory_(parent.length_factory_)
     , clip_buffer_(parent.clip_buffer_)
   {}
@@ -402,7 +398,6 @@ public:
     , document_(parent.document_)
     , image_buffer_(NULL)
     , parent_buffer_(boost::bind(&Canvas::getImageBuffer, &parent))
-    , is_switch_child_(false)
     , length_factory_(parent.length_factory_)
     , clip_buffer_(parent.clip_buffer_)
   {}
@@ -518,8 +513,6 @@ protected:
   Document & document() const { return document_; }
   ClipBuffer const & clipBuffer() const { return *clip_buffer_; }
   virtual bool isSwitchElement() const { return false; }
-
-  const bool is_switch_child_;
 };
 
 struct SimpleFilterView: IFilterView
@@ -626,18 +619,6 @@ public:
     m.directionality = directionality;
   }
 
-  void marker(svgpp::marker_vertex v, double x, double y, svgpp::tag::orient_fixed, unsigned marker_index)
-  {
-    BOOST_ASSERT(false); // Auto directionality requested in marker_get_config
-  }
-
-  void marker_get_config(svgpp::marker_config & start, svgpp::marker_config & mid, svgpp::marker_config & end)
-  {
-    start = svgpp::marker_orient_auto;
-    mid   = svgpp::marker_orient_auto;
-    end   = svgpp::marker_orient_auto;
-  }
-
 private:
 #if defined(RENDERER_AGG)
   agg::path_storage path_storage_;
@@ -708,7 +689,7 @@ typedef
     svgpp::transform_events_policy<svgpp::policy::transform_events::forward_to_method<Transformable> >, // Same as default, but less instantiations
     svgpp::path_events_policy<svgpp::policy::path_events::forward_to_method<Path> >, // Same as default, but less instantiations
     svgpp::error_policy<svgpp::policy::error::default_policy<Stylable> >, // Type of context isn't used
-    svgpp::markers_policy<svgpp::policy::markers::calculate>,
+    svgpp::markers_policy<svgpp::policy::markers::calculate_always>,
     svgpp::attribute_traversal_policy<attribute_traversal>,
     svgpp::viewport_policy<svgpp::policy::viewport::as_transform>
   > document_traversal_main;

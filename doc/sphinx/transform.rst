@@ -57,101 +57,13 @@ Transform Events Policy Concept
     /*...*/
   };
 
-Пример с использованием настроек по умолчанию::
+Пример с использованием настроек по умолчанию (``src/samples/sample_transform01.cpp``):
   
-  #include <svgpp/svgpp.hpp>
+.. literalinclude:: ../../src/samples/sample_transform01.cpp 
 
-  struct Context
-  {
-    void transform_matrix(const boost::array<double, 6> & matrix)
-    {
-      for(auto n: matrix)
-        std::cout << n << " ";
-      std::cout << "\n";
-    }
-  };
+Пример, в котором умножение последовательных transforms происходит в user code (``src/samples/sample_transform02.cpp``):
 
-  void func()
-  {
-    Context context;
-    value_parser<tag::type::transform_list>::parse(tag::attribute::transform(), context, 
-      std::string("translate(-10,-20) scale(2) rotate(45) translate(5,10)"), tag::source::attribute());
-  }
-
-Пример, в котором умножение последовательных transforms происходит в user code::
-
-  #include <svgpp/svgpp.hpp>
-  #include <boost/math/constants/constants.hpp>
-  #include <boost/numeric/ublas/matrix.hpp>
-  #include <boost/numeric/ublas/io.hpp>
-
-  namespace ublas = boost::numeric::ublas;
-
-  typedef ublas::scalar_matrix<double> matrix_t;
-
-  struct transform_events_policy
-  {
-    typedef matrix_t context_type;
-
-    static void transform_matrix(matrix_t & transform, const boost::array<number_type, 6> & matrix)
-    {
-      matrix_t m(3, 3);
-      m(0, 0) = matrix[0]; m(1, 0) = matrix[1]; m(0, 1) = matrix[2]; 
-      m(1, 1) = matrix[3]; m(0, 2) = matrix[4]; m(1, 2) = matrix[5]; m(2, 2) = 1.0;
-      transform = ublas::prod(transform, matrix);
-    }
-
-    static void transform_translate(matrix_t & transform, number_type tx, number_type ty)
-    {
-      matrix_t m = ublas::identity_matrix(3, 3);
-      m(0, 2) = tx; m(1, 2) = ty; 
-      transform = ublas::prod(transform, matrix);
-    }
-
-    static void transform_scale(matrix_t & transform, number_type sx, number_type sy)
-    {
-      matrix_t m(3, 3);
-      m(0, 0) = sx; m(1, 1) = sy; m(2, 2) = 1; 
-      transform = ublas::prod(transform, matrix);
-    }
-
-    static void transform_rotate(matrix_t & transform, number_type angle)
-    {
-      angle *= boost::math::constants::degree<number_type>();
-      matrix_t m(3, 3);
-      m(0, 0) =  std::cos(angle); m(1, 0) = std::sin(angle); 
-      m(0, 1) = -std::sin(angle); m(1, 1) = std::cos(angle); m(2, 2) = 1; 
-      transform = ublas::prod(transform, matrix);
-    }
-
-    static void transform_skew_x(matrix_t & transform, number_type angle)
-    {
-      angle *= boost::math::constants::degree<number_type>();
-      matrix_t m = ublas::identity_matrix(3, 3);
-      m(0, 1) = std::tan(angle);
-      transform = ublas::prod(transform, matrix);
-    }
-
-    static void transform_skew_y(matrix_t & transform, number_type angle)
-    {
-      angle *= boost::math::constants::degree<number_type>();
-      matrix_t m = ublas::identity_matrix(3, 3);
-      m(1, 0) = std::tan(angle);
-      transform = ublas::prod(transform, matrix);
-    }
-  };
-
-  void func()
-  {
-    matrix_t transform(ublas::identity_matrix(3, 3));
-    value_parser<
-      tag::type::transform_list,
-      transform_policy<policy::transform::minimal<double> >,
-      transform_events_policy<transform_events_policy>
-    >::parse(tag::attribute::transform(), transform, 
-      std::string("translate(-10,-20) scale(2) rotate(45) translate(5,10)"), tag::source::attribute());
-    std::cout << context.transform << "\n";
-  }
+.. literalinclude:: ../../src/samples/sample_transform02.cpp 
 
 
 Transform Policy Concept

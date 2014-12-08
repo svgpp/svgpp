@@ -11,6 +11,10 @@ include_directories(
   ${GTEST_DIR}/include
 )
 
+if (MSVC)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj /W4")
+endif()
+
 file(GLOB_RECURSE SVGPP_HEADERS RELATIVE  ${CMAKE_CURRENT_SOURCE_DIR}/../../include/svgpp ${CMAKE_CURRENT_SOURCE_DIR}/../../include/svgpp/*.*)
 
 foreach(i ${SVGPP_HEADERS})
@@ -70,34 +74,23 @@ foreach(i ${SVGPP_HEADERS_HPP})
   endif()
 endforeach()
 
-if (MSVC)
-  set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   /W4")
-  set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} /W4")
-endif()
 
 add_library(CheckHeadersAutonomy STATIC
   ${CHECK_HEADERS_SOURCES}
 )
 
 if (0)
-add_executable(FullParseTest
-  full_parse_main.cpp
-  full_parse_test.cpp
-  full_parse_test2.cpp
-  full_parse_test_common.hpp
-)
+	add_executable(FullParseTest
+		full_parse_main.cpp
+		full_parse_test.cpp
+		full_parse_test2.cpp
+		full_parse_test_common.hpp
+	)
 
-if (UNIX)
-  target_link_libraries(FullParseTest
-    boost_timer
-    boost_system
-  )
-endif()
-
-if (MSVC)
-  set_target_properties(
-    FullParseTest
-    PROPERTIES COMPILE_FLAGS "/bigobj"
-  )
-endif()
+	if (UNIX)
+		target_link_libraries(FullParseTest
+			boost_timer
+			boost_system
+		)
+	endif()
 endif()

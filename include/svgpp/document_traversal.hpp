@@ -244,9 +244,10 @@ public:
       }
       else
       {
-        if (!load_child_xml_element<ExpectedChildElements, is_element_processed, void>(
-            xml_child_element, context, element_tag))
-          return false;
+        if (traversal_control_policy::process_child(context, xml_child_element))
+          if (!load_child_xml_element<ExpectedChildElements, is_element_processed, void>(
+              xml_child_element, context, element_tag))
+            return false;
       }
       if (!traversal_control_policy::proceed_to_next_child(context))
         break;

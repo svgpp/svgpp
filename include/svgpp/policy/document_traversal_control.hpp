@@ -18,6 +18,10 @@ struct stub
 
   static bool proceed_to_next_child(Context &)
   { return true; }
+
+  template<class XMLElement>
+  static bool process_child(Context &, XMLElement &)
+  { return true; }
 };
 
 template<class Context>

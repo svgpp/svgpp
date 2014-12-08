@@ -128,9 +128,9 @@ Attribute Traversal Policy
     static const bool parse_style = /* true or false */;
     static const bool css_hides_presentation_attribute = /* true or false */;
 
-    typedef /* Metafunction class returning Forward Sequence when passed with element tag */ get_priority_attributes_by_element;
-    typedef /* same */ get_deferred_attributes_by_element;
-    typedef /* same */ get_required_attributes_by_element;
+    typedef /* Metafunction class */ get_priority_attributes_by_element;
+    typedef /* Metafunction class */ get_deferred_attributes_by_element;
+    typedef /* Metafunction class */ get_required_attributes_by_element;
   };
 
 ``parse_style = true``
@@ -145,6 +145,37 @@ Attribute Traversal Policy
 
   Если ``css_hides_presentation_attribute = false``, то используется меньше памяти, но могут приходить 
   значения одного свойства и из **style** и из *presentation attribute* в произвольном порядке.
+
+``get_priority_attributes_by_element``
+
+``get_deferred_attributes_by_element``
+
+``get_required_attributes_by_element``
+  `Metafunction class <http://www.boost.org/doc/libs/1_57_0/libs/mpl/doc/refmanual/metafunction-class.html>`_,
+  принимающий тэг элемента и
+  возвращающий `Forward Sequence <http://www.boost.org/doc/libs/1_57_0/libs/mpl/doc/refmanual/forward-sequence.html>`_.
+  Элементы возвращаемой последовательности - тэги атрибутов.
+
+  Атрибуты, возвращаемые метафункцией ``get_priority_attributes_by_element`` для данного элемента, будут обработаны раньше других 
+  атрибутов именно в том порядке, в какой они перечислены в последовательности.
+
+  Атрибуты, возвращаемые метафункцией ``get_deferred_attributes_by_element`` для данного элемента, будут обработаны 
+  после всех других атрибутов именно в том порядке, в какой они перечислены в последовательности.
+
+  .. note::
+
+    Последовательности, возвращаемые  ``get_priority_attributes_by_element`` и ``get_deferred_attributes_by_element``, 
+    кроме тэгов атрибутов могут содержать элементы вида ``notify_context<EventTag>``. ``EventTag`` - это 
+    произвольный тип-тэг, который будет передан методу ``notify`` контекста. 
+    ``notify(EventTag())`` будет вызван, в тот момент, когда все атрибуты, идущие в последовательности
+    перед ним, уже обработаны.
+
+  Отсутствие какого-либо атрибута из последовательности, возвращаемой метафункцией ``get_required_attributes_by_element`` для данного элемента, 
+  считается ошибкой и будет обработано в соотвествии с заданным *Error Policy*.
+  В SVG++ определена метафункция ``traits::element_required_attributes``, возвращающая обязательные атрибуты, в соответствии со
+  спецификацией SVG. Ее можно использовать так::
+
+    typedef boost::mpl::quote1<traits::element_required_attributes> get_required_attributes_by_element;
 
 
 

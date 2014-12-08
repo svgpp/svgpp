@@ -18,6 +18,7 @@ TEST(LengthFactory, full)
 {
   svgpp::factory::length::unitless<> factory;
   factory.set_absolute_units_coefficient(90, svgpp::tag::length_units::in()); // 90 dpi
+  EXPECT_NEAR(15, factory.get_absolute_units_coefficient(svgpp::tag::length_units::pc()), 1e-8);
   factory.set_viewport_size(250, 120);
   EXPECT_NEAR(1.25, factory.create_length(1, svgpp::tag::length_units::pt()), 1e-8);
   EXPECT_NEAR(3.75, factory.create_length(3, svgpp::tag::length_units::pt()), 1e-8);

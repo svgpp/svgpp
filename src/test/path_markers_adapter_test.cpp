@@ -118,6 +118,8 @@ namespace
             case svgpp::marker_start: idx = 0; break;
             case svgpp::marker_mid: idx = 1; break;
             case svgpp::marker_end: idx = 2; break;
+            default:
+              ADD_FAILURE();
             }
             switch (c[idx])
             {
@@ -132,6 +134,8 @@ namespace
             case svgpp::marker_orient_auto:
               filtered_markers.push_back(*m);
               break;
+            default:
+              ADD_FAILURE();
             }
           }
 
