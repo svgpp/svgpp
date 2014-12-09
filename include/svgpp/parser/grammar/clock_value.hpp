@@ -31,7 +31,7 @@ struct real_policies_seconds_with_fraction: qi::ureal_policies<Number>
   template <typename Iterator>
   static BOOST_CONSTEXPR bool parse_exp(Iterator &, Iterator const &) { return false; }
   template <typename Iterator, typename Attribute>
-  static BOOST_CONSTEXPR bool parse_n(Iterator & first, Iterator const & last, Attribute & attr) 
+  static bool parse_n(Iterator & first, Iterator const & last, Attribute & attr) 
   { 
     Iterator f = first;
     if (!qi::ureal_policies<Number>::parse_n(f, last, attr))

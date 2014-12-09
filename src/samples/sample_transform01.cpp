@@ -1,4 +1,6 @@
 #include <svgpp/svgpp.hpp>
+#include <algorithm>
+#include <iterator>
 
 using namespace svgpp;
 
@@ -6,8 +8,8 @@ struct Context
 {
   void transform_matrix(const boost::array<double, 6> & matrix)
   {
-    for(auto n: matrix)
-      std::cout << n << " ";
+    std::copy(matrix.begin(), matrix.end(), 
+      std::ostream_iterator<double>(std::cout, " "));
     std::cout << "\n";
   }
 };
