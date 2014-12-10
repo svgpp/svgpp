@@ -48,13 +48,14 @@ public:
   {}
 };
 
-typedef
-  boost::mpl::insert<
-    boost::mpl::insert<
-      traits::shape_elements,
-      tag::element::svg
+typedef 
+  boost::mpl::fold<
+    traits::shape_elements,
+    boost::mpl::set<
+      tag::element::svg,
+      tag::element::g
     >::type,
-    tag::element::g
+    boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
   >::type processed_elements_t;
 
 void loadSvg(xml_element_t xml_root_element)

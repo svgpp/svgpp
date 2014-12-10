@@ -7,12 +7,12 @@
 
 #pragma once
 
-#include <svgpp/factory/length.hpp>
+#include <svgpp/factory/unitless_length.hpp>
 
 namespace svgpp { namespace policy { namespace length
 {
 
-template<class Context, class LengthFactory = const typename Context::length_factory>
+template<class Context, class LengthFactory = const typename Context::length_factory_type>
 struct forward_to_method
 {
   typedef LengthFactory length_factory_type;
@@ -25,13 +25,13 @@ struct forward_to_method
 
 namespace
 {
-  factory::length::default_factory const default_factory_instance;
+  factory::length::unitless<> const default_factory_instance;
 }
 
 template<class Context>
 struct default_policy
 {
-  typedef factory::length::default_factory const length_factory_type;
+  typedef factory::length::unitless<> const length_factory_type;
 
   static length_factory_type & length_factory(Context const &)
   {

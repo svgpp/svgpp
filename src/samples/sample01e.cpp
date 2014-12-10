@@ -68,23 +68,23 @@ public:
   boost::optional<double> const & height() const { return height_; }
 
   template<class IRI>
-  void set(svgpp::tag::attribute::xlink::href, svgpp::tag::iri_fragment, IRI const & fragment)
+  void set(tag::attribute::xlink::href, tag::iri_fragment, IRI const & fragment)
   { fragment_id_.assign(boost::begin(fragment), boost::end(fragment)); }
 
   template<class IRI>
-  void set(svgpp::tag::attribute::xlink::href, IRI const & fragment)
+  void set(tag::attribute::xlink::href, IRI const & fragment)
   { std::cerr << "External references aren't supported\n"; }
 
-  void set(svgpp::tag::attribute::x, double val)
+  void set(tag::attribute::x, double val)
   { x_ = val; }
 
-  void set(svgpp::tag::attribute::y, double val)
+  void set(tag::attribute::y, double val)
   { y_ = val; }
 
-  void set(svgpp::tag::attribute::width, double val)
+  void set(tag::attribute::width, double val)
   { width_ = val; }
 
-  void set(svgpp::tag::attribute::height, double val)
+  void set(tag::attribute::height, double val)
   { height_ = val; }
 
   void on_exit_element();
@@ -143,15 +143,15 @@ struct ChildContextFactories::apply<BaseContext, tag::element::use_>
 
 // Elements referenced by 'use' element
 template<>
-struct ChildContextFactories::apply<UseContext, svgpp::tag::element::svg, void>
+struct ChildContextFactories::apply<UseContext, tag::element::svg, void>
 {
-  typedef svgpp::factory::context::on_stack<ReferencedSymbolOrSvgContext> type;
+  typedef factory::context::on_stack<ReferencedSymbolOrSvgContext> type;
 };
 
 template<>
-struct ChildContextFactories::apply<UseContext, svgpp::tag::element::symbol, void>
+struct ChildContextFactories::apply<UseContext, tag::element::symbol, void>
 {
-  typedef svgpp::factory::context::on_stack<ReferencedSymbolOrSvgContext> type;
+  typedef factory::context::on_stack<ReferencedSymbolOrSvgContext> type;
 };
 
 template<class ElementTag>
@@ -179,8 +179,8 @@ typedef
   boost::mpl::fold<
     boost::mpl::protect<
       boost::mpl::joint_view<
-        svgpp::traits::shapes_attributes_by_element, 
-        svgpp::traits::viewport_attributes
+        traits::shapes_attributes_by_element, 
+        traits::viewport_attributes
       >
     >,
     boost::mpl::set<

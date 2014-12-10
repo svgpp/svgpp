@@ -68,6 +68,8 @@ Path Events Policy Concept
 
 :ref:`Named class template parameter <named-params>` for *Path Events Policy* is ``path_events_policy``.
 
+.. _path_policy:
+
 Path Policy Concept
 ------------------------
 

@@ -40,6 +40,7 @@ of Boost.Exception.
     std::cerr << ": " << e.what() << "\n";
   }
 
+.. _error_policy:
 
 Error Policy Concept
 ---------------------------

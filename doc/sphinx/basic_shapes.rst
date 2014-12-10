@@ -1,5 +1,7 @@
 .. _Associative Sequence: http://www.boost.org/doc/libs/1_56_0/libs/mpl/doc/refmanual/associative-sequence.html
 
+.. _basic_shapes:
+
 Basic Shapes
 ====================
 
@@ -33,8 +35,9 @@ Basic Shapes Policy Concept
   ``tag::element::rect`` входит в ``convert_to_path``, то преобразованы в **path** будут только rounded rectangles,
   а обычные прямоугольники будут обработаны как будто ``tag::element::rect`` входит в ``collect_attributes``.
 
-В ``document_traversal`` должны быть разрешена обработка атрибутов, описывающих геометрию *basic shapes* (**x**, **y**,
-**r** и т. д.), т. е. они должны быть включены в ``processed_elements`` или не включены в ``ignored_elements``.
+В ``document_traversal`` должна быть :ref:`разрешена <processed_attributes>` 
+обработка атрибутов, описывающих геометрию *basic shapes* (**x**, **y**,
+**r** и т. д.), т. е. они должны быть включены в ``processed_attributes`` или не включены в ``ignored_attributes``.
 `Associative Sequence`_ ``traits::shapes_attributes_by_element`` содержит список таких атрибутов для всех *basic shapes*.
 
 :ref:`Named class template parameter <named-params>` for *Basic Shapes Policy* is ``basic_shapes_policy``.
@@ -61,9 +64,9 @@ Basic Shapes Events Policy Concept
 Адаптеры, реализующие эти преобразования, используют метод ``length_to_user_coordinate`` *Length Factory*,
 чтобы получить численные *user coordinates* из *length*. Эти адаптеры передают значения по умолчанию при отсутствии
 атрибута и проверяют корректность значений атрибутов. Если значение disables rendering of the element
-в соответствии со стандартом SVG, то функция *Basic Shapes Events Policy* не вызывается, а если 
+в соответствии со спецификацией SVG, то функция *Basic Shapes Events Policy* не вызывается, а если 
 отрицательное значение недопустимо для этого атрибута в соответствии со стандартом, то вызывается 
-функция ``negative_value`` *Error Policy*.
+функция ``negative_value`` :ref:`Error Policy <error_policy>`.
 
 *Basic Shapes Events Policy* по умолчанию (``policy::basic_shapes_events::forward_to_method``) переадресует вызовы 
 статических методов методам объекта ``context``::

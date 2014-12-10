@@ -91,8 +91,8 @@ typedef
   boost::mpl::fold<
     boost::mpl::protect<
       boost::mpl::joint_view<
-        svgpp::traits::shapes_attributes_by_element, 
-        svgpp::traits::viewport_attributes
+        traits::shapes_attributes_by_element, 
+        traits::viewport_attributes
       >
     >,
     boost::mpl::set<

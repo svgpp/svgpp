@@ -20,20 +20,21 @@ Markers Policy Concept
     static const bool always_calculate_auto_orient = /* true or false */; 
   };
 
-``calculate_markers = true`` включает автоматический расчет положения маркеров. Если ``calculate_markers = false``,
-то остальные члены класса не используются.
+``calculate_markers = true`` 
+  Включает автоматический расчет положения маркеров. Если ``calculate_markers = false``,
+  то остальные члены класса не используются.
 
-В зависимости от значений marker properties, не для всех вершин нужно расчитывать 
-положение маркеров. А в зависимости от значения **orient** attribute of **marker** element, направление маркера может или 
-расчитываться для каждой вершины (**auto**) или задаваться значением атрибута.
+  В зависимости от значений marker properties, не для всех вершин нужно расчитывать 
+  положение маркеров. А в зависимости от значения **orient** attribute of **marker** element, направление маркера может или 
+  расчитываться для каждой вершины (**auto**) или задаваться значением атрибута.
 
-  ``always_calculate_auto_orient = true`` 
-    В этом случае вычисляется положение маркера и направление в режиме **orient="auto"** для каждой вершины.
+``always_calculate_auto_orient = true`` 
+  В этом случае вычисляется положение маркера и направление в режиме **orient="auto"** для каждой вершины.
 
-  ``always_calculate_auto_orient = false``
-    В этом случае, в начале обработки каждого path вызывается метод ``marker_get_config`` *Marker Events Policy*,
-    который запрашивает у пользовательского кода необходимость расчета положения и направления маркера. Позиции
-    маркеров возвращаются только для запрошенных вершин.
+``always_calculate_auto_orient = false``
+  В этом случае, в начале обработки каждого path вызывается метод ``marker_get_config`` *Marker Events Policy*,
+  который запрашивает у пользовательского кода необходимость расчета положения и направления маркера. Позиции
+  маркеров возвращаются только для запрошенных вершин.
 
 ``directionality_policy`` определяет как вычисляется направление маркера. По умолчанию направление маркера - 
 это значение типа ``double``, содержащее угол в радианах.
@@ -42,14 +43,21 @@ Markers Policy Concept
 ``policy::markers::calculate_always``, ``policy::markers::calculate`` и ``policy::markers::raw``.
 ``policy::markers::raw`` используется по умолчанию и выключает автоматический расчет маркеров.
 
+:ref:`Named class template parameter <named-params>` for *Markers Policy* is ``markers_policy``.
+
 
 Marker Events Policy Concept
 ----------------------------------
 
 ::
 
-  enum marker_vertex { marker_start, marker_mid, marker_end };
-  enum marker_config { marker_none, marker_orient_fixed, marker_orient_auto };
+  namespace svgpp
+  {
+    enum marker_vertex { marker_start, marker_mid, marker_end };
+    enum marker_config { marker_none, marker_orient_fixed, marker_orient_auto };
+  }
+
+::
 
   struct marker_events_policy_concept
   {
@@ -65,11 +73,11 @@ Marker Events Policy Concept
   };
 
 Метод ``marker_get_config`` вызывается, если ``makers_policy::always_calculate_auto_orient = false``. 
-Пользовательский код должен вернуть для каждого типа вершин (``start``, ``mid`` and ``end``), хочет ли он расчитывать
-угол и позицию (``marker_config::marker_orient_auto``), только позицию (``marker_config::marker_orient_fixed``)
-или ни то ни другое (``marker_config::marker_none``).
+Пользовательский код должен вернуть для каждого типа вершин (``start``, ``mid`` and ``end``), хочет ли он рассчитывать
+угол и позицию (``marker_orient_auto``), только позицию (``marker_orient_fixed``)
+или ни то ни другое (``marker_none``).
 
-Метод ``marker`` вызывается для каждой расчитанной вершины:
+Метод ``marker`` вызывается для каждой рассчитанной вершины:
 
   ``x`` и ``y`` - координаты вершины
 
@@ -86,6 +94,8 @@ Marker Events Policy Concept
 
     ``marker_index`` соответствует порядку, в котором вершины должны отрисовываться (0-based).
 
+
+:ref:`Named class template parameter <named-params>` for *Marker Events Policy* is ``marker_events_policy``.
 
 *Marker Events Policy* по умолчанию (``policy::marker_events::forward_to_method``) переадресует вызовы статических методов 
 методам объекта ``context``.

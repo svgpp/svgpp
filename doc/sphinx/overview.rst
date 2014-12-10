@@ -211,7 +211,7 @@ CSS Support
 ----------------
 
 SVG++ разбирает properties in **style** attribute, если обработка **style** разрешена программистом
-(``tag::attribute::style`` входит в список ``processed_attributes`` или не входит в ``ignored_attributes``).
+(см. *Attribute Traversal Policy*).
 
 SVG++ не реализует CSS cascading и обработку CSS stylesheet в элементе **style** - это, при необходимости, должен 
 делать другой модуль, предоставляя результат в виде атрибутов **style**.

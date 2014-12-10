@@ -10,17 +10,20 @@ add_custom_target(
     document_traversal.rst
     error.rst 
     index.rst 
+    installation.rst
     iri.rst 
     length.rst 
     lesson01.rst 
-	markers.rst 
+    license.rst
+    markers.rst 
     overview.rst 
     path.rst 
-	text.rst
+    text.rst
     transform.rst 
     value.rst 
     value_parser.rst 
-	viewport.rst 
+    viewport.rst 
+    conf.py 
 )
 
 if (WIN32)

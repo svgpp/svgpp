@@ -32,8 +32,15 @@ Color Factory Concept
 
 `System colors <http://www.w3.org/TR/2008/REC-CSS2-20080411/ui.html#system-colors>`_ библиотекой пока не обрабатываются.
 
+:ref:`Named class template parameter <named-params>` for *Color Factory* is ``color_factory``.
+
 Integer Color Factory
 -------------------------
+
+SVG++ по умолчанию использует класс ``factory::color::integer<>``, model of *Color Factory*. 
+Эта фабрика возвращает цвет, упакованный в одно число ``int``, компонент Red в третьем байте, 
+Green - во втором, Blue - в первом (младшем).
+Смещения компонентов и тип числа настраиваются.
 
 
 .. _icc-color-factory-section:
@@ -71,7 +78,7 @@ ICC Color Factory Concept
     factory.append_component_value(builder, 0.75);
     factory.append_component_value(builder, 0.15);
     factory.append_component_value(builder, 0.25);
-    set_color(factory.create_icc_color(builder));
+    value_events_policy::set(context, attribute_tag, factory.create_icc_color(builder));
   }
 
 
@@ -94,3 +101,5 @@ ICC Color Policy Concept
 *ICC Color Policy* по умолчанию возвращает статический экземпляр ``factory::icc_color::stub``.
 ``factory::icc_color::stub`` - model of *ICC Color Factory*, игнорирующая передаваемые фабрике значения и 
 возвращающая в качестве экземпляра ICC color пустой класс ``tag::skip_icc_color``.
+
+:ref:`Named class template parameter <named-params>` for *ICC Color Policy* is ``icc_color_policy``.

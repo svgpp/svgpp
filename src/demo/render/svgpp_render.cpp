@@ -672,7 +672,7 @@ struct attribute_traversal: svgpp::policy::attribute_traversal::default_policy
       svgpp::tag::attribute::markerUnits,
       svgpp::tag::attribute::orient,
       svgpp::notify_context<afterMarkerUnitsTag>
-    >,
+    >::type,
     boost::mpl::empty_sequence
   > get_priority_attributes_by_element;
 };

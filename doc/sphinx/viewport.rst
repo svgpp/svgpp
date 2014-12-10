@@ -35,6 +35,8 @@ Viewport Policy Concept
   Метод ``set_viewbox_transform`` *Viewport Events Policy* не используется, вместо него новая система координат
   задается посредством :ref:`Transform Events Policy <transform-section>`.
 
+:ref:`Named class template parameter <named-params>` for *Viewport Policy* is ``viewport_policy``.
+
 В файле ``svgpp/policy/viewport.hpp`` определены несколько predefined вариантов *Viewport Policy*. Используемый по умолчанию
 ``policy::viewport::raw`` не использует обработку viewport средствами SVG++. 
 ``policy::viewport::as_transform`` выставляет все булевские члены в ``true``, то есть обрабатывает атрибуты viewport 
@@ -67,6 +69,8 @@ Viewport Events Policy Concept
 
 ``get_reference_viewport_size``
   См. ниже :ref:`viewport_referenced_element`.
+
+:ref:`Named class template parameter <named-params>` for *Viewport Events Policy* is ``viewport_events_policy``.
 
 .. _viewport_referenced_element:
 

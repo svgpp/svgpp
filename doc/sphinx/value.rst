@@ -60,6 +60,8 @@ Value Events Policy Concept
 
   #include <svgpp/svgpp.hpp>
 
+  using namespace svgpp;
+
   struct Context
   {
     void set(tag::attribute::amplitude, double value)
@@ -83,7 +85,7 @@ Value Events Policy Concept
     struct default_policy<boost::optional<double> >
     {
       template<class AttributeTag>
-      void set(boost::optional<double> & context, AttributeTag tag, double value) 
+      static void set(boost::optional<double> & context, AttributeTag tag, double value) 
       {
         context = value;
       }
@@ -108,7 +110,7 @@ Value Events Policy Concept
   **gradientUnits** ограничен одним из двух возможных литеральных значений, а **clip-path**, кроме
   литеральных значений **none** и **inherit**, может принимать значения другого типа - *<FuncIRI>*.
 
-  Пример реализации контекста, контекста, принимающего значения атрибута **gradientUnits**::
+  Пример реализации контекста, принимающего значения атрибута **gradientUnits**::
 
     class GradientContext
     {

@@ -9,7 +9,7 @@ using namespace svgpp;
 typedef rapidxml_ns::xml_node<> const * xml_element_t;
 
 typedef boost::tuple<unsigned char, unsigned char, unsigned char> color_t;
-typedef boost::variant<svgpp::tag::value::none, svgpp::tag::value::currentColor, color_t> SolidPaint;
+typedef boost::variant<tag::value::none, tag::value::currentColor, color_t> SolidPaint;
 struct IRIPaint
 {
   IRIPaint(std::string const & fragment, boost::optional<SolidPaint> const & fallback = boost::optional<SolidPaint>())
@@ -25,13 +25,20 @@ typedef boost::variant<SolidPaint, IRIPaint> Paint;
 class StylableContext
 {
 public:
-  void set(tag::attribute::stroke, svgpp::tag::value::none)
-    { stroke_ = svgpp::tag::value::none(); }
+  StylableContext()
+    : stroke_width_(1)
+  {}
 
-  void set(tag::attribute::stroke, svgpp::tag::value::currentColor)
-    { stroke_ = svgpp::tag::value::currentColor(); }
+  void set(tag::attribute::stroke_width, double val)
+    { stroke_width_  = 1; }
 
-  void set(tag::attribute::stroke, color_t color, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
+  void set(tag::attribute::stroke, tag::value::none)
+    { stroke_ = tag::value::none(); }
+
+  void set(tag::attribute::stroke, tag::value::currentColor)
+    { stroke_ = tag::value::currentColor(); }
+
+  void set(tag::attribute::stroke, color_t color, tag::skip_icc_color = tag::skip_icc_color())
     { stroke_ = color; }
 
   template<class IRI>
@@ -39,56 +46,78 @@ public:
     { throw std::runtime_error("Non-local references aren't supported"); }
 
   template<class IRI>
-  void set(tag::attribute::stroke tag, svgpp::tag::iri_fragment, IRI const & fragment)
+  void set(tag::attribute::stroke tag, tag::iri_fragment, IRI const & fragment)
     { stroke_ = IRIPaint(std::string(boost::begin(fragment), boost::end(fragment))); }
 
   template<class IRI>
-  void set(tag::attribute::stroke tag, IRI const &, svgpp::tag::value::none val)
+  void set(tag::attribute::stroke tag, IRI const &, tag::value::none val)
     { set(tag, val); }
 
   template<class IRI>
-  void set(tag::attribute::stroke tag, svgpp::tag::iri_fragment, IRI const & fragment, svgpp::tag::value::none val)
+  void set(tag::attribute::stroke tag, tag::iri_fragment, IRI const & fragment, tag::value::none val)
     { stroke_ = IRIPaint(std::string(boost::begin(fragment), boost::end(fragment)), boost::optional<SolidPaint>(val)); }
 
   template<class IRI>
-  void set(tag::attribute::stroke tag, IRI const &, svgpp::tag::value::currentColor val)
+  void set(tag::attribute::stroke tag, IRI const &, tag::value::currentColor val)
     { set(tag, val); }
 
   template<class IRI>
-  void set(tag::attribute::stroke tag, svgpp::tag::iri_fragment, IRI const & fragment, svgpp::tag::value::currentColor val)
+  void set(tag::attribute::stroke tag, tag::iri_fragment, IRI const & fragment, tag::value::currentColor val)
     { stroke_ = IRIPaint(std::string(boost::begin(fragment), boost::end(fragment)), boost::optional<SolidPaint>(val)); }
 
   template<class IRI>
-  void set(tag::attribute::stroke tag, IRI const &, color_t val, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
+  void set(tag::attribute::stroke tag, IRI const &, color_t val, tag::skip_icc_color = tag::skip_icc_color())
     { set(tag, val); }
 
   template<class IRI>
-  void set(tag::attribute::stroke tag, svgpp::tag::iri_fragment, IRI const & fragment, color_t val, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
+  void set(tag::attribute::stroke tag, tag::iri_fragment, IRI const & fragment, color_t val, tag::skip_icc_color = tag::skip_icc_color())
     { stroke_ = IRIPaint(std::string(boost::begin(fragment), boost::end(fragment)), boost::optional<SolidPaint>(val)); }
 
 protected:
   Paint stroke_;
+  double stroke_width_;
 };
 
 class BaseContext: public StylableContext
 {
 public:
+  BaseContext(double resolutionDPI)
+  {
+    length_factory_.set_absolute_units_coefficient(resolutionDPI, tag::length_units::in());
+  }
+
+  // Called by Context Factory
   void on_exit_element()
   {}
 
+  // Transform Events Policy
   void transform_matrix(const boost::array<double, 6> & matrix)
   {}
 
+  // Viewport Events Policy
   void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height)
-  {}
+  {
+    length_factory_.set_viewport_size(viewport_width, viewport_height);
+  }
+
+  // Length Policy interface
+  typedef factory::length::unitless<> length_factory_type;
+
+  length_factory_type const & length_factory() const
+  { return length_factory_; }
+
+private:
+  length_factory_type length_factory_;
 };
 
 class ShapeContext: public BaseContext
 {
 public:
   ShapeContext(BaseContext const & parent)
+    : BaseContext(parent)
   {}
 
+  // Path Events Policy methods
   void path_move_to(double x, double y, tag::coordinate::absolute)
   {}
 
@@ -121,6 +150,7 @@ public:
   void path_exit()
   {}
 
+  // Marker Events Policy method
   void marker(marker_vertex v, double x, double y, double directionality, unsigned marker_index)
   {
     if (marker_index >= markers_.size())
@@ -147,6 +177,7 @@ class UseContext: public BaseContext
 {
 public:
   UseContext(BaseContext const & parent)
+    : BaseContext(parent)
   {}
 
   boost::optional<double> const & width() const { return width_; }
@@ -155,23 +186,23 @@ public:
   using BaseContext::set;
 
   template<class IRI>
-  void set(svgpp::tag::attribute::xlink::href, svgpp::tag::iri_fragment, IRI const & fragment)
+  void set(tag::attribute::xlink::href, tag::iri_fragment, IRI const & fragment)
   { fragment_id_.assign(boost::begin(fragment), boost::end(fragment)); }
 
   template<class IRI>
-  void set(svgpp::tag::attribute::xlink::href, IRI const & fragment)
+  void set(tag::attribute::xlink::href, IRI const & fragment)
   { std::cerr << "External references aren't supported\n"; }
 
-  void set(svgpp::tag::attribute::x, double val)
+  void set(tag::attribute::x, double val)
   { x_ = val; }
 
-  void set(svgpp::tag::attribute::y, double val)
+  void set(tag::attribute::y, double val)
   { y_ = val; }
 
-  void set(svgpp::tag::attribute::width, double val)
+  void set(tag::attribute::width, double val)
   { width_ = val; }
 
-  void set(svgpp::tag::attribute::height, double val)
+  void set(tag::attribute::height, double val)
   { height_ = val; }
 
   void on_exit_element();
@@ -192,6 +223,7 @@ public:
   {
   }
 
+  // Viewport Events Policy
   void get_reference_viewport_size(double & width, double & height)
   {
     if (referencing_.width())
@@ -230,15 +262,15 @@ struct ChildContextFactories::apply<BaseContext, tag::element::use_>
 
 // Elements referenced by 'use' element
 template<>
-struct ChildContextFactories::apply<UseContext, svgpp::tag::element::svg, void>
+struct ChildContextFactories::apply<UseContext, tag::element::svg, void>
 {
-  typedef svgpp::factory::context::on_stack<ReferencedSymbolOrSvgContext> type;
+  typedef factory::context::on_stack<ReferencedSymbolOrSvgContext> type;
 };
 
 template<>
-struct ChildContextFactories::apply<UseContext, svgpp::tag::element::symbol, void>
+struct ChildContextFactories::apply<UseContext, tag::element::symbol, void>
 {
-  typedef svgpp::factory::context::on_stack<ReferencedSymbolOrSvgContext> type;
+  typedef factory::context::on_stack<ReferencedSymbolOrSvgContext> type;
 };
 
 template<class ElementTag>
@@ -261,6 +293,33 @@ struct ColorFactoryBase
 };
 typedef factory::color::percentage_adapter<ColorFactoryBase> ColorFactory;
 
+struct AttributeTraversal: policy::attribute_traversal::default_policy
+{
+  typedef boost::mpl::if_<
+    // If element is 'svg' or 'symbol'...
+    boost::mpl::has_key<
+      boost::mpl::set<
+        tag::element::svg,
+        tag::element::symbol
+      >,
+      boost::mpl::_1
+    >::type,
+    boost::mpl::vector<
+      // ... load viewport-related attributes first ...
+      tag::attribute::x, 
+      tag::attribute::y, 
+      tag::attribute::width, 
+      tag::attribute::height, 
+      tag::attribute::viewBox, 
+      tag::attribute::preserveAspectRatio,
+      // ... notify library, that all viewport attributes that are present was loaded.
+      // It will result in call to BaseContext::set_viewport
+      notify_context<tag::event::after_viewport_attributes>
+    >::type,
+    boost::mpl::empty_sequence
+  > get_priority_attributes_by_element;
+};
+
 typedef 
   boost::mpl::fold<
     traits::shape_elements,
@@ -277,13 +336,14 @@ typedef
   boost::mpl::fold<
     boost::mpl::protect<
       boost::mpl::joint_view<
-        svgpp::traits::shapes_attributes_by_element, 
-        svgpp::traits::viewport_attributes
+        traits::shapes_attributes_by_element, 
+        traits::viewport_attributes
       >
     >,
     boost::mpl::set<
       tag::attribute::transform,
       tag::attribute::stroke,
+      tag::attribute::stroke_width,
       boost::mpl::pair<tag::element::use_, tag::attribute::xlink::href>
     >::type,
     boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
@@ -296,12 +356,14 @@ typedef
     viewport_policy<policy::viewport::as_transform>,
     context_factories<ChildContextFactories>,
     markers_policy<policy::markers::calculate_always>,
-    color_factory<ColorFactory>
+    color_factory<ColorFactory>,
+    length_policy<policy::length::forward_to_method<BaseContext> >
   > document_traversal_t;
 
 void loadSvg(xml_element_t xml_root_element)
 {
-  BaseContext context;
+  static const double ResolutionDPI = 90;
+  BaseContext context(ResolutionDPI);
   document_traversal_t::load_document(xml_root_element, context);
 }
 
