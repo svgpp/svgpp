@@ -128,8 +128,8 @@ public:
       get_e_and_deriv(eta2_, p3x_, p3y_, alpha_e2_deriv_x_, alpha_e2_deriv_y_);
       alpha_e2_deriv_x_ *= owner_.alpha_;
       alpha_e2_deriv_y_ *= owner_.alpha_;
+      i_ = -1;
       advance();
-      i_ = 0;
     }
 
     bool eof() const
