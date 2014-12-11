@@ -158,7 +158,6 @@ struct unwrap_context
     return context;
   }
 
-// TODO: rename bind to get_policy
   template<class Parameters>
   struct bind
   {

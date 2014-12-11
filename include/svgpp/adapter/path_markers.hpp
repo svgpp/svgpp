@@ -261,8 +261,30 @@ public:
 
     in_subpath_ = true;
 
-    // TODO:
-    line_to(x, y);
+    x_axis_rotation *= boost::math::constants::degree<coordinate_type>();
+    coordinate_type cx, cy, theta1, theta2;
+    arc_endpoint_to_center(last_x_, last_y_, x, y,
+      rx, ry, x_axis_rotation, large_arc_flag, sweep_flag,
+      cx, cy, theta1, theta2);
+
+    coordinate_type sin_theta = std::sin(x_axis_rotation);
+    coordinate_type cos_theta = std::cos(x_axis_rotation);
+    coordinate_type a_sin_eta1 = rx * std::sin(theta1);
+    coordinate_type b_cos_eta1 = ry * std::cos(theta1);
+    coordinate_type deriv_x1 = -a_sin_eta1 * cos_theta - b_cos_eta1 * sin_theta;
+    coordinate_type deriv_y1 = -a_sin_eta1 * sin_theta + b_cos_eta1 * cos_theta;
+    coordinate_type a_sin_eta2 = rx * std::sin(theta2);
+    coordinate_type b_cos_eta2 = ry * std::cos(theta2);
+    coordinate_type deriv_x2 = -a_sin_eta2 * cos_theta - b_cos_eta2 * sin_theta;
+    coordinate_type deriv_y2 = -a_sin_eta2 * sin_theta + b_cos_eta2 * cos_theta;
+
+    coordinate_type sweep_sign = sweep_flag ? 1 : -1;
+
+    on_nonzero_length_segment(
+      MarkersPolicy::directionality_policy::segment_directionality(deriv_x1 * sweep_sign, deriv_y1 * sweep_sign),
+      MarkersPolicy::directionality_policy::segment_directionality(deriv_x2 * sweep_sign, deriv_y2 * sweep_sign));
+    last_x_ = x;
+    last_y_ = y;
   }
 
   void path_close_subpath()

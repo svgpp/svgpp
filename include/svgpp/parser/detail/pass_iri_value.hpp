@@ -24,7 +24,7 @@ struct pass_iri_value_proxy
   template<class Context, class AttributeTag, class IRI, class... Args>
   static void set(Context & context, AttributeTag tag, IRI const & iri, BOOST_FWD_REF(Args)... args)
   {
-    if (boost::begin(iri) != boost::end(iri) && *boost::begin(iri) == '#') // TODO: is portable?
+    if (boost::begin(iri) != boost::end(iri) && *boost::begin(iri) == '#') 
       EventsPolicy::set(context, tag, 
         tag::iri_fragment(), 
         IRI(boost::next(boost::begin(iri)), boost::end(iri)), boost::forward<Args>(args)...);

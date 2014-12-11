@@ -9,7 +9,9 @@
 
 // TODO: should be set to "static" if compiler supports thread-safe initialization of local static variables
 // or non-multithreaded configuration of library requested
+#ifndef SVGPP_STATIC_IF_SAFE
 #define SVGPP_STATIC_IF_SAFE static
+#endif
 
 #ifndef SVGPP_NO_EXCEPTIONS
 #define SVGPP_INTERCEPT_EXCEPTIONS 1

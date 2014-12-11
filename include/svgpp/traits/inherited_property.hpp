@@ -8,13 +8,14 @@
 #pragma once
 
 #include <svgpp/definitions.hpp>
+#include <svgpp/traits/attribute_groups.hpp>
 #include <boost/mpl/bool.hpp>
 
 namespace svgpp { namespace traits
 {
   
 template<class AttributeTag>
-struct inherited_property: boost::mpl::true_ {}; // TODO: limit to properties only
+struct inherited_property: is_presentation_attribute<AttributeTag> {}; 
 
 template<> struct inherited_property<tag::attribute::alignment_baseline>: boost::mpl::false_ {};
 template<> struct inherited_property<tag::attribute::baseline_shift>: boost::mpl::false_ {};

@@ -12,7 +12,6 @@
 namespace svgpp 
 { 
   
-// TODO: class enums for C++11
 enum marker_vertex { marker_start = 1, marker_mid = 2, marker_end = 3 };
 enum marker_config { marker_none = 0, marker_orient_fixed = 1, marker_orient_auto = 2 };
  

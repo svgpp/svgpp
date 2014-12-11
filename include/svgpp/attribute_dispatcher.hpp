@@ -423,7 +423,7 @@ public:
     return value_parser<typename traits::attribute_type<ElementTag, AttributeTag>::type, 
         SVGPP_TEMPLATE_ARGS_PASS>::parse(
       attribute_tag, 
-      detail::adapt_context_value_events(this->context_, boost::fusion::at_c<0>(states_)), // TODO: change 0 for some meaningful value
+      detail::adapt_context_value_events(this->context_, boost::fusion::at_c<0>(states_)),
       attribute_value, property_source);
   }
 
@@ -528,7 +528,7 @@ public:
     return value_parser<typename traits::attribute_type<tag::element::marker, AttributeTag>::type, 
         SVGPP_TEMPLATE_ARGS_PASS>::parse(
       attribute_tag, 
-      detail::adapt_context_value_events(this->context_, boost::fusion::at_c<0>(states_)), // TODO: change 0 for some meaningful value
+      detail::adapt_context_value_events(this->context_, boost::fusion::at_c<0>(states_)),
       attribute_value, property_source);
   }
 
@@ -637,8 +637,7 @@ public:
         SVGPP_TEMPLATE_ARGS_PASS
       >::parse(
         attribute_tag, 
-        //boost::fusion::at_key<collect_attributes_adapter>(states_), 
-        detail::adapt_context_value_events(this->context_, boost::fusion::at_c<0>(states_).get_own_context()), // TODO: change 0 for some meaningful value
+        detail::adapt_context_value_events(this->context_, boost::fusion::at_c<0>(states_).get_own_context()), 
         attribute_value, property_source);
   }
 };
