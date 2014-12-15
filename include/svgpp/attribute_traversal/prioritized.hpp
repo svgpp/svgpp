@@ -70,15 +70,15 @@ namespace traversal_detail
   template<class State, class AttributeTag>
   struct is_attribute_id_in_sequence_op
   {
-    static bool check(detail::attribute_id id)
+    static bool check_attribute(detail::attribute_id id)
     {
-      return AttributeTag::id == id || State::check(id);
+      return AttributeTag::id == id || State::check_attribute(id);
     }
   };
 
   struct is_attribute_id_in_sequence_start
   {
-    BOOST_CONSTEXPR static bool check(detail::attribute_id)
+    BOOST_CONSTEXPR static bool check_attribute(detail::attribute_id)
     {
       return false;
     }
@@ -396,7 +396,7 @@ struct attribute_traversal_prioritized
     typedef typename found_attributes::template load_func<Dispatcher, false> load_func_t;
     load_func_t load_func(dispatcher, found);
     for(size_t id = 0; id < detail::attribute_count; ++id)
-      if (!is_deferred_t::check(static_cast<detail::attribute_id>(id)))
+      if (!is_deferred_t::check_attribute(static_cast<detail::attribute_id>(id)))
         if (!load_func(static_cast<detail::attribute_id>(id)))
           return false;
 
