@@ -186,7 +186,7 @@ public:
     coordinate_type dy1 = y1 - last_y_;
     coordinate_type dx2 = x - x1;
     coordinate_type dy2 = y - y1;
-    if (dx1 == 0 && dy1 == 0 || dx2 == 0 && dy2 == 0)
+    if ( ( dx1 == 0 && dy1 == 0 ) || ( dx2 == 0 && dy2 == 0 ) )
     {
       line_to(x, y);
     }
@@ -220,8 +220,8 @@ public:
     coordinate_type dy1 = y1 - last_y_;
     coordinate_type dx2 = x - x2;
     coordinate_type dy2 = y - y2;
-    if (dx1 == 0 && dy1 == 0 && (dx2 == 0 && dy2 == 0 || x2 == last_x_ && y2 == last_y_)
-      || dx2 == 0 && dy2 == 0 && x1 == x && y1 == y) 
+    if ( ( dx1 == 0 && dy1 == 0 && ( ( dx2 == 0 && dy2 == 0 ) || ( x2 == last_x_ && y2 == last_y_ ) ) )
+      || ( dx2 == 0 && dy2 == 0 && x1 == x && y1 == y ) ) 
     {
       line_to(x, y);
     }
