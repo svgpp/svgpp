@@ -22,6 +22,8 @@
 # include "parser_rapidxml_ns.hpp"
 #elif defined(SVG_PARSER_LIBXML)
 # include "parser_libxml.hpp"
+#elif defined(SVG_PARSER_XERCES)
+# include "parser_xerces.hpp"
 #endif
 #include <boost/function.hpp>
 #include <boost/tuple/tuple.hpp>
