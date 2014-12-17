@@ -5,6 +5,7 @@ project(Documentation)
 add_custom_target(
   Documentation ALL 
   SOURCES 
+    advanced.rst
     basic_shapes.rst 
     color.rst 
     document_traversal.rst
@@ -18,6 +19,7 @@ add_custom_target(
     markers.rst 
     overview.rst 
     path.rst 
+    reference.rst
     text.rst
     transform.rst 
     value.rst 

@@ -1,3 +1,5 @@
+#define BOOST_PARAMETER_MAX_ARITY 11
+
 #include <rapidxml_ns/rapidxml_ns.hpp>
 #include <svgpp/policy/xml/rapidxml_ns.hpp>
 #include <svgpp/svgpp.hpp>
@@ -303,7 +305,7 @@ struct AttributeTraversal: policy::attribute_traversal::default_policy
         tag::element::symbol
       >,
       boost::mpl::_1
-    >::type,
+    >,
     boost::mpl::vector<
       // ... load viewport-related attributes first ...
       tag::attribute::x, 
@@ -357,7 +359,8 @@ typedef
     context_factories<ChildContextFactories>,
     markers_policy<policy::markers::calculate_always>,
     color_factory<ColorFactory>,
-    length_policy<policy::length::forward_to_method<BaseContext> >
+    length_policy<policy::length::forward_to_method<BaseContext> >,
+    attribute_traversal_policy<AttributeTraversal>
   > document_traversal_t;
 
 void loadSvg(xml_element_t xml_root_element)

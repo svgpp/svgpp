@@ -1,10 +1,11 @@
-How parsed values are passed to user code
+How parsed values are passed to context
 =============================================
 
-Для того, чтобы определить, как значение данного атрибута будет передано в user code, нужно использовать
+Для того, чтобы определить, как значение данного атрибута будет передано to context, нужно использовать
 следующий алгоритм:
 
-#. Если атрибут включен в список passthrough_attributes_, то его значение будет передано через `Value Events Policy`_ 
+#. Если атрибут включен в список :ref:`passthrough_attributes <passthrough_attributes>`, 
+   то его значение будет передано через `Value Events Policy`_ 
    в виде :ref:`строки <passing-string>`.
 #. Если тип ``traits::attribute_type<ElementTag, AttributeTag>::type`` совпадает с ``tag::type::string``, то значение 
    тоже будет передано в виде :ref:`строки <passing-string>`.
@@ -37,7 +38,7 @@ Value Events Policy Concept
   };
 
 По умолчанию используется ``policy::value_events::forward_to_method``, который переадресует вызовы 
-методов ``set`` объекту ``context`` с параметрами  ``AttributeTag tag, ValueType1 const & value1...``::
+методов ``set`` объекту ``context``::
 
   template<class Context>
   struct forward_to_method
@@ -100,6 +101,8 @@ Value Events Policy Concept
       std::cout << *context << "\n";
   }
 
+.. _Literal Values:
+
 *Literal Values*
   Если значением атрибута может быть литерал, то такому значению атрибута соответствует вызов с тэгом из
   пространства имен ``tag::value``. Пример атрибутов, которые могут принимать литеральные значения::
@@ -134,7 +137,7 @@ Value Events Policy Concept
     };
 
 *<length>* or *<coordinate>*
-  Передается одним параметром, тип которого определяется :ref:`Length Factory <length-section>` 
+  Передается одним параметром, тип которого определяется :ref:`Length Factory <length-section>` (по умолчанию ``double``).
 
 *<IRI>* or *<FuncIRI>*
   См. :ref:`iri-section`.
@@ -149,6 +152,7 @@ Value Events Policy Concept
 
 *<color>* 
   Передается одним параметром, тип которого определяется :ref:`Color Factory <color-section>` 
+  (по умолчанию 8 бит на канал RGB, упакованные в ``int``).
 
 *<color> [<icccolor>]*
   Если *<icccolor>* не задан, то передается одним параметром, тип которого определяется :ref:`Color Factory <color-section>`.
@@ -164,7 +168,7 @@ Value Events Policy Concept
     };
 
 *<angle>*
-  Передается одним параметром, тип и значение которого определяются :ref:`Angle Factory <angle-section>` (по умолчанию 
+  Передается одним параметром, тип и значение которого определяются *Angle Factory* (по умолчанию 
   это значение типа ``double`` в градусах).
 
 *<number-optional-number>*
@@ -174,9 +178,10 @@ Value Events Policy Concept
   Передается одним параметром of unspecified type, который является моделью 
   `Boost Single Pass Range <http://www.boost.org/doc/libs/1_57_0/libs/range/doc/html/range/concepts/single_pass_range.html>`_.
   
-  Элементы *range* имеют тип number_type_ (по умолчанию ``double``) для *<list-of-numbers>*. 
-  Или определяется :ref:`Length Factory <length-section>` в случае *<list-of-lengths>*.
-  Или имеют тип ``std::pair<number_type, number_type>`` (по умолчанию ``std::pair<double, double>``) в случае *<list-of-points>*.
+  Элементы *range* имеют тип:
+    * number_type_ (по умолчанию ``double``) для *<list-of-numbers>*;
+    * определяется :ref:`Length Factory <length-section>` в случае *<list-of-lengths>*;
+    * ``std::pair<number_type, number_type>`` (по умолчанию ``std::pair<double, double>``) в случае *<list-of-points>*.
 
   Пример::
 
@@ -210,9 +215,17 @@ Value Events Policy Concept
   Передается четырьмя параметрами типа number_type_ (по умолчанию ``double``): ``(lo_x, lo_y, hi_x, hi_y)``.
 
 **preserveAspectRatio** attribute
+  В зависимости от значения передается как:
+    * ``(bool defer, tag::value::none)``
+    * ``(bool defer, AlignT align, MeetOrSliceT meetOrSlice)``
+
+      Тип ``AlignT`` - один из ``tag::value::xMinYMin``, ``tag::value::xMidYMin``, ``tag::value::xMaxYMin``, 
+      ``tag::value::xMinYMid``, ``tag::value::xMidYMid``, ``tag::value::xMaxYMid``, 
+      ``tag::value::xMinYMax``, ``tag::value::xMidYMax``, ``tag::value::xMaxYMax``.
+      Тип ``MeetOrSliceT`` - ``tag::value::meet`` или ``tag::value::slice``.
 
 **text-decoration** property
-  Значения **none** and **inherit** передаются как *Literal Values* (см. выше).
+  Значения **none** and **inherit** передаются как `Literal Values`_.
   Остальные варианты передаются восемью параметрами, из них четыре типа ``bool``, каждому предшествует *tag*, 
   определяющий назначение параметра. Boolean parameters принимают значение ``true``, если соответствующий 
   text decoration указан в property::
@@ -229,7 +242,7 @@ Value Events Policy Concept
     };
 
 **enable-background** property
-  Значения **accumulate**, **new** and **inherit** передаются как *Literal Values* (см. выше).
+  Значения **accumulate**, **new** and **inherit** передаются как `Literal Values`_.
   Значения вида **new <x> <y> <width> <height>** передаются пятью параметрами, первое - *tag*, 
   остальные имеют тип number_type_ (по умолчанию ``double``): 
   ``(tag::value::new_(), x, y, width, height)``.

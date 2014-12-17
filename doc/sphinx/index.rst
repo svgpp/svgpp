@@ -54,6 +54,6 @@ Take a look on :ref:`Tutorial <tutorial>` to get idea about what it is.
    lesson01
    overview
    reference
-   value_parser
+   advanced
    license
    help

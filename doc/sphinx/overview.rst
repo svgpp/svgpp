@@ -7,22 +7,26 @@ Context
 ---------
 
 Основная схема разбора SVG с помощью SVG++: программист вызывает какую-то функцию библиотеки, передавая ссылку на *context*
-и XML элемент или XML атрибут, а библиотека вызывает статические методы соответствующего *Events Policy*, 
+и XML элемент или значение XML атрибута, а библиотека вызывает статические методы соответствующего *Events Policy*, 
 передавая этот же *context* и разобранные значения в виде параметров.
 
-*Events Policies* (*Value Events Policy*, *Transform Events Policy*, *Path Events Policy* etc) определяют какой тип должен иметь *context*.
+*Events Policies* (*Value Events Policy*, *Transform Events Policy*, *Path Events Policy* etc) определяют 
+какой тип должен иметь *context*.
 *Events Policies* по умолчанию используют *context* как объект, вызывая его методы. 
-
 
 
 Компоненты
 -----------------
 
 Перечислим главные компоненты библиотеки SVG++, начиная с нижнего уровня, каждый следующий базируется на предыдущих:
+  
+  *Grammars*
+    Boost.Spirit grammars представляют реализацию грамматик спецификации SVG.
 
   *Value Parsers*
-    В основе SVG++ лежат *Value Parsers* - функции, преобразующие строковые значения атрибутов и CSS properties
-    в вызовы пользовательских функций с удобными для обработки параметрами.
+    *Value Parsers* - функции, преобразующие строковые значения атрибутов и CSS properties
+    в вызовы пользовательских функций с удобными для обработки параметрами. 
+    Для разбора некоторых значений используются *grammars*. 
 
     Например, значение атрибута **x="16mm"** может быть преобразовано в соответствующее ``double`` значение, 
     учитывающее единицы измерения, 
@@ -31,7 +35,7 @@ Context
   *Adapters*
     *Value Parsers* максимально сохраняют структуру данных SVG, что позволяет, например, использовать SVG++ для
     построения SVG DOM, но в других приложениях эта информация может быть избыточной. 
-    SVG++ предоставляет ряд *Adapters*, которые позволяют упростить программисту обработку данных SVG.
+    SVG++ предоставляет ряд *adapters*, которые позволяют упростить программисту обработку данных SVG.
     *Adapters* конфигурируются посредстовом *policies*.
 
   *Attribute Dispatcher*
@@ -42,32 +46,25 @@ Context
     значения атрибутов **x1**, **y1**, **x2** и **y2** - этим управляет *Attribute Dispatcher*.
 
   *Attribute Traversal*
-    Объект *Attribute Traversal* создается на время обработки атрибутов одного элемента и вызывает
-    методы *Attribute Dispatcher*. 
-    
-    *Attribute Traversal* определяет по имени атрибута его внутренний числовой идентификатор.
-
-    *Attribute Traversal* осуществляет разбор атрибута **style**, так что в последующем значения атрибутов
-    и значения CSS properties обрабатываются аналогично.
-
-    *Attribute Traversal* проверяет присутствие обязательных атрибутов элемента.
-
-    *Attribute Traversal* "прячет" presentation attribute, если это же property задано в CSS.
-
-    *Attribute Traversal* позволяет задать порядок обработки атрибутов.
+    * Объект *Attribute Traversal* создается на время обработки атрибутов одного элемента и вызывает
+      методы *Attribute Dispatcher*.
+    * Определяет по имени атрибута его внутренний числовой идентификатор.
+    * Осуществляет разбор атрибута **style**, так что в последующем значения атрибутов
+      и значения CSS properties обрабатываются аналогично.
+    * Проверяет присутствие обязательных атрибутов элемента.
+    * "Прячет" presentation attribute, если это же property задано в атрибуте **style**.
+    * Позволяет задать порядок обработки атрибутов.
 
   *Document Traversal*
-    Набор статических методов. Осуществляет обход дерева SVG документа, обрабатывая выбранные программистом элементы SVG.
-
-    *Document Traversal* проверяет content model, то есть допустимость появления дочерних элементов.
-
-    *Document Traversal* создает экземпляры и вызывает методы *Attribute Dispatcher* и *Attribute Traversal* для атрибутов элемента.
-
-    *Document Traversal* передает child text nodes тех элементов SVG, которые могут иметь text content, в user code.
-
+    * Набор статических методов. Осуществляет обход дерева SVG документа, обрабатывая выбранные программистом элементы SVG.
+    * Проверяет content model, то есть допустимость появления дочерних элементов.
+    * Создает экземпляры и вызывает методы *Attribute Dispatcher* и *Attribute Traversal* для атрибутов элемента.
+    * Передает child text nodes тех элементов SVG, которые могут иметь text content, в user code.
 
 *Document Traversal* предоставляет удобный доступ ко всем возможностям библиотеки и, в большинстве случаев, его и нужно 
 использовать.
+
+*Grammars* - максимально независимые компоненты, могут использоваться отдельно.
 
 *Value Parsers* имеют простой интерфейс и могут быть легко подключены в приложение, если по каким-то причинам обход 
 дерева SVG, предоставляемый *Document Traversal*, не нужен или достаточно разобрать отдельные атрибуты.
@@ -114,7 +111,8 @@ Tags
     }
   }
 
-Каждому элементу SVG соответствует тэг из пространства имен ``tag::element``, а каждому атрибуту SVG - тэг из пространства 
+Каждому элементу SVG соответствует тэг из пространства имен ``tag::element``, а каждому атрибуту (or property) SVG - 
+тэг из пространства 
 имен ``tag::attribute``. Атрибутам из XML namespace **xlink** соответствуют тэги in C++ namespace ``tag::attribute::xlink``, 
 а атрибутам из XML namespace **xml** - тэги in C++ namespace ``tag::attribute::xml``. 
 Есть и иные тэги, которые описаны в других местах документации.
@@ -127,7 +125,18 @@ Named Class Template Parameters
 
 SVG++ широко использует 
 `named class template parameters <http://www.boost.org/doc/libs/1_56_0/libs/parameter/doc/html/index.html#class-template-parameter-support>`_ 
-для compile-time настройки библиотеки. Заданные named class template parameters передаются между компонентами, например,
+для compile-time настройки библиотеки. Выглядит это так::
+
+  svgpp::document_traversal<
+    svgpp::length_policy<SomeUserLengthPolicy>,
+    svgpp::path_policy<SomeUserPathPolicy>
+    /* ... */
+  >::load_document(/* ... */);
+
+В этом примере тип ``SomeUserLengthPolicy`` передается в качестве параметра ``length_policy``,
+а тип ``SomeUserPathPolicy`` передается в качестве ``path_policy``.
+
+Заданные named class template parameters передаются между компонентами, например,
 named class template parameters, заданные ``document_traversal``, передаются вплоть до ``value_parser``.
 
 Конфигурация библиотеки
@@ -150,6 +159,8 @@ named class template parameters, заданные ``document_traversal``, пер
       {};
     }}}
 
+.. _xml-parser:
+
 XML Parser
 -------------
 
@@ -167,18 +178,22 @@ header file соответствующего *XML Policy* библиотеки S
   #include <svgpp/policy/xml/rapidxml_ns.hpp>
   #include <svgpp/svgpp.hpp>
 
+.. _xml_policy_types:
+
 Ниже перечислены поддерживаемые XML parsing libraries, соответствующие header файлы с *XML Policy* и типы
 XMLElement и XMLAttribute:
 
-+--------------------------+-----------------------------------------------+-------------------------------------------+------------------------------------------------+
-|XML Parser Library        | Policy header                                 | XMLElement template parameter             | XMLAttribute template parameter                |
-+==========================+===============================================+===========================================+================================================+
-|RapidXML NS               | <svgpp/policy/xml/rapidxml_ns.hpp>            | ``rapidxml_ns::xml_node<Ch> const *``     | ``rapidxml_ns::xml_attribute<Ch> const *``     |
-+--------------------------+-----------------------------------------------+-------------------------------------------+------------------------------------------------+
-|libxml2                   | <svgpp/policy/xml/libxml2.hpp>                | ``xmlNode *``                             | ``xmlAttr *``                                  |
-+--------------------------+-----------------------------------------------+-------------------------------------------+------------------------------------------------+
-|MSXML                     | <svgpp/policy/xml/msxml.hpp>                  | ``IXMLDOMElement *``                      | ``IXMLDOMNode *``                              |
-+--------------------------+-----------------------------------------------+-------------------------------------------+------------------------------------------------+
++--------------------------+-----------------------------------------------+-------------------------------------------+
+|XML Parser Library        | Policy header                                 | XMLElement template parameter             |
++==========================+===============================================+===========================================+
+|RapidXML NS               | <svgpp/policy/xml/rapidxml_ns.hpp>            | ``rapidxml_ns::xml_node<Ch> const *``     |
++--------------------------+-----------------------------------------------+-------------------------------------------+
+|libxml2                   | <svgpp/policy/xml/libxml2.hpp>                | ``xmlNode *``                             |
++--------------------------+-----------------------------------------------+-------------------------------------------+
+|MSXML                     | <svgpp/policy/xml/msxml.hpp>                  | ``IXMLDOMElement *``                      |
++--------------------------+-----------------------------------------------+-------------------------------------------+
+|Xerces                    | <svgpp/policy/xml/xerces.hpp>                 | ``xercesc::DOMElement const *``           |
++--------------------------+-----------------------------------------------+-------------------------------------------+
 
 
 .. _passing-string:
@@ -186,8 +201,8 @@ XMLElement и XMLAttribute:
 Строки
 ------------
 
-SVG++ поддерживает разную ширину character type. Пока библиотека тестируется с ``char`` и ``wchar_t``, но поддержка других
-типов предусмотрена. Тип character определяется используемой XML parsing library.
+SVG++ поддерживает разную ширину character type - ``char`` и ``wchar_t``, а на некоторых компиляторах
+и ``char16_t`` и ``char32_t``. Тип character определяется используемой XML parsing library.
 
 Там, где надо передать строковое значение в пользовательский код, используется model of
 `Forward Range <http://www.boost.org/doc/libs/1_56_0/libs/iterator/doc/new-iter-concepts.html#forward-traversal-iterators-lib-forward-traversal-iterators>`_
@@ -210,8 +225,8 @@ concept. Пример обработки::
 CSS Support
 ----------------
 
-SVG++ разбирает properties in **style** attribute, если обработка **style** разрешена программистом
-(см. *Attribute Traversal Policy*).
+SVG++ разбирает properties in **style** attribute, если обработка **style** :ref:`разрешена <parse_style>` 
+программистом.
 
 SVG++ не реализует CSS cascading и обработку CSS stylesheet в элементе **style** - это, при необходимости, должен 
 делать другой модуль, предоставляя результат в виде атрибутов **style**.

@@ -1,3 +1,5 @@
+.. _viewport-section:
+
 Viewport
 ================================
 
@@ -81,7 +83,7 @@ Viewport Events Policy Concept
 заданные ссылающимся элементом. 
 
 Для того, чтобы SVG++ получила информацию, что загружается элемент referenced by **use** or **image**,
-надо передать тэг ссылающегося элемента через параметр ``referencing_element`` ``document_traversal``.
+надо передать тэг ссылающегося элемента через параметр :ref:`referencing_element <referencing_element>` ``document_traversal``.
 В этом случае будет вызываться ``get_reference_viewport_size``.
 В реализации ``get_reference_viewport_size`` нужно присвоить ``viewport_width``
 значение атрибута **width** ссылающегося элемента, если этот атрибут присутствует. 
@@ -121,7 +123,7 @@ Viewport Events Policy Concept
     > marker_viewport_attributes;
   }
 
-Эти атрибуты должны быть разрешены пользователем.
+Обработка этих атрибутов должна быть :ref:`разрешена <processed_attributes>` пользователем.
 
 Порядок обработки атрибутов
 -------------------------------------

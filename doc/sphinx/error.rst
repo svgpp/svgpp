@@ -1,3 +1,5 @@
+.. _error-handling:
+
 Error handling
 =================
 
@@ -31,7 +33,7 @@ of Boost.Exception.
   catch(svgpp::exception_base const & e)
   {
     typedef boost::error_info<svgpp::tag::error_info::xml_element, XMLElement> element_error_info;
-    std::cerr << "Error reading XML";
+    std::cerr << "Error reading SVG";
     if (XMLElement const * element = boost::get_error_info<element_error_info>(e))
       std::cerr 
         << " in element '" 
@@ -52,7 +54,10 @@ Error Policy Concept
     typedef /* ... */ context_type;
 
     template<class XMLElement, class ElementName>
-    static bool unknown_element(context_type const &, XMLElement const & element, ElementName const & name);
+    static bool unknown_element(
+      context_type const &, 
+      XMLElement const & element, 
+      ElementName const & name);
 
     template<class XMLAttributesIterator, class AttributeName>
     static bool unknown_attribute(context_type &, 
@@ -83,9 +88,14 @@ Error Policy Concept
     template<class AttributeTag>
     static bool negative_value(context_type &, AttributeTag);
 
-    typedef boost::exception intercepted_exception_type;
+    typedef /* ... */ intercepted_exception_type;
 
     template<class XMLElement>
     static bool add_element_info(intercepted_exception_type & e, 
       XMLElement const & element);
   };
+
+Если метод *Error Policy* возвращает ``true``, то SVG++ продолжает обработку, пропустив ошибочную часть. 
+В некоторых случаях это может привести к проблемам в последующей обработке. 
+
+Если возвращается ``false``, то обработка прекращается.

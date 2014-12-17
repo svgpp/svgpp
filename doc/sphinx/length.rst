@@ -3,7 +3,7 @@
 Length
 ===============
 
-*Length Factory* определяет какой тип будет соответствовать SVG types `<length> <http://www.w3.org/TR/SVG/types.html#DataTypeLength>`_ 
+*Length Factory* определяет, какой тип будет соответствовать SVG types `<length> <http://www.w3.org/TR/SVG/types.html#DataTypeLength>`_ 
 and `<coordinate> <http://www.w3.org/TR/SVG/types.html#DataTypeCoordinate>`_ и как он создается из 
 текстовых значений, включающих единицы измерения.
 

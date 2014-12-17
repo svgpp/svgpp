@@ -4,7 +4,8 @@ Installation
 The latest version of SVG++ can be downloaded from SVG++ repository, at https://github.com/svgpp/svgpp, or
 as a package at https://github.com/svgpp/svgpp/archive/master.zip
 
-SVG++ requires Boost library (was tested with Boost >= 1.55).
+SVG++ requires Boost library (was tested with Boost >= 1.55). Only header-only libraries from Boost are
+used, no build required.
 
 SVG++ consists of header files only and does not require any libraries to link against. 
 Including ``svgpp/svgpp.hpp`` will be sufficient for most projects.

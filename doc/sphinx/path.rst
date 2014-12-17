@@ -85,7 +85,7 @@ Path Policy Concept
     static const bool arc_as_cubic_bezier           = /* true or false */; 
   };
 
-Как видно, *Path Policy* - это класс с набором статических member constants типа bool. Если все они имеют значение ``false``
+*Path Policy* - это класс с набором статических member constants типа bool. Если все они имеют значение ``false``
 (как в ``policy::path::raw``), то адаптер не используется и парсер передает разобранные значения как есть. Устанавливая опции в 
 ``true`` можно упростить код приложения:
 

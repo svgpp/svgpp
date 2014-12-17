@@ -79,7 +79,7 @@ Transform Policy Concept
     static const bool only_matrix_transform = /* true or false */;
   };
 
-Как видно, *Transform Policy* - это класс с набором статических member constants типа bool. Если все они имеют значение ``false``
+*Transform Policy* - это класс с набором статических member constants типа bool. Если все они имеют значение ``false``
 (как в ``policy::transform::raw``), то адаптер не используется и парсер передает разобранные значения как есть. Устанавливая опции в 
 ``true`` можно упростить код приложения:
 
