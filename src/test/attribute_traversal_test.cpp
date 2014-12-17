@@ -78,6 +78,11 @@ namespace
   {
     static const bool parse_style = false;
   };
+
+  struct traversal_policy_with_style: svgpp::policy::attribute_traversal::raw
+  {
+    static const bool parse_style = true;
+  };
 }
 
 TEST(AttributeTraversal, Prioritized)
@@ -142,7 +147,7 @@ TEST(AttributeTraversal, Sequential)
   traversal_context context;
   EXPECT_TRUE((svgpp::attribute_traversal<
       svgpp::tag::element::svg, 
-      svgpp::attribute_traversal_policy<svgpp::policy::attribute_traversal::raw> 
+      svgpp::attribute_traversal_policy<traversal_policy_with_style> 
     >::type::load(svg_element->first_attribute(), context)));
   {
     using namespace svgpp;

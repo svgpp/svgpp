@@ -263,7 +263,7 @@ public:
     static bool load(XMLElement const & xml_element, Context & parent_context)
     {
       typedef typename boost::parameter::parameters<
-          boost::parameter::optional<tag::referencing_element>
+          boost::parameter::optional<tag::referencing_element, boost::is_base_of<tag::element::any, boost::mpl::_> >
         , boost::parameter::required<tag::expected_elements, boost::mpl::is_sequence<boost::mpl::_> >
         , boost::parameter::optional<tag::ignored_elements, boost::mpl::is_sequence<boost::mpl::_> >
         , boost::parameter::optional<tag::processed_elements, boost::mpl::is_sequence<boost::mpl::_> >
@@ -281,13 +281,13 @@ public:
       // If neither ignored_elements nor processed_elements are set then expected_elements treated as processed_elements
       typedef typename
         boost::mpl::if_<
-          boost::mpl::not_<boost::is_void<processed_elements> >,
-          boost::mpl::has_key<boost::mpl::protect<processed_elements>, boost::mpl::_1>,
+          boost::is_void<processed_elements>,
           typename boost::mpl::if_<
-            boost::mpl::not_<boost::is_void<ignored_elements> >,
-            boost::mpl::not_<boost::mpl::has_key<boost::mpl::protect<ignored_elements>, boost::mpl::_1> >,
-            boost::mpl::has_key<boost::mpl::protect<expected_elements>, boost::mpl::_1>
-          >::type
+            boost::is_void<ignored_elements>,
+            boost::mpl::has_key<boost::mpl::protect<expected_elements>, boost::mpl::_1>,
+            boost::mpl::not_<boost::mpl::has_key<boost::mpl::protect<ignored_elements>, boost::mpl::_1> >
+          >::type,
+          boost::mpl::has_key<boost::mpl::protect<processed_elements>, boost::mpl::_1>
         >::type is_element_processed;
 
       // The 'a' element may contain any element that its parent may contain, except itself.
