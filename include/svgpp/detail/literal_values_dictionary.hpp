@@ -57,7 +57,7 @@ struct literal_values_dictionary<SVGPP_ITER_CHAR_TYPE>
   template<> \
   inline literal_values_dictionary<SVGPP_ITER_CHAR_TYPE>::string_type \
     literal_values_dictionary<SVGPP_ITER_CHAR_TYPE>::get_name<tag::value::name>() \
-  { static const SVGPP_ITER_CHAR_TYPE value[] = SVGPP_ITER_STRINGIZE(string); \
+  { static const SVGPP_ITER_CHAR_TYPE value[] = BOOST_PP_CAT(SVGPP_ITER_STRINGIZE, #string); \
     return string_type(value, value + sizeof(value)/sizeof(value[0]) - 1); }
 #include <svgpp/detail/dict/enumerate_literal_values.inc>
 #undef SVGPP_ON_VALUE

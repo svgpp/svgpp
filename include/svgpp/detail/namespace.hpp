@@ -48,21 +48,21 @@ template<class Ch> inline boost::iterator_range<Ch const *> xlink_namespace_uri(
 template<>
 inline boost::iterator_range<SVGPP_ITER_CHAR_TYPE const *> svg_namespace_uri<SVGPP_ITER_CHAR_TYPE>()
 {
-  static const SVGPP_ITER_CHAR_TYPE value[] = SVGPP_ITER_STRINGIZE(SVGPP_SVG_NAMESPACE_URI);
+  static const SVGPP_ITER_CHAR_TYPE value[] = BOOST_PP_CAT(SVGPP_ITER_STRINGIZE, SVGPP_SVG_NAMESPACE_URI);
   return boost::iterator_range<SVGPP_ITER_CHAR_TYPE const *>(value, boost::end(value) - 1);
 }
 
 template<>
 inline boost::iterator_range<SVGPP_ITER_CHAR_TYPE const *> xml_namespace_uri<SVGPP_ITER_CHAR_TYPE>()
 {
-  static const SVGPP_ITER_CHAR_TYPE value[] = SVGPP_ITER_STRINGIZE(SVGPP_XML_NAMESPACE_URI);
+  static const SVGPP_ITER_CHAR_TYPE value[] = BOOST_PP_CAT(SVGPP_ITER_STRINGIZE, SVGPP_XML_NAMESPACE_URI);
   return boost::iterator_range<SVGPP_ITER_CHAR_TYPE const *>(value, boost::end(value) - 1);
 }
 
 template<>
 inline boost::iterator_range<SVGPP_ITER_CHAR_TYPE const *> xlink_namespace_uri<SVGPP_ITER_CHAR_TYPE>()
 {
-  static const SVGPP_ITER_CHAR_TYPE value[] = SVGPP_ITER_STRINGIZE(SVGPP_XLINK_NAMESPACE_URI);
+  static const SVGPP_ITER_CHAR_TYPE value[] = BOOST_PP_CAT(SVGPP_ITER_STRINGIZE, SVGPP_XLINK_NAMESPACE_URI);
   return boost::iterator_range<SVGPP_ITER_CHAR_TYPE const *>(value, boost::end(value) - 1);
 }
 

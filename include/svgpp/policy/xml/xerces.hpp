@@ -71,7 +71,7 @@ public:
 
   bool is_end() const
   {
-    return current_attribute_ < attribute_map_->getLength();
+    return current_attribute_ >= attribute_map_->getLength();
   }
 
   xercesc::DOMAttr const * operator->() const
@@ -245,7 +245,7 @@ private:
         if (TextsAlso)
           return;
         break;
-       default:
+      default:
         break;
       }
     }
