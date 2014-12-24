@@ -1,15 +1,10 @@
-.. SVG++ documentation master file, created by
-   sphinx-quickstart on Wed Jul 23 21:06:03 2014.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 SVG++ documentation
 =================================
 
 About
 ------------
 
-SVG++ library can be thought of as a framework, containing parsers for various SVG syntaxes, adapters that simplifies
+SVG++ library can be thought of as a framework, containing parsers for various SVG syntaxes, adapters that simplify
 handling of parsed data and a lot of other utilities and helpers for most common tasks.
 Take a look on :ref:`Tutorial <tutorial>` to get idea about what it is.
 

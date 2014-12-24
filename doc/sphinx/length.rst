@@ -3,12 +3,12 @@
 Length
 ===============
 
-*Length Factory* определяет, какой тип будет соответствовать SVG types `<length> <http://www.w3.org/TR/SVG/types.html#DataTypeLength>`_ 
-and `<coordinate> <http://www.w3.org/TR/SVG/types.html#DataTypeCoordinate>`_ и как он создается из 
-текстовых значений, включающих единицы измерения.
+*Length Factory* defines what type corresponds to SVG types `<length> <http://www.w3.org/TR/SVG/types.html#DataTypeLength>`_ 
+and `<coordinate> <http://www.w3.org/TR/SVG/types.html#DataTypeCoordinate>`_ 
+and how instances of that types are created from text values that includes units.
 
-*Length Policy* определяет способ получения экземпляра *Length Factory* для конкретного контекста. Это позволяет 
-конфигурировать *Length Factory* in runtime.
+*Length Policy* specifies how *Length Factory* for the context is accessed. 
+It permits configuration of *Length Factory* in runtime (e.g. when viewport size or font size is changed).
 
 Length Factory Concept
 ----------------------------
@@ -37,23 +37,23 @@ Length Factory Concept
 
 ``create_length`` method receives number and length tag and returns corresponding length value of type ``length_type``.
 
-Lengths, заданные в percent units, могут обрабатываться 
-`по разному <http://www.w3.org/TR/SVG/coords.html#Units_viewport_percentage>`_, 
-в зависимости от того, длине или ширине соответствует значение. Для этого ``create_length`` передается третий
-параметр - один из трёх тэгов ``tag::length_dimension::width``, ``tag::length_dimension::height`` 
-или ``tag::length_dimension::not_width_nor_height``.
+Lengths that are set with percent units may be treated
+`differently <http://www.w3.org/TR/SVG/coords.html#Units_viewport_percentage>`_, 
+depending on whether value corresponds to width or height. That is why ``create_length`` receives third
+parameter - one of the three tag types ``tag::length_dimension::width``, ``tag::length_dimension::height`` 
+or ``tag::length_dimension::not_width_nor_height``.
 
-В зависимости от реализации *Length Factory*, length может иметь как численный тип, так и более сложный, например объект, содержащий 
-значение и единицы измерения. SVG++ предоставляет ``factory::length::unitless``, реализующий конфигурируемую фабрику, 
-возвращающую численные значения.
+Depending on the implementation of *Length Factory*, length may be of integer type 
+or something more complex like object containing value and units used. 
+SVG++ provides ``factory::length::unitless``, that implements configurable *Length Factory* 
+returning numeric values.
 
 Unitless Length Factory
 --------------------------
 
-*Unitless Length Factory* ``factory::length::unitless`` - это model of *Length Factory*, предоставляемая SVG++ library. 
-Unitless в названии означает,
-что lengths, создаваемые фабрикой, просто числа, не имеющие размерности. Информация о единицах измерения 
-используется *Unitless Length Factory* для выбора коэффициента.
+*Unitless Length Factory* ``factory::length::unitless`` - is a model of *Length Factory*, provided by SVG++ library. 
+Name "unitless" means that lengths created by factory are numbers without information about units. 
+*Unitless Length Factory* uses units information to apply corresponding coefficient to value.
 
 ::
 
@@ -86,10 +86,9 @@ Unitless в названии означает,
   };
 
 ``set_absolute_units_coefficient``
-  Позволяет задать коэффициент, на который будет умножаться значение, заданное в абсолютных единицах измерения
-  (*in*, *cm*, *mm*, *pt* или *pc*), для получения длины.
-  Метод достаточно вызвать для любой абсолютной единицы измерения, коэффициенты для остальных абсолютных единиц будут вычисленны
-  автоматически. Например::
+  Sets coefficient that will be used for lengths in absolute units (*in*, *cm*, *mm*, *pt* or *pc*).
+  The method should be called for any one of absolute units, coefficients for others will be calculated
+  automatically. Example::
 
     svgpp::factory::length::unitless<> factory;
     // Let our length value be a pixel. Set 'in' coefficient to 90 (90 Dots per inch)
@@ -98,19 +97,19 @@ Unitless в названии означает,
     assert(factory.get_absolute_units_coefficient(svgpp::tag::length_units::pc()) == 15);
 
 ``set_user_units_coefficient``
-  Позволяет задать коэффициент, на который будет умножаться значение, заданное в user units (заданное без единиц измерения
-  или в *px*). По умолчанию коэффициент = 1.
+  Sets coefficient that will be used for lengths in user units (that are specified without units or in *px*). 
+  By default coefficient = 1.
 
 ``set_viewport_size``
-  Задает ширину и высоту viewport для преобразования percentage values that are defined to be relative to the size of viewport.
+  Sets width and height of the viewport to be used for percentage values that are defined to be relative to the size of viewport.
 
-``set_em_coefficient`` и ``set_ex_coefficient``
-  Позволяют задать коэффициенты для единиц измерения *em* и *ex*, учитывающих размер выбранного фонта.
+``set_em_coefficient`` and ``set_ex_coefficient``
+  Sets coefficients for font-related *em* and *ex* units.
 
 Length Policy Concept
 --------------------------
 
-*Length Policy* определяет способ получения экземпляра *Length Factory* для конкретного контекста::
+*Length Policy* defines which *Length Factory* will be used for the context::
 
   struct length_policy
   {
@@ -119,13 +118,13 @@ Length Policy Concept
     static length_factory_type & length_factory(context_type & context);
   };
 
-*Length Policy* по умолчанию возвращает константную ссылку на общий экземпляр ``factory::length::default_factory`` независимо от
-контекста.
+Default *Length Policy* returns constant reference to static instance of
+``factory::length::default_factory``.
 
 :ref:`Named class template parameter <named-params>` for *Length Policy* is ``length_policy``.
 
-Для того чтобы сконфигурировать *Length Factory* для ``document_traversal``, нужно передать параметр шаблона ``length_policy``. Например,
-``policy::length::forward_to_method``::
+To configure *Length Factory* named template parameter ``length_policy`` must be passed to ``document_traversal``. 
+For example, using library provided ``policy::length::forward_to_method``::
 
   typedef factory::length::unitless<> LengthFactory;
 

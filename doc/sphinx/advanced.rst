@@ -1,14 +1,14 @@
 Advanced Topics
 =====================
 
-Добавление XML парсера
--------------------------------------
+Adding new XML parser
+-------------------------------------------------
 
-Добавление поддержки нового XML парсера сводится к созданию новых специализаций
-``svgpp::policy::xml::attribute_iterator`` и ``svgpp::policy::xml::element_iterator`` по одному из образцов 
-в папке ``include/svgpp/policy/xml``.
+Implementing support for the new XML parser requires creating new specializations for
+``svgpp::policy::xml::attribute_iterator`` and ``svgpp::policy::xml::element_iterator`` 
+class templates using one of existing implementations in folder ``include/svgpp/policy/xml`` as a sample.
 
-Некоторую сложность может представлять набор типов::
+Understanding following types may cause some difficulties::
 
   template<>
   struct attribute_iterator<CustomXMLAttribute>
@@ -21,28 +21,28 @@ Advanced Topics
     /* ... */
   };
 
-``string_type`` должен быть model of 
-`Forward Range <http://www.boost.org/doc/libs/1_57_0/libs/range/doc/html/range/concepts/forward_range.html>`_, 
-элементы этого range - characters одного из стандартных типов (``char``, ``wchar_t``, ``char16_t``, ``char32_t``).
-Простым решением может быть использование ``boost::iterator_range<CharT const *>``.
+``string_type`` 
+  A model of 
+  `Forward Range <http://www.boost.org/doc/libs/1_57_0/libs/range/doc/html/range/concepts/forward_range.html>`_, 
+  with items of some character type (``char``, ``wchar_t``, ``char16_t``, ``char32_t``).
+  Easy solution is to use ``boost::iterator_range<CharT const *>``.
 
 ``attribute_name_type`` 
-  Copy constructible тип, для которого есть метод 
+  Copy constructible type, for which exists method
   ``string_type attribute_iterator::get_string_range(attribute_name_type const &)``. 
-  Значение ``attribute_name_type`` может использоваться только до инкрементации 
-  ``attribute_iterator`` и может становиться невалидным при переходе к другому атрибуту.
+  Value of ``attribute_name_type`` is used only before ``attribute_iterator`` 
+  gets incremented and may become invalid after that.
 
 ``attribute_value_type`` 
-  Copy constructible тип, для которого есть метод 
+  Copy constructible type, for which exists method
   ``string_type attribute_iterator::get_string_range(attribute_value_type const &)``. 
-  Значение ``attribute_value_type`` должно сохраняться независимо от состояния
-  ``attribute_iterator``.
+  Value of ``attribute_value_type`` must be accessible independently of ``attribute_iterator`` state changes.
 
 ``saved_value_type`` 
-  Copy constructible тип, для которого есть метод
-  ``attribute_value_type attribute_iterator::get_value(saved_value_type const &)``. Этот тип должен максимально эффективно
-  сохранять значение атрибута, которое может и не понадобиться.
-  Если, например, в XML парсере используется такой доступ к XML атрибуту::
+  Copy constructible type, for which exists method
+  ``attribute_value_type attribute_iterator::get_value(saved_value_type const &)``. 
+  Object of this type must as efficiently as possible save attribute value that may be not requested.
+  For example XML parser provides access to XML attribute like this::
 
     class XmlAttribute
     {
@@ -50,7 +50,7 @@ Advanced Topics
       std::string getValue() const;
     };
 
-  то ``saved_value_type`` может быть ``XmlAttribute const *``, а не ``std::string``, чтобы
-  избежать расходов на создание и копирование строки, которая может и не пригодиться.
+  In this case ``saved_value_type`` may be defined as ``XmlAttribute const *``, instead of ``std::string``, 
+  to avoid expences of creating and coping string that may not be requested later.
 
 .. include::  value_parser.rst

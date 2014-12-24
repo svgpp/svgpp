@@ -3,15 +3,15 @@
 Viewport
 ================================
 
-When establishing new viewport с использованием элементов **svg**, **symbol** (instanced by **use**) or **image** нужно 
-обработать несколько атрибутов (**x**, **y**, **width**, **height**, **preserveAspectRatio**, **viewbox**), чтобы
-определить новую user coordinate system и clipping path. SVG++ может сделать это сама и предоставить результат
-в удобном виде. Для включения и настройки такой обработки предназначен *Viewport Policy*. 
-*Viewport Events Policy* определяет способ передачи значений в пользовательский код.
+When establishing new viewport by elements **svg**, **symbol** (instanced by **use**) or **image** 
+several attributes must be processed (**x**, **y**, **width**, **height**, **preserveAspectRatio**, **viewbox**)
+to get new user coordinate system, viewport and clipping path. 
+SVG++ may do it itself and present result in convenient way. 
+This behavior is configured by *Viewport Policy*. 
+*Viewport Events Policy* defines how viewport information is passed to user code.
 
-Элементы **marker** похожим образом устанавливают новую систему координат и clipping path, когда 
-отрисовываются в вершинах пути, поэтому маркеры тоже могут обрабатываться посредством *Viewport Policy*
-и *Viewport Events Policy*.
+**marker** element establish new viewport similar way, when it is instances in path vertices, 
+so **marker** elements may also be handled by *Viewport Policy* and *Viewport Events Policy*.
 
 Viewport Policy Concept
 --------------------------------
@@ -26,23 +26,24 @@ Viewport Policy Concept
   };
 
 ``calculate_viewport = true``
-  Включает обработку атрибутов, описывающих viewport. Значения будут переданы вызовами методов ``set_viewport`` и 
-  ``set_viewbox_transform`` *Viewport Events Policy*.
+  Enables handling of viewport attributes. Values will be passed by calls to ``set_viewport`` or 
+  ``set_viewbox_transform`` of *Viewport Events Policy*.
 
 ``calculate_marker_viewport = true``
-  То же самое для элементов **marker**.
+  The same for **marker** elements.
 
 ``viewport_as_transform = true``
-  Проверяется только если ``calculate_viewport = true``.
-  Метод ``set_viewbox_transform`` *Viewport Events Policy* не используется, вместо него новая система координат
-  задается посредством :ref:`Transform Events Policy <transform-section>`.
+  Is checked only if ``calculate_viewport = true``.
+  ``set_viewbox_transform`` method of *Viewport Events Policy* isn't used, 
+  new coordinate system is set by :ref:`Transform Events Policy <transform-section>` instead.
 
 :ref:`Named class template parameter <named-params>` for *Viewport Policy* is ``viewport_policy``.
 
-В файле ``svgpp/policy/viewport.hpp`` определены несколько predefined вариантов *Viewport Policy*. Используемый по умолчанию
-``policy::viewport::raw`` не использует обработку viewport средствами SVG++. 
-``policy::viewport::as_transform`` выставляет все булевские члены в ``true``, то есть обрабатывает атрибуты viewport 
-и передает изменение системы координат посредством *Transform Events Policy*.
+File ``svgpp/policy/viewport.hpp`` contains some predefined *Viewport Policies*. 
+``policy::viewport::raw``, used by default, turns off viewport processing in SVG++. 
+``policy::viewport::as_transform`` sets all boolean members to ``true``, 
+thus enabling viewport attributes handling by SVG++ and 
+passing coordinate system changes by *Transform Events Policy*.
 
 
 Viewport Events Policy Concept
@@ -63,38 +64,39 @@ Viewport Events Policy Concept
   };
 
 ``set_viewport`` 
-  Передает положение нового viewport.
+  Sets new viewport position.
 
 ``set_viewbox_transform``
-  Передает сдвиг и масштабирование, заданные комбинацией атрибутов **viewbox** и **preserveAspectRatio**. 
-  Не используется, если ``viewport_as_transform = true``.
+  Passes offset and scale that are set by combination of **viewbox** and **preserveAspectRatio**. 
+  Not used if ``viewport_as_transform = true``.
 
 ``get_reference_viewport_size``
-  См. ниже :ref:`viewport_referenced_element`.
+  See :ref:`viewport_referenced_element`.
 
 :ref:`Named class template parameter <named-params>` for *Viewport Events Policy* is ``viewport_events_policy``.
 
 .. _viewport_referenced_element:
 
-Ссылающийся элемент
+Referenced element
 ------------------------
 
-При обработке **svg** referenced by **use** or **image**, **symbol** referenced by **use** нужно знать ширину и высоту,
-заданные ссылающимся элементом. 
+When processing **svg** element referenced by **use** or **image**, **symbol** referenced by **use** 
+values of width and height of referencing element are required. 
 
-Для того, чтобы SVG++ получила информацию, что загружается элемент referenced by **use** or **image**,
-надо передать тэг ссылающегося элемента через параметр :ref:`referencing_element <referencing_element>` ``document_traversal``.
-В этом случае будет вызываться ``get_reference_viewport_size``.
-В реализации ``get_reference_viewport_size`` нужно присвоить ``viewport_width``
-значение атрибута **width** ссылающегося элемента, если этот атрибут присутствует. 
-И присвоить ``viewport_height`` значение атрибута **height** ссылающегося элемента, если этот атрибут присутствует.
+To pass to SVG++ information that element is referenced by **use** or **image**,
+tag of referenced element must be passed as :ref:`referencing_element <referencing_element>` parameter
+of ``document_traversal`` class.
+In this case ``get_reference_viewport_size`` method of *Viewport Events Policy* will be called.
+Implementation of ``get_reference_viewport_size`` must set ``viewport_width`` to
+value of **width** attribute of referenced element, if this attribute is set. 
+And set ``viewport_height`` value of **height** attribute of referenced element, if this attribute is set. 
 
 
-Обрабатываемые атрибуты
+Processed attributes
 --------------------------------
 
-Если в *Viewport Policy* ``calculate_viewport = true``, то SVG++ перехватывает и обрабатывает атрибуты, 
-перечисленные в ``traits::viewport_attributes``::
+If ``calculate_viewport = true`` in *Viewport Policy*, then SVG++ intercepts and processes attributes, 
+listed in ``traits::viewport_attributes``::
 
   namespace traits 
   {
@@ -108,8 +110,8 @@ Viewport Events Policy Concept
     > viewport_attributes;
   }
 
-Если в *Viewport Policy* ``calculate_marker_viewport = true``, то SVG++ перехватывает и обрабатывает атрибуты маркера, 
-перечисленные в ``traits::marker_viewport_attributes``::
+If ``calculate_marker_viewport = true`` in *Viewport Policy*, then SVG++ 
+intercepts and processes marker attributes listed in ``traits::marker_viewport_attributes``::
 
   namespace traits 
   {
@@ -123,10 +125,11 @@ Viewport Events Policy Concept
     > marker_viewport_attributes;
   }
 
-Обработка этих атрибутов должна быть :ref:`разрешена <processed_attributes>` пользователем.
+Processing of this attributes must be :ref:`enabled <processed_attributes>` by programmer.
 
-Порядок обработки атрибутов
+Order of viewport processing
 -------------------------------------
 
-Атрибуты будут обработаны и результат передан посредством *Viewport Events Policy* после обработки всех атрибутов 
-элемента SVG или по приходу нотификации с тэгом ``tag::event::after_viewport_attributes``.
+Viewport attributes will be processed and result will be passed by *Viewport Events Policy* 
+after all SVG element attributes are processed or when :ref:`notification <notify_in_priority>`
+with tag ``tag::event::after_viewport_attributes`` arrives.

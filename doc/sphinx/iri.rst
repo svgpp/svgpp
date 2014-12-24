@@ -3,17 +3,19 @@
 IRI
 =====
 
-`IRIs <http://www.w3.org/TR/SVG/linking.html#IRIandURI>`_, в том числе заданные с помощью `FuncIRI <http://www.w3.org/TR/SVG/types.html#DataTypeFuncIRI>`_
+`IRIs <http://www.w3.org/TR/SVG/linking.html#IRIandURI>`_, including ones that are set with
+`FuncIRI <http://www.w3.org/TR/SVG/types.html#DataTypeFuncIRI>`_
 syntax, are passed to user code the same way as other :ref:`strings <passing-string>` in SVG++. 
 
-Единственная возможная настройка в *IRI Policy* определяет, различать ли local references to document fragment (IRIs prefixed with "#").
-Если используется ``policy::iri::distinguish_local`` (по умолчанию), то local references to document fragment
-передаются как пара параметров: {``tag::iri_fragment()``, *<fragment string>*}. Если задать ``policy::iri::raw``,
-то любой IRI передается одним параметром - :ref:`строкой <passing-string>`.
+The only setting in *IRI Policy* configures whether to distinguish
+local references to document fragment (IRIs prefixed with "#") from non-local IRI references. 
+If ``policy::iri::distinguish_local`` used (as by default), then local reference to document fragment
+is passed as pair of parameters: {``tag::iri_fragment()``, *<fragment string>*}. 
+If ``policy::iri::raw`` is set, then any IRI is passed as single :ref:`string <passing-string>`.
 
 :ref:`Named class template parameter <named-params>` for *IRI Policy* is ``iri_policy``.
 
-Пример использования с *IRI Policy* по умолчанию (``src/samples/sample_iri.cpp``):
+Example of using default *IRI Policy* (``src/samples/sample_iri.cpp``):
   
 .. literalinclude:: ../../src/samples/sample_iri.cpp 
 

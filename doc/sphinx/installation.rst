@@ -17,5 +17,5 @@ Library was tested with this compilers:
 * Clang 3.2
 
 .. note::
-  Компиляция модуля, использующего много возможностей SVG++, может потребовать большого объема оперативной памяти.
-  Учитывайте это при запуске компиляции на виртуальных машинах.
+  Compilation of module that uses a lot of SVG++ features may require large amount of RAM.
+  Please be aware of this when compiling on VMs.

@@ -1,4 +1,5 @@
 .. _Associative Sequence: http://www.boost.org/doc/libs/1_55_0/libs/mpl/doc/refmanual/associative-sequence.html
+.. _Metafunction Class: http://www.boost.org/doc/libs/1_57_0/libs/mpl/doc/refmanual/metafunction-class.html
 
 Document Traversal
 ======================
@@ -8,15 +9,15 @@ Document Traversal
 document_traversal Class
 -----------------------------
 
-Шаблонный класс ``document_traversal`` - это фасад, предоставляющий доступ к большинству возможностей библиотеки.
+``document_traversal`` template class is a facade that provides access to most features of SVG++ library.
 
-``document_traversal`` включает только статические методы.
-Все методы ``document_traversal`` принимают *context* и *XML element*.
-*Context* - это пользовательский объект, который будет принимать обработанные данные.
-*XML element* - это тип, соответствующий :ref:`типу <xml_policy_types>` XML элемента в выбранном XML парсере.
+``document_traversal`` contains only static methods.
+Each ``document_traversal`` method receives *context* and *XML element* parameters.
+*Context* is a user defined object that will receive parsed data.
+*XML element* has :ref:`type <xml_policy_types>` of XML element in chosen XML parser.
 
-:ref:`Именованные параметры <named-params>` шаблонного класса ``document_traversal`` позволяют настраивать
-все аспекты обработки SVG.
+:ref:`Named template parameters <named-params>` of ``document_traversal`` class allows to configure 
+almost each aspect of  SVG processing.
 
 ::
 
@@ -41,7 +42,7 @@ document_traversal Class
     };
   };
 
-Методы
+Methods
 """"""""""""
 
 ::
@@ -51,8 +52,8 @@ document_traversal Class
 
 .. _fakeRef3:
 
-  ``load_document`` - это shortcut для ``load_expected_element``, принимающий корневой элемент SVG документа (**svg**)
-  в качестве параметра ``xml_root_element``.
+  ``load_document`` - is a shortcut for ``load_expected_element`` that receives root element (**svg**) of SVG document 
+  as ``xml_root_element`` parameter.
 
 ::
 
@@ -64,11 +65,11 @@ document_traversal Class
 
 .. _fakeRef4:
 
-  ``load_expected_element`` загружает ``xml_element`` и его потомков, в соответствии с конфигурацией, передавая
-  загруженные данные в ``context``. 
+  ``load_expected_element`` loads ``xml_element`` and its descendands and passes parsed data
+  to ``context``. 
 
-  ``load_expected_element`` ожидает, что имя элемента ``xml_element`` соответствует ``ElementTag``.
-  Если нет - выбрасывается исключение ``unexpected_element_error`` (см. :ref:`Error Policy <error-handling>`).
+  ``load_expected_element`` expects that XML name of ``xml_element`` corresponds to ``ElementTag``.
+  Otherwise exception ``unexpected_element_error`` is thrown (see :ref:`Error Policy <error-handling>`).
 
 ::
 
@@ -80,36 +81,35 @@ document_traversal Class
 
 .. _fakeRef5:
 
-  ``load_referenced_element`` главным образом используется для загрузки элементов SVG, на которые ссылается другой
-  элемент SVG, например, элемент **use** или *gradients*. 
-  В отличие от ``load_expected_element``, допустимый тип ``xml_element``, не ограничен одним элементом, а задается
-  последовательностью ``expected_elements``. 
+  ``load_referenced_element`` mainly used to load SVG elements that are referenced by other SVG element,
+  e.g. **use** element or *gradients*. 
+  Unlike ``load_expected_element``, allowed XML name of ``xml_element`` isn't limited to one and is passed
+  as ``expected_elements`` sequence. 
 
   Named class template parameters of ``document_traversal::load_referenced_element``
 
   ``expected_elements`` *(required)*
-    Значение параметра - `Associative Sequence`_.
-    Содержит список тэгов ожидаемых типов элемента ``xml_element``.
-    Если тип ``xml_element`` не соответствует одному из списка  - выбрасывается исключение 
-    ``unexpected_element_error`` (см. :ref:`Error Policy <error-handling>`).
+    Value is `Associative Sequence`_.
+    Contains list of tags of expected elements for ``xml_element``.
+    If XML name of ``xml_element`` doesn't correspond to any from the list, exception 
+    ``unexpected_element_error`` (see :ref:`Error Policy <error-handling>`) is thrown.
 
     .. note::
 
-      ``traits::reusable_elements`` содержит список элементов, на которые может ссылаться **use**.
+      ``traits::reusable_elements`` contains list of elements, that can be referenced by **use** element.
 
 .. _referencing_element:
 
   ``referencing_element`` *(optional)*
-    Значение параметра - тэг элемента, который содержит ссылку на загружаемый элемент.
-    Используется только если *Viewport Policy* требует обработки viewport библиотекой 
-    (для того, чтобы корректно обрабатывать элементы **svg** и **symbols**, на которые
-    ссылаются **image** или **use**).
+    Value is tag of element that references ``xml_element``.
+    It is used only if *Viewport Policy* requires processing of viewport by SVG++ 
+    (for correct processing of **svg** and **symbol** elements, referenced by **image** or **use** elements).
 
-  ``processed_elements`` или ``ignored_elements`` *(optional)*
-    Не более одного из двух может быть задано. 
-    :ref:`См. описание <processed_elements>` одноименных параметров ``document_traversal``.
-    Позволяет для переданного элемента переопределить значения ``processed_elements``/``ignored_elements``, заданные
-    для ``document_traversal``. Дочерние элементы будут обработаны с настройками ``document_traversal``.
+  ``processed_elements`` or ``ignored_elements`` *(optional)*
+    Only one may be set. 
+    See :ref:`description <processed_elements>` of ``document_traversal`` parameters with the same names.
+    Allows to override ``document_traversal`` settings ``processed_elements``/``ignored_elements``
+    for the passed SVG element. Child elements will be processed with ``document_traversal`` settings.
 
 
 document_traversal Named Class Template Parameters
@@ -118,52 +118,51 @@ document_traversal Named Class Template Parameters
 .. _processed_elements:
 
   ``ignored_elements`` and ``processed_elements``
-    Один из этих параметров должен быть задан, чтобы определить какие элементы SVG обрабатываются. 
-    Значение параметра - `Associative Sequence`_ (например ``boost::mpl::set``),
-    содержащий тэги элементов.
+    One of them must be set to limit SVG elements processed. 
+    It must be model of `Associative Sequence`_ (e.g. ``boost::mpl::set``),
+    containing element tags.
 
-    Если задан ``processed_elements``, то обработка ограничивается только перечисленными элементами,
-    если ``ignored_elements``, то обрабатываются все элементы, кроме перечисленных.
+    If ``processed_elements`` is set, then only listed elements are processed,
+    otherwise if ``ignored_elements`` is set, then only non-listed elements are processed.
 
 .. _processed_attributes:
 
   ``ignored_attributes`` and ``processed_attributes``
-    Один из этих параметров должен быть задан, чтобы определить какие атрибуты SVG обрабатываются. 
-    Значение параметра - `Associative Sequence`_ (например ``boost::mpl::set``),
-    содержащий тэги атрибутов. Кроме тэгов атрибутов он может содержать пары <тэг элемента, тэг атрибута>
-    в таком виде ``boost::mpl::pair<tag::element::g, tag::attribute::transform>``, в этом случае
-    проверка проходит если и атрибут и элемент соответствуют обрабатывемому. 
+    One of them must be set to limit SVG attributes processed. 
+    It must be model of `Associative Sequence`_,
+    containing attribute tags. Also it may contain pairs <element tag, attribute tag>
+    like this ``boost::mpl::pair<tag::element::g, tag::attribute::transform>``, such pair
+    is matched if both processed element and processed attribute matches tags.
 
-    Если задан ``processed_attributes``, то обработка ограничивается только перечисленными атрибутами,
-    если ``ignored_attributes``, то обрабатываются все атрибуты, кроме перечисленных.  
+    If ``processed_attributes`` is set, then only listed attributes are processed,
+    otherwise if ``ignored_attributes`` is set, then only non-listed attributes are processed.
 
 .. _passthrough_attributes:
 
   ``passthrough_attributes`` *(optional)*
-    Значение параметра - `Associative Sequence`_ (например ``boost::mpl::set``),
-    содержащий тэги атрибутов. Значения перечисленных атрибутов не обрабатываются SVG++,
-    а передаются в пользовательский код в виде :ref:`строки <passing-string>`.
+    Is a `Associative Sequence`_, that contains attribute tags. 
+    Values of listed attributes aren't parsed by SVG++, and passed to user code as :ref:`string <passing-string>`.
 
   ``context_factories`` *(optional)*
-    См. :ref:`context_factories`.
+    See :ref:`context_factories`.
 
   ``attribute_traversal_policy`` *(optional)*
-    См. :ref:`attribute_traversal_policy`.
+    See :ref:`attribute_traversal_policy`.
 
 .. _context_factories:
 
 Context Factories
 --------------------------------
 
-При обходе дерева SVG, для каждого встреченного элемента выбирается контекст, который будет использоваться
-для передачи значений атрибутов и character data посредством соответствующего *event policy*. 
-Для конфигурации этого поведения используется параметр ``context_factories``.
+When ``document_traversal`` traverses SVG tree, it, for each SVG element met, chooses context 
+to be used to pass attribute values and character data by corresponding *event policy*. 
+To configure this behavior ``context_factories`` parameters is used.
 
-Параметр ``context_factories`` содержит metafunction class, принимающий два параметра: 
+``context_factories`` parameter accepts `Metafunction Class`_, that receives: 
 
-  - ``ParentContext`` - тип родительского контекста (контекст, использованный для parent SVG element);
-  - ``ElementTag`` - тэг элемента (соответствует типу встреченного элемента),
-    и возвращающий тип *Context Factory*.
+  - ``ParentContext`` - parent context type (context used for parent SVG element);
+  - ``ElementTag`` - element tag (corresponds to the SVG element met),
+  and returns *Context Factory*.
 
 ::
 
@@ -171,15 +170,16 @@ Context Factories
     typename context_factories::template apply<ParentContext, ElementTag>::type 
       selected_context_factory;
 
-SVG++ предоставляет несколько готовых *Context Factory*::
+SVG++ provides several *Context Factories*::
 
   template<class ParentContext, class ElementTag>
   class factory::context::same;
 
 .. _fakeRef1:
 
-  Новый контекст для элемента не создается, будет использован parent context. У parent context будут вызваны 
-  методы ``on_enter_element(ElementTag())`` и ``on_exit_element()`` в начале и в конце обработки элемента соответственно.
+  New context object isn't created, parent context will be used. 
+  ``on_enter_element(ElementTag())`` and ``on_exit_element()`` methods of parent context will be called
+  at the start and at the end of element processing respectively.
 
 ::
 
@@ -188,14 +188,14 @@ SVG++ предоставляет несколько готовых *Context Fact
 
 .. _fakeRef2:
 
-  На стеке создается объект контекста типа ``ChildContext``. В конструктор передается один параметр - reference 
-  to parent context. После окончания обработки объекта перед вызовом деструктора
-  вызывается метод ``ChildContext::on_exit_element()`` этого объекта.
-  Время жизни объекта ограничено временем обработки атрибутов элемента, всех дочерних элементов и текста.
+  New object of type ``ChildContext`` is created on stack. 
+  Constructor of the object is passed with the reference to the parent context. 
+  After element processing is finished, method ``ChildContext::on_exit_element()`` is called before destruction.
+  Lifetime of context object matches processing of SVG element content (element attributes, child elements and text nodes).
 
-  ``factory::context::on_stack_with_xml_element`` то же самое что ``factory::context::on_stack``, но в конструктор 
-  ``ChildContext`` вторым параметром передается объект, соответствующий элементу XML. Его тип зависит от используемого
-  XML парсера.
+  ``factory::context::on_stack_with_xml_element`` is the same as ``factory::context::on_stack``, 
+  but ``ChildContext`` constructor receives second parameter - XML element. 
+  Its type depends on XML parser used.
 
 ::
   
@@ -208,9 +208,9 @@ SVG++ предоставляет несколько готовых *Context Fact
 
 .. _fakeRef7:
 
-  Для получения контекста вызывается метод ``get_child_context(ElementTag())`` родительского контекста, который
-  должен вернуть указатель типа ``ChildContextPtr`` на контекст дочернего объекта. Указатель может быть обычным или
-  smart указателем. После окончания обработки дочернего объекта вызывается метод ``ChildContext::on_exit_element()`` этого объекта.
+  Pointer ``ChildContextPtr`` to context object is requested from parent context by call to the
+  method ``get_child_context(ElementTag())``. Pointer can be raw pointer or some smart pointer. 
+  ``ChildContext::on_exit_element()`` is called after element processing is finished.
 
 
 .. _attribute_traversal_policy:
@@ -218,7 +218,7 @@ SVG++ предоставляет несколько готовых *Context Fact
 Attribute Traversal Policy
 -----------------------------------
 
-*Attribute Traversal Policy* настраивает порядок обработки SVG attributes, а также CSS properties in **style** attribute.
+*Attribute Traversal Policy* configures order and other aspects of SVG attributes and CSS properties processing.
 
 ::
 
@@ -235,44 +235,48 @@ Attribute Traversal Policy
 .. _parse_style:
 
 ``parse_style = true``
-  Содержимое атрибута **style** обрабатывается как последовательность semicolon-separated пар свойство-значение.
+  Contents of **style** attribute is parsed as a sequence of semicolon-separated pairs property-value.
 
 ``css_hides_presentation_attribute = true``
-  Проверяется только если ``parse_style = true``. 
+  Is checked only if ``parse_style = true``. 
   
-  Если одно свойство задано как в **style**, так и соответствующим
-  *presentation attribute*, то будет обработано только значение свойства в атрибуте **style** (оно имеет больший
-  приоритет в соответствии со спецификацией SVG).
+  If the same property is set both in **style** attribute and as a *presentation attribute*, 
+  then only value in **style** attribute will be parsed (it has higher priority according to SVG).
 
-  Если ``css_hides_presentation_attribute = false``, то используется меньше памяти, но могут приходить 
-  значения одного свойства и из **style** и из *presentation attribute* в произвольном порядке.
+  If ``css_hides_presentation_attribute = false``, then memory usage is lower, but both values
+  (from **style** attribute and a *presentation attribute*) of same property will be parsed and passed to user code
+  in arbitrary order.
 
 .. _get_priority_attributes_by_element:
 
 ``get_priority_attributes_by_element``, ``get_deferred_attributes_by_element`` and ``get_required_attributes_by_element``
-  `Metafunction class <http://www.boost.org/doc/libs/1_57_0/libs/mpl/doc/refmanual/metafunction-class.html>`_,
-  принимающий тэг элемента и
-  возвращающий `Forward Sequence <http://www.boost.org/doc/libs/1_57_0/libs/mpl/doc/refmanual/forward-sequence.html>`_.
-  Элементы возвращаемой последовательности - тэги атрибутов.
+  They are `Metafunction classes <http://www.boost.org/doc/libs/1_57_0/libs/mpl/doc/refmanual/metafunction-class.html>`_,
+  receiving element tag and returning 
+  `Forward Sequence <http://www.boost.org/doc/libs/1_57_0/libs/mpl/doc/refmanual/forward-sequence.html>`_ of attribute tags.
 
-  Атрибуты, возвращаемые метафункцией ``get_priority_attributes_by_element`` для данного элемента, будут обработаны раньше других 
-  атрибутов именно в том порядке, в каком они перечислены в последовательности.
+  Attributes, returned by ``get_priority_attributes_by_element`` metafunction for current element,
+  will be processed before all others in the same order as in sequence. 
 
-  Атрибуты, возвращаемые метафункцией ``get_deferred_attributes_by_element`` для данного элемента, будут обработаны 
-  после всех других атрибутов именно в том порядке, в каком они перечислены в последовательности.
+  Attributes, returned by ``get_deferred_attributes_by_element`` metafunction for current element,
+  will be processed after all others in the same order as in sequence. 
+
+.. _notify_in_priority:
 
   .. note::
 
-    Последовательности, возвращаемые  ``get_priority_attributes_by_element`` и ``get_deferred_attributes_by_element``, 
-    кроме тэгов атрибутов могут содержать элементы вида ``notify_context<EventTag>``. ``EventTag`` - это 
-    произвольный тип-тэг, который будет передан методу ``notify`` контекста. 
-    ``notify(EventTag())`` будет вызван в тот момент, когда все атрибуты, идущие в последовательности
-    перед ним, уже обработаны.
+    Sequences, returned by ``get_priority_attributes_by_element`` and ``get_deferred_attributes_by_element``, 
+    besides attribute tags may contain elements like ``notify_context<EventTag>``. 
+    ``EventTag`` is an arbitrary tag, that will be passed to ``notify`` method of the context. 
+    ``notify(EventTag())`` will be called right after all previous attributes in sequence are processed.
 
-  Отсутствие какого-либо атрибута из последовательности, возвращаемой метафункцией ``get_required_attributes_by_element`` для данного элемента, 
-  считается ошибкой и будет обработано в соотвествии с заданным *Error Policy*.
-  В SVG++ определена метафункция ``traits::element_required_attributes``, возвращающая обязательные атрибуты, в соответствии со
-  спецификацией SVG. Ее можно использовать так::
+  If element lacks any attribute from the sequence, returned by ``get_required_attributes_by_element`` metafunction for
+  this element, then ``required_attribute_not_found_error`` exception will be thrown (see :ref:`Error Policy <error-handling>`).
+  SVG++ contains definition of ``traits::element_required_attributes`` metafunction
+  that returns mandatory attributes for element, according to SVG Specification. It can be used like this::
 
-    typedef boost::mpl::quote1<traits::element_required_attributes> 
-      get_required_attributes_by_element;
+    struct my_attribute_traversal_policy
+    {
+      /* ... other members ... */
+      typedef boost::mpl::quote1<traits::element_required_attributes> 
+        get_required_attributes_by_element;
+    };

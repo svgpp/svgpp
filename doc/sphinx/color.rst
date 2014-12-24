@@ -3,11 +3,12 @@
 Color
 ========
 
-*Color Factory* определяет какой тип будет соответствовать SVG type `<color> <http://www.w3.org/TR/SVG/types.html#DataTypeColor>`_ 
-и как он создается из текстового описания цвета.
+*Color Factory* defines what type corresponds to `<color> <http://www.w3.org/TR/SVG/types.html#DataTypeColor>`_ 
+SVG type and how values of this type are created from SVG color description.
 
-*ICC Color Factory* определяет какой тип будет соответствовать SVG type 
-`<icccolor> <http://www.w3.org/TR/SVG/types.html#DataTypeICCColor>`_ и как он создается из текстового описания цвета.
+*ICC Color Factory* defines what type corresponds to 
+`<icccolor> <http://www.w3.org/TR/SVG/types.html#DataTypeICCColor>`_ SVG type 
+and how values of this type are created from SVG ICC color description.
 
 Color Factory Concept
 ------------------------
@@ -23,24 +24,24 @@ Color Factory Concept
     static color_type create_from_percent(percentage_type r, percentage_type g, percentage_type b);
   };
 
-``create_from_percent`` вызывается в случае, когда компоненты цвета заданы процентами (например, **rgb(100%,100%,100%)**).
-Значения процентов передаются без коэффициента, **100%** передается как ``100``.
+``create_from_percent`` is called when color components are set as percents (e.g. **rgb(100%,100%,100%)**).
+Percent values are passed as is, i.e. **100%** is passed as ``100``.
 
-В остальных случаях вызывается функция ``create``, значения компонентов передаются как целые числа от ``0`` до ``255``.
-`Recognized color keyword names <http://www.w3.org/TR/SVG/types.html#ColorKeywords>`_ преобразуются в соответствующие значения
-компонентов SVG++ library. 
+In other cases ``create`` function is called with integer component values in range ``0`` to ``255``.
+`Recognized color keyword names <http://www.w3.org/TR/SVG/types.html#ColorKeywords>`_ 
+are converted to corresponding component values by SVG++ library. 
 
-`System colors <http://www.w3.org/TR/2008/REC-CSS2-20080411/ui.html#system-colors>`_ библиотекой пока не обрабатываются.
+`System colors <http://www.w3.org/TR/2008/REC-CSS2-20080411/ui.html#system-colors>`_ aren't handled yet.
 
 :ref:`Named class template parameter <named-params>` for *Color Factory* is ``color_factory``.
 
 Integer Color Factory
 -------------------------
 
-SVG++ по умолчанию использует класс ``factory::color::integer<>``, model of *Color Factory*. 
-Эта фабрика возвращает цвет, упакованный в одно число ``int``, компонент Red в третьем байте, 
-Green - во втором, Blue - в первом (младшем).
-Смещения компонентов и тип числа настраиваются.
+SVG++ by default uses ``factory::color::integer<>`` as *Color Factory*. 
+This factory returns color packed in ``int`` value: Red component in 3rd byte, 
+Green in 2nd, Blue in 1st (least significant).
+Component offsets and number type can be configured.
 
 
 .. _icc-color-factory-section:
@@ -63,13 +64,13 @@ ICC Color Factory Concept
     icc_color_type create_icc_color(builder_type const &) const;
   };
 
-``icc_color_type`` - это тип, который будет передан в user code. 
+``icc_color_type`` is a type that will be passed to user code. 
 
-``builder_type`` используется как временный объект для создания ``icc_color_type`` из имени цветового профиля 
-и некоторого количества значений компонентов.
+``builder_type`` is used as a temporary object during building ``icc_color_type`` 
+from color profile name and some components values.
 
-Иллюстрация последовательности вызовов методов *ICC Color Factory* на примере разбора 
-значения **icc-color(profile1 0.75, 0.15, 0.25)**::
+Pseudo-code that illustrates usage of *ICC Color Factory* from inside SVG++
+to parse **icc-color(profile1 0.75, 0.15, 0.25)** value::
 
   void parse_icc(icc_color_factory const & factory)
   {
@@ -85,8 +86,8 @@ ICC Color Factory Concept
 ICC Color Policy Concept
 ---------------------------
 
-*ICC Color Policy* определяет способ получения экземпляра *ICC Color Factory* для конкретного контекста. Это позволяет 
-учитывать состояние контекста (например, referenced color profiles) при создании цвета.
+*ICC Color Policy* defines which *ICC Color Factory* instance is used for the context. 
+It can be used to configure *ICC Color Factory* in runtime, e.g. taking in account referenced color profiles in SVG document.
 
 ::
 
@@ -98,8 +99,8 @@ ICC Color Policy Concept
     static icc_color_factory_type & icc_color_factory(Context const &);
   };
   
-*ICC Color Policy* по умолчанию возвращает статический экземпляр ``factory::icc_color::stub``.
-``factory::icc_color::stub`` - model of *ICC Color Factory*, игнорирующая передаваемые фабрике значения и 
-возвращающая в качестве экземпляра ICC color пустой класс ``tag::skip_icc_color``.
+Default *ICC Color Policy* returns static instance of ``factory::icc_color::stub``.
+``factory::icc_color::stub`` is a model of *ICC Color Factory* that skips passed values 
+and returns instance of empty ``tag::skip_icc_color`` class as ICC color.
 
 :ref:`Named class template parameter <named-params>` for *ICC Color Policy* is ``icc_color_policy``.
