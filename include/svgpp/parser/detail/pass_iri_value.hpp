@@ -42,7 +42,7 @@ struct pass_iri_value_proxy
       tag::iri_fragment(),                                                                              \
       IRI(boost::next(boost::begin(iri)), boost::end(iri)) BOOST_PP_ENUM_TRAILING_PARAMS(n, arg));   \
     else                                                                                             \
-      EventsPolicy::set(context, tag, iri BOOST_PP_ENUM_TRAILING_PARAMS(n, arg));                      \
+      EventsPolicy::set(context, tag, property_source, iri BOOST_PP_ENUM_TRAILING_PARAMS(n, arg));                      \
   }
 # define BOOST_PP_LOCAL_LIMITS (0, 2)
 # include BOOST_PP_LOCAL_ITERATE()
