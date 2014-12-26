@@ -3,25 +3,27 @@
 Error handling
 =================
 
-Возвращаемые значения
+Returned values
 -----------------------
 
-Многие методы в SVG++ возвращают значение типа ``bool``. В большинстве случаев оно используется как альтернатива исключениям - 
-если метод вернул ``false``, то вызывающий его метод тоже немедленно завершит работу, вернув ``false`` и так далее.
+In most cases when SVG++ methods returns ``bool`` values, they can be used as an alternative to exceptions
+- if method returns ``false``, then calling method immediately returns with ``false`` result and so on.
 
-Обработка ошибок конфигурируется с помощью *Error Policy*. Используемый по умолчанию ``policy::error::raise_exception`` 
-выбрасывает в случае ошибок объекты исключений, унаследованные от ``std::exception`` и ``boost::exception``.
+Error reporting is controlled by *Error Policy*. ``policy::error::raise_exception`` used by default
+throws exception objects, derived from ``std::exception`` and ``boost::exception``. 
+In this case only ``true`` may be returned as a result code.
 
 Default Error Handling
 ----------------------------
 
-Используемый по умолчанию ``policy::error::raise_exception`` uses transporting of arbitrary data to the catch site feature
-of Boost.Exception.
+Default ``policy::error::raise_exception`` uses Boost.Exception for transporting arbitrary 
+data to the catch site.
 
-``boost::error_info`` с тэгами ``tag::error_info::xml_element`` и ``tag::error_info::xml_attribute`` передают
-с исключением информацию о месте возникновения исключения. Тип значения зависит от используемого XML parser и *XML Policy*
+``boost::error_info`` uses tags ``tag::error_info::xml_element`` and ``tag::error_info::xml_attribute`` 
+to pass information about place in SVG document where error occured alongside with the exception object.
+Value type depends on XML parser and *XML Policy* used.
 
-Пример обработки исключений с парсером RapidXML NS::
+Example of SVG++ exception handling when RapidXML NS parser is used::
 
   typedef rapidxml_ns::xml_node<> const * XMLElement;
 
@@ -95,7 +97,7 @@ Error Policy Concept
       XMLElement const & element);
   };
 
-Если метод *Error Policy* возвращает ``true``, то SVG++ продолжает обработку, пропустив ошибочную часть. 
-В некоторых случаях это может привести к проблемам в последующей обработке. 
+If *Error Policy* method returns ``true``, then SVG++ continues SVG processing skipping the part with the error. 
+In some cases it may lead to problems in further processing. 
 
-Если возвращается ``false``, то обработка прекращается.
+If method returns ``false``, then processing immediately stops.

@@ -3,11 +3,11 @@
 Markers
 =============
 
-SVG++ предоставляет возможность автоматического расчета положения маркеров на линиях 
+SVG++ provides option to automatically calculate marker symbols orientation on lines
 (**path**, **line**, **polyline** or **polygon** element).
 
-*Markers Policy* позволяет включать и настраивать автоматический расчет положения маркеров.
-*Marker Events Policy* настраивает способ передачи позиции маркеров в пользовательский код.
+*Markers Policy* turns on/off and configures marker position calculations.
+*Marker Events Policy* defines how marker positions are passed to the user code.
 
 Markers Policy Concept
 ------------------------------------
@@ -23,27 +23,28 @@ Markers Policy Concept
   };
 
 ``calculate_markers = true`` 
-  Включает автоматический расчет положения маркеров. Если ``calculate_markers = false``,
-  то остальные члены класса не используются.
+  Enables marker position calculations. If ``calculate_markers = false``,
+  then other class members aren't used.
 
-В зависимости от значений marker properties, не для всех вершин нужно расчитывать 
-положение маркеров. А в зависимости от значения **orient** attribute of **marker** element, направление маркера может или 
-расчитываться для каждой вершины (**auto**) или задаваться значением атрибута.
+Marker properties define which vertices contain markers. 
+Depending on the value of **orient** attribute of **marker** element, marker orientation may be
+fixed or calculated by line geometry (**auto** value).
 
 ``always_calculate_auto_orient = true`` 
-  В этом случае вычисляется положение маркера и направление в режиме **orient="auto"** для каждой вершины.
+  In this case marker orientation is calculated for each vertex (orentation required in **orient="auto"** case).
 
 ``always_calculate_auto_orient = false``
-  В этом случае, в начале обработки каждого path вызывается метод ``marker_get_config`` *Marker Events Policy*,
-  который запрашивает у пользовательского кода необходимость расчета положения и направления маркера. Позиции
-  маркеров возвращаются только для запрошенных вершин.
+  In this case, before processing each line element, ``marker_get_config`` method of *Marker Events Policy* is called,
+  to request from user code which verteces markers are required (user code should know this from marker properties).
+  Marker positions are returned by *Marker Events Policy* only for vertices, for which user code requested marker calculations.
 
-``directionality_policy`` определяет как вычисляется направление маркера. По умолчанию направление маркера - 
-это значение типа ``double``, содержащее угол в радианах.
+``directionality_policy`` 
+  Class that defines how marker orientation is calculated and passed. 
+  By default marker orientation is ``double`` value, containing angle in radians.
 
-В файле ``svgpp/policy/markers.hpp`` определены несколько predefined вариантов *Markers Policy*: 
-``policy::markers::calculate_always``, ``policy::markers::calculate`` и ``policy::markers::raw``.
-``policy::markers::raw`` используется по умолчанию и выключает автоматический расчет маркеров.
+File ``svgpp/policy/markers.hpp`` contains some predefined *Markers Policies*: 
+``policy::markers::calculate_always``, ``policy::markers::calculate`` and ``policy::markers::raw``.
+``policy::markers::raw`` used by default disables automatic marker calculation.
 
 :ref:`Named class template parameter <named-params>` for *Markers Policy* is ``markers_policy``.
 
@@ -74,35 +75,32 @@ Marker Events Policy Concept
       number_type x, number_type y, tag::orient_fixed directionality, unsigned marker_index);
   };
 
-Метод ``marker_get_config`` вызывается, если ``makers_policy::always_calculate_auto_orient = false``. 
-Пользовательский код должен вернуть для каждого типа вершин (``start``, ``mid`` and ``end``), хочет ли он рассчитывать
-угол и позицию (``marker_orient_auto``), только позицию (``marker_orient_fixed``)
-или ни то ни другое (``marker_none``).
+``marker_get_config`` method is called if ``makers_policy::always_calculate_auto_orient = false``. 
+User code must set for each vertex type (``start``, ``mid`` and ``end``), whether it wants to
+calculate orientation and position (``marker_orient_auto``), position only (``marker_orient_fixed``)
+or neither of them (``marker_none``).
 
-Метод ``marker`` вызывается для каждой рассчитанной вершины:
+``marker`` method is called for each vertex calculated with this arguments:
 
-  ``x`` и ``y`` - координаты вершины
+  ``x`` and ``y`` - marker position
 
-  ``v`` - тип вершины (``marker_start``, ``marker_mid`` или ``marker_end``)
+  ``v`` - vertex type (``marker_start``, ``marker_mid`` or ``marker_end``)
 
-  ``directionality`` - направление маркера (по умолчанию тип ``double``, значение в радианах).
-  Если ``marker_get_config`` вернул ``marker_orient_fixed`` для вершин этого типа, то вместо значения направления
-  передается tag ``tag::orient_fixed``.
+  ``directionality`` - marker orientation (by default ``double`` value in radians).
+    If ``marker_get_config`` returned ``marker_orient_fixed`` for this type of vertex, 
+    then tag ``tag::orient_fixed`` is passed instead of orientation value.
 
   ``marker_index``
-    Направление маркеров расчитывается и возвращается не всегда по порядку. Направление маркера первой вершины *subpath* 
-    может быть определено только после окончания обработки этого *subpath*, поэтому сначала будут возвращены позиции 
-    промежуточных вершин, а только потом позиция начальной вершины.
-
-    ``marker_index`` соответствует порядку, в котором вершины должны отрисовываться (0-based).
-
+    Marker orientations aren't always calculated and passed in the order,
+    because orientation of marker on first vertex of *subpath* may be calculated only after *subpath* is finished.
+    ``marker_index`` is the 0-based index of the marker in drawing order.
 
 :ref:`Named class template parameter <named-params>` for *Marker Events Policy* is ``marker_events_policy``.
 
-*Marker Events Policy* по умолчанию (``policy::marker_events::forward_to_method``) переадресует вызовы статических методов 
-методам объекта ``context``.
+Default *Marker Events Policy* (``policy::marker_events::forward_to_method``) fowards calls to its static methods
+to ``context`` object methods.
 
-Пример::
+Example::
 
   class Context
   {

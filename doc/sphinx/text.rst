@@ -13,5 +13,5 @@ Character data content of elements, that supports it according to SVG Specificat
     static void set_text(Context & context, Range const & text);
   };
 
-Не гарантируется объединение последовательных блоков текста. 
-``set_text`` вызывается на каждый Text или CDATA node, возвращенных XML парсером.
+It is not guaranteed that sequential blocks of text will be joined together. 
+``set_text`` is called for each TEXT or CDATA node returned by XML parser.

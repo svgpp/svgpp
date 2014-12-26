@@ -4,22 +4,21 @@
 Tutorial
 ================
 
-Начнем знакомство с SVG++ с примера, в который будем последовательно добавлять использование возможностей библиотеки.
-
+This tutorial introduces SVG++ features by adding them one-by-one into some sample application.
 
 All SVG++ headers may be included through this one::
 
 #include <svgpp/svgpp.hpp>
 
-All SVG++ code is placed in ``svgpp`` namespace. We'll import entire namespace in our sample.
+All SVG++ code is placed in ``svgpp`` namespace. We'll import the entire namespace in our sample.
 
 .. _tutorial:
 
 Handling Shapes Geometry
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Основной способ использования SVG++ - функциям библиотеки передается объект-контекст, библиотека вызывает функции объекта 
-и передает им загруженные данные. 
+Basic pattern of SVG++ usage: call ``document_traversal::load_document`` method, passing XML element and *context* to it.
+Library will call methods of *context*, passing the parsed data.
 
 ::
 
@@ -72,24 +71,25 @@ Handling Shapes Geometry
     >::load_document(xml_root_element, context);
   }
 
-Класс :ref:`document_traversal <document_traversal>` - это фасад, предоставляющий доступ к большинству возможностей библиотеки.
+:ref:`document_traversal <document_traversal>` is a facade that provides access to most library capabilities.
 
-В большинстве случаев обрабатывать нужно только некоторое подмножество элементов SVG, для этого мы передаем 
-:ref:`именованный параметр <named-params>` :ref:`processed_elements <processed_elements>` 
-шаблонному классу ``document_traversal``. В нашем случае ``processed_elements_t`` 
-это ``boost::mpl::set``, объединяющий последовательность ``traits::shape_elements`` (enumerates SVG 
-`shapes <http://www.w3.org/TR/SVG11/intro.html#TermShape>`_) и два structural elements **svg** and **g**.
+In most cases only some subset of SVG elements is needed, so we pass
+:ref:`named template parameter <named-params>` :ref:`processed_elements <processed_elements>` 
+to ``document_traversal`` template class. In our case it is ``processed_elements_t`` -
+``boost::mpl::set`` that combines ``traits::shape_elements`` (enumerates SVG 
+`shapes <http://www.w3.org/TR/SVG11/intro.html#TermShape>`_) with **svg** and **g** elements.
 
 SVG++ references SVG element types by :ref:`tags <tags-section>`.
 
-Аналогично выбранным для обработки элементам, выбираем подмножество атрибутов и передаем его в параметре 
-:ref:`processed_attributes <processed_attributes>`.  
-``traits::shapes_attributes_by_element`` содержит атрибуты, определяющие геометрию всех shapes 
-({**x**, **y**, **width**, **height**, **rx** and **ry**} for **rect**, {**d**} for **path** etc). 
+We choose SVG attributes subset and pass it as
+:ref:`processed_attributes <processed_attributes>` parameter.  
+``traits::shapes_attributes_by_element`` contains attributes, that describe geometry of all shapes 
+({**x**, **y**, **width**, **height**, **rx** and **ry**} for **rect**, {**d**} for **path** etc.). 
 
-В этом примере один объект-контекст используется для всех элементов SVG, 
-``on_enter_element(element_tag)`` вызывается при каждом переходе к дочернему элементу, в качестве аргумента 
-передается тэг типа дочернего элемента. ``on_exit_element()`` вызывается при выходе из дочернего объекта:
+In this sample the same context instance is used for all SVG elements.
+``Context::on_enter_element(element_tag)`` is called when moving to child SVG element, type
+of child element passed as tag in the only argument (``tag::element::any`` is a base class for all element tags).
+``on_exit_element()`` is called when processing of child element is finished:
 
 =====================   =============================================
 XML element             Call to context
@@ -106,26 +106,27 @@ XML element             Call to context
 ``</svg>``              ``on_exit_element()``
 =====================   =============================================
 
-Вызовы ``path_XXXX`` except ``path_exit`` соответствуют командам from SVG 
-`path data <http://www.w3.org/TR/SVG11/paths.html#PathData>`_. 
+Calls like ``path_XXXX`` except ``path_exit`` correspond to SVG  
+`path data <http://www.w3.org/TR/SVG11/paths.html#PathData>`_ commands. 
 ``path_exit`` is called after path data attribute was parsed.
 
-SVG++ по умолчанию использует :ref:`Path Policy <path_policy>`, который:
+SVG++ by default (see :ref:`Path Policy <path_policy>` for details):
 
-- Замещает относительные координаты на абсолютные
-- Команды рисования ортогональных линий (H, h, V, v) преобразует в вызовы ``path_line_to`` с двумя координатами
-- Shorthand/smooth curveto and shorthand/smooth quadratic Bézier curveto replaces with calls with full parameters list
+- converts relative coordinates with absolute ones
+- commands for horizontal and vertical lines (**H**, **h**, **V**, **v**) converts to calls to ``path_line_to`` with two coordinates
+- shorthand/smooth curveto and shorthand/smooth quadratic Bézier curveto replaces with calls with full parameters list
 
-:ref:`Basic Shapes Policy <basic_shapes>` по умолчанию converts 
-`basic shapes <http://www.w3.org/TR/SVG11/shapes.html>`_ to path.
+SVG++ by default converts `basic shapes <http://www.w3.org/TR/SVG11/shapes.html>`_ to path
+(see :ref:`Basic Shapes Policy <basic_shapes>` for details).
 
-Выбор XML парсера
+XML Parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-We didn't declared ``xml_element_t`` yet. Это тип, соответствующий :ref:`типу <xml_policy_types>` элемента в выбранном XML парсере.
+We didn't declared ``xml_element_t`` yet. 
+It is type that corresponds to XML element :ref:`type <xml_policy_types>` in XML parser chosen.
 Let's use `RapidXML NS <https://github.com/svgpp/rapidxml_ns>`_ library (it is a clone of 
 `RapidXML <http://rapidxml.sourceforge.net/>`_ with namespace handling added) that comes with SVG++ 
-in ``third_party/rapidxml_ns/rapidxml_ns.hpp`` file. It's a single header library, so we just need to point to its header::
+in the ``third_party/rapidxml_ns/rapidxml_ns.hpp`` file. It's a single header library, so we just need to point to its header::
 
   #include <rapidxml_ns/rapidxml_ns.hpp>
 
@@ -133,14 +134,15 @@ Then we must include *policy* for XML parser chosen::
 
   #include <svgpp/policy/xml/rapidxml_ns.hpp>
 
-XML policies headers don't include parser header because their location and names may differ. Programmer must include 
+XML policies headers don't include parser header because their location and names may differ. 
+The programmer must include 
 appropriate XML parser header herself before including policy header.
 
 Setting appropriate XML element type for RapidXML NS parser::
 
   typedef rapidxml_ns::xml_node<> const * xml_element_t;
 
-Полный файл с примером можно увидеть здесь ``src/samples/sample01a.cpp``.
+You can find the full cpp file here: ``src/samples/sample01a.cpp``.
 
 Handling Transformations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -168,17 +170,15 @@ Passed ``matrix`` array ``[a b c d e f]`` correspond to this matrix:
 
 The :ref:`default <transform-section>` SVG++ behavior is to join all transformations in ``transform`` attribute into single affine transformation matrix.
 
-Файл с примером ``src/samples/sample01b.cpp``.
+Source file: ``src/samples/sample01b.cpp``.
 
 Handling Viewports
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Элементы **svg** могут быть использованы внутри документа для establishing new viewport. 
-Для того чтобы обработать new viewport coordinate system, a new user coordinate system 
-нужно обработать несколько атрибутов (**x**, **y**, **width**, **height**, **preserveAspectRatio**, **viewbox**).
-SVG++ может взять это на себя.
-
-Мы задаем :ref:`Viewport Policy <viewport-section>` ``policy::viewport::as_transform``::
+The **svg** element may be used inside SVG document to establish a new viewport. 
+To process new viewport coordinate system, a new user coordinate system 
+several attributes must be processed (**x**, **y**, **width**, **height**, **preserveAspectRatio**, **viewbox**).
+SVG++ will do it itself if we set ``policy::viewport::as_transform`` :ref:`Viewport Policy <viewport-section>` ::
 
   document_traversal<
     processed_elements<processed_elements_t>,
@@ -186,7 +186,7 @@ SVG++ может взять это на себя.
     viewport_policy<policy::viewport::as_transform>
   >::load_document(xml_root_element, context);
 
-и добавляем viewport attributes к списку обрабатываемых::
+we also must append viewport attributes to the list of processed attributes::
 
   typedef 
     boost::mpl::fold<
@@ -202,26 +202,27 @@ SVG++ может взять это на себя.
       boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
     >::type processed_attributes_t;
 
-Теперь SVG++ будет вызывать уже добавленный метод ``transform_matrix`` для установки new user coordinate system.
-И нам остается добавить метод ``set_viewport``, через который будет передаваться информация о новом viewport::
+Now SVG++ will call the existing method ``transform_matrix`` to set new user coordinate system.
+And we must add ``set_viewport`` method that will be passed with information about new viewport::
 
   void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height);
 
-Файл с примером ``src/samples/sample01c.cpp``.
+The full cpp file for this step can be found here: ``src/samples/sample01c.cpp``.
 
 Creating Contexts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-До сих пор использовался один экземпляр объекта-контекст для загрузки всех элементов SVG.
-Удобно создавать на стеке экземпляр объекта-контекста для каждого встреченного элемента SVG. Это поведение контролируется 
-фабриками контекстов, передаваемыми в параметре :ref:`context_factories <context_factories>` класса ``document_traversal``.
+Until now only one instance of context object was used for entire SVG document tree.
+It is convenient to create context instance on stack for each SVG element processed. 
+This behavior is controlled by context factories, passed by :ref:`context_factories <context_factories>` 
+parameter of ``document_traversal`` template class.
 
-*Context factories* - это `Metafunction Class`_, принимающий в качестве параметров тип родительского контекста и тэг элемента 
-и возвращающий тип фабрики контекста.
+*Context factories* is a `Metafunction Class`_ that receives parent context type and element tag as parameters
+and returns *context factory* type.
 
-В нашем примере обрабатываются structural elements (**svg** и **g**) и shape elements (**path**, **rect**, **circle** etc).
-У structural elements обрабатывается только атрибут **transform**, а у shape elements - и **transform** и attributes 
-describing shape. Мы можем разделить класс ``Context`` на ``BaseContext`` и ``ShapeContext``:
+This sample application processes structural elements (**svg** and **g**) and shape elements (**path**, **rect**, **circle** etc).
+For the structural elements only **transform** attribute is processed, and for the shape elements - **transform** and attributes 
+describing shape. So we can divide ``Context`` context class for ``BaseContext`` and ``ShapeContext`` subclass:
 
 ::
 
@@ -259,75 +260,77 @@ describing shape. Мы можем разделить класс ``Context`` на
     typedef factory::context::on_stack<ShapeContext> type;
   };
 
-Factory ``factory::context::on_stack<ChildContext>`` создаёт объект контекста для дочернего элемента
-типа ``ChildContext``, передавая в конструктор ссылку на родительский контекст. Время жизни контекста - до завершения обработки
-element content (child elements and text nodes). ``on_exit_element()`` вызывается перед уничтожением объекта контекста.
+``factory::context::on_stack<ChildContext>`` factory creates context object ``ChildContext``, passing reference 
+on parent context in constructor. 
+Lifetime of context object - until processing of element content (child elements and text nodes) is finished. 
+``on_exit_element()`` is called right before object destruction.
 
-И передаем ``ChildContextFactories`` параметром ``document_traversal``::
+``ChildContextFactories`` is passed to ``document_traversal``::
 
   document_traversal<
     /* ... */
     context_factories<ChildContextFactories>
   >::load_document(xml_root_element, context);
 
-Файл с примером ``src/samples/sample01d.cpp``.
+Source file: ``src/samples/sample01d.cpp``.
 
 
-Поддержка элемента **use**
+The **use** Element Support
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Элемент **use** позволяет ссылаться на другие элементы внутри документа SVG. Если **use** ссылается на **svg** или
-**symbol** устанавливается новый viewport и новая система координат.
+The **use** element is used to include/draw other SVG element. If **use** references **svg** or
+**symbol**, then new viewport and user coordinate system are established.
 
-Для добавления поддержки **use** в наш пример мы:
+To add support for **use** in our sample we:
 
-  * Добавим ``tag::element::use_`` в список обрабатываемых элементов, а ``tag::attribute::xlink::href`` в 
-    список обрабатываемых атрибутов (**x**, **y**, **width** и **height** уже входят в ``traits::viewport_attributes``).
-  * Создадим класс контекста ``UseContext`` для элемента **use**, который будет собирать значения атрибутов 
-    **x**, **y**, **width**, **height** и **xlink:href**.
-  * После загрузки всех атрибутов элемента **use** (в методе ``UseContext::on_exit_element()``)
-    найдем в документе элемент с заданным **id** и загрузим его вызовом
+  * Add ``tag::element::use_`` to the list of processed elements , and ``tag::attribute::xlink::href`` to 
+    the list of processed attributes  (**x**, **y**, **width** and **height** already included through ``traits::viewport_attributes``).
+  * Create context class ``UseContext`` to be used for **use** element, that will
+    collect **x**, **y**, **width**, **height** and **xlink:href** attributes values.
+  * After processing all **use** element attributes (in method ``UseContext::on_exit_element()``),
+    look inside document for element with given **id** and load it with call to 
     ``document_traversal_t::load_referenced_element<...>::load()``.
-  * Для корректной работы :ref:`Viewport Policy <viewport-section>` мы должны реализовать в контекстах **svg** и **symbol**
-    метод::
+  * Implement :ref:`Viewport Policy <viewport-section>` requirement - **svg** and **symbol** context
+    must have method::
 
       void get_reference_viewport_size(double & width, double & height);
 
-    возвращающий размер viewport, заданный ссылающимся элементом **use**. 
-    Одним из вариантов будет создание для этого нового контекста ``ReferencedSymbolOrSvgContext``.
+    that returns size of the viewport set in referenced **use** element. 
+    One of possible variant is creation of new context ``ReferencedSymbolOrSvgContext``.
 
-Реализация в файле ``src/samples/sample01e.cpp``.
+Full implementation is in file: ``src/samples/sample01e.cpp``.
 
-Определение позиций маркеров
+Calculating Marker Positions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-SVG++ может решать нетривиальную задачу определения направления маркеров, заданных с атрибутом `orient="auto"`.
-
-Задаем :ref:`Markers Policy <markers-section>`, включающий автоматический расчет позиций маркеров::
+SVG++ may solve complex task of calculating orientations of markers with attribute `orient="auto"`.
+Let's set :ref:`Markers Policy <markers-section>` that enables this option::
 
   document_traversal<
     /* ... */
     markers_policy<policy::markers::calculate_always>
   > /* ... */
 
-И добавляем обработчик *Marker Events* в ``ShapeContext``::
+Now adding *Marker Events* method to ``ShapeContext``::
 
   void marker(marker_vertex v, double x, double y, double directionality, unsigned marker_index);
 
-В нашем примере (``src/samples/sample01f.cpp``) мы ограничились получением списка маркеров с координатами и углами.
-Для полной поддержки маркеров надо добавить обработку **marker**, **marker-start**, **marker-mid** и **marker-end** properties
-и обработку элементов **marker** (во многом аналогично обработке элементов **use**).
+The sample (``src/samples/sample01f.cpp``) just shows how to get marker positions. 
+To implement full marker support we also need to process 
+**marker**, **marker-start**, **marker-mid** and **marker-end** properties
+and process **marker** element (similar to processing of **use** element). 
+Demo application may give some idea about this.
 
-Обработка **stroke** и **stroke-width** properties
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Processing of **stroke** and **stroke-width** Properties
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Обработка **stroke-width** property реализуется тривиально - 
-``tag::attribute::stroke_width`` добавляется в список обрабатываемых атрибутов, а в класс контекста добавляется метод,
-принимающий значение::
+Adding **stroke-width** property processing is trivial - just add
+``tag::attribute::stroke_width`` to the list of processed attributes, and add method, 
+that receives value, to the context class::
 
   void set(tag::attribute::stroke_width, double val);
 
-Property **stroke** имеет сложный тип *<paint>*::
+Property **stroke** has complex type *<paint>*::
 
   <paint>:      none |
                 currentColor |
@@ -335,7 +338,7 @@ Property **stroke** имеет сложный тип *<paint>*::
                 <funciri> [ none | currentColor | <color> [<icccolor>] ] |
                 inherit
 
-поэтому и число методов, принимающих возможные значения этого property велико::
+that is why so many methods are required to receive all possible values of the property::
 
   void set(tag::attribute::stroke_width, double val);
   void set(tag::attribute::stroke, tag::value::none);
@@ -358,21 +361,21 @@ Property **stroke** имеет сложный тип *<paint>*::
   template<class IRI>
   void set(tag::attribute::stroke tag, tag::iri_fragment, IRI const & fragment, color_t val, tag::skip_icc_color = tag::skip_icc_color());
 
-Здесь используется :ref:`IRI Policy <iri-section>` по умолчанию, 
-которое различает абсолютные IRI и локальные IRI ссылки на фрагменты внутри документа.
+Default :ref:`IRI Policy <iri-section>` used that distinguishes absolute IRIs and local IRI references 
+to fragments in same SVG document.
 
-Файл с примером ``src/samples/sample01g.cpp``.
+Source code: ``src/samples/sample01g.cpp``.
 
 Custom Color Factory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Предположим, что нас не устраивает представление цвета в виде упакованных в ``int`` байтовых значений компонентов,
-предоставляемое по умолчанию SVG++, а мы хотим хранить компоненты цвета в ``boost::tuple``::
+Suppose that default SVG++ color presentation as 8 bit per channel RGB packed in ``int`` doesn't suit our needs.
+We prefer to use some custom type, e.g. ``boost::tuple`` (same as C++11 ``std::tuple``)::
 
   typedef boost::tuple<unsigned char, unsigned char, unsigned char> color_t;
  
-В этом случае нам надо задать собственную :ref:`Color Factory <color-section>`, создающую выбранный нами тип цвета из значений
-компонентов, прочитанных из SVG::
+In this case we need our own :ref:`Color Factory <color-section>`, that creates our custom color 
+from components values, that was read from SVG::
 
   struct ColorFactoryBase
   {
@@ -391,23 +394,24 @@ Custom Color Factory
     color_factory<ColorFactory>
   > /* ... */
 
-Использование ``factory::color::percentage_adapter`` избавляет нас от необходимости реализовывать метод
-``create_from_percent`` в нашей *Color Factory*.
+Usage of ``factory::color::percentage_adapter`` frees us from implementing 
+``create_from_percent`` method in our *Color Factory*.
 
-Файл с примером ``src/samples/sample01h.cpp``.
+Source file: ``src/samples/sample01h.cpp``.
 
 Correct Length Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-На следующем шаге развития нашего примера (``src/samples/sample01h.cpp``) мы добавим корректную обработку *length*,
-учитывающую разрешение (dpi) устройства и изменение размера viewport элементами **svg** и **symbol**, которое
-влияет на значения длины, заданные в процентах. Для этого мы:
+On next step (``src/samples/sample01h.cpp``) of sample evolution we add correct handling of *length*,
+that takes in account device resolution (dpi) and changes of viewport size by **svg** and **symbol** elements, 
+that affects lengths, which are set in percent. So we:
 
-  * Добавим ``BaseContext`` конструктор, в который будем передавать разрешение устройства в dpi.
-  * Добавим ``length_factory_`` field and access function. Настройки ``length_factory_`` (resolution, viewport size)
-    будут передаваться контекстам дочерних элементов в конструкторе копирования.
-  * В реализации ``set_viewport`` добавим передачу размера *viewport* в *Length Factory*.
-  * Зададим :ref:`Length Policy <length-section>`, запрашивающий *Length Factory* у контекста::
+  * Add to ``BaseContext`` class constructor that receives device resolution in dpi (this constructor
+    is only called by ourselves from ``loadSvg`` function).
+  * Add ``length_factory_`` field and access function. ``length_factory_`` settings (resolution, viewport size)
+    will be passed to child contexts in copy constructor.
+  * In ``BaseContext::set_viewport`` method add passing *viewport* size to *Length Factory*.
+  * Set :ref:`Length Policy <length-section>`, that will ask context for *Length Factory* instance::
 
       document_traversal<
         /* ... */
@@ -442,11 +446,11 @@ Correct Length Handling
     length_factory_type length_factory_;
   };
 
-В соответствии со спецификацией SVG, размеры нового viewport должны учитываться в атрибутах элемента,
-который establish new viewport (кроме атрибутов **x**, **y**, **width** и **height**).
-Так как в выбранной нами стратегии *Length Factory* преобразует проценты в число немедленно,
-нам нужно передать размер нового viewport *Length Factory* до обработки остальных атрибутов. 
-Для этого воспользуемся параметром :ref:`get_priority_attributes_by_element <get_priority_attributes_by_element>`
+According to SVG Specification, the size of the new viewport affects attributes of element 
+that establish new viewport (except **x**, **y**, **width** and **height** attributes).
+As our *Length Factory* converts length in percent to number immediately,
+we need to pass new viewport size to *Length Factory* before processing other attributes. 
+To do this we will use :ref:`get_priority_attributes_by_element <get_priority_attributes_by_element>` parameter of
 *Attribute Traversal Policy*::
 
   struct AttributeTraversal: policy::attribute_traversal::default_policy
@@ -481,4 +485,4 @@ Correct Length Handling
     attribute_traversal_policy<AttributeTraversal>
   > /* ... */;
 
-Теперь мы уверены, что ``BaseContext::set_viewport`` будет вызван до обработки остальных атрибутов.
+Now we are sure that ``BaseContext::set_viewport`` will be called before other attributes are processed.

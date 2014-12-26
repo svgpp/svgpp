@@ -3,9 +3,10 @@
 Path
 ==========
 
-Path parsing is controlled by *Path Policy* и *Path Events Policy*. *Path Policy* задает настройки адаптера, который упрощает для 
-приложения работу с paths (например, адаптер может заменять относительные координаты на абсолютные, избавив программиста от
-этой работы). *Path Events Policy* определяет, как разобранные данные передаются объекту контекста.
+Path parsing is controlled by *Path Policy* and *Path Events Policy*. 
+*Path Policy* configures the adapter that simplifies path handling for application
+(e.g. adapter may substitute relative coordinates with absolute ones relieving programmer from this duty).
+*Path Events Policy* defines how parsed path data is passed to the user code.
 
 Path Events Policy Concept
 --------------------------
@@ -43,15 +44,13 @@ Path Events Policy Concept
     static void path_exit(context_type & context);
   };
 
-В качестве параметра ``absoluteOrRelative`` может быть передан объект типа ``tag::coordinate::absolute`` или типа 
-``tag::coordinate::relative`` в зависимости от того абсолютные или относительные координаты переданы в качестве
-параметров.
+``absoluteOrRelative`` parameter may have type ``tag::coordinate::absolute`` or
+``tag::coordinate::relative`` depending on whether absolute or relative coordinates are passed in other parameters.
 
-В зависимости от *Path Policy*, не все перечисленные методы могут использоваться и, соответственно, не все может быть необходимо
-реализовывать.
+Depending on *Path Policy*, some of the methods aren't called by SVG++ and therefore shouldn't be implemented.
 
-*Path Events Policy* по умолчанию (``policy::path_events::forward_to_method``) переадресует вызовы статических методов 
-методам объекта ``context``::
+Default *Path Events Policy* (``policy::path_events::forward_to_method``) forwards calls to its static methods
+to ``context`` object methods::
 
   struct forward_to_method
   {
@@ -85,38 +84,38 @@ Path Policy Concept
     static const bool arc_as_cubic_bezier           = /* true or false */; 
   };
 
-*Path Policy* - это класс с набором статических member constants типа bool. Если все они имеют значение ``false``
-(как в ``policy::path::raw``), то адаптер не используется и парсер передает разобранные значения как есть. Устанавливая опции в 
-``true`` можно упростить код приложения:
+*Path Policy* is a class with ``bool`` static member constants. 
+If they all are ``false`` (as in ``policy::path::raw``), then adapter isn't used and parser passed parsed values to the user code as is.
+By setting some members to ``true`` programmer may simplify his work:
 
   ``absolute_coordinates_only = true`` 
-    Относительные координаты заменяются на соответствующие им абсолютные. 
-    Соответственно, методы *Path Events Policy* с параметром ``tag::coordinate::relative`` не используются.
+    Relative coordinates are replaced with corresponding absolute. 
+    Therefore *Path Events Policy* methods with ``tag::coordinate::relative`` parameter aren't used.
 
   ``no_ortho_line_to = true`` 
-    Вместо ``path_line_to_ortho`` с одной координатой используется соответствующий 
-    вызов ``path_line_to`` с двумя.
+    Instead of call to ``path_line_to_ortho`` with one coordinate call is made to ``path_line_to`` with two coordinates.
 
   ``no_quadratic_bezier_shorthand = true``
-    Вместо ``path_quadratic_bezier_to`` с двумя координатами (shorthand/smooth curve) 
-    используется соответствующий вызов с четырьмя.
+    Instead of ``path_quadratic_bezier_to`` with two coordinates (shorthand/smooth curve) 
+    overload of same method with four coordinates is used.
 
   ``no_cubic_bezier_shorthand = true`` 
-    Вместо ``path_cubic_bezier_to`` с четырьмя координатами (shorthand/smooth curve) 
-    используется соответствующий вызов с шестью.
+    Instead of ``path_cubic_bezier_to`` with four coordinates (shorthand/smooth curve) 
+    overload of same method with six coordinates is used.
 
   ``quadratic_bezier_as_cubic = true`` 
-    ``path_quadratic_bezier_to`` заменяется на соответствующие вызовы ``path_cubic_bezier_to``.
+    Call to ``path_quadratic_bezier_to`` is replaced with call to ``path_cubic_bezier_to``.
 
   ``arc_as_cubic_bezier = true`` 
-    Elliptical arc аппроксимируется кубической кривой Bézier. Вызов ``path_elliptical_arc_to`` 
-    заменяется серией вызовов ``path_cubic_bezier_to``.
+    Elliptical arc is approximated with cubic Bézier curve. Call to ``path_elliptical_arc_to`` 
+    substituted with series of calls to ``path_cubic_bezier_to``.
 
 :ref:`Named class template parameter <named-params>` for *Path Policy* is ``path_policy``.
 
-В файле ``svgpp/policy/path.hpp`` определены несколько predefined вариантов *Path Policy*. Используемый по умолчанию
-``policy::path::no_shorthands`` максимально сокращает интерфейс *Path Events Policy*, но не использует аппроксимацию.
-Для него *Path Events Policy* имеет вид::
+File ``svgpp/policy/path.hpp`` contains some predefined *Path Policies*. 
+``policy::path::no_shorthands`` used by default limits *Path Events Policy* interface as much as possible
+not using approximation.
+In this case *Path Events Policy* becomes::
 
   struct path_events_no_shorthands_concept
   {
@@ -141,5 +140,4 @@ Path Policy Concept
     static void path_exit(context_type & context);
   };
 
-Собственную реализации *Path Policy* лучше наследовать от какой-нибудь из предоставляемых SVG++ для обеспечения совместимости
-в будущем.
+It is better to inherit own *Path Policy* from some provided by SVG++ to easy upgrade to future versions of SVG++.

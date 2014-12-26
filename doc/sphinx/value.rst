@@ -1,21 +1,20 @@
+.. _passing-values:
+
 How parsed values are passed to context
 =============================================
 
-Для того, чтобы определить, как значение данного атрибута будет передано to context, нужно использовать
-следующий алгоритм:
+To find out how value of the SVG attribute will be passed to context, following algorithm should be applied:
 
-#. Если атрибут включен в список :ref:`passthrough_attributes <passthrough_attributes>`, 
-   то его значение будет передано через `Value Events Policy`_ 
-   в виде :ref:`строки <passing-string>`.
-#. Если тип ``traits::attribute_type<ElementTag, AttributeTag>::type`` совпадает с ``tag::type::string``, то значение 
-   тоже будет передано в виде :ref:`строки <passing-string>`.
-#. Иначе надо найти описание этого атрибута в `SVG Specification <http://www.w3.org/TR/SVG/attindex.html>`_
-   и узнать его тип.
+#. If attribute tag is included in :ref:`passthrough_attributes <passthrough_attributes>` sequence, 
+   then its value will be passed by `Value Events Policy`_ as a :ref:`string <passing-string>`.
+#. If for this element and attribute ``traits::attribute_type<ElementTag, AttributeTag>::type`` is ``tag::type::string``, 
+   then value will also be passed by `Value Events Policy`_ as a :ref:`string <passing-string>`.
+#. Otherwise type of the attribute should be found in its description in `SVG Specification <http://www.w3.org/TR/SVG/attindex.html>`_.
 #. Attribute values of type `<path data> <http://www.w3.org/TR/SVG/paths.html#PathData>`_ 
    (e.g. **d** attribute of **path** element) are described in :ref:`path_section` section.
 #. Attribute values of type `<transform list> <http://www.w3.org/TR/SVG/coords.html#TransformAttribute>`_ 
    (e.g. **transform** attribute) are described in :ref:`transform-section` section.
-#. All other are passed through `Value Events Policy`_.
+#. All others are passed through `Value Events Policy`_.
 
 
 Value Events Policy
@@ -24,9 +23,9 @@ Value Events Policy
 Value Events Policy Concept
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-*Value Events Policy* - это класс, у которого определены статические методы ``set``, принимающие ссылку на экземпляр 
-контекста в качестве первого параметра и тэг атрибута в качестве второго. Число и типы остальных параметров 
-зависят от атрибута.
+*Value Events Policy* is a class, containing static ``set`` methods, that receives reference to
+context object as a first argument and attribute tag as a second. 
+Number and types of other parameters depends on an attribute type.
 
 ::
 
@@ -37,8 +36,7 @@ Value Events Policy Concept
     /*...*/
   };
 
-По умолчанию используется ``policy::value_events::forward_to_method``, который переадресует вызовы 
-методов ``set`` объекту ``context``::
+``policy::value_events::forward_to_method`` used by default forward calls to ``set`` methods of ``context`` object::
 
   template<class Context>
   struct forward_to_method
@@ -52,12 +50,12 @@ Value Events Policy Concept
 
 .. note::
 
-  *Value Events Policy* по умолчанию не передает значения ``tag::value::inherit`` для тех properties and 
-  presentation attributes, которые не наследуются (см. ``policy::value_events::skip_inherit``). Значение 
-  **inherit** для этих атрибутов эквивалентно их отсутствию.
+  Default *Value Events Policy* doesn't pass ``tag::value::inherit`` values of properties and presentation attributes, 
+  that are inherited (see ``policy::value_events::skip_inherit``). 
+  **inherit** value for such attributes is equivalent to its absence.
 
 
-Пример использования *Value Events Policy* по умолчанию::
+Example of default *Value Events Policy* usage::
 
   #include <svgpp/svgpp.hpp>
 
@@ -77,8 +75,9 @@ Value Events Policy Concept
     value_parser<tag::type::number>::parse(tag::attribute::amplitude(), context, std::string("3.14"), tag::source::attribute());
   }
 
-Пример собственной реализации *Value Events Policy*. Создаем специализацию шаблона 
-``policy::value_events::default_policy`` для нашего типа контекста (для примера ``boost::optional<double>``)::
+Example of own *Value Events Policy* implementation. 
+Created ``policy::value_events::default_policy`` template class specialization 
+for our context type (let it be ``boost::optional<double>`` in our example)::
 
   namespace svgpp { namespace policy { namespace value_events 
   {
@@ -104,16 +103,16 @@ Value Events Policy Concept
 .. _Literal Values:
 
 *Literal Values*
-  Если значением атрибута может быть литерал, то такому значению атрибута соответствует вызов с тэгом из
-  пространства имен ``tag::value``. Пример атрибутов, которые могут принимать литеральные значения::
+  If literal is one of attribute possible values, then this value will cause call with
+  tag from ``tag::value`` namespace. Example of attributes that may have literal values::
 
       gradientUnits = "userSpaceOnUse | objectBoundingBox"
       clip-path = "<funciri> | none | inherit"
 
-  **gradientUnits** ограничен одним из двух возможных литеральных значений, а **clip-path**, кроме
-  литеральных значений **none** и **inherit**, может принимать значения другого типа - *<FuncIRI>*.
+  **gradientUnits** is limited to two literal values. **clip-path**, besides
+  **none** and **inherit** literal values may get values of *<FuncIRI>* type.
 
-  Пример реализации контекста, принимающего значения атрибута **gradientUnits**::
+  Example of context implementation, that receives values of **gradientUnits** attributes::
 
     class GradientContext
     {
@@ -137,27 +136,28 @@ Value Events Policy Concept
     };
 
 *<length>* or *<coordinate>*
-  Передается одним параметром, тип которого определяется :ref:`Length Factory <length-section>` (по умолчанию ``double``).
+  Is passed as single argument, whose type is set by :ref:`Length Factory <length-section>` (by default ``double``).
 
 *<IRI>* or *<FuncIRI>*
-  См. :ref:`iri-section`.
+  See :ref:`iri-section`.
     
 *<integer>*
-  Передается одно значение типа ``int``.
+  Single argument of ``int`` type is used.
 
 *<number>* or *<opacity-value>*
-  Передается одим параметром типа number_type_ (по умолчанию ``double``).
+  Is passed as single argument of number_type_ (by default ``double``).
 
 *<percentage>*
 
 *<color>* 
-  Передается одним параметром, тип которого определяется :ref:`Color Factory <color-section>` 
-  (по умолчанию 8 бит на канал RGB, упакованные в ``int``).
+  Is passed as single argument, whose type is set by :ref:`Color Factory <color-section>` 
+  (by default 8 bit per channel RGB packed in ``int``).
 
 *<color> [<icccolor>]*
-  Если *<icccolor>* не задан, то передается одним параметром, тип которого определяется :ref:`Color Factory <color-section>`.
-  Если задан, то добавляется второй параметр, тип которого определяется :ref:`ICC Color Factory <icc-color-factory-section>`.
-  Пример::
+  If *<icccolor>* isn't set, then it is passed as single argument,
+  whose type is set by :ref:`Color Factory <color-section>`.
+  Otherwise, second argument is added, whose type is set by :ref:`ICC Color Factory <icc-color-factory-section>`.
+  Example::
 
     struct Context
     {
@@ -168,22 +168,22 @@ Value Events Policy Concept
     };
 
 *<angle>*
-  Передается одним параметром, тип и значение которого определяются *Angle Factory* (по умолчанию 
-  это значение типа ``double`` в градусах).
+  Is passed as single argument, whose type and value are set by *Angle Factory* 
+  (by default ``double`` value in degrees).
 
 *<number-optional-number>*
-  Передается одим или двумя параметрами типа number_type_ (по умолчанию ``double``).
+  Is passed as one or two arguments of number_type_ type (by default ``double``).
 
 *<list-of-numbers>*, *<list-of-lengths>* or *<list-of-points>* 
-  Передается одним параметром of unspecified type, который является моделью 
+  Is passed as single argument of unspecified type, which is model of  
   `Boost Single Pass Range <http://www.boost.org/doc/libs/1_57_0/libs/range/doc/html/range/concepts/single_pass_range.html>`_.
   
-  Элементы *range* имеют тип:
-    * number_type_ (по умолчанию ``double``) для *<list-of-numbers>*;
-    * определяется :ref:`Length Factory <length-section>` в случае *<list-of-lengths>*;
-    * ``std::pair<number_type, number_type>`` (по умолчанию ``std::pair<double, double>``) в случае *<list-of-points>*.
+  *range* items have type:
+    * number_type_ (by default ``double``) in case of *<list-of-numbers>*;
+    * that is set by :ref:`Length Factory <length-section>` in case of *<list-of-lengths>*;
+    * ``std::pair<number_type, number_type>`` (by default ``std::pair<double, double>``) in case of *<list-of-points>*.
 
-  Пример::
+  Example::
 
     struct Context
     {
@@ -197,38 +197,39 @@ Value Events Policy Concept
     };
 
   .. note::
-    Если решение с template function не может быть использовано (например, требуется виртуальная функция),
-    в качестве типа параметра можно использовать Boost 
-    `any_range <http://www.boost.org/doc/libs/1_57_0/libs/range/doc/html/range/reference/ranges/any_range.html>`_::
+    If template function can't be used (e.g. it is virtual function),
+    then Boost 
+    `any_range <http://www.boost.org/doc/libs/1_57_0/libs/range/doc/html/range/reference/ranges/any_range.html>`_
+    can be used as range type instead::
 
       typedef boost::any_range<double, boost::single_pass_traversal_tag, double const &, std::ptrdiff_t> Range;
 
 
 *<shape>*
-  Передается пятью параметрами - первый *tag* ``tag::value::rect``, остальные типа number_type_ (по умолчанию ``double``): 
+  Is passed as 5 arguments - first is *tag* ``tag::value::rect``, others are of number_type_ type (by default ``double``): 
   ``(tag::value::rect(), top, right, bottom, left)``.
 
 **viewBox** attribute
-  Передается четырьмя параметрами типа number_type_ (по умолчанию ``double``): ``(x, y, width, height)``.
+  Is passed as 4 arguments of number_type_ type (by default ``double``): ``(x, y, width, height)``.
 
 **bbox** attribute
-  Передается четырьмя параметрами типа number_type_ (по умолчанию ``double``): ``(lo_x, lo_y, hi_x, hi_y)``.
+  Is passed as 4 arguments of number_type_ type (by default ``double``): ``(lo_x, lo_y, hi_x, hi_y)``.
 
 **preserveAspectRatio** attribute
-  В зависимости от значения передается как:
+  Depending on value is passed as:
     * ``(bool defer, tag::value::none)``
     * ``(bool defer, AlignT align, MeetOrSliceT meetOrSlice)``
 
-      Тип ``AlignT`` - один из ``tag::value::xMinYMin``, ``tag::value::xMidYMin``, ``tag::value::xMaxYMin``, 
+      Type ``AlignT`` is one of ``tag::value::xMinYMin``, ``tag::value::xMidYMin``, ``tag::value::xMaxYMin``, 
       ``tag::value::xMinYMid``, ``tag::value::xMidYMid``, ``tag::value::xMaxYMid``, 
       ``tag::value::xMinYMax``, ``tag::value::xMidYMax``, ``tag::value::xMaxYMax``.
-      Тип ``MeetOrSliceT`` - ``tag::value::meet`` или ``tag::value::slice``.
+      Type ``MeetOrSliceT`` is ``tag::value::meet`` or ``tag::value::slice``.
 
 **text-decoration** property
-  Значения **none** and **inherit** передаются как `Literal Values`_.
-  Остальные варианты передаются восемью параметрами, из них четыре типа ``bool``, каждому предшествует *tag*, 
-  определяющий назначение параметра. Boolean parameters принимают значение ``true``, если соответствующий 
-  text decoration указан в property::
+  **none** and **inherit** values are passed as `Literal Values`_.
+  Other values are passed as 8 arguments, 4 of which is of type ``bool``, each of them
+  preceded with *tag*, describing argument meaning. Boolean parameters takes ``true`` value
+  if corresponding text decoration is set in property::
 
     struct Context
     {
@@ -242,13 +243,13 @@ Value Events Policy Concept
     };
 
 **enable-background** property
-  Значения **accumulate**, **new** and **inherit** передаются как `Literal Values`_.
-  Значения вида **new <x> <y> <width> <height>** передаются пятью параметрами, первое - *tag*, 
-  остальные имеют тип number_type_ (по умолчанию ``double``): 
+  **accumulate**, **new** and **inherit** values are passed as `Literal Values`_.
+  Values as **new <x> <y> <width> <height>** are passed as 5 arguments, first of them is *tag*, 
+  other have type number_type_ (by default ``double``): 
   ``(tag::value::new_(), x, y, width, height)``.
 
 *<paint>*
-  Возможные комбинации параметров:
+  Possible combinations of argument types:
 
     * (``tag::value::inherit``)
     * (``tag::value::none``)
@@ -260,10 +261,10 @@ Value Events Policy Concept
     * (*<iri>*, *<color>*)
     * (*<iri>*, *<color>*, *<icccolor>*)
 
-  Как определяется тип *<color>* и *<icccolor>* описано выше.
+  Which types corresponds to *<color>* and *<icccolor>* is described above.
 
-  Если в качестве :ref:`IRI Policy <iri-section>` используется ``policy::iri::distinguish_local``,
-  то число методов с *<iri>* удваивается:
+  If :ref:`IRI Policy <iri-section>` ``policy::iri::distinguish_local`` is used,
+  then number of methods with *<iri>* is doubled:
 
     * (``tag::value::inherit``)
     * (``tag::value::none``)
@@ -279,7 +280,7 @@ Value Events Policy Concept
     * (*<iri>*, *<color>*, *<icccolor>*)
     * (``tag::iri_fragment``, *<iri fragment>*, *<color>*, *<icccolor>*)
 
-  Пример::
+  Example::
 
     typedef boost::variant<tag::value::none, tag::value::currentColor, int/* rgba */> SolidPaint;
 

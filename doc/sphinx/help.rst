@@ -10,6 +10,6 @@ Author can be contacted at olegmax@gmail.com
 Acknowledgements
 -----------------------
 
-Thanks to `Atlassian <https://www.atlassian.com/>`_ company for providing free 
+Thanks to `Atlassian <https://www.atlassian.com/>`_ Company for providing free 
 Bamboo continuous integration `server <https://svgcpp.atlassian.net/builds/browse/SVG>`_ 
 that made it easy to test library immediately in different environments.

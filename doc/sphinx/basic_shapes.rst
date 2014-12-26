@@ -6,7 +6,7 @@ Basic Shapes
 ====================
 
 `Basic shapes <http://www.w3.org/TR/SVG/shapes.html>`_ (**rect**, **circle**, **ellipse**, **line**, **polyline**
-и **polygon**) могут быть автоматически преобразованы в команды path.
+and **polygon**) can be automatically converted to *path* commands.
 
 Basic Shapes Policy Concept
 --------------------------------
@@ -22,23 +22,25 @@ Basic Shapes Policy Concept
   };
 
 ``convert_to_path``
-  `Associative Sequence`_ (например, ``boost::mpl::set``), содержащая тэги *basic shapes* элементов
-  SVG, которые будут преобразованы в **path**.  Генерируемые **path** используют настройки *Path Policy* и *Path Events Policy*.
+  `Associative Sequence`_ (e.g. ``boost::mpl::set``), containing SVG *basic shapes* elements tags,
+  which will be converted to **path**.  Generated **path** uses *Path Policy* and *Path Events Policy* settings.
 
 ``collect_attributes``
-  `Associative Sequence`_, содержащая тэги элементов 
-  **rect**, **circle**, **ellipse** и **line**, геометрия которых будет передана одним вызовом, вместо того, чтобы
-  передавать значения атрибутов по отдельности.
+  `Associative Sequence`_, containing any of **rect**, **circle**, **ellipse** or **line** element tags.
+  Geometry of elements included in the sequence will be passed with single call instead of separate attribute
+  handling (see *Basic Shapes Events Policy*).
 
 ``convert_only_rounded_rect_to_path``
-  Если static member constant ``convert_only_rounded_rect_to_path`` имеет значение ``true`` и 
-  ``tag::element::rect`` входит в ``convert_to_path``, то преобразованы в **path** будут только rounded rectangles,
-  а обычные прямоугольники будут обработаны как будто ``tag::element::rect`` входит в ``collect_attributes``.
+  If static member constant ``convert_only_rounded_rect_to_path`` equals to ``true`` and 
+  ``tag::element::rect`` is included in ``convert_to_path`` sequence, 
+  then only rounded rectangles will be converted to **path**,
+  and regular rectangles will be handle like if ``tag::element::rect`` is included in ``collect_attributes``.
 
-В ``document_traversal`` должна быть :ref:`разрешена <processed_attributes>` 
-обработка атрибутов, описывающих геометрию *basic shapes* (**x**, **y**,
-**r** и т. д.), т. е. они должны быть включены в ``processed_attributes`` или не включены в ``ignored_attributes``.
-`Associative Sequence`_ ``traits::shapes_attributes_by_element`` содержит список таких атрибутов для всех *basic shapes*.
+In ``document_traversal`` processing of attributes describing *basic shapes* geometry (**x**, **y**,
+**r** etc) must be :ref:`enabled <processed_attributes>`, 
+i. e. they must be included in ``processed_attributes`` or excluded from ``ignored_attributes``.
+`Associative Sequence`_ ``traits::shapes_attributes_by_element`` contains tags of all such attributes 
+for *basic shapes*.
 
 :ref:`Named class template parameter <named-params>` for *Basic Shapes Policy* is ``basic_shapes_policy``.
 
@@ -58,18 +60,18 @@ Basic Shapes Events Policy Concept
     static void set_ellipse(Context & context, Coordinate cx, Coordinate cy, Coordinate rx, Coordinate ry);
   };
 
-*Basic Shapes Events Policy* используется для тех элементов *basic shapes* (кроме **polyline** и **polygon**), 
-тэги которых перечислены в ``collect_attributes`` *Basic Shapes Policy*.
+*Basic Shapes Events Policy* is used for *basic shapes* (except **polyline** and **polygon**) elements, 
+that are listed in ``collect_attributes`` field of *Basic Shapes Policy*.
 
-Адаптеры, реализующие эти преобразования, используют метод ``length_to_user_coordinate`` *Length Factory*,
-чтобы получить численные *user coordinates* из *length*. Эти адаптеры передают значения по умолчанию при отсутствии
-атрибута и проверяют корректность значений атрибутов. Если значение disables rendering of the element
-в соответствии со спецификацией SVG, то функция *Basic Shapes Events Policy* не вызывается, а если 
-отрицательное значение недопустимо для этого атрибута в соответствии со стандартом, то вызывается 
-функция ``negative_value`` :ref:`Error Policy <error_policy>`.
+Adapters that implement these conversions, use ``length_to_user_coordinate`` method of *Length Factory*
+to get *user coordinates* value by *length*. These adapters passes default values if attributes are missing
+and check correctness of attributes. If value disables rendering of the element
+according to SVG specification, then *Basic Shapes Events Policy* methods aren't called, 
+and if an attribute has negative value that is not permitted by specification, 
+then ``negative_value`` function of :ref:`Error Policy <error_policy>` is called.
 
-*Basic Shapes Events Policy* по умолчанию (``policy::basic_shapes_events::forward_to_method``) переадресует вызовы 
-статических методов методам объекта ``context``::
+Default *Basic Shapes Events Policy* (``policy::basic_shapes_events::forward_to_method``) 
+forwards calls to its static methods to ``context`` object methods::
 
   struct forward_to_method
   {
