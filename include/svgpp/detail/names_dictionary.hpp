@@ -186,7 +186,7 @@ typedef static_dictionary<css_property_name_to_id, unknown_attribute_id> css_pro
   BOOST_PP_TUPLE_ELEM(2, 1, BOOST_PP_SEQ_ELEM(BOOST_PP_ITERATION(), SVGPP_CHAR_TYPES))
 
 #define SVGPP_ADD_ITEM(key, value) \
-  { SVGPP_ITER_STRINGIZE(key), sizeof(SVGPP_ITER_STRINGIZE(key)) / sizeof(SVGPP_ITER_CHAR_TYPE) - 1, value },
+  { BOOST_PP_CAT(SVGPP_ITER_STRINGIZE, #key), sizeof(BOOST_PP_CAT(SVGPP_ITER_STRINGIZE, #key)) / sizeof(SVGPP_ITER_CHAR_TYPE) - 1, value },
 
 template<>
 inline boost::iterator_range<element_name_to_id::value_type<SVGPP_ITER_CHAR_TYPE> const *> const & 

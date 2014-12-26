@@ -83,6 +83,24 @@ if (LIBXML2_FOUND)
   )
 endif()
 
+if (XERCES_INCLUDE_DIR)
+  add_executable(svgpp_agg_render_xerces
+    parser_xerces.hpp
+    parser_xerces.cpp
+    ${AGG_DEMO_SOURCES}
+  )
+
+  target_compile_definitions(svgpp_agg_render_xerces
+    PRIVATE SVG_PARSER_XERCES;RENDERER_AGG
+  )
+
+  set_property(TARGET svgpp_agg_render_xerces
+    APPEND PROPERTY INCLUDE_DIRECTORIES ${XERCES_INCLUDE_DIR}
+  )
+  target_link_libraries(svgpp_agg_render_xerces
+  )
+endif()
+
 if (WIN32)
   add_executable(svgpp_gdip_render_msxml
     ${DEMO_SOURCES}
