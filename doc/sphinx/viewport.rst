@@ -61,6 +61,8 @@ Viewport Events Policy Concept
 
     static void get_reference_viewport_size(context_type & context, 
       number_type & viewport_width, number_type & viewport_height);
+
+    static void disable_rendering(context_type & context);
   };
 
 ``set_viewport`` 
@@ -72,6 +74,11 @@ Viewport Events Policy Concept
 
 ``get_reference_viewport_size``
   See :ref:`viewport_referenced_element`.
+
+``disable_rendering``
+  SVG Specification says that "[**width** or **height** attribute] value of zero disables rendering of this element".
+  ``disable_rendering`` will be called in such cases, so that application can behave in proper way.
+  *Document Traversal Control Policy* may be used to skip processing of element content.
 
 :ref:`Named class template parameter <named-params>` for *Viewport Events Policy* is ``viewport_events_policy``.
 

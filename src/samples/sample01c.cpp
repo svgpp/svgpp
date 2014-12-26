@@ -21,6 +21,9 @@ public:
   void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height)
   {}
 
+  void disable_rendering()
+  {}
+
   void path_move_to(double x, double y, tag::coordinate::absolute)
   {}
 

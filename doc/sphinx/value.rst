@@ -24,15 +24,17 @@ Value Events Policy Concept
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 *Value Events Policy* is a class, containing static ``set`` methods, that receives reference to
-context object as a first argument and attribute tag as a second. 
+context object as a first argument, attribute tag as a second and a source tag as a third. 
+Source tag is one of two types: ``tag::source::css`` and ``tag::source::attribute`` (they have common base ``tag::source::any``).
+Source tag shows where value comes from -- CSS value in **style** attribute or from separate SVG/XML attribute.
 Number and types of other parameters depends on an attribute type.
 
 ::
 
   struct value_events_policy
   {
-    static void set(Context & context, AttributeTag tag, ValueType1 const & value1);
-    static void set(Context & context, AttributeTag tag, ValueType1 const & value1, ValueType2 const & value2);
+    static void set(Context & context, AttributeTag tag, SourceTag source, ValueType1 const & value1);
+    static void set(Context & context, AttributeTag tag, SourceTag source, ValueType1 const & value1, ValueType2 const & value2);
     /*...*/
   };
 
@@ -42,11 +44,17 @@ Number and types of other parameters depends on an attribute type.
   struct forward_to_method
   {
     template<class AttributeTag, class ...Args>
-    static void set(Context & context, AttributeTag tag, Args... args)
+    static void set(Context & context, AttributeTag tag, tag::source::any const &, Args... args)
     {
       context.set(tag, args...);
     }
   };
+
+.. note::
+
+  Source tag is dropped by default *Value Events Policy*, because default 
+  :ref:`Attribute Traversal Policy <attribute_traversal_policy>` processes only one value of the same property,
+  even if both are provided (``css_hides_presentation_attribute = true``).
 
 .. note::
 
@@ -85,7 +93,7 @@ for our context type (let it be ``boost::optional<double>`` in our example)::
     struct default_policy<boost::optional<double> >
     {
       template<class AttributeTag>
-      static void set(boost::optional<double> & context, AttributeTag tag, double value) 
+      static void set(boost::optional<double> & context, AttributeTag tag, tag::source::any, double value) 
       {
         context = value;
       }
