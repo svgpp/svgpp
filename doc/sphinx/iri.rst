@@ -5,7 +5,7 @@ IRI
 
 `IRIs <http://www.w3.org/TR/SVG/linking.html#IRIandURI>`_, including ones that are set with
 `FuncIRI <http://www.w3.org/TR/SVG/types.html#DataTypeFuncIRI>`_
-syntax, are passed to user code the same way as other :ref:`strings <passing-string>` in SVG++. 
+syntax, are passed to the user code the same way as other :ref:`strings <passing-string>` in SVG++. 
 
 The only setting in *IRI Policy* configures whether to distinguish
 local references to document fragment (IRIs prefixed with "#") from non-local IRI references. 

@@ -5,10 +5,10 @@ Viewport
 
 When establishing new viewport by elements **svg**, **symbol** (instanced by **use**) or **image** 
 several attributes must be processed (**x**, **y**, **width**, **height**, **preserveAspectRatio**, **viewbox**)
-to get new user coordinate system, viewport and clipping path. 
+to get the new user coordinate system, viewport and clipping path. 
 SVG++ may do it itself and present result in convenient way. 
 This behavior is configured by *Viewport Policy*. 
-*Viewport Events Policy* defines how viewport information is passed to user code.
+*Viewport Events Policy* defines how viewport information is passed to the user code.
 
 **marker** element establish new viewport similar way, when it is instances in path vertices, 
 so **marker** elements may also be handled by *Viewport Policy* and *Viewport Events Policy*.
@@ -125,7 +125,7 @@ intercepts and processes marker attributes listed in ``traits::marker_viewport_a
     > marker_viewport_attributes;
   }
 
-Processing of this attributes must be :ref:`enabled <processed_attributes>` by programmer.
+Processing of this attributes must be :ref:`enabled <processed_attributes>` by the programmer.
 
 Order of viewport processing
 -------------------------------------

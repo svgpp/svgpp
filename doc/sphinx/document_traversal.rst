@@ -122,7 +122,7 @@ document_traversal Named Class Template Parameters
     It must be model of `Associative Sequence`_ (e.g. ``boost::mpl::set``),
     containing element tags.
 
-    If ``processed_elements`` is set, then only listed elements are processed,
+    If ``processed_elements`` is set, then only the listed elements are processed,
     otherwise if ``ignored_elements`` is set, then only non-listed elements are processed.
 
 .. _processed_attributes:
@@ -141,7 +141,7 @@ document_traversal Named Class Template Parameters
 
   ``passthrough_attributes`` *(optional)*
     Is a `Associative Sequence`_, that contains attribute tags. 
-    Values of listed attributes aren't parsed by SVG++, and passed to user code as :ref:`string <passing-string>`.
+    Values of listed attributes aren't parsed by SVG++, and passed to the user code as :ref:`string <passing-string>`.
 
   ``context_factories`` *(optional)*
     See :ref:`context_factories`.
@@ -156,7 +156,7 @@ Context Factories
 
 When ``document_traversal`` traverses SVG tree, it, for each SVG element met, chooses context 
 to be used to pass attribute values and character data by corresponding *event policy*. 
-To configure this behavior ``context_factories`` parameters is used.
+To configure this behavior ``context_factories`` parameter is used.
 
 ``context_factories`` parameter accepts `Metafunction Class`_, that receives: 
 
@@ -177,7 +177,7 @@ SVG++ provides several *Context Factories*::
 
 .. _fakeRef1:
 
-  New context object isn't created, parent context will be used. 
+  The new context object isn't created, parent context will be used. 
   ``on_enter_element(ElementTag())`` and ``on_exit_element()`` methods of parent context will be called
   at the start and at the end of element processing respectively.
 
@@ -188,7 +188,7 @@ SVG++ provides several *Context Factories*::
 
 .. _fakeRef2:
 
-  New object of type ``ChildContext`` is created on stack. 
+  The new object of type ``ChildContext`` is created on stack. 
   Constructor of the object is passed with the reference to the parent context. 
   After element processing is finished, method ``ChildContext::on_exit_element()`` is called before destruction.
   Lifetime of context object matches processing of SVG element content (element attributes, child elements and text nodes).
@@ -244,8 +244,8 @@ Attribute Traversal Policy
   then only value in **style** attribute will be parsed (it has higher priority according to SVG).
 
   If ``css_hides_presentation_attribute = false``, then memory usage is lower, but both values
-  (from **style** attribute and a *presentation attribute*) of same property will be parsed and passed to user code
-  in arbitrary order.
+  (from **style** attribute and a *presentation attribute*) of the same property will be parsed and passed to the user code
+  in the arbitrary order.
 
 .. _get_priority_attributes_by_element:
 
@@ -267,7 +267,7 @@ Attribute Traversal Policy
     Sequences, returned by ``get_priority_attributes_by_element`` and ``get_deferred_attributes_by_element``, 
     besides attribute tags may contain elements like ``notify_context<EventTag>``. 
     ``EventTag`` is an arbitrary tag, that will be passed to ``notify`` method of the context. 
-    ``notify(EventTag())`` will be called right after all previous attributes in sequence are processed.
+    ``notify(EventTag())`` will be called right after all previous attributes in the sequence are processed.
 
   If element lacks any attribute from the sequence, returned by ``get_required_attributes_by_element`` metafunction for
   this element, then ``required_attribute_not_found_error`` exception will be thrown (see :ref:`Error Policy <error-handling>`).

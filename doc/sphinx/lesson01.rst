@@ -10,7 +10,7 @@ All SVG++ headers may be included through this one::
 
 #include <svgpp/svgpp.hpp>
 
-All SVG++ code is placed in ``svgpp`` namespace. We'll import entire namespace in our sample.
+All SVG++ code is placed in ``svgpp`` namespace. We'll import the entire namespace in our sample.
 
 .. _tutorial:
 
@@ -18,7 +18,7 @@ Handling Shapes Geometry
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Basic pattern of SVG++ usage: call ``document_traversal::load_document`` method, passing XML element and *context* to it.
-Library will call methods of *context*, passing parsed data.
+Library will call methods of *context*, passing the parsed data.
 
 ::
 
@@ -86,7 +86,7 @@ We choose SVG attributes subset and pass it as
 ``traits::shapes_attributes_by_element`` contains attributes, that describe geometry of all shapes 
 ({**x**, **y**, **width**, **height**, **rx** and **ry**} for **rect**, {**d**} for **path** etc.). 
 
-In this sample same context instance is used for all SVG elements.
+In this sample the same context instance is used for all SVG elements.
 ``Context::on_enter_element(element_tag)`` is called when moving to child SVG element, type
 of child element passed as tag in the only argument (``tag::element::any`` is a base class for all element tags).
 ``on_exit_element()`` is called when processing of child element is finished:
@@ -112,9 +112,9 @@ Calls like ``path_XXXX`` except ``path_exit`` correspond to SVG
 
 SVG++ by default (see :ref:`Path Policy <path_policy>` for details):
 
-- Converts relative coordinates with absolute ones
-- Commands for horizontal and vertical lines (**H**, **h**, **V**, **v**) converts to calls to ``path_line_to`` with two coordinates
-- Shorthand/smooth curveto and shorthand/smooth quadratic Bézier curveto replaces with calls with full parameters list
+- converts relative coordinates with absolute ones
+- commands for horizontal and vertical lines (**H**, **h**, **V**, **v**) converts to calls to ``path_line_to`` with two coordinates
+- shorthand/smooth curveto and shorthand/smooth quadratic Bézier curveto replaces with calls with full parameters list
 
 SVG++ by default converts `basic shapes <http://www.w3.org/TR/SVG11/shapes.html>`_ to path
 (see :ref:`Basic Shapes Policy <basic_shapes>` for details).
@@ -126,7 +126,7 @@ We didn't declared ``xml_element_t`` yet.
 It is type that corresponds to XML element :ref:`type <xml_policy_types>` in XML parser chosen.
 Let's use `RapidXML NS <https://github.com/svgpp/rapidxml_ns>`_ library (it is a clone of 
 `RapidXML <http://rapidxml.sourceforge.net/>`_ with namespace handling added) that comes with SVG++ 
-in ``third_party/rapidxml_ns/rapidxml_ns.hpp`` file. It's a single header library, so we just need to point to its header::
+in the ``third_party/rapidxml_ns/rapidxml_ns.hpp`` file. It's a single header library, so we just need to point to its header::
 
   #include <rapidxml_ns/rapidxml_ns.hpp>
 
@@ -134,7 +134,8 @@ Then we must include *policy* for XML parser chosen::
 
   #include <svgpp/policy/xml/rapidxml_ns.hpp>
 
-XML policies headers don't include parser header because their location and names may differ. Programmer must include 
+XML policies headers don't include parser header because their location and names may differ. 
+The programmer must include 
 appropriate XML parser header herself before including policy header.
 
 Setting appropriate XML element type for RapidXML NS parser::
@@ -174,7 +175,7 @@ Source file: ``src/samples/sample01b.cpp``.
 Handling Viewports
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The **svg** element may be used inside SVG document to establish new viewport. 
+The **svg** element may be used inside SVG document to establish a new viewport. 
 To process new viewport coordinate system, a new user coordinate system 
 several attributes must be processed (**x**, **y**, **width**, **height**, **preserveAspectRatio**, **viewbox**).
 SVG++ will do it itself if we set ``policy::viewport::as_transform`` :ref:`Viewport Policy <viewport-section>` ::
@@ -185,7 +186,7 @@ SVG++ will do it itself if we set ``policy::viewport::as_transform`` :ref:`Viewp
     viewport_policy<policy::viewport::as_transform>
   >::load_document(xml_root_element, context);
 
-also we must append viewport attributes to the list of processed attributes::
+we also must append viewport attributes to the list of processed attributes::
 
   typedef 
     boost::mpl::fold<
@@ -201,7 +202,7 @@ also we must append viewport attributes to the list of processed attributes::
       boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
     >::type processed_attributes_t;
 
-Now SVG++ will call existing method ``transform_matrix`` to set new user coordinate system.
+Now SVG++ will call the existing method ``transform_matrix`` to set new user coordinate system.
 And we must add ``set_viewport`` method that will be passed with information about new viewport::
 
   void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height);
@@ -219,8 +220,8 @@ parameter of ``document_traversal`` template class.
 *Context factories* is a `Metafunction Class`_ that receives parent context type and element tag as parameters
 and returns *context factory* type.
 
-This sample application processed structural elements (**svg** and **g**) and shape elements (**path**, **rect**, **circle** etc).
-For structural elements only **transform** attribute is processed, and for shape elements - **transform** and attributes 
+This sample application processes structural elements (**svg** and **g**) and shape elements (**path**, **rect**, **circle** etc).
+For the structural elements only **transform** attribute is processed, and for the shape elements - **transform** and attributes 
 describing shape. So we can divide ``Context`` context class for ``BaseContext`` and ``ShapeContext`` subclass:
 
 ::
@@ -314,7 +315,7 @@ Now adding *Marker Events* method to ``ShapeContext``::
 
   void marker(marker_vertex v, double x, double y, double directionality, unsigned marker_index);
 
-In the sample (``src/samples/sample01f.cpp``) just shown how to get marker positions. 
+The sample (``src/samples/sample01f.cpp``) just shows how to get marker positions. 
 To implement full marker support we also need to process 
 **marker**, **marker-start**, **marker-mid** and **marker-end** properties
 and process **marker** element (similar to processing of **use** element). 
@@ -445,7 +446,7 @@ that affects lengths, which are set in percent. So we:
     length_factory_type length_factory_;
   };
 
-According to SVG Specification, size of the new viewport affects attributes of element 
+According to SVG Specification, the size of the new viewport affects attributes of element 
 that establish new viewport (except **x**, **y**, **width** and **height** attributes).
 As our *Length Factory* converts length in percent to number immediately,
 we need to pass new viewport size to *Length Factory* before processing other attributes. 

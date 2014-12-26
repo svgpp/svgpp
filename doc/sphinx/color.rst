@@ -64,7 +64,7 @@ ICC Color Factory Concept
     icc_color_type create_icc_color(builder_type const &) const;
   };
 
-``icc_color_type`` is a type that will be passed to user code. 
+``icc_color_type`` is a type that will be passed to the user code. 
 
 ``builder_type`` is used as a temporary object during building ``icc_color_type`` 
 from color profile name and some components values.

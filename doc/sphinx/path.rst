@@ -4,9 +4,9 @@ Path
 ==========
 
 Path parsing is controlled by *Path Policy* and *Path Events Policy*. 
-*Path Policy* configures adapter that simplifies path handling for application
+*Path Policy* configures the adapter that simplifies path handling for application
 (e.g. adapter may substitute relative coordinates with absolute ones relieving programmer from this duty).
-*Path Events Policy* defines how parsed path data is passed to user code.
+*Path Events Policy* defines how parsed path data is passed to the user code.
 
 Path Events Policy Concept
 --------------------------
@@ -49,7 +49,7 @@ Path Events Policy Concept
 
 Depending on *Path Policy*, some of the methods aren't called by SVG++ and therefore shouldn't be implemented.
 
-Default *Path Events Policy* (``policy::path_events::forward_to_method``) forward calls to its static methods
+Default *Path Events Policy* (``policy::path_events::forward_to_method``) forwards calls to its static methods
 to ``context`` object methods::
 
   struct forward_to_method
@@ -85,7 +85,7 @@ Path Policy Concept
   };
 
 *Path Policy* is a class with ``bool`` static member constants. 
-If they all are ``false`` (as in ``policy::path::raw``), then adapter isn't used and parser passed parsed values to user code as is.
+If they all are ``false`` (as in ``policy::path::raw``), then adapter isn't used and parser passed parsed values to the user code as is.
 By setting some members to ``true`` programmer may simplify his work:
 
   ``absolute_coordinates_only = true`` 

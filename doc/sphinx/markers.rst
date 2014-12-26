@@ -7,7 +7,7 @@ SVG++ provides option to automatically calculate marker symbols orientation on l
 (**path**, **line**, **polyline** or **polygon** element).
 
 *Markers Policy* turns on/off and configures marker position calculations.
-*Marker Events Policy* defines how marker positions are passed to user code.
+*Marker Events Policy* defines how marker positions are passed to the user code.
 
 Markers Policy Concept
 ------------------------------------
@@ -27,7 +27,7 @@ Markers Policy Concept
   then other class members aren't used.
 
 Marker properties define which vertices contain markers. 
-Depending on value of **orient** attribute of **marker** element, marker orientation may be
+Depending on the value of **orient** attribute of **marker** element, marker orientation may be
 fixed or calculated by line geometry (**auto** value).
 
 ``always_calculate_auto_orient = true`` 
@@ -91,7 +91,7 @@ or neither of them (``marker_none``).
     then tag ``tag::orient_fixed`` is passed instead of orientation value.
 
   ``marker_index``
-    Marker orientations aren't always calculated and passed in order,
+    Marker orientations aren't always calculated and passed in the order,
     because orientation of marker on first vertex of *subpath* may be calculated only after *subpath* is finished.
     ``marker_index`` is the 0-based index of the marker in drawing order.
 

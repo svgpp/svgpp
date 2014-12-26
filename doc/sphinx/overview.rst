@@ -18,13 +18,13 @@ Default *Events Policies* treats *context* as an object, calling its methods.
 Components
 -----------------
 
-Here are shown main SVG++ components, starting from lowest level. Every next is based on previous:
+Below are shown the main SVG++ components, starting from the lowest level. Every following is based on the preceding:
   
   *Grammars*
     Boost.Spirit implementations of grammars in SVG Specification.
 
   *Value Parsers*
-    *Value Parsers* are functions that converts string values of attributes and CSS properties
+    *Value Parsers* are functions that convert string values of attributes and CSS properties
     to calls of user functions with convenient presentation of SVG data. 
     Some of them use *grammars*. 
 
@@ -34,7 +34,7 @@ Here are shown main SVG++ components, starting from lowest level. Every next is 
 
   *Adapters*
     *Value Parsers* as much as possible saves SVG information, this allows, for example, 
-    use SVG++ for SVG DOM generation. In other applications this information
+    to use SVG++ for SVG DOM generation. In other applications this information
     may be excessive. SVG++ provides some *adapters*, that may simplify processing of SVG.
     *Adapters* are configured by *policies*.
 
@@ -55,15 +55,15 @@ Here are shown main SVG++ components, starting from lowest level. Every next is 
     * Allows attribute ordering.
 
   *Document Traversal*
-    * Traverses SVG document tree, processes elements selected for processing by programmer.
+    * Traverses SVG document tree, processes elements selected for processing by the programmer.
     * Checks content model, i.e. whether each child element is allowed for this parent.
     * Creates instances of *Attribute Dispatcher* and *Attribute Traversal* and passes processing to them for each element.
-    * Passes to user code child text nodes of SVG elements that are allowed to carry text content by SVG Specification.
+    * Passes to the user code child text nodes of SVG elements that are allowed to carry text content by SVG Specification.
 
 *Document Traversal* provides convenient access to entire library and, in most cases, 
 it is the only SVG++ component with which programmer interacts.
 
-*Grammars* are quite independend components and can be easily used separatelly.
+*Grammars* are quite independent components and can be easily used separately.
 
 *Value Parsers* have simple interface and can be easily called from application if for some reason
 traversing of SVG document tree by *Document Traversal* isn't applicable or only few attributes need to be parsed.
@@ -76,7 +76,7 @@ traversing of SVG document tree by *Document Traversal* isn't applicable or only
 Tags
 -------
 
-SVG++ widely uses *tag* concept to reference various SVG enities in compile time with 
+SVG++ widely uses *tag* concept to reference various SVG entities in compile time with 
 overload resolution and metaprogramming techniques. *Tag* here is just an empty class.
 
 ::
@@ -175,7 +175,7 @@ header file of corresponding *XML Policy* from SVG++ and only after that include
 
 .. _xml_policy_types:
 
-Here listed XML parsing libraries supported by SVG++, their respective *XML Policy* header files 
+Below are XML parsing libraries supported by SVG++, their respective *XML Policy* header files 
 and expected XMLElement type:
 
 +--------------------------+-----------------------------------------------+-------------------------------------------+
@@ -199,7 +199,7 @@ Strings
 SVG++ supports different character types - ``char`` and ``wchar_t``, and on supporting compilers
 ``char16_t`` and ``char32_t``. Character type is defined by XML parsing library used.
 
-Strings are passed to user code by some unspecified model of
+Strings are passed to the user code by some unspecified model of
 `Forward Range <http://www.boost.org/doc/libs/1_56_0/libs/iterator/doc/new-iter-concepts.html#forward-traversal-iterators-lib-forward-traversal-iterators>`_
 concept. Example of processing::
 
@@ -222,7 +222,7 @@ CSS Support
 ----------------
 
 SVG++ parses properties in **style** attribute, if **style** processing is :ref:`enabled <parse_style>` 
-by programmer.
+by the programmer.
 
 SVG++ doesn't support CSS cascading and CSS stylesheet in **style** element. It may be handled, if needed,
 by some other component, that provides result as **style** attribute.

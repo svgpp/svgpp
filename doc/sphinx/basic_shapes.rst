@@ -63,8 +63,8 @@ Basic Shapes Events Policy Concept
 *Basic Shapes Events Policy* is used for *basic shapes* (except **polyline** and **polygon**) elements, 
 that are listed in ``collect_attributes`` field of *Basic Shapes Policy*.
 
-Adapters that implement these conversions, uses ``length_to_user_coordinate`` method of *Length Factory*
-to get *user coordinates* value by *length*. This adapters passes default values if attributes is missing
+Adapters that implement these conversions, use ``length_to_user_coordinate`` method of *Length Factory*
+to get *user coordinates* value by *length*. These adapters passes default values if attributes are missing
 and check correctness of attributes. If value disables rendering of the element
 according to SVG specification, then *Basic Shapes Events Policy* methods aren't called, 
 and if an attribute has negative value that is not permitted by specification, 

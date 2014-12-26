@@ -9,7 +9,7 @@ To choose proper ``value_parser`` for the attribute, ``traits::attribute_type`` 
     typedef /*unspecified*/ type;
   };
 
-Returned type can be:
+The returned type can be:
 
 * One of type tags. E.g. **width**, as many others attributes has *<length>* type (corresponds to ``tag::type::length``)::
 

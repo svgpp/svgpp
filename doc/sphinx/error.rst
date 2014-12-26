@@ -16,11 +16,11 @@ In this case only ``true`` may be returned as a result code.
 Default Error Handling
 ----------------------------
 
-Default ``policy::error::raise_exception`` uses transporting of arbitrary data to the catch site feature
-of Boost.Exception.
+Default ``policy::error::raise_exception`` uses Boost.Exception for transporting arbitrary 
+data to the catch site.
 
 ``boost::error_info`` uses tags ``tag::error_info::xml_element`` and ``tag::error_info::xml_attribute`` 
-to pass information about place in SVG document where error occured alongside with exception object.
+to pass information about place in SVG document where error occured alongside with the exception object.
 Value type depends on XML parser and *XML Policy* used.
 
 Example of SVG++ exception handling when RapidXML NS parser is used::
@@ -97,7 +97,7 @@ Error Policy Concept
       XMLElement const & element);
   };
 
-If *Error Policy* method returns ``true``, then SVG++ continues SVG processing skipping part with error. 
+If *Error Policy* method returns ``true``, then SVG++ continues SVG processing skipping the part with the error. 
 In some cases it may lead to problems in further processing. 
 
 If method returns ``false``, then processing immediately stops.

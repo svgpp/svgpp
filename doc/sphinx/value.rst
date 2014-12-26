@@ -14,7 +14,7 @@ To find out how value of the SVG attribute will be passed to context, following 
    (e.g. **d** attribute of **path** element) are described in :ref:`path_section` section.
 #. Attribute values of type `<transform list> <http://www.w3.org/TR/SVG/coords.html#TransformAttribute>`_ 
    (e.g. **transform** attribute) are described in :ref:`transform-section` section.
-#. All other are passed through `Value Events Policy`_.
+#. All others are passed through `Value Events Policy`_.
 
 
 Value Events Policy
@@ -25,7 +25,7 @@ Value Events Policy Concept
 
 *Value Events Policy* is a class, containing static ``set`` methods, that receives reference to
 context object as a first argument and attribute tag as a second. 
-Number and types of other parameters depends on attribute type.
+Number and types of other parameters depends on an attribute type.
 
 ::
 
@@ -228,7 +228,7 @@ for our context type (let it be ``boost::optional<double>`` in our example)::
 **text-decoration** property
   **none** and **inherit** values are passed as `Literal Values`_.
   Other values are passed as 8 arguments, 4 of which is of type ``bool``, each of them
-  preceded with *tag*, descibing argument meaning. Boolean parameters takes ``true`` value
+  preceded with *tag*, describing argument meaning. Boolean parameters takes ``true`` value
   if corresponding text decoration is set in property::
 
     struct Context

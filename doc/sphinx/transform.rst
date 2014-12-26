@@ -4,11 +4,11 @@ Transform
 =================
 
 Transformation parsing is controlled by *Transform Policy* and *Transform Events Policy*. 
-*Transform Policy* configures adapter 
-that simplifies for application handling of coordinate system transformations (e.g. adapter
+*Transform Policy* configures the adapter 
+that simplifies application handling of coordinate system transformations (e.g. adapter
 may substitute simple transformation steps translate/scale/rotate/skew with corresponding
 transformation matrices, more convenient in some cases). 
-*Transform Events Policy* defines how parsed data is passed to user code.
+*Transform Events Policy* defines how parsed data is passed to the user code.
 
 
 Transform Events Policy Concept
@@ -81,8 +81,8 @@ Transform Policy Concept
   };
 
 *Transform Policy* is a class with ``bool`` static member constants. If they all are ``false``
-(as in ``policy::transform::raw``), then adapter isn't used and parser passes parsed values as is. 
-By setting some members to ``true`` programmer may simplify application:
+(as in ``policy::transform::raw``), then adapter isn't used and the parser passes parsed values as is. 
+Setting some members to ``true`` programmer may simplify the application:
 
   ``join_transforms = true``
     All transformations in SVG attribute are joined in single transformation matrix. 
