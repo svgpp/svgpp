@@ -102,6 +102,9 @@ public:
     length_factory_.set_viewport_size(viewport_width, viewport_height);
   }
 
+  void disable_rendering()
+  {}
+
   // Length Policy interface
   typedef factory::length::unitless<> length_factory_type;
 

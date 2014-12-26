@@ -32,6 +32,11 @@ struct forward_to_method
   {
     context.get_reference_viewport_size(viewport_width, viewport_height);
   }
+
+  static void disable_rendering(Context & context)
+  {
+    context.disable_rendering();
+  }
 };
 
 template<class Context>

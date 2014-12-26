@@ -174,20 +174,6 @@ template<class ElementTag>
 struct child_context_factories::apply<Marker, ElementTag, void>: child_context_factories::apply<Canvas, ElementTag>
 {};
 
-struct DocumentTraversalControl
-{
-  static bool proceed_to_element_content(Stylable const & context)
-  {
-    return context.style().display_;
-  }
-
-  template<class Context>
-  static bool proceed_to_next_child(Context &)
-  {
-    return true;
-  }
-};
-
 typedef boost::mpl::set<
   svgpp::tag::element::svg,
   svgpp::tag::element::g,
@@ -378,6 +364,7 @@ public:
     : document_(document)
     , parent_buffer_(boost::bind(&Canvas::getPassedImageBuffer, this))
     , image_buffer_(&image_buffer)
+    , rendering_disabled_(false)
   {
     if (image_buffer.isSizeSet())
       clip_buffer_.reset(new ClipBuffer(image_buffer_->width(), image_buffer_->height()));
@@ -391,6 +378,7 @@ public:
     , parent_buffer_(boost::bind(&Canvas::getImageBuffer, &parent))
     , length_factory_(parent.length_factory_)
     , clip_buffer_(parent.clip_buffer_)
+    , rendering_disabled_(false)
   {}
 
   Canvas(Canvas & parent, dontInheritStyle)
@@ -400,6 +388,7 @@ public:
     , parent_buffer_(boost::bind(&Canvas::getImageBuffer, &parent))
     , length_factory_(parent.length_factory_)
     , clip_buffer_(parent.clip_buffer_)
+    , rendering_disabled_(false)
   {}
 
   void on_exit_element()
@@ -475,6 +464,12 @@ public:
     length_factory_.set_viewport_size(viewport_width, viewport_height);
   }
 
+  void disable_rendering()
+  { rendering_disabled_ = true; }
+
+  bool rendering_disabled() const
+  { return rendering_disabled_; }
+
   length_factory_t & length_factory() 
   { return length_factory_; }
 
@@ -488,6 +483,7 @@ private:
   std::auto_ptr<ImageBuffer> own_buffer_;
   boost::shared_ptr<ClipBuffer> clip_buffer_;
   length_factory_t length_factory_;
+  bool rendering_disabled_;
 
   void loadMask(ImageBuffer &) const;
   void applyFilter();
@@ -675,6 +671,20 @@ struct attribute_traversal: svgpp::policy::attribute_traversal::default_policy
     >::type,
     boost::mpl::empty_sequence
   > get_priority_attributes_by_element;
+};
+
+struct DocumentTraversalControl
+{
+  static bool proceed_to_element_content(Canvas const & canvas)
+  {
+    return canvas.style().display_ && !canvas.rendering_disabled();
+  }
+
+  template<class Context>
+  static bool proceed_to_next_child(Context &)
+  {
+    return true;
+  }
 };
 
 typedef 

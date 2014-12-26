@@ -50,8 +50,10 @@ public:
       tag::length_dimension::height());
 
     if (marker_width == 0 || marker_height == 0)
-      // TODO: disable rendering
+    {
+      viewport_events::policy::disable_rendering(viewport_events::get(context));
       return true;
+    }
 
     if (marker_width < 0)
       return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::markerWidth());
@@ -61,8 +63,11 @@ public:
     if (this->viewbox_)
     {
       if (this->viewbox_->template get<2>() == 0 || this->viewbox_->template get<3>() == 0)
-        // TODO: disable rendering
+      {
+        viewport_events::policy::disable_rendering(viewport_events::get(context));
         return true;
+      }
+
       if (this->viewbox_->template get<2>() < 0 || this->viewbox_->template get<3>() < 0)
         return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::viewBox());
 

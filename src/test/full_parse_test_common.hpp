@@ -32,14 +32,14 @@ inline void CheckCall()
 struct ValueEventsPolicy
 {
   template<class AttributeTag, class T1>
-  static void set(Context & context, AttributeTag tag, tag::source::any const &, T1 const & value)
+  static void set(Context & context, AttributeTag, tag::source::any const &, T1 const & value)
   {
     CheckAttributeTag<AttributeTag>();
     UseValue(value);
   }
 
   template<class AttributeTag, class T1, class T2>
-  static void set(Context & context, AttributeTag tag, tag::source::any const &, T1 const & value1, T2 const & value2)
+  static void set(Context & context, AttributeTag, tag::source::any const &, T1 const & value1, T2 const & value2)
   {
     CheckAttributeTag<AttributeTag>();
     UseValue(value1);
@@ -47,7 +47,7 @@ struct ValueEventsPolicy
   }
 
   template<class AttributeTag, class T1, class T2, class T3>
-  static void set(Context & context, AttributeTag tag, tag::source::any const &, T1 const & value1, T2 const & value2, T3 const & value3)
+  static void set(Context & context, AttributeTag, tag::source::any const &, T1 const & value1, T2 const & value2, T3 const & value3)
   {
     CheckAttributeTag<AttributeTag>();
     UseValue(value1);
@@ -56,7 +56,7 @@ struct ValueEventsPolicy
   }
 
   template<class AttributeTag, class T1, class T2, class T3, class T4>
-  static void set(Context & context, AttributeTag tag, tag::source::any const &, T1 const & value1, T2 const & value2, T3 const & value3, 
+  static void set(Context & context, AttributeTag, tag::source::any const &, T1 const & value1, T2 const & value2, T3 const & value3, 
     T4 const & value4)
   {
     CheckAttributeTag<AttributeTag>();
@@ -67,7 +67,7 @@ struct ValueEventsPolicy
   }
 
   template<class AttributeTag, class T1, class T2, class T3, class T4, class T5>
-  static void set(Context & context, AttributeTag tag, tag::source::any const &, T1 const & value1, T2 const & value2, T3 const & value3, 
+  static void set(Context & context, AttributeTag, tag::source::any const &, T1 const & value1, T2 const & value2, T3 const & value3, 
     T4 const & value4, T5 const & value5)
   {
     CheckAttributeTag<AttributeTag>();
@@ -79,7 +79,7 @@ struct ValueEventsPolicy
   }
 
   template<class AttributeTag, class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
-  static void set(Context & context, AttributeTag tag, tag::source::any const &, T1 const & value1, T2 const & value2, T3 const & value3, 
+  static void set(Context & context, AttributeTag, tag::source::any const &, T1 const & value1, T2 const & value2, T3 const & value3, 
     T4 const & value4, T5 const & value5, T6 const & value6, T7 const & value7, T8 const & value8)
   {
     CheckAttributeTag<AttributeTag>();

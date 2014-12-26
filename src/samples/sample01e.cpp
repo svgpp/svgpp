@@ -17,6 +17,9 @@ public:
 
   void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height)
   {}
+
+  void disable_rendering()
+  {}
 };
 
 class ShapeContext: public BaseContext

@@ -274,8 +274,10 @@ public:
     base_size_holder::template get_viewport_size<typename viewport_events::policy>(context, converter, viewport_width, viewport_height);
 
     if (viewport_width == 0 || viewport_height == 0)
-      // TODO: disable rendering
+    {
+      viewport_events::policy::disable_rendering(viewport_events::get(context));
       return true;
+    }
 
     if (viewport_width < 0)
       return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::width());
@@ -287,8 +289,11 @@ public:
     if (this->viewbox_)
     {
       if (this->viewbox_->template get<2>() == 0 || this->viewbox_->template get<3>() == 0)
-        // TODO: disable rendering
+      {
+        viewport_events::policy::disable_rendering(viewport_events::get(context));
         return true;
+      }
+
       if (this->viewbox_->template get<2>() < 0 || this->viewbox_->template get<3>() < 0)
         return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::viewBox());
 
@@ -342,6 +347,14 @@ struct viewport_transform_adapter
     typedef detail::unwrap_context<Context, tag::viewport_events_policy> viewport_events;
 
     viewport_events::policy::get_reference_viewport_size(viewport_events::get(context), viewport_width, viewport_height);
+  }
+
+  template<class Context>
+  static void disable_rendering(Context & context)
+  {
+    typedef detail::unwrap_context<Context, tag::viewport_events_policy> viewport_events;
+
+    viewport_events::policy::disable_rendering(viewport_events::get(context));
   }
 };
 
