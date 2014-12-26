@@ -354,7 +354,7 @@ public:
       boost::is_same<typename traits::attribute_type<ElementTag, AttributeTag>::type, tag::type::string>::value
       || boost::mpl::has_key<passthrough_attributes, AttributeTag>::value>::type * = 0)
   {
-    policy::value_events::default_policy<Context>::set(context_, tag, attribute_value, property_source);
+    policy::value_events::default_policy<Context>::set(context_, tag, property_source, attribute_value);
     return true;
   }
 

@@ -20,10 +20,10 @@ struct value_parser<tag::type::string, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
-                                    PropertySource)
+                                    PropertySource property_source)
   {
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
-    args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, attribute_value);
+    args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, property_source, attribute_value);
     return true;
   }
 };

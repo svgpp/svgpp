@@ -23,7 +23,7 @@ struct value_parser<tag::attribute::points, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue>
   static bool parse(tag::attribute::points tag, Context & context, AttributeValue const & attribute_value, 
-                                    tag::source::attribute)
+                                    tag::source::attribute property_source)
   {
     namespace qi = boost::spirit::qi;
 
@@ -47,7 +47,7 @@ struct value_parser<tag::attribute::points, SVGPP_TEMPLATE_ARGS_PASS>
       boost::begin(attribute_value), boost::end(attribute_value), 
       pair_grammar, separator_grammar, detail::character_encoding_namespace::space);
 
-    args_t::value_events_policy::set(args_t::value_events_context::get(context), tag,
+    args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, property_source,
       boost::make_iterator_range(output_iterator_t(parse_list), output_iterator_t()));
     if (parse_list.error())
       return args_t::error_policy::parse_failed(args_t::error_policy_context::get(context), tag, attribute_value);

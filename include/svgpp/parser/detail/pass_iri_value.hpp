@@ -21,25 +21,25 @@ template<class EventsPolicy>
 struct pass_iri_value_proxy
 {
 #ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
-  template<class Context, class AttributeTag, class IRI, class... Args>
-  static void set(Context & context, AttributeTag tag, IRI const & iri, BOOST_FWD_REF(Args)... args)
+  template<class Context, class AttributeTag, class PropertySource, class IRI, class... Args>
+  static void set(Context & context, AttributeTag tag, PropertySource property_source, IRI const & iri, BOOST_FWD_REF(Args)... args)
   {
     if (boost::begin(iri) != boost::end(iri) && *boost::begin(iri) == '#') 
-      EventsPolicy::set(context, tag, 
+      EventsPolicy::set(context, tag, property_source,
         tag::iri_fragment(), 
         IRI(boost::next(boost::begin(iri)), boost::end(iri)), boost::forward<Args>(args)...);
     else
-      EventsPolicy::set(context, tag, iri, boost::forward<Args>(args)...);
+      EventsPolicy::set(context, tag, property_source, iri, boost::forward<Args>(args)...);
   }
 #else
 # define BOOST_PP_LOCAL_MACRO(n)                                                                     \
-  template<class Context, class AttributeTag, class IRI BOOST_PP_ENUM_TRAILING_PARAMS(n, class Arg)> \
-  static void set(Context & context, AttributeTag tag, IRI const & iri                               \
-    BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(n, const Arg, & arg))                                       \
-  {                                                                                                  \
-    if (boost::begin(iri) != boost::end(iri) && *boost::begin(iri) == '#')                           \
-      EventsPolicy::set(context, tag,                                                                  \
-      tag::iri_fragment(),                                                                           \
+  template<class Context, class AttributeTag, class PropertySource, class IRI BOOST_PP_ENUM_TRAILING_PARAMS(n, class Arg)> \
+  static void set(Context & context, AttributeTag tag, PropertySource property_source, IRI const & iri  \
+    BOOST_PP_ENUM_TRAILING_BINARY_PARAMS(n, const Arg, & arg))                                          \
+  {                                                                                                     \
+    if (boost::begin(iri) != boost::end(iri) && *boost::begin(iri) == '#')                              \
+      EventsPolicy::set(context, tag, property_source,                                                  \
+      tag::iri_fragment(),                                                                              \
       IRI(boost::next(boost::begin(iri)), boost::end(iri)) BOOST_PP_ENUM_TRAILING_PARAMS(n, arg));   \
     else                                                                                             \
       EventsPolicy::set(context, tag, iri BOOST_PP_ENUM_TRAILING_PARAMS(n, arg));                      \

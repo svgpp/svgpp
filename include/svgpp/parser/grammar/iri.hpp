@@ -34,18 +34,21 @@ private:
   typename this_type::start_type rule_; 
 };
 
-template <class Iterator>
+template <class PropertySource, class Iterator>
 class funciri_grammar:
   public qi::grammar<Iterator, typename boost::iterator_range<Iterator>()>
 {
-  typedef funciri_grammar<Iterator> this_type;
+  typedef funciri_grammar<PropertySource, Iterator> this_type;
 public:
   funciri_grammar()
     : this_type::grammar(rule_)
   {
     using detail::character_encoding_namespace::char_;
 
-    rule_ = qi::lit("url(") >> iri_ >> qi::lit(')');
+    rule_ 
+        =   detail::no_case_if_css(PropertySource())[ qi::lit("url(") ] 
+            >> iri_ 
+            >> qi::lit(')');
   }
 
 private:

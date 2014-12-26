@@ -35,10 +35,10 @@ namespace detail
   }
 }
 
-template <class Iterator, class ColorFactory>
+template <class PropertySource, class Iterator, class ColorFactory>
 class color_grammar: public qi::grammar<Iterator, typename ColorFactory::color_type()>
 {
-  typedef color_grammar<Iterator, ColorFactory> this_type;
+  typedef color_grammar<PropertySource, Iterator, ColorFactory> this_type;
 public:
   typedef typename ColorFactory::color_type color_type;
 
@@ -63,7 +63,7 @@ public:
     color 
         =   hex_rule [_val = _1]
         |   (
-                 lit("rgb(") 
+                 detail::no_case_if_css(PropertySource())[ lit("rgb(") ]
               >> *space 
               >> (  components_rule [_val = _1]
                  |  percentage_rule [_val = _1]

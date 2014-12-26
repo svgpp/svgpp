@@ -21,7 +21,7 @@ struct value_parser<tag::type::color, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
-                                    PropertySource)
+                                    PropertySource property_source)
   {
     namespace qi = boost::spirit::qi;
 
@@ -32,12 +32,12 @@ struct value_parser<tag::type::color, SVGPP_TEMPLATE_ARGS_PASS>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename detail::unwrap_context<Context, tag::color_factory>::template bind<args2_t>::type color_factory_t;
 
-    SVGPP_STATIC_IF_SAFE const color_grammar<iterator_t, color_factory_t> color_rule;
+    SVGPP_STATIC_IF_SAFE const color_grammar<PropertySource, iterator_t, color_factory_t> color_rule;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     typename color_factory_t::color_type color;
     if (qi::parse(it, end, color_rule, color) && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, color);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, property_source, color);
       return true;
     }
     else
@@ -52,7 +52,7 @@ struct value_parser<tag::type::color_optional_icc_color, SVGPP_TEMPLATE_ARGS_PAS
 {
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
-                                    PropertySource)
+                                    PropertySource source)
   {
     namespace qi = boost::spirit::qi;
 
@@ -75,9 +75,9 @@ struct value_parser<tag::type::color_optional_icc_color, SVGPP_TEMPLATE_ARGS_PAS
     if (qi::parse(it, end, color_rule(boost::phoenix::ref(icc_color_factory)), color) && it == end)
     {
       if (color.template get<1>())
-        args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, color.template get<0>(), *color.template get<1>());
+        args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, source, color.template get<0>(), *color.template get<1>());
       else
-        args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, color.template get<0>());
+        args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, source, color.template get<0>());
       return true;
     }
     else

@@ -38,7 +38,7 @@ struct value_parser<
       typename args_t::value_events_context::type, 
       typename args_t::value_events_policy,
       AttributeValue,
-      boost::is_same<PropertySource, tag::source::attribute>::value
+      PropertySource
     > fn(args_t::value_events_context::get(context), attribute_value);
     boost::mpl::for_each<tag_list>(boost::ref(fn));
     if (!fn.found())

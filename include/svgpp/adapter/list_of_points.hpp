@@ -20,7 +20,7 @@ template<>
 struct list_of_points_to_path_adapter<tag::element::polyline>
 {
   template<class Context, class Range>
-  static void set(Context & context, tag::attribute::points, Range const & r)
+  static void set(Context & context, tag::attribute::points, tag::source::attribute, Range const & r)
   {
     typedef detail::unwrap_context<Context, tag::path_events_policy> path_events;
 
@@ -40,7 +40,7 @@ template<>
 struct list_of_points_to_path_adapter<tag::element::polygon>
 {
   template<class Context, class Range>
-  static void set(Context & context, tag::attribute::points, Range const & r)
+  static void set(Context & context, tag::attribute::points, tag::source::attribute, Range const & r)
   {
     typedef detail::unwrap_context<Context, tag::path_events_policy> path_events;
 

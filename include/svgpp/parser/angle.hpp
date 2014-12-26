@@ -21,7 +21,7 @@ struct value_parser<tag::type::angle, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
-                                    PropertySource)
+                                    PropertySource source)
   {
     namespace qi = boost::spirit::qi;
 
@@ -38,7 +38,7 @@ struct value_parser<tag::type::angle, SVGPP_TEMPLATE_ARGS_PASS>
     if (boost::spirit::qi::parse(it, end, grammar, value) 
       && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, value);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, source, value);
       return true;
     }
     else

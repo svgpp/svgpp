@@ -20,7 +20,7 @@ struct value_parser<tag::type::percentage_or_length, SVGPP_TEMPLATE_ARGS_PASS>
 
   template<class AttributeTag, class Context, class AttributeValue>
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
-                                    tag::source::css)
+                                    tag::source::css property_source)
   {
     typedef typename traits::length_dimension_by_attribute<AttributeTag>::type direction_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
@@ -43,7 +43,7 @@ struct value_parser<tag::type::percentage_or_length, SVGPP_TEMPLATE_ARGS_PASS>
     if (boost::spirit::qi::parse(it, end, length_grammar(boost::phoenix::ref(length_factory)), value) 
       && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, value);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, property_source, value);
       return true;
     }
     else

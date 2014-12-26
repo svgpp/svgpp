@@ -24,7 +24,7 @@ struct iri_value_parser
 {
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
   static bool parse(AttributeTag tag, Context & context, 
-    AttributeValue const & attribute_value, PropertySource)
+    AttributeValue const & attribute_value, PropertySource property_source)
   {
     typedef value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::parameter::parameters<
@@ -33,7 +33,7 @@ struct iri_value_parser
     typedef typename detail::unwrap_context<Context, tag::iri_policy>::template bind<args2_t>::type iri_policy_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
 
-    SVGPP_STATIC_IF_SAFE typename GetGrammarMetafunction::template apply<iterator_t>::type iri_rule;
+    SVGPP_STATIC_IF_SAFE typename GetGrammarMetafunction::template apply<PropertySource, iterator_t>::type iri_rule;
     boost::iterator_range<iterator_t> iri;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (qi::parse(it, end, iri_rule, iri) && it == end)
@@ -42,7 +42,7 @@ struct iri_value_parser
         typename args_t::value_events_policy, 
         iri_policy_t
       >::type value_events_policy_t;
-      value_events_policy_t::set(args_t::value_events_context::get(context), tag, iri);
+      value_events_policy_t::set(args_t::value_events_context::get(context), tag, property_source, iri);
       return true;
     }
     else
@@ -56,13 +56,13 @@ struct iri_value_parser
 
 template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::type::iri, SVGPP_TEMPLATE_ARGS_PASS>
-  : detail::iri_value_parser<boost::mpl::quote1<iri_grammar>, SVGPP_TEMPLATE_ARGS_PASS>
+  : detail::iri_value_parser<boost::mpl::bind1<boost::mpl::quote1<iri_grammar>, boost::mpl::_2>, SVGPP_TEMPLATE_ARGS_PASS>
 {
 };
 
 template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::type::funciri, SVGPP_TEMPLATE_ARGS_PASS>
-  : detail::iri_value_parser<boost::mpl::quote1<funciri_grammar>, SVGPP_TEMPLATE_ARGS_PASS>
+  : detail::iri_value_parser<boost::mpl::quote2<funciri_grammar>, SVGPP_TEMPLATE_ARGS_PASS>
 {
 };
 

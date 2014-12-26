@@ -25,7 +25,7 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
-                                    PropertySource)
+                                    PropertySource property_source)
   {
     namespace qi = boost::spirit::qi;
     namespace phx = boost::phoenix;
@@ -49,26 +49,28 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
     boost::tuple<typename color_factory_t::color_type, boost::optional<typename icc_color_factory_t::icc_color_type> > 
       color;
     icc_color_factory_t & icc_color_factory = icc_color_policy_t::icc_color_factory(icc_color_context_t::get(context));
-    SVGPP_STATIC_IF_SAFE const funciri_grammar<iterator_t> funciri_rule;
+    SVGPP_STATIC_IF_SAFE const funciri_grammar<PropertySource, iterator_t> funciri_rule;
     typename boost::iterator_range<iterator_t> iri;
     static const int opt_not_set = 0, opt_none = 1, opt_currentColor = 2, opt_inherit = 3, opt_color = 4, opt_funciri = 5;
     int main_option, funciri_suboption = opt_not_set;
 
     qi::rule<iterator_t> rule = 
-        qi::lit("none")           [phx::ref(main_option) = opt_none]
-      | qi::lit("currentColor")   [phx::ref(main_option) = opt_currentColor]
-      | qi::lit("inherit")        [phx::ref(main_option) = opt_inherit]
-      | color_optional_icc_color(boost::phoenix::ref(icc_color_factory))  
-         [phx::ref(color) = qi::_1, phx::ref(main_option) = opt_color]
-      | ( funciri_rule [phx::ref(iri) = qi::_1]
-          >> - ( +space
-                  >> ( qi::lit("none")          [phx::ref(funciri_suboption) = opt_none]
-                     | qi::lit("currentColor")  [phx::ref(funciri_suboption) = opt_currentColor]
-                     | color_optional_icc_color(boost::phoenix::ref(icc_color_factory)) 
-                        [phx::ref(color) = qi::_1, phx::ref(funciri_suboption) = opt_color]
-                     )
-               )
-        ) [phx::ref(main_option) = opt_funciri];
+      detail::no_case_if_css(property_source) [
+          qi::lit("none")           [phx::ref(main_option) = opt_none]
+        | qi::lit("currentColor")   [phx::ref(main_option) = opt_currentColor]
+        | qi::lit("inherit")        [phx::ref(main_option) = opt_inherit]
+        | color_optional_icc_color(boost::phoenix::ref(icc_color_factory))  
+           [phx::ref(color) = qi::_1, phx::ref(main_option) = opt_color]
+        | ( funciri_rule [phx::ref(iri) = qi::_1]
+            >> - ( +space
+                    >> ( qi::lit("none")          [phx::ref(funciri_suboption) = opt_none]
+                       | qi::lit("currentColor")  [phx::ref(funciri_suboption) = opt_currentColor]
+                       | color_optional_icc_color(boost::phoenix::ref(icc_color_factory)) 
+                          [phx::ref(color) = qi::_1, phx::ref(funciri_suboption) = opt_color]
+                       )
+                 )
+          ) [phx::ref(main_option) = opt_funciri]
+      ];
 
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (qi::parse(it, end, rule) && it == end)
@@ -81,37 +83,37 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
       switch (main_option)
       {
       case opt_none:
-        value_events_policy_t::set(value_events_context, tag, tag::value::none());
+        value_events_policy_t::set(value_events_context, tag, property_source, tag::value::none());
         break;
       case opt_currentColor:
-        value_events_policy_t::set(value_events_context, tag, tag::value::currentColor());
+        value_events_policy_t::set(value_events_context, tag, property_source, tag::value::currentColor());
         break;
       case opt_inherit:
-        value_events_policy_t::set(value_events_context, tag, tag::value::inherit());
+        value_events_policy_t::set(value_events_context, tag, property_source, tag::value::inherit());
         break;
       case opt_color:
         if (color.template get<1>())
-          value_events_policy_t::set(value_events_context, tag, color.template get<0>(), *color.template get<1>());
+          value_events_policy_t::set(value_events_context, tag, property_source, color.template get<0>(), *color.template get<1>());
         else
-          value_events_policy_t::set(value_events_context, tag, color.template get<0>());
+          value_events_policy_t::set(value_events_context, tag, property_source, color.template get<0>());
         break;
       case opt_funciri:
         switch (funciri_suboption)
         {
         case opt_not_set:
-          value_events_with_iri_policy_t::set(value_events_context, tag, iri);
+          value_events_with_iri_policy_t::set(value_events_context, tag, property_source, iri);
           break;
         case opt_none:
-          value_events_with_iri_policy_t::set(value_events_context, tag, iri, tag::value::none());
+          value_events_with_iri_policy_t::set(value_events_context, tag, property_source, iri, tag::value::none());
           break;
         case opt_currentColor:
-          value_events_with_iri_policy_t::set(value_events_context, tag, iri, tag::value::currentColor());
+          value_events_with_iri_policy_t::set(value_events_context, tag, property_source, iri, tag::value::currentColor());
           break;
         case opt_color:
           if (color.template get<1>())
-            value_events_with_iri_policy_t::set(value_events_context, tag, iri, color.template get<0>(), *color.template get<1>());
+            value_events_with_iri_policy_t::set(value_events_context, tag, property_source, iri, color.template get<0>(), *color.template get<1>());
           else
-            value_events_with_iri_policy_t::set(value_events_context, tag, iri, color.template get<0>());
+            value_events_with_iri_policy_t::set(value_events_context, tag, property_source, iri, color.template get<0>());
           break;
         }
         break;

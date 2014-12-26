@@ -26,6 +26,7 @@ void valid_testT(StringT const & testStr, int r, int g, int b)
 {
   typename StringT::const_iterator first = testStr.begin();
   typedef svgpp::color_grammar<
+    svgpp::tag::source::attribute,
     typename StringT::const_iterator, color_factory
   > grammar_t;
   grammar_t grammar;
@@ -41,7 +42,7 @@ template<class StringT>
 void invalid_testT(StringT const & testStr)
 {
   typename StringT::const_iterator first = testStr.begin();
-  svgpp::color_grammar<typename StringT::const_iterator, color_factory> grammar;
+  svgpp::color_grammar<svgpp::tag::source::attribute, typename StringT::const_iterator, color_factory> grammar;
   EXPECT_TRUE(!qi::parse(first, testStr.end(), grammar) || first != testStr.end());
 }
 

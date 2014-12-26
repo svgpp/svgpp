@@ -19,9 +19,9 @@ namespace svgpp
 template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::type::clock_value, SVGPP_TEMPLATE_ARGS_PASS>
 {
-  template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
+  template<class AttributeTag, class Context, class AttributeValue>
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
-                                    PropertySource)
+                                    tag::source::attribute source)
   {
     namespace qi = boost::spirit::qi;
 
@@ -34,7 +34,7 @@ struct value_parser<tag::type::clock_value, SVGPP_TEMPLATE_ARGS_PASS>
     typename args_t::number_type value;
     if (qi::parse(it, end, grammar, value) && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, value);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, source, value);
       return true;
     }
     else

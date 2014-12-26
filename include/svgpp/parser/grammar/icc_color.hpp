@@ -35,7 +35,7 @@ public:
     using detail::character_encoding_namespace::char_;
 
     rule_ 
-        = qi::lit("icc-color(")
+        = detail::no_case_if_css(PropertySource())[ qi::lit("icc-color(") ]
           >> qi::raw[ +(!char_(",() \r\n\t") >> char_) ]  // [^,()#x20#x9#xD#xA]  any char except ",", "(", ")" or wsp 
                 [phx::bind(&icc_color_grammar::call_set_profile_name, qi::_r1, qi::_a, qi::_1)]
           >> + ( 

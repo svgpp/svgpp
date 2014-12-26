@@ -24,9 +24,9 @@ namespace svgpp
 template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::type::integer, SVGPP_TEMPLATE_ARGS_PASS>
 {
-  template<class AttributeTag, class Context, class AttributeValue>
+  template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
-                                    tag::source::any)
+                                    PropertySource property_source)
   {
     namespace qi = boost::spirit::qi;
 
@@ -37,7 +37,7 @@ struct value_parser<tag::type::integer, SVGPP_TEMPLATE_ARGS_PASS>
     int value;
     if (qi::parse(it, end, qi::int_, value) && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, value);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, property_source, value);
       return true;
     }
     else
@@ -52,7 +52,7 @@ struct value_parser<tag::attribute::viewBox, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue>
   static bool parse(tag::attribute::viewBox tag, Context & context, AttributeValue const & attribute_value, 
-                                    tag::source::attribute)
+                                    tag::source::attribute property_source)
   {
     namespace qi = boost::spirit::qi;
     using namespace boost::phoenix;
@@ -72,7 +72,7 @@ struct value_parser<tag::attribute::viewBox, SVGPP_TEMPLATE_ARGS_PASS>
       number[ref(w) = _1] >> comma_wsp >>
       number[ref(h) = _1]) && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, x, y, w, h);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, property_source, x, y, w, h);
       return true;
     }
     else
@@ -87,7 +87,7 @@ struct value_parser<tag::attribute::bbox, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue>
   static bool parse(tag::attribute::bbox tag, Context & context, AttributeValue const & attribute_value, 
-                                    tag::source::attribute)
+                                    tag::source::attribute property_source)
   {
     namespace qi = boost::spirit::qi;
     using namespace boost::phoenix;
@@ -106,7 +106,7 @@ struct value_parser<tag::attribute::bbox, SVGPP_TEMPLATE_ARGS_PASS>
       number[ref(hi_x) = _1] >> qi::lit(',') >>
       number[ref(hi_y) = _1]) && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, lo_x, lo_y, hi_x, hi_y);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, property_source, lo_x, lo_y, hi_x, hi_y);
       return true;
     }
     else
@@ -175,16 +175,17 @@ struct value_parser<tag::attribute::preserveAspectRatio, SVGPP_TEMPLATE_ARGS_PAS
     case 1:
       value_events_policy_t::set(unwrap_value_events_policy_t::get(context), 
         tag::attribute::preserveAspectRatio(), 
+        tag::source::attribute(),
         defer, tag::value::none());
       break;
 #define SVGPP_CASE(value_tag) \
       if (slice) \
         value_events_policy_t::set(unwrap_value_events_policy_t::get(context), \
-          tag::attribute::preserveAspectRatio(), \
+          tag::attribute::preserveAspectRatio(), tag::source::attribute(), \
           defer, tag::value::value_tag(), tag::value::slice()); \
       else \
         value_events_policy_t::set(unwrap_value_events_policy_t::get(context), \
-          tag::attribute::preserveAspectRatio(), \
+          tag::attribute::preserveAspectRatio(), tag::source::attribute(), \
           defer, tag::value::value_tag(), tag::value::meet()); \
       break;
 
@@ -207,7 +208,7 @@ struct value_parser<boost::mpl::pair<tag::element::stop, tag::attribute::offset>
 {
   template<class Context, class AttributeValue>
   static bool parse(tag::attribute::offset tag, Context & context, AttributeValue const & attribute_value, 
-                                    tag::source::attribute)
+                                    tag::source::attribute property_source)
   {
     namespace qi = boost::spirit::qi;
     using namespace boost::phoenix;
@@ -223,7 +224,8 @@ struct value_parser<boost::mpl::pair<tag::element::stop, tag::attribute::offset>
     bool percentage = false;
     if (qi::parse(it, end, number[ref(value) = _1] >> -(qi::lit('%')[ref(percentage) = true])) && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, percentage ? value / 100 : value);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), 
+        tag, property_source, percentage ? value / 100 : value);
       return true;
     }
     else
@@ -238,7 +240,7 @@ struct value_parser<tag::attribute::clip, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue, class PropertySource>
   static bool parse(tag::attribute::clip tag, Context & context, AttributeValue const & attribute_value, 
-                                    PropertySource)
+                                    PropertySource property_source)
   {
     // 'auto' and 'inherit' values must be checked outside
 
@@ -274,27 +276,31 @@ struct value_parser<tag::attribute::clip, SVGPP_TEMPLATE_ARGS_PASS>
     for(int i=0; i<4; ++i)
       rect[i] = length_factory.create_length(0, tag::length_units::none()); 
     const qi::rule<iterator_t> rule = 
-      qi::lit("rect") >> *detail::character_encoding_namespace::space >> qi::lit('(')
-      >> *detail::character_encoding_namespace::space
-      >>  ( qi::lit("auto") 
-          | length_grammar_y(phx::cref(length_factory)) [phx::ref(rect[0]) = qi::_1]
-          )
-      >> +detail::character_encoding_namespace::space
-      >>  ( qi::lit("auto")
-          | length_grammar_x(phx::cref(length_factory)) [phx::ref(rect[1]) = qi::_1]
-          )
-      >> +detail::character_encoding_namespace::space
-      >>  ( qi::lit("auto")
-          | length_grammar_y(phx::cref(length_factory)) [phx::ref(rect[2]) = qi::_1]
-          )
-      >> +detail::character_encoding_namespace::space
-      >>  ( qi::lit("auto")
-          | length_grammar_x(phx::cref(length_factory)) [phx::ref(rect[3]) = qi::_1]
-          )
-      >> *detail::character_encoding_namespace::space >> qi::lit(')');
+      detail::no_case_if_css(property_source)
+      [
+        qi::lit("rect") >> *detail::character_encoding_namespace::space >> qi::lit('(')
+        >> *detail::character_encoding_namespace::space
+        >>  ( qi::lit("auto") 
+            | length_grammar_y(phx::cref(length_factory)) [phx::ref(rect[0]) = qi::_1]
+            )
+        >> +detail::character_encoding_namespace::space
+        >>  ( qi::lit("auto")
+            | length_grammar_x(phx::cref(length_factory)) [phx::ref(rect[1]) = qi::_1]
+            )
+        >> +detail::character_encoding_namespace::space
+        >>  ( qi::lit("auto")
+            | length_grammar_y(phx::cref(length_factory)) [phx::ref(rect[2]) = qi::_1]
+            )
+        >> +detail::character_encoding_namespace::space
+        >>  ( qi::lit("auto")
+            | length_grammar_x(phx::cref(length_factory)) [phx::ref(rect[3]) = qi::_1]
+            )
+        >> *detail::character_encoding_namespace::space >> qi::lit(')')
+      ];
     if (qi::parse(it, end, rule) && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, tag::value::rect(), rect[0], rect[1], rect[2], rect[3]);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), 
+        tag, property_source, tag::value::rect(), rect[0], rect[1], rect[2], rect[3]);
       return true;
     }
     else
@@ -309,7 +315,7 @@ struct value_parser<tag::attribute::enable_background, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue, class PropertySource>
   static bool parse(tag::attribute::enable_background tag, Context & context, AttributeValue const & attribute_value, 
-                                    PropertySource)
+                                    PropertySource property_source)
   {
     // 'accumulate', 'new' and 'inherit' values must be checked outside
 
@@ -325,7 +331,7 @@ struct value_parser<tag::attribute::enable_background, SVGPP_TEMPLATE_ARGS_PASS>
     SVGPP_STATIC_IF_SAFE const qi::real_parser<coordinate_t, detail::number_policies<coordinate_t, PropertySource> > number;
     coordinate_t x, y, width, height;
     const qi::rule<iterator_t> rule = 
-      qi::lit("new") 
+      detail::no_case_if_css(property_source)[ qi::lit("new") ]
       >> +detail::character_encoding_namespace::space 
       >> number [phx::ref(x) = qi::_1]
       >> +detail::character_encoding_namespace::space 
@@ -337,7 +343,8 @@ struct value_parser<tag::attribute::enable_background, SVGPP_TEMPLATE_ARGS_PASS>
     // TODO: check for negative values
     if (qi::parse(it, end, rule) && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, tag::value::new_(), x, y, width, height);
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), 
+        tag, property_source, tag::value::new_(), x, y, width, height);
       return true;
     }
     else
@@ -352,7 +359,7 @@ struct value_parser<tag::attribute::text_decoration, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue, class PropertySource>
   static bool parse(tag::attribute::text_decoration tag, Context & context, AttributeValue const & attribute_value, 
-                                    PropertySource)
+                                    PropertySource property_source)
   {
     // 'none' and 'inherit' values must be checked outside
 
@@ -366,15 +373,18 @@ struct value_parser<tag::attribute::text_decoration, SVGPP_TEMPLATE_ARGS_PASS>
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     bool underline = false, overline = false, line_through = false, blink = false;
     const qi::rule<iterator_t> value = 
-      qi::lit("underline")      [phx::ref(underline) = true]
-      | qi::lit("overline")     [phx::ref(overline) = true]
-      | qi::lit("line-through") [phx::ref(line_through) = true]
-      | qi::lit("blink")        [phx::ref(blink) = true];
+      detail::no_case_if_css(property_source)
+      [
+        qi::lit("underline")      [phx::ref(underline) = true]
+        | qi::lit("overline")     [phx::ref(overline) = true]
+        | qi::lit("line-through") [phx::ref(line_through) = true]
+        | qi::lit("blink")        [phx::ref(blink) = true]
+      ];
 
     const qi::rule<iterator_t> rule = value % +detail::character_encoding_namespace::space;
     if (qi::parse(it, end, rule) && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, 
+      args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, property_source,
         tag::value::underline(), underline,
         tag::value::overline(), overline,
         tag::value::line_through(), line_through,

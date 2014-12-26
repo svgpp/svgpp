@@ -8,7 +8,7 @@ namespace svgpp { namespace policy { namespace value_events
   struct default_policy<boost::optional<double> >
   {
     template<class AttributeTag>
-    static void set(boost::optional<double> & context, AttributeTag tag, double value) 
+    static void set(boost::optional<double> & context, AttributeTag tag, tag::source::any const &, double value) 
     {
       context = value;
     }

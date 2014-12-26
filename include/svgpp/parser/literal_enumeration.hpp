@@ -30,7 +30,7 @@ template<
   class Context, 
   class ValueEventsPolicy, 
   class ValueRange, 
-  bool CaseSensitive
+  class PropertySource
 >
 struct literal_enumeration_type_visitor: boost::noncopyable
 {
@@ -44,9 +44,13 @@ struct literal_enumeration_type_visitor: boost::noncopyable
   void operator ()(T value_tag) 
   {
     if (!found_ && boost::algorithm::equals(range_, Dictionary::template get_name<T>(), 
-      typename boost::mpl::if_c<CaseSensitive, boost::algorithm::is_equal, boost::algorithm::is_iequal>::type()))
+      typename boost::mpl::if_<
+        boost::is_same<PropertySource, tag::source::attribute>, 
+        boost::algorithm::is_equal, 
+        boost::algorithm::is_iequal
+      >::type()))
     {
-      ValueEventsPolicy::set(context_, AttributeTag(), value_tag);
+      ValueEventsPolicy::set(context_, AttributeTag(), PropertySource(), value_tag);
       found_ = true;
     }
   }
@@ -79,7 +83,7 @@ struct value_parser<tag::type::literal_enumeration<LiteralsList>, SVGPP_TEMPLATE
       typename args_t::value_events_context::type, 
       typename args_t::value_events_policy,
       ValueRange,
-      boost::is_same<PropertySource, tag::source::attribute>::value
+      PropertySource
     > fn(args_t::value_events_context::get(context), attribute_value);
 
     boost::mpl::for_each<LiteralsList>(boost::ref(fn));
