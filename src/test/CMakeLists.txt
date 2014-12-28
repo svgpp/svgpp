@@ -79,7 +79,7 @@ add_library(CheckHeadersAutonomy STATIC
   ${CHECK_HEADERS_SOURCES}
 )
 
-if (1)
+if (0)
 	add_executable(FullParseTest
 		full_parse_main.cpp
 		full_parse_test.cpp
