@@ -203,9 +203,11 @@ we also must append viewport attributes to the list of processed attributes::
     >::type processed_attributes_t;
 
 Now SVG++ will call the existing method ``transform_matrix`` to set new user coordinate system.
-And we must add ``set_viewport`` method that will be passed with information about new viewport::
+And we must add some methods that will be passed with information about new viewport::
 
   void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height);
+  void set_viewbox_size(double viewbox_width, double viewbox_height);
+  void disable_rendering();
 
 The full cpp file for this step can be found here: ``src/samples/sample01c.cpp``.
 

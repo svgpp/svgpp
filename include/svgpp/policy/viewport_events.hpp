@@ -28,6 +28,12 @@ struct forward_to_method
   }
 
   template<class Coordinate>
+  static void set_viewbox_size(Context & context, Coordinate viewbox_width, Coordinate viewbox_height)
+  {
+    context.set_viewbox_size(viewbox_width, viewbox_height);
+  }
+
+  template<class Coordinate>
   static void get_reference_viewport_size(Context & context, Coordinate & viewport_width, Coordinate & viewport_height)
   {
     context.get_reference_viewport_size(viewport_width, viewport_height);

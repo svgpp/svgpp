@@ -102,6 +102,11 @@ public:
     length_factory_.set_viewport_size(viewport_width, viewport_height);
   }
 
+  void set_viewbox_size(double viewbox_width, double viewbox_height)
+  {
+    length_factory_.set_viewport_size(viewbox_width, viewbox_height);
+  }
+
   void disable_rendering()
   {}
 

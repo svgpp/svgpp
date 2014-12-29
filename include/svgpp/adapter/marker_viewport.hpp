@@ -81,6 +81,8 @@ public:
       Coordinate dy = -ref_y * scale_y - translate_y;
       viewport_events::policy::set_viewport(viewport_events::get(context), dx, dy, marker_width, marker_height);
       viewport_events::policy::set_viewbox_transform(viewport_events::get(context), translate_x, translate_y, scale_x, scale_y, this->defer_);
+      viewport_events::policy::set_viewbox_size(viewport_events::get(context), 
+        this->viewbox_->template get<2>(), this->viewbox_->template get<3>());
     }
     else
       viewport_events::policy::set_viewport(viewport_events::get(context), -ref_x, -ref_y, marker_width, marker_height);

@@ -39,7 +39,6 @@ struct LinearGradient: GradientBase
   LinearGradient()
     : x1_(0)
     , y1_(0)
-    , x2_(1)
     , y2_(0)
   {}
 
@@ -48,12 +47,6 @@ struct LinearGradient: GradientBase
 
 struct RadialGradient: GradientBase
 {
-  RadialGradient()
-    : cx_(0.5)
-    , cy_(0.5)
-    , r_(0.5)
-  {}
-
   double cx_, cy_, r_, fx_, fy_;
 };
 

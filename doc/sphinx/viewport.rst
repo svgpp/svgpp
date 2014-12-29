@@ -20,17 +20,22 @@ Viewport Policy Concept
 
   struct viewport_policy_concept
   {
-    static const bool calculate_viewport        = /* true or false */;
-    static const bool calculate_marker_viewport = /* true or false */;
-    static const bool viewport_as_transform     = /* true or false */;
+    static const bool calculate_viewport          = /* true or false */;
+    static const bool calculate_marker_viewport   = /* true or false */;
+    static const bool calculate_pattern_viewport  = /* true or false */;
+    static const bool viewport_as_transform       = /* true or false */;
   };
 
 ``calculate_viewport = true``
-  Enables handling of viewport attributes. Values will be passed by calls to ``set_viewport`` or 
+  Enables handling of viewport attributes for **svg** and **symbol** elements. 
+  Values will be passed by calls to ``set_viewport`` or 
   ``set_viewbox_transform`` of *Viewport Events Policy*.
 
 ``calculate_marker_viewport = true``
   The same for **marker** elements.
+
+``calculate_pattern_viewport = true``
+  The same for **pattern** elements.
 
 ``viewport_as_transform = true``
   Is checked only if ``calculate_viewport = true``.
@@ -59,6 +64,8 @@ Viewport Events Policy Concept
     static void set_viewbox_transform(context_type & context, number_type translate_x, number_type translate_y, 
       number_type scale_x, number_type scale_y, bool defer);
 
+    static void set_viewbox_size(context_type & context, number_type viewbox_width, number_type viewbox_height);
+
     static void get_reference_viewport_size(context_type & context, 
       number_type & viewport_width, number_type & viewport_height);
 
@@ -71,6 +78,10 @@ Viewport Events Policy Concept
 ``set_viewbox_transform``
   Passes offset and scale that are set by combination of **viewbox** and **preserveAspectRatio**. 
   Not used if ``viewport_as_transform = true``.
+
+``set_viewbox_size``
+  Passes size of viewbox, set by **viewbox** attribute. Called only if **viewbox** attribute is present.
+  It can be used to set viewport size in *Length Factory*.
 
 ``get_reference_viewport_size``
   See :ref:`viewport_referenced_element`.
@@ -102,7 +113,8 @@ And set ``viewport_height`` value of **height** attribute of referenced element,
 Processed attributes
 --------------------------------
 
-If ``calculate_viewport = true`` in *Viewport Policy*, then SVG++ intercepts and processes attributes, 
+If ``calculate_viewport = true`` or ``calculate_pattern_viewport = true`` in *Viewport Policy*, 
+then SVG++ intercepts and processes attributes, 
 listed in ``traits::viewport_attributes``::
 
   namespace traits 

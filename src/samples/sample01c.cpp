@@ -21,6 +21,9 @@ public:
   void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height)
   {}
 
+  void set_viewbox_size(double viewbox_width, double viewbox_height)
+  {}
+
   void disable_rendering()
   {}
 

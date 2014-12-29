@@ -68,6 +68,12 @@ struct get_viewport_size_source<tag::element::use_, tag::element::symbol>
   typedef tag::viewport_size_source::use_reference type;
 };
 
+template<>
+struct get_viewport_size_source<void, tag::element::pattern>
+{
+  typedef tag::viewport_size_source::use_own type;
+};
+
 namespace detail
 {
   template<class Length, class Coordinate, class ViewportSizeSourceTag>
@@ -305,6 +311,9 @@ public:
         this->align_, this->meetOrSlice_);
       viewport_events::policy::set_viewbox_transform(viewport_events::get(context), 
         translate_x, translate_y, scale_x, scale_y, this->defer_);
+
+      viewport_events::policy::set_viewbox_size(viewport_events::get(context), 
+        this->viewbox_->template get<2>(), this->viewbox_->template get<3>());
     }
     return true;
   }
@@ -347,6 +356,14 @@ struct viewport_transform_adapter
     typedef detail::unwrap_context<Context, tag::viewport_events_policy> viewport_events;
 
     viewport_events::policy::get_reference_viewport_size(viewport_events::get(context), viewport_width, viewport_height);
+  }
+
+  template<class Context, class Coordinate>
+  static void set_viewbox_size(Context & context, Coordinate viewbox_width, Coordinate viewbox_height)
+  {
+    typedef detail::unwrap_context<Context, tag::viewport_events_policy> viewport_events;
+
+    viewport_events::policy::set_viewbox_size(viewport_events::get(context), viewbox_width, viewbox_height);
   }
 
   template<class Context>

@@ -404,6 +404,11 @@ class viewport_attribute_dispatcher:
   typedef typename boost::parameter::value_type<args, tag::viewport_policy, 
     typename policy::viewport::by_context<Context>::type>::type viewport_policy;
 
+  static const bool calculate_viewport = 
+    boost::is_same<ElementTag, tag::element::pattern>::value
+      ? viewport_policy::calculate_pattern_viewport
+      : viewport_policy::calculate_viewport;
+
 public:
   viewport_attribute_dispatcher(Context & context)
     : base_type(context)
@@ -414,7 +419,7 @@ public:
 
   template<class AttributeTag, class AttributeValue>
   typename boost::enable_if_c<
-    viewport_policy::calculate_viewport
+    calculate_viewport
     && boost::mpl::has_key<traits::viewport_attributes, AttributeTag>::value, bool>::type
   load_attribute_value(AttributeTag attribute_tag, AttributeValue const & attribute_value, 
                        tag::source::attribute property_source)
@@ -455,7 +460,7 @@ private:
   > viewport_adapter;
   typedef 
     typename boost::mpl::if_c<
-      viewport_policy::calculate_viewport,
+      calculate_viewport,
       typename boost::mpl::if_c< 
         viewport_policy::viewport_as_transform,
         boost::mpl::single_view<
@@ -490,6 +495,18 @@ class attribute_dispatcher<tag::element::symbol, Context, SVGPP_TEMPLATE_ARGS_PA
   public detail::viewport_attribute_dispatcher<tag::element::symbol, Context, SVGPP_TEMPLATE_ARGS_PASS>
 {
   typedef detail::viewport_attribute_dispatcher<tag::element::symbol, Context, SVGPP_TEMPLATE_ARGS_PASS> base_type;
+
+public:
+  attribute_dispatcher(Context & context)
+    : base_type(context)
+  {}
+};
+
+template<class Context, SVGPP_TEMPLATE_ARGS>
+class attribute_dispatcher<tag::element::pattern, Context, SVGPP_TEMPLATE_ARGS_PASS>:
+  public detail::viewport_attribute_dispatcher<tag::element::pattern, Context, SVGPP_TEMPLATE_ARGS_PASS>
+{
+  typedef detail::viewport_attribute_dispatcher<tag::element::pattern, Context, SVGPP_TEMPLATE_ARGS_PASS> base_type;
 
 public:
   attribute_dispatcher(Context & context)

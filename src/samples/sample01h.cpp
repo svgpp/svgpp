@@ -87,7 +87,11 @@ public:
   void transform_matrix(const boost::array<double, 6> & matrix)
   {}
 
+  // Viewport Events Policy
   void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height)
+  {}
+
+  void set_viewbox_size(double viewbox_width, double viewbox_height)
   {}
 
   void disable_rendering()

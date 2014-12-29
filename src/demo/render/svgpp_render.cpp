@@ -464,6 +464,12 @@ public:
     length_factory_.set_viewport_size(viewport_width, viewport_height);
   }
 
+  void set_viewbox_size(double viewbox_width, double viewbox_height)
+  {
+    // If "viewbox" attribute is present, then percentage is calculated relative to viewbox
+    length_factory_.set_viewport_size(viewbox_width, viewbox_height);
+  }
+
   void disable_rendering()
   { rendering_disabled_ = true; }
 

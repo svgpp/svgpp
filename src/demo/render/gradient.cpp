@@ -135,10 +135,16 @@ public:
   LinearGradientContext(GradientContext & gradientContext)
     : GradientBaseContext(data_, gradientContext)
     , gradientContext_(gradientContext)
+    , x2_set_(false)
   {}
 
   void on_exit_element()
-  { gradientContext_.gradient_ = data_; }
+  { 
+    if (!x2_set_)
+      data_.x2_ = length_factory().create_length(
+        100, svgpp::tag::length_units::percent(), svgpp::tag::length_dimension::width());
+    gradientContext_.gradient_ = data_; 
+  }
 
   using GradientBaseContext::set;
 
@@ -149,7 +155,7 @@ public:
   { data_.y1_ = val; }
 
   void set(svgpp::tag::attribute::x2, double val)
-  { data_.x2_ = val; }
+  { data_.x2_ = val; x2_set_ = true; }
 
   void set(svgpp::tag::attribute::y2, double val)
   { data_.y2_ = val; }
@@ -157,6 +163,7 @@ public:
 private:
   GradientContext & gradientContext_;
   LinearGradient data_;
+  bool x2_set_;
 };
 
 class RadialGradientContext: public GradientBaseContext
@@ -165,12 +172,24 @@ public:
   RadialGradientContext(GradientContext & gradientContext)
     : GradientBaseContext(data_, gradientContext)
     , gradientContext_(gradientContext)
+    , cx_set_(false)
+    , cy_set_(false)
+    , r_set_ (false)
     , fx_set_(false)
     , fy_set_(false)
   {}
 
   void on_exit_element()
   { 
+    if (!cx_set_)
+      data_.cx_ = length_factory().create_length(
+        50, svgpp::tag::length_units::percent(), svgpp::tag::length_dimension::width());
+    if (!cy_set_)
+      data_.cy_ = length_factory().create_length(
+        50, svgpp::tag::length_units::percent(), svgpp::tag::length_dimension::height());
+    if (!r_set_)
+      data_.r_ = length_factory().create_length(
+        50, svgpp::tag::length_units::percent(), svgpp::tag::length_dimension::not_width_nor_height());
     if (!fx_set_)
       data_.fx_ = data_.cx_;
     if (!fy_set_)
@@ -181,13 +200,13 @@ public:
   using GradientBaseContext::set;
 
   void set(svgpp::tag::attribute::cx, double val)
-  { data_.cx_ = val; }
+  { cx_set_ = true; data_.cx_ = val; }
 
   void set(svgpp::tag::attribute::cy, double val)
-  { data_.cy_ = val; }
+  { cy_set_ = true; data_.cy_ = val; }
 
   void set(svgpp::tag::attribute::r, double val)
-  { data_.r_ = val; }
+  { r_set_ = true; data_.r_ = val; }
 
   void set(svgpp::tag::attribute::fx, double val)
   { fx_set_ = true; data_.fx_ = val; }
@@ -198,6 +217,7 @@ public:
 private:
   GradientContext & gradientContext_;
   RadialGradient data_;
+  bool cx_set_, cy_set_, r_set_;
   bool fx_set_, fy_set_;
 };
 

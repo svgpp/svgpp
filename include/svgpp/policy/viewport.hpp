@@ -14,6 +14,7 @@ struct raw
 {
   static const bool calculate_viewport = false;
   static const bool calculate_marker_viewport = false;
+  static const bool calculate_pattern_viewport = false;
   static const bool viewport_as_transform = false;
 };
 
@@ -21,6 +22,7 @@ struct as_transform
 {
   static const bool calculate_viewport = true;
   static const bool calculate_marker_viewport = true;
+  static const bool calculate_pattern_viewport = true;
   static const bool viewport_as_transform = true;
 };
 
@@ -28,6 +30,7 @@ struct calculate
 {
   static const bool calculate_viewport = true;
   static const bool calculate_marker_viewport = true;
+  static const bool calculate_pattern_viewport = true;
   static const bool viewport_as_transform = false;
 };
 
