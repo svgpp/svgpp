@@ -11,7 +11,7 @@ and reference to XML element or value of XML attribute; library calls static met
 passing *context* and parsed values as arguments.
 
 *Events Policies* (*Value Events Policy*, *Transform Events Policy*, *Path Events Policy* etc) 
-sets *context* type.
+know how to pass value to corresponding *context* type.
 Default *Events Policies* treats *context* as an object, calling its methods. 
 
 
@@ -29,7 +29,7 @@ Below are shown the main SVG++ components, starting from the lowest level. Every
     Some of them use *grammars*. 
 
     E.g., attribute value **x="16mm"** may be passed as corresponding ``double`` value, 
-    taking in account units, and **d="M10 10 L15 100"** may become sequence of 
+    taking into account units, and **d="M10 10 L15 100"** may become sequence of 
     calls like ``path_move_to(10,10); path_line_to(15, 100);``.
 
   *Adapters*
@@ -51,7 +51,7 @@ Below are shown the main SVG++ components, starting from the lowest level. Every
     * Parses **style** attribute, so that values of attributes and values of CSS properties are handled identically.
     * Checks presence of mandatory attributes in element.
     * "Hides" `presentation attribute <http://www.w3.org/TR/SVG/styling.html#UsingPresentationAttributes>`_, 
-      if this property already set in the **style** attribute.
+      if this property is already set in the **style** attribute.
     * Allows attribute ordering.
 
   *Document Traversal*

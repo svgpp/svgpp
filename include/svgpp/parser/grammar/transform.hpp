@@ -30,6 +30,7 @@ public:
   transform_grammar()
     : this_type::base_type(transforms)
   {
+    namespace phx = boost::phoenix;
     using qi::_1;
     using qi::_2;
     using qi::_3;
@@ -62,16 +63,16 @@ public:
               >> number >> no_skip[comma_wsp]
               >> number >> no_skip[comma_wsp]
               >> number >> lit(')')
-            ) [bind(&call_matrix, _r1, _1, _2, _3, _4, _5, _6)];
+            ) [phx::bind(&call_matrix, _r1, _1, _2, _3, _4, _5, _6)];
     translate 
         =   lit("translate") 
             >> lit('(') 
             >> number [_a = _1] 
             >> ( ( no_skip[comma_wsp] 
                   >> number [_b = _1] 
-                  >> lit(')') [bind(&transform_grammar::call_translate, _r1, _a, _b)] 
+                  >> lit(')') [phx::bind(&transform_grammar::call_translate, _r1, _a, _b)] 
                 )
-                | lit(')') [bind(&transform_grammar::call_translate, _r1, _a)] 
+                | lit(')') [phx::bind(&transform_grammar::call_translate, _r1, _a)] 
               );
     scale 
         =   lit("scale") 
@@ -79,9 +80,9 @@ public:
             >> number [_a = _1]
             >> ( ( no_skip[comma_wsp] 
                   >> number [_b = _1] 
-                  >> lit(')') [bind(&transform_grammar::call_scale, _r1, _a, _b)] 
+                  >> lit(')') [phx::bind(&transform_grammar::call_scale, _r1, _a, _b)] 
                 )
-                | lit(')') [bind(&transform_grammar::call_scale, _r1, _a)] 
+                | lit(')') [phx::bind(&transform_grammar::call_scale, _r1, _a)] 
               );
     rotate 
         =   lit("rotate") 
@@ -91,20 +92,20 @@ public:
                   >> number [_b = _1] 
                   >> no_skip[comma_wsp] 
                   >> number [_c = _1] 
-                  >> lit(')') [bind(&transform_grammar::call_rotate, _r1, _a, _b, _c)] 
+                  >> lit(')') [phx::bind(&transform_grammar::call_rotate, _r1, _a, _b, _c)] 
                 )
-                | lit(')') [bind(&transform_grammar::call_rotate, _r1, _a)] 
+                | lit(')') [phx::bind(&transform_grammar::call_rotate, _r1, _a)] 
               );
     skewX 
         =   ( lit("skewX") 
               >> lit('(') 
               >> number 
-              >> lit(')') ) [bind(&transform_grammar::call_skew_x, _r1, _1)];
+              >> lit(')') ) [phx::bind(&transform_grammar::call_skew_x, _r1, _1)];
     skewY 
         =   ( lit("skewY") 
               >> lit('(') 
               >> number 
-              >> lit(')') ) [bind(&transform_grammar::call_skew_y, _r1, _1)];
+              >> lit(')') ) [phx::bind(&transform_grammar::call_skew_y, _r1, _1)];
   }
 
 private:

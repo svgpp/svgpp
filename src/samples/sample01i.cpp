@@ -323,7 +323,7 @@ struct AttributeTraversal: policy::attribute_traversal::default_policy
       tag::attribute::viewBox, 
       tag::attribute::preserveAspectRatio,
       // ... notify library, that all viewport attributes that are present was loaded.
-      // It will result in call to BaseContext::set_viewport
+      // It will result in call to BaseContext::set_viewport and BaseContext::set_viewbox_size
       notify_context<tag::event::after_viewport_attributes>
     >::type,
     boost::mpl::empty_sequence

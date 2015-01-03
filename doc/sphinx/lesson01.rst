@@ -112,9 +112,9 @@ Calls like ``path_XXXX`` except ``path_exit`` correspond to SVG
 
 SVG++ by default (see :ref:`Path Policy <path_policy>` for details):
 
-- converts relative coordinates with absolute ones
-- commands for horizontal and vertical lines (**H**, **h**, **V**, **v**) converts to calls to ``path_line_to`` with two coordinates
-- shorthand/smooth curveto and shorthand/smooth quadratic Bézier curveto replaces with calls with full parameters list
+- converts relative coordinates to absolute ones;
+- commands for horizontal and vertical lines (**H**, **h**, **V**, **v**) converts to calls to ``path_line_to`` with two coordinates;
+- shorthand/smooth curveto and shorthand/smooth quadratic Bézier curveto replaces with calls with full parameters list.
 
 SVG++ by default converts `basic shapes <http://www.w3.org/TR/SVG11/shapes.html>`_ to path
 (see :ref:`Basic Shapes Policy <basic_shapes>` for details).
@@ -123,18 +123,17 @@ XML Parser
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 We didn't declared ``xml_element_t`` yet. 
-It is type that corresponds to XML element :ref:`type <xml_policy_types>` in XML parser chosen.
 Let's use `RapidXML NS <https://github.com/svgpp/rapidxml_ns>`_ library (it is a clone of 
 `RapidXML <http://rapidxml.sourceforge.net/>`_ with namespace handling added) that comes with SVG++ 
 in the ``third_party/rapidxml_ns/rapidxml_ns.hpp`` file. It's a single header library, so we just need to point to its header::
 
   #include <rapidxml_ns/rapidxml_ns.hpp>
 
-Then we must include *policy* for XML parser chosen::
+Then we must include SVG++ *policy* for chosen XML parser::
 
   #include <svgpp/policy/xml/rapidxml_ns.hpp>
 
-XML policies headers don't include parser header because their location and names may differ. 
+XML policy headers don't include parser header because their location and names may differ. 
 The programmer must include 
 appropriate XML parser header herself before including policy header.
 
@@ -176,7 +175,7 @@ Handling Viewports
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The **svg** element may be used inside SVG document to establish a new viewport. 
-To process new viewport coordinate system, a new user coordinate system 
+To process new viewport coordinate system and new user coordinate system 
 several attributes must be processed (**x**, **y**, **width**, **height**, **preserveAspectRatio**, **viewbox**).
 SVG++ will do it itself if we set ``policy::viewport::as_transform`` :ref:`Viewport Policy <viewport-section>` ::
 
@@ -216,10 +215,10 @@ Creating Contexts
 
 Until now only one instance of context object was used for entire SVG document tree.
 It is convenient to create context instance on stack for each SVG element processed. 
-This behavior is controlled by context factories, passed by :ref:`context_factories <context_factories>` 
+This behavior is controlled by *context factories*, passed by :ref:`context_factories <context_factories>` 
 parameter of ``document_traversal`` template class.
 
-*Context factories* is a `Metafunction Class`_ that receives parent context type and element tag as parameters
+*Context factories* is a `Metafunction Class`_ that receives parent context type and child element tag as parameters
 and returns *context factory* type.
 
 This sample application processes structural elements (**svg** and **g**) and shape elements (**path**, **rect**, **circle** etc).
@@ -234,6 +233,8 @@ describing shape. So we can divide ``Context`` context class for ``BaseContext``
     void on_exit_element();
     void transform_matrix(const boost::array<double, 6> & matrix);
     void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height);
+    void set_viewbox_size(double viewbox_width, double viewbox_height);
+    void disable_rendering();
   };
 
   class ShapeContext: public BaseContext
@@ -263,7 +264,7 @@ describing shape. So we can divide ``Context`` context class for ``BaseContext``
   };
 
 ``factory::context::on_stack<ChildContext>`` factory creates context object ``ChildContext``, passing reference 
-on parent context in constructor. 
+to parent context in ``ChildContext`` constructor. 
 Lifetime of context object - until processing of element content (child elements and text nodes) is finished. 
 ``on_exit_element()`` is called right before object destruction.
 
@@ -285,7 +286,7 @@ The **use** element is used to include/draw other SVG element. If **use** refere
 
 To add support for **use** in our sample we:
 
-  * Add ``tag::element::use_`` to the list of processed elements , and ``tag::attribute::xlink::href`` to 
+  * Add ``tag::element::use_`` to the list of processed elements, and ``tag::attribute::xlink::href`` to 
     the list of processed attributes  (**x**, **y**, **width** and **height** already included through ``traits::viewport_attributes``).
   * Create context class ``UseContext`` to be used for **use** element, that will
     collect **x**, **y**, **width**, **height** and **xlink:href** attributes values.
@@ -313,7 +314,7 @@ Let's set :ref:`Markers Policy <markers-section>` that enables this option::
     markers_policy<policy::markers::calculate_always>
   > /* ... */
 
-Now adding *Marker Events* method to ``ShapeContext``::
+Then add *Marker Events* method to ``ShapeContext``::
 
   void marker(marker_vertex v, double x, double y, double directionality, unsigned marker_index);
 
@@ -363,7 +364,7 @@ that is why so many methods are required to receive all possible values of the p
   template<class IRI>
   void set(tag::attribute::stroke tag, tag::iri_fragment, IRI const & fragment, color_t val, tag::skip_icc_color = tag::skip_icc_color());
 
-Default :ref:`IRI Policy <iri-section>` used that distinguishes absolute IRIs and local IRI references 
+Default :ref:`IRI Policy <iri-section>` is used that distinguishes absolute IRIs and local IRI references 
 to fragments in same SVG document.
 
 Source code: ``src/samples/sample01g.cpp``.
@@ -371,7 +372,7 @@ Source code: ``src/samples/sample01g.cpp``.
 Custom Color Factory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Suppose that default SVG++ color presentation as 8 bit per channel RGB packed in ``int`` doesn't suit our needs.
+Suppose that default SVG++ color presentation as 8 bit per channel RGB value packed in ``int`` doesn't suit our needs.
 We prefer to use some custom type, e.g. ``boost::tuple`` (same as C++11 ``std::tuple``)::
 
   typedef boost::tuple<unsigned char, unsigned char, unsigned char> color_t;
@@ -404,7 +405,7 @@ Source file: ``src/samples/sample01h.cpp``.
 Correct Length Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-On next step (``src/samples/sample01h.cpp``) of sample evolution we add correct handling of *length*,
+On next step (``src/samples/sample01i.cpp``) of sample evolution we will add correct handling of *length*,
 that takes in account device resolution (dpi) and changes of viewport size by **svg** and **symbol** elements, 
 that affects lengths, which are set in percent. So we:
 
@@ -412,8 +413,8 @@ that affects lengths, which are set in percent. So we:
     is only called by ourselves from ``loadSvg`` function).
   * Add ``length_factory_`` field and access function. ``length_factory_`` settings (resolution, viewport size)
     will be passed to child contexts in copy constructor.
-  * In ``BaseContext::set_viewport`` method add passing *viewport* size to *Length Factory*.
-  * Set :ref:`Length Policy <length-section>`, that will ask context for *Length Factory* instance::
+  * In ``BaseContext::set_viewport`` and ``BaseContext::set_viewbox_size`` methods pass *viewport* size to the *Length Factory*.
+  * Set :ref:`Length Policy <length-section>`, that will ask ``BaseContext`` class for *Length Factory* instance::
 
       document_traversal<
         /* ... */
@@ -438,6 +439,11 @@ that affects lengths, which are set in percent. So we:
       length_factory_.set_viewport_size(viewport_width, viewport_height);
     }
 
+    void set_viewbox_size(double viewbox_width, double viewbox_height)
+    {
+      length_factory_.set_viewport_size(viewbox_width, viewbox_height);
+    }
+
     // Length Policy interface
     typedef factory::length::unitless<> length_factory_type;
 
@@ -450,9 +456,9 @@ that affects lengths, which are set in percent. So we:
 
 According to SVG Specification, the size of the new viewport affects attributes of element 
 that establish new viewport (except **x**, **y**, **width** and **height** attributes).
-As our *Length Factory* converts length in percent to number immediately,
+As our *Length Factory* converts lengths to numbers immediately,
 we need to pass new viewport size to *Length Factory* before processing other attributes. 
-To do this we will use :ref:`get_priority_attributes_by_element <get_priority_attributes_by_element>` parameter of
+To do so we will use :ref:`get_priority_attributes_by_element <get_priority_attributes_by_element>` parameter of
 *Attribute Traversal Policy*::
 
   struct AttributeTraversal: policy::attribute_traversal::default_policy
@@ -475,7 +481,7 @@ To do this we will use :ref:`get_priority_attributes_by_element <get_priority_at
         tag::attribute::viewBox, 
         tag::attribute::preserveAspectRatio,
         // ... notify library, that all viewport attributes that are present was loaded.
-        // It will result in call to BaseContext::set_viewport
+        // It will result in call to BaseContext::set_viewport and BaseContext::set_viewbox_size
         notify_context<tag::event::after_viewport_attributes>
       >::type,
       boost::mpl::empty_sequence
@@ -487,4 +493,5 @@ To do this we will use :ref:`get_priority_attributes_by_element <get_priority_at
     attribute_traversal_policy<AttributeTraversal>
   > /* ... */;
 
-Now we are sure that ``BaseContext::set_viewport`` will be called before other attributes are processed.
+Now we are sure that ``BaseContext::set_viewport`` (and ``BaseContext::set_viewbox_size``) 
+will be called before other attributes are processed.
