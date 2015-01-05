@@ -49,6 +49,8 @@ add_executable( ParserGTest
   value_parser_test.cpp
   value_parser_length_test.cpp 
   value_parser_paint_test.cpp 
+	value_parser_path_test.cpp 
+	value_parser_transform_test.cpp 
   ${GTEST_DIR}/src/gtest_main.cc 
   ${GTEST_DIR}/src/gtest-all.cc 
 )

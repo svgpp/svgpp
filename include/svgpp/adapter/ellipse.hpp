@@ -75,8 +75,10 @@ struct ellipse_to_path_adapter
 
     typename path_events::type & path_context = path_events::get(context);
     path_events::policy::path_move_to(path_context, cx + rx, cy, tag::coordinate::absolute());
-    path_events::policy::path_elliptical_arc_to(path_context, rx, ry, 0, false, true, cx - rx, cy, tag::coordinate::absolute());
-    path_events::policy::path_elliptical_arc_to(path_context, rx, ry, 0, false, true, cx + rx, cy, tag::coordinate::absolute());
+    path_events::policy::path_elliptical_arc_to(path_context, 
+      rx, ry, Coordinate(0), false, true, cx - rx, cy, tag::coordinate::absolute());
+    path_events::policy::path_elliptical_arc_to(path_context, 
+      rx, ry, Coordinate(0), false, true, cx + rx, cy, tag::coordinate::absolute());
     path_events::policy::path_close_subpath(path_context);
     path_events::policy::path_exit(path_context);
   }

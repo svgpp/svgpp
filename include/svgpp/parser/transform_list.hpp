@@ -33,19 +33,26 @@ struct value_parser<tag::type::transform_list, SVGPP_TEMPLATE_ARGS_PASS>
     typedef typename detail::unwrap_context<context_t, tag::transform_events_policy> transform_events_context;
     typedef typename transform_events_context::policy transform_events_policy;
     typedef detail::transform_adapter_if_needed<context_t> adapted_context_t; 
+    typedef 
+      typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::transform_events_policy>::policy
+        adapted_transform_events_policy;
     typedef transform_grammar<
       iterator_t, 
-      typename adapted_context_t::type, 
+      adapted_transform_events_policy::context_type,
       typename args_t::number_type,
-      typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::transform_events_policy>::policy
+      adapted_transform_events_policy
     > transform_grammar_t;
 
     context_t bound_context(context);
     typename adapted_context_t::type transform_adapter(transform_events_context::get(bound_context));
+    typename adapted_context_t::adapted_context_holder adapted_transform_context(adapted_context_t::adapt_context(bound_context, transform_adapter));
     SVGPP_STATIC_IF_SAFE const transform_grammar_t grammar;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (boost::spirit::qi::phrase_parse(it, end, 
-        grammar(boost::phoenix::ref(transform_adapter)), typename transform_grammar_t::skipper_type()) 
+        grammar(boost::phoenix::ref(
+          detail::unwrap_context<typename adapted_context_t::adapted_context, tag::transform_events_policy>::get(
+            adapted_transform_context))), 
+        typename transform_grammar_t::skipper_type()) 
       && it == end)
     {
       adapted_context_t::on_exit_attribute(transform_adapter);

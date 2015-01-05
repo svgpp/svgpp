@@ -194,7 +194,7 @@ public:
   { 
     current_x += x;
     current_y += y;
-    path_move_to<Policy>(x, y, tag);
+    EventsPolicy::path_move_to(output_context, x, y, tag);
     non_curve_command();
     subpath_start_x = current_x;
     subpath_start_y = current_y;

@@ -299,13 +299,14 @@ private:
 public:
   typedef adapter_stub type;
   typedef OriginalContext adapted_context;
+  typedef OriginalContext & adapted_context_holder;
 
   static OriginalContext & adapt_context(OriginalContext & context, adapter_stub &)
   {
     return context;
   }
 
-  void on_exit_attribute(type const &) {}
+  static void on_exit_attribute(type const &) {}
 };
 
 template<class OriginalContext>
@@ -331,6 +332,7 @@ public:
     tag::transform_events_policy, 
     policy::transform_events::forward_to_method<type>
   > adapted_context;
+  typedef adapted_context adapted_context_holder;
 
   static adapted_context adapt_context(OriginalContext & context, type & adapter)
   {
