@@ -32,6 +32,14 @@
 #include <agg_span_gradient.h>
 #include <agg_span_interpolator_linear.h>
 #include <stb/stb_image_write.h>
+#elif defined(RENDERER_SKIA)
+#include <SkBitmap.h>
+#include <SkCanvas.h>
+#include <SkImageEncoder.h>
+#include <SkPath.h>
+#include <effects/SkDashPathEffect.h>
+#include <effects/SkGradientShader.h>
+#include <images/SkForceLinking.h>
 #endif
 
 #include <map>
@@ -92,10 +100,20 @@ private:
   Document::followed_refs_t::iterator lock_;
 };
 
+#if defined(RENDERER_SKIA)
+struct path_policy: svgpp::policy::path::raw
+{
+  static const bool no_ortho_line_to = true;
+  static const bool no_quadratic_bezier_shorthand = true;
+  static const bool no_cubic_bezier_shorthand = true;
+  static const bool arc_as_cubic_bezier = true; 
+};
+#else
 struct path_policy: svgpp::policy::path::no_shorthands
 {
   static const bool arc_as_cubic_bezier = true; 
 };
+#endif
 
 struct child_context_factories
 {
@@ -257,22 +275,34 @@ public:
   int width() const { return bitmap_->GetWidth(); }
   int height() const { return bitmap_->GetHeight(); }
   Gdiplus::Bitmap & bitmap() { return *bitmap_; }
+#elif defined(RENDERER_SKIA)
+  int width() const { return bitmap_.width(); }
+  int height() const { return bitmap_.height(); }
+  SkBitmap & bitmap() { return bitmap_; }
 #endif
 
+#if defined(RENDERER_SKIA)
+  bool isSizeSet() const { return !bitmap_.empty(); }
+#else
   bool isSizeSet() const { return !buffer_.empty(); }
+#endif
 
   void setSize(int width, int height, color_t const & fill_color)
   {
-    BOOST_ASSERT(buffer_.empty());
 #if defined(RENDERER_AGG)
+    BOOST_ASSERT(buffer_.empty());
     buffer_.resize(width * height * pixfmt_t::pix_width);
     rbuf_.attach(&buffer_[0], width, height, width * pixfmt_t::pix_width);
     pixfmt_.attach(rbuf_);
     agg::renderer_base<pixfmt_t> renderer_base(pixfmt_);
     renderer_base.clear(fill_color);
 #elif defined(RENDERER_GDIPLUS)
+    BOOST_ASSERT(buffer_.empty());
     buffer_.resize(width * height * 4);
     bitmap_.reset(new Gdiplus::Bitmap(width, height, width * 4, PixelFormat32bppARGB, &buffer_[0]));
+#elif defined(RENDERER_SKIA)
+    bitmap_.allocN32Pixels(width, height);
+    bitmap_.eraseColor(fill_color); 
 #endif
   }
 
@@ -284,6 +314,9 @@ public:
 #elif defined(RENDERER_GDIPLUS)
     return boost::gil::interleaved_view(bitmap_->GetWidth(), bitmap_->GetHeight(), 
       reinterpret_cast<boost::gil::rgba8_pixel_t*>(&buffer_[0]), bitmap_->GetWidth() * 4);
+#elif defined(RENDERER_SKIA)
+    return boost::gil::interleaved_view(bitmap_.width(), bitmap_.height(), 
+      reinterpret_cast<boost::gil::rgba8_pixel_t*>(bitmap_.getPixels()), bitmap_.rowBytesAsPixels());
 #endif
   }
 
@@ -295,6 +328,8 @@ private:
 #elif defined(RENDERER_GDIPLUS)
   std::vector<BYTE> buffer_;
   std::unique_ptr<Gdiplus::Bitmap> bitmap_;
+#elif defined(RENDERER_SKIA)
+  SkBitmap bitmap_;
 #endif
 };
 
@@ -303,7 +338,9 @@ class Transformable
 public:
   Transformable()
   {
-#if defined(RENDERER_AGG)
+#if defined(RENDERER_SKIA)
+    transform_.reset();
+#elif defined(RENDERER_AGG)
     transform_ = agg::trans_affine_translation(0.5, 0.5);
 #endif
   }
@@ -315,15 +352,66 @@ public:
   }
 #endif
 
-  void transform_matrix(const boost::array<double, 6> & matrix)
+#if defined(RENDERER_SKIA)
+  void transform_matrix(const boost::array<SkScalar, 6> & matrix)
   {
-#if defined(RENDERER_AGG)
+    SkMatrix m;
+    m.setAffine(matrix.data());
+    transform_.preConcat(m);
+  }
+
+  void transform_translate(SkScalar tx, SkScalar ty)
+  {
+    transform_.preTranslate(tx, ty);
+  }
+
+  void transform_translate(SkScalar tx)
+  {
+    transform_.preTranslate(tx, 0);
+  }
+
+  void transform_scale(SkScalar sx, SkScalar sy)
+  {
+    transform_.preScale(sx, sy);
+  }
+
+  void transform_scale(SkScalar scale)
+  {
+    transform_.preScale(scale, scale);
+  }
+
+  void transform_rotate(SkScalar angle)
+  {
+    transform_.preRotate(angle);
+  }
+
+  void transform_rotate(SkScalar angle, SkScalar cx, SkScalar cy)
+  {
+    transform_.preRotate(angle, cx, cy);
+  }
+
+  void transform_skew_x(SkScalar angle)
+  {
+    transform_.preSkew(std::tan(angle * boost::math::constants::degree<SkScalar>()), 0);
+  }
+
+  void transform_skew_y(SkScalar angle)
+  {
+    transform_.preSkew(0, std::tan(angle * boost::math::constants::degree<SkScalar>()));
+  }
+#elif defined(RENDERER_AGG)
+  void transform_matrix(const boost::array<number_t, 6> & matrix)
+  {
     transform_.premultiply(transform_t(matrix.data()));
+  }
 #elif defined(RENDERER_GDIPLUS)
+  void transform_matrix(const boost::array<number_t, 6> & matrix)
+  {
+
     transform_.Multiply(
       &Gdiplus::Matrix(matrix[0], matrix[1], matrix[2], matrix[3], matrix[4], matrix[5]));
-#endif
   }
+#endif
 
   transform_t       & transform()       { return transform_; }
   transform_t const & transform() const { return transform_; }
@@ -438,14 +526,22 @@ public:
       Gdiplus::Graphics graphics(&parent_buffer_().bitmap());
       graphics.DrawImage(
         &own_buffer_->bitmap(), 
-        Gdiplus::Rect(0, 0, own_buffer_->width(),own_buffer_->height()), 
-        0, 0, own_buffer_->width(),own_buffer_->height(),
+        Gdiplus::Rect(0, 0, own_buffer_->width(), own_buffer_->height()), 
+        0, 0, own_buffer_->width(), own_buffer_->height(),
         Gdiplus::UnitPixel, &ImgAttr);
+    }
+#elif defined(RENDERER_SKIA)
+    {
+      SkCanvas canvas(parent_buffer_().bitmap());
+      SkPaint paint;
+      paint.setStyle(SkPaint::kFill_Style);
+      paint.setAlpha(style().opacity_ * 255);
+      canvas.drawBitmap(own_buffer_->bitmap(), 0, 0, &paint);
     }
 #endif
   }
 
-  void set_viewport(double viewport_x, double viewport_y, double viewport_width, double viewport_height)
+  void set_viewport(number_t viewport_x, number_t viewport_y, number_t viewport_width, number_t viewport_height)
   {
     if (image_buffer_) // If topmost SVG element
     {
@@ -464,7 +560,7 @@ public:
     length_factory_.set_viewport_size(viewport_width, viewport_height);
   }
 
-  void set_viewbox_size(double viewbox_width, double viewbox_height)
+  void set_viewbox_size(number_t viewbox_width, number_t viewbox_height)
   {
     // If "viewbox" attribute is present, then percentage is calculated relative to viewbox
     length_factory_.set_viewport_size(viewbox_width, viewbox_height);
@@ -574,28 +670,28 @@ public:
   }
 
 #if defined(RENDERER_AGG)
-  void path_move_to(double x, double y, svgpp::tag::coordinate::absolute const &)
+  void path_move_to(number_t x, number_t y, svgpp::tag::coordinate::absolute const &)
   { 
     path_storage_.move_to(x, y);
   }
 
-  void path_line_to(double x, double y, svgpp::tag::coordinate::absolute const &)
+  void path_line_to(number_t x, number_t y, svgpp::tag::coordinate::absolute const &)
   { 
     path_storage_.line_to(x, y);
   }
 
   void path_cubic_bezier_to(
-    double x1, double y1, 
-    double x2, double y2, 
-    double x, double y, 
+    number_t x1, number_t y1, 
+    number_t x2, number_t y2, 
+    number_t x, number_t y, 
     svgpp::tag::coordinate::absolute const &)
   { 
     path_storage_.curve4(x1, y1, x2, y2, x, y);
   }
 
   void path_quadratic_bezier_to(
-    double x1, double y1, 
-    double x, double y, 
+    number_t x1, number_t y1, 
+    number_t x, number_t y, 
     svgpp::tag::coordinate::absolute const &)
   { 
     path_storage_.curve3(x1, y1, x, y);
@@ -608,9 +704,71 @@ public:
 
   void path_exit()
   {}
+#elif defined(RENDERER_SKIA)
+  void path_move_to(SkScalar x, SkScalar y, svgpp::tag::coordinate::absolute const &)
+  { 
+    path_.moveTo(x, y);
+  }
+
+  void path_move_to(SkScalar x, SkScalar y, svgpp::tag::coordinate::relative const &)
+  { 
+    path_.rMoveTo(x, y);
+  }
+
+  void path_line_to(SkScalar x, SkScalar y, svgpp::tag::coordinate::absolute const &)
+  { 
+    path_.lineTo(x, y);
+  }
+
+  void path_line_to(SkScalar x, SkScalar y, svgpp::tag::coordinate::relative const &)
+  { 
+    path_.rLineTo(x, y);
+  }
+
+  void path_cubic_bezier_to(
+    SkScalar x1, SkScalar y1, 
+    SkScalar x2, SkScalar y2, 
+    SkScalar x, SkScalar y, 
+    svgpp::tag::coordinate::absolute const &)
+  { 
+    path_.cubicTo(x1, y1, x2, y2, x, y);
+  }
+
+  void path_cubic_bezier_to(
+    SkScalar x1, SkScalar y1, 
+    SkScalar x2, SkScalar y2, 
+    SkScalar x, SkScalar y, 
+    svgpp::tag::coordinate::relative const &)
+  { 
+    path_.rCubicTo(x1, y1, x2, y2, x, y);
+  }
+
+  void path_quadratic_bezier_to(
+    SkScalar x1, SkScalar y1, 
+    SkScalar x, SkScalar y, 
+    svgpp::tag::coordinate::absolute const &)
+  { 
+    path_.quadTo(x1, y1, x, y);
+  }
+
+  void path_quadratic_bezier_to(
+    SkScalar x1, SkScalar y1, 
+    SkScalar x, SkScalar y, 
+    svgpp::tag::coordinate::relative const &)
+  { 
+    path_.rQuadTo(x1, y1, x, y);
+  }
+
+  void path_close_subpath()
+  {
+    path_.close();
+  }
+
+  void path_exit()
+  {}
 #endif
 
-  void marker(svgpp::marker_vertex v, double x, double y, double directionality, unsigned marker_index)
+  void marker(svgpp::marker_vertex v, number_t x, number_t y, number_t directionality, unsigned marker_index)
   {
     if (marker_index >= markers_.size())
       markers_.resize(marker_index + 1);
@@ -624,12 +782,14 @@ public:
 private:
 #if defined(RENDERER_AGG)
   agg::path_storage path_storage_;
+#elif defined(RENDERER_SKIA)
+  SkPath path_;
 #endif
 
   struct MarkerPos
   {
     svgpp::marker_vertex v;
-    double x, y, directionality;
+    number_t x, y, directionality;
   };
 
   typedef std::vector<MarkerPos> Markers; 
@@ -653,14 +813,14 @@ private:
   typedef boost::variant<svgpp::tag::value::none, color_t, Gradient> EffectivePaint;
 #if defined(RENDERER_AGG)
   template<class VertexSource>
-  void paintScanlines(EffectivePaint const & paint, double opacity, agg::rasterizer_scanline_aa<> & rasterizer,
+  void paintScanlines(EffectivePaint const & paint, number_t opacity, agg::rasterizer_scanline_aa<> & rasterizer,
     VertexSource & curved);
   template<class VertexSourceStroked, class VertexSourceCurved>
   void strokePath(EffectivePaint const & stroke, VertexSourceStroked & curved_stroked, VertexSourceCurved & curved);
 #endif
   void drawPath();
   void drawMarkers();
-  void drawMarker(svg_string_t const & id, double x, double y, double dir);
+  void drawMarker(svg_string_t const & id, number_t x, number_t y, number_t dir);
   EffectivePaint getEffectivePaint(Paint const &) const;
 };
 
@@ -695,6 +855,12 @@ struct DocumentTraversalControl
 
 typedef 
   svgpp::document_traversal<
+#if defined(RENDERER_SKIA)
+    svgpp::number_type<SkScalar>,
+    svgpp::transform_policy<svgpp::policy::transform::raw>,
+#elif defined(RENDERER_GDIPLUS)
+    svgpp::number_type<Gdiplus::REAL>,
+#endif
     svgpp::context_factories<child_context_factories>,
     svgpp::length_policy<svgpp::policy::length::forward_to_method<Canvas, const length_factory_t> >,
     svgpp::color_factory<color_factory_t>,
@@ -730,6 +896,8 @@ public:
       transform().premultiply(agg::trans_affine_translation(x_, y_));
 #elif defined(RENDERER_GDIPLUS)
       transform().Translate(x_, y_);
+#elif defined(RENDERER_SKIA)
+      transform().preTranslate(x_, y_);
 #endif
       document_traversal_main::load_referenced_element<
         svgpp::referencing_element<svgpp::tag::element::use_>,
@@ -754,25 +922,25 @@ public:
   void set(svgpp::tag::attribute::xlink::href, IRI const & fragment)
   { std::cerr << "External references aren't supported\n"; }
 
-  void set(svgpp::tag::attribute::x, double val)
+  void set(svgpp::tag::attribute::x, number_t val)
   { x_ = val; }
 
-  void set(svgpp::tag::attribute::y, double val)
+  void set(svgpp::tag::attribute::y, number_t val)
   { y_ = val; }
 
-  void set(svgpp::tag::attribute::width, double val)
+  void set(svgpp::tag::attribute::width, number_t val)
   { width_ = val; }
 
-  void set(svgpp::tag::attribute::height, double val)
+  void set(svgpp::tag::attribute::height, number_t val)
   { height_ = val; }
 
-  boost::optional<double> const & width() const { return width_; }
-  boost::optional<double> const & height() const { return height_; }
+  boost::optional<number_t> const & width() const { return width_; }
+  boost::optional<number_t> const & height() const { return height_; }
 
 private:
   svg_string_t fragment_id_;
-  double x_, y_;
-  boost::optional<double> width_, height_;
+  number_t x_, y_;
+  boost::optional<number_t> width_, height_;
 };
 
 class ReferencedSymbolOrSvg: 
@@ -785,7 +953,7 @@ public:
   {
   }
 
-  void get_reference_viewport_size(double & width, double & height)
+  void get_reference_viewport_size(number_t & width, number_t & height)
   {
     if (parent_.width())
       width = *parent_.width();
@@ -805,7 +973,7 @@ public:
     , maskUseObjectBoundingBox_(true)
     , maskContentUseObjectBoundingBox_(false)
   {
-#if defined(RENDERER_AGG)
+#if defined(RENDERER_AGG) || defined(RENDERER_SKIA)
     transform() = referenced.transform();
 #elif defined(RENDERER_GDIPLUS)
     AssignMatrix(transform(), referenced.transform());
@@ -832,21 +1000,21 @@ public:
   void set(svgpp::tag::attribute::maskContentUnits, svgpp::tag::value::objectBoundingBox)
   { maskContentUseObjectBoundingBox_ = true; }
 
-  void set(svgpp::tag::attribute::x, double val)
+  void set(svgpp::tag::attribute::x, number_t val)
   { x_ = val; }
 
-  void set(svgpp::tag::attribute::y, double val)
+  void set(svgpp::tag::attribute::y, number_t val)
   { y_ = val; }
 
-  void set(svgpp::tag::attribute::width, double val)
+  void set(svgpp::tag::attribute::width, number_t val)
   { width_ = val; }
 
-  void set(svgpp::tag::attribute::height, double val)
+  void set(svgpp::tag::attribute::height, number_t val)
   { height_ = val; }
 
 private:
   bool maskUseObjectBoundingBox_, maskContentUseObjectBoundingBox_;
-  double x_, y_, width_, height_; // TODO: defaults
+  number_t x_, y_, width_, height_; // TODO: defaults
 };
 
 void Canvas::loadMask(ImageBuffer & mask_buffer) const
@@ -862,6 +1030,17 @@ void Canvas::loadMask(ImageBuffer & mask_buffer) const
     throw std::runtime_error("Element referenced by 'mask' not found");
 }
 
+struct GradientBase_visitor: boost::static_visitor<>
+{
+  void operator()(GradientBase const & g) 
+  {
+    gradient_ = &g;
+  }
+
+  GradientBase const * gradient_;
+};
+
+#if defined(RENDERER_AGG)
 template<class Gradient>
 class GradientRepeatAdapter
 {
@@ -908,17 +1087,17 @@ private:
   GradientBase::SpreadMethod const method_;
 };
 
-#if defined(RENDERER_AGG)
+
 struct ColorFunctionProfile
 {
   static const unsigned size_ = 256;
 
-  ColorFunctionProfile(GradientStops const & stops, double opacity) 
+  ColorFunctionProfile(GradientStops const & stops, number_t opacity) 
   {
     assert(stops.size() >= 2);
 
-    static const double offset_step = 1.0 / size_;
-    double offset = 0;
+    static const number_t offset_step = 1.0 / size_;
+    number_t offset = 0;
     GradientStops::const_iterator stop1 = stops.begin(), stop2 = stops.begin();
     agg::rgba8 color1 = stopColor(*stop1, opacity), color2 = color1;
     for(int i = 0; i < size_; ++i, offset += offset_step)
@@ -945,7 +1124,7 @@ struct ColorFunctionProfile
   }
 
 private:
-  static agg::rgba8 stopColor(GradientStop const & stop, double opacity)
+  static agg::rgba8 stopColor(GradientStop const & stop, number_t opacity)
   {
     if (opacity < 0.999)
     {
@@ -958,14 +1137,14 @@ private:
   agg::rgba8 colors_[size_];
 };
 
-static const double GradientScale = 100.0;
+static const number_t GradientScale = 100.0;
 
 template<class GradientFunc, class VertexSource>
 void RenderScanlinesGradient(renderer_base_t & renderer, 
   agg::rasterizer_scanline_aa<> & rasterizer,
   GradientFunc const & gradient_func, GradientBase const & gradient_base, 
   transform_t const & user_transform, transform_t const & gradient_geometry_transform,
-  double opacity,
+  number_t opacity,
   VertexSource & curved)
 {
   typedef agg::span_interpolator_linear<> span_interpolator_t;
@@ -984,7 +1163,7 @@ void RenderScanlinesGradient(renderer_base_t & renderer,
 
   if (gradient_base.useObjectBoundingBox_)
   {
-    double min_x, min_y, max_x, max_y;
+    number_t min_x, min_y, max_x, max_y;
     agg::bounding_rect_single(curved, 0, &min_x, &min_y, &max_x, &max_y);
     if (min_x >= max_x || min_y >= max_y)
       return;
@@ -1004,7 +1183,7 @@ void RenderScanlinesGradient(renderer_base_t & renderer,
 }
 
 template<class VertexSource>
-void Path::paintScanlines(EffectivePaint const & paint, double opacity, agg::rasterizer_scanline_aa<> & rasterizer,
+void Path::paintScanlines(EffectivePaint const & paint, number_t opacity, agg::rasterizer_scanline_aa<> & rasterizer,
   VertexSource & curved) 
 {
   renderer_base_t renderer_base(getImageBuffer().pixfmt());
@@ -1025,8 +1204,8 @@ void Path::paintScanlines(EffectivePaint const & paint, double opacity, agg::ras
     if (LinearGradient const * linearGradient = boost::get<LinearGradient>(&gradient))
     {
       agg::gradient_x gradient_func;
-      double dx = linearGradient->x2_ - linearGradient->x1_;
-      double dy = linearGradient->y2_ - linearGradient->y1_;
+      number_t dx = linearGradient->x2_ - linearGradient->x1_;
+      number_t dy = linearGradient->y2_ - linearGradient->y1_;
       transform_t gradient_geometry_transform = 
         agg::trans_affine_scaling(std::sqrt(dx * dx + dy * dy))
         * agg::trans_affine_rotation(std::atan2(dy, dx))
@@ -1074,6 +1253,74 @@ void Path::strokePath(EffectivePaint const & stroke,
   rasterizer.filling_rule(agg::fill_non_zero);
   rasterizer.add_path(curved_stroked_transformed);
   paintScanlines(stroke, style().stroke_opacity_, rasterizer, curved);
+}
+#elif defined(RENDERER_SKIA)
+void AssignGradientPaint(SkPaint & paint, SkPath const & path, Gradient const & gradient, SkMatrix transform)
+{
+  GradientBase_visitor gradientBase;
+  boost::apply_visitor(gradientBase, gradient);
+
+  std::vector<SkColor> colors;
+  std::vector<SkScalar> positions;
+  colors.reserve(gradientBase.gradient_->stops_.size());
+  positions.reserve(gradientBase.gradient_->stops_.size());
+  for(GradientStops::const_iterator s = gradientBase.gradient_->stops_.begin(); s != gradientBase.gradient_->stops_.end(); ++s)
+  {
+    colors.push_back(s->color_);
+    positions.push_back(s->offset_);
+  }
+  BOOST_ASSERT(!colors.empty()); // Checked in GetEffectivePaint
+
+  if (gradientBase.gradient_->useObjectBoundingBox_)
+  {
+    SkRect const & bounds = path.getBounds();
+    if (bounds.isEmpty())
+      return;
+    transform.preTranslate(bounds.x(), bounds.y());
+    transform.preScale(bounds.width(), bounds.height());
+  }
+
+  if (gradientBase.gradient_->matrix_)
+    transform.preConcat(*gradientBase.gradient_->matrix_);
+
+  if (LinearGradient const * linearGradient = boost::get<LinearGradient>(&gradient))
+  {
+    const SkPoint pts[2] = 
+    {
+      SkPoint::Make(linearGradient->x1_, linearGradient->y1_),
+      SkPoint::Make(linearGradient->x2_, linearGradient->y2_)
+    };
+    paint.setShader(
+      SkGradientShader::CreateLinear(
+        pts, &colors[0], &positions[0], positions.size(), linearGradient->spreadMethod_,
+        0, &transform
+      )
+    )->unref();
+  }
+  else
+  {
+    RadialGradient const & radialGradient = boost::get<RadialGradient>(gradient);
+    if (radialGradient.fx_ == radialGradient.cx_ && radialGradient.fy_ == radialGradient.cy_)
+      paint.setShader(
+        SkGradientShader::CreateRadial(
+          SkPoint::Make(radialGradient.cx_, radialGradient.cy_), 
+          radialGradient.r_,
+          &colors[0], &positions[0], positions.size(), radialGradient.spreadMethod_,
+          0, &transform
+        )
+      )->unref();
+    else
+      paint.setShader(
+        SkGradientShader::CreateTwoPointRadial(
+          SkPoint::Make(radialGradient.fx_, radialGradient.fy_), 
+          0,
+          SkPoint::Make(radialGradient.cx_, radialGradient.cy_), 
+          radialGradient.r_,
+          &colors[0], &positions[0], positions.size(), radialGradient.spreadMethod_,
+          0, &transform
+        )
+      )->unref();
+  }
 }
 #endif
 
@@ -1123,7 +1370,7 @@ void Path::drawPath()
       typedef agg::conv_dash<curved_t> curved_dashed_t;
       curved_dashed_t curved_dashed(curved);
 
-      std::vector<double> const & dasharray = style().stroke_dasharray_;
+      std::vector<number_t> const & dasharray = style().stroke_dasharray_;
       int num_dash_values = 
         dasharray.size() % 2 == 0
           ? dasharray.size() 
@@ -1166,7 +1413,7 @@ void Path::drawPath()
       pen.SetEndCap(style().line_cap_);
       pen.SetLineJoin(style().line_join_);
       pen.SetMiterLimit(style().miterlimit_);
-      std::vector<double> const & dasharray = style().stroke_dasharray_;
+      std::vector<number_t> const & dasharray = style().stroke_dasharray_;
       if (!dasharray.empty())
       {
         std::vector<Gdiplus::REAL> dashes(dasharray.begin(), dasharray.end());
@@ -1179,6 +1426,55 @@ void Path::drawPath()
     }
     // TODO: gradient
   }
+#elif defined(RENDERER_SKIA)
+  if (path_.isEmpty())
+    return;
+  path_.setFillType(style().nonzero_fill_rule_ ? SkPath::kWinding_FillType : SkPath::kEvenOdd_FillType);
+
+  SkCanvas canvas(getImageBuffer().bitmap());
+  canvas.setMatrix(transform());
+  EffectivePaint fill = getEffectivePaint(style().fill_paint_);
+  if (boost::get<svgpp::tag::value::none>(&fill) == NULL)
+  {
+    SkPaint fillPaint;
+    fillPaint.setAntiAlias(true);
+    fillPaint.setStyle(SkPaint::kFill_Style);
+    if (color_t const * color = boost::get<color_t>(&fill))
+    {
+      fillPaint.setColor(SkColorSetA(*color, style().fill_opacity_ * 255));
+    }
+    else 
+    {
+      fillPaint.setColor(SkColorSetA(0, style().fill_opacity_ * 255));
+      AssignGradientPaint(fillPaint, path_, boost::get<Gradient const>(fill), transform());
+    }
+
+    canvas.drawPath(path_, fillPaint);
+  }
+  EffectivePaint stroke = getEffectivePaint(style().stroke_paint_);
+  if (boost::get<svgpp::tag::value::none>(&stroke) == NULL)
+  {
+    SkPaint strokePaint = style().skPaintStroke_;
+    strokePaint.setAlpha(style().stroke_opacity_ * 255);
+    std::vector<number_t> const & dasharray = style().stroke_dasharray_;
+    if (!dasharray.empty())
+    {
+      std::vector<SkScalar> dashes(dasharray.begin(), dasharray.end());
+      if (dasharray.size() % 2 == 1)
+        dashes.insert(dashes.end(), dasharray.begin(), dasharray.end());
+      strokePaint.setPathEffect(SkDashPathEffect::Create(&dashes[0], dashes.size(), style().stroke_dashoffset_))->unref();
+    }
+    if (color_t const * color = boost::get<color_t>(&stroke))
+    {
+      strokePaint.setColor(SkColorSetA(*color, style().stroke_opacity_ * 255));
+    }
+    else
+    {
+      strokePaint.setColor(SkColorSetA(0, style().stroke_opacity_ * 255));
+      AssignGradientPaint(strokePaint, path_, boost::get<Gradient const>(stroke), transform());
+    }
+    canvas.drawPath(path_, strokePaint);
+  }
 #endif
 }
 
@@ -1186,7 +1482,7 @@ class Marker:
   public Canvas
 {
 public:
-  Marker(Path & parent, double strokeWidth, double x, double y, double autoOrient)
+  Marker(Path & parent, number_t strokeWidth, number_t x, number_t y, number_t autoOrient)
     : Canvas(parent, dontInheritStyle())
     , autoOrient_(autoOrient)
     , strokeWidth_(strokeWidth)
@@ -1197,6 +1493,8 @@ public:
     transform().premultiply(agg::trans_affine_translation(x, y));
 #elif defined(RENDERER_GDIPLUS)
     transform().Translate(x, y);
+#elif defined(RENDERER_SKIA)
+    transform().preTranslate(x, y);
 #endif
   }
 
@@ -1216,7 +1514,11 @@ public:
 #elif defined(RENDERER_GDIPLUS)
       transform().Scale(strokeWidth_, strokeWidth_);
     }
-    transform().Rotate(orient_);
+    transform().Rotate(orient_ * boost::math::constants::radian<number_t>());
+#elif defined(RENDERER_SKIA)
+      transform().preScale(strokeWidth_, strokeWidth_);
+    }
+    transform().preRotate(orient_ * boost::math::constants::radian<number_t>());
 #endif
 
     return true;
@@ -1230,17 +1532,17 @@ public:
   void set(svgpp::tag::attribute::markerUnits, svgpp::tag::value::userSpaceOnUse)
   { strokeWidthUnits_ = false; }
 
-  void set(svgpp::tag::attribute::orient, double val)
-  { orient_ = val * boost::math::constants::degree<double>(); }
+  void set(svgpp::tag::attribute::orient, number_t val)
+  { orient_ = val * boost::math::constants::degree<number_t>(); }
 
   void set(svgpp::tag::attribute::orient, svgpp::tag::value::auto_)
   { orient_ = autoOrient_; }
 
 private:
-  double const strokeWidth_;
-  double const autoOrient_;
+  number_t const strokeWidth_;
+  number_t const autoOrient_;
   bool strokeWidthUnits_;
-  double orient_;
+  number_t orient_;
 };
 
 void Path::drawMarkers()
@@ -1256,26 +1558,22 @@ void Path::drawMarkers()
   }
 }
 
-void Path::drawMarker(svg_string_t const & id, double x, double y, double dir)
+void Path::drawMarker(svg_string_t const & id, number_t x, number_t y, number_t dir)
 {
   if (XMLElement element = document().xml_document_.findElementById(id))
   {
     Document::FollowRef lock(document(), element);
 
-    Marker markerContext(*this, style().stroke_width_, x, y, dir);
+    Marker markerContext(*this, 
+#if defined(RENDERER_SKIA)
+      style().skPaintStroke_.getStrokeWidth(), 
+#else
+      style().stroke_width_, 
+#endif
+      x, y, dir);
     document_traversal_main::load_expected_element(element, markerContext, svgpp::tag::element::marker());
   }
 }
-
-struct GradientBase_visitor: boost::static_visitor<>
-{
-  void operator()(GradientBase const & g) 
-  {
-    gradient_ = &g;
-  }
-
-  GradientBase const * gradient_;
-};
 
 Path::EffectivePaint Path::getEffectivePaint(Paint const & paint) const
 {
@@ -1376,6 +1674,10 @@ int main(int argc, char * argv[])
       { 0x557cf406, 0x1a04, 0x11d3, { 0x9a, 0x73, 0x00, 0x00, 0xf8, 0x1e, 0xf3, 0x2e } };
     buffer.bitmap().Save(std::wstring(out_file_name, out_file_name + strlen(out_file_name)).c_str(), 
       &PNGEncoderCLSID, NULL);
+#elif defined(RENDERER_SKIA)
+    __SK_FORCE_IMAGE_DECODER_LINKING;
+    if (!SkImageEncoder::EncodeFile(out_file_name, buffer.bitmap(), SkImageEncoder::kPNG_Type, 100))
+      std::cerr << "Failed to write " << out_file_name << "\n";
 #endif
 }
 #if defined(RENDERER_GDIPLUS)

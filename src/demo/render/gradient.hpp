@@ -6,6 +6,9 @@
 #include <map>
 #include <vector>
 #include "common.hpp"
+#if defined(RENDERER_SKIA)
+#include <SkShader.h>
+#endif
 
 struct GradientStop
 {
@@ -13,7 +16,7 @@ struct GradientStop
     : color_(BlackColor())
   {}
 
-  double offset_;
+  number_t offset_;
   color_t color_;
 };
 
@@ -21,15 +24,27 @@ typedef std::vector<GradientStop> GradientStops;
 
 struct GradientBase
 {
+#if !defined(RENDERER_SKIA)
   enum SpreadMethod { spreadPad, spreadReflect, spreadRepeat };
+#endif
 
   GradientBase()
+#if defined(RENDERER_SKIA)
+    : spreadMethod_(SkShader::kClamp_TileMode)
+#else
     : spreadMethod_(spreadPad)
+#endif
     , useObjectBoundingBox_(true)
   {}
 
-  boost::optional<boost::array<double, 6> > matrix_;
+  
+#if defined(RENDERER_SKIA)
+  boost::optional<SkMatrix> matrix_;
+  SkShader::TileMode spreadMethod_;
+#else
+  boost::optional<boost::array<number_t, 6> > matrix_;
   SpreadMethod spreadMethod_;
+#endif
   GradientStops stops_;
   bool useObjectBoundingBox_;
 };
@@ -42,12 +57,12 @@ struct LinearGradient: GradientBase
     , y2_(0)
   {}
 
-  double x1_, y1_, x2_, y2_;
+  number_t x1_, y1_, x2_, y2_;
 };
 
 struct RadialGradient: GradientBase
 {
-  double cx_, cy_, r_, fx_, fy_;
+  number_t cx_, cy_, r_, fx_, fy_;
 };
 
 typedef boost::variant<LinearGradient, RadialGradient> Gradient;

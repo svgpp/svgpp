@@ -20,11 +20,14 @@ typedef boost::variant<SolidPaint, IRIPaint> Paint;
 struct InheritedStyle
 {
   InheritedStyle()
-    : color_(0, 0, 0)
-    , stroke_width_(1.0)
+    : color_(BlackColor())
+    , fill_paint_(BlackColor())
+    , stroke_paint_(svgpp::tag::value::none())
+    , nonzero_fill_rule_(true)
     , stroke_opacity_(1.0)
     , fill_opacity_(1.0)
-    , nonzero_fill_rule_(true)
+#if !defined(RENDERER_SKIA)
+    , stroke_width_(1.0)
 #if defined(RENDERER_AGG)
     , line_cap_(agg::butt_cap)
     , line_join_(agg::miter_join)
@@ -33,16 +36,27 @@ struct InheritedStyle
     , line_join_(Gdiplus::LineJoinMiterClipped)
 #endif
     , miterlimit_(4.0)
-    , fill_paint_(BlackColor())
-    , stroke_paint_(svgpp::tag::value::none())
     , stroke_dashoffset_(0)
-  {}
+#endif
+  {
+#if defined(RENDERER_SKIA)
+    skPaintStroke_.setAntiAlias(true);
+    skPaintStroke_.setStyle(SkPaint::kStroke_Style);
+    skPaintStroke_.setStrokeWidth(1);
+    skPaintStroke_.setStrokeMiter(4);
+    skPaintStroke_.setStrokeCap(SkPaint::kButt_Cap);
+    skPaintStroke_.setStrokeJoin(SkPaint::kMiter_Join);
+#endif
+  }
 
   color_t color_;
   Paint fill_paint_, stroke_paint_;
-  double stroke_width_;
-  double stroke_opacity_, fill_opacity_;
+  number_t stroke_opacity_, fill_opacity_;
   bool nonzero_fill_rule_;
+#if defined(RENDERER_SKIA)
+  SkPaint skPaintStroke_;
+#else
+  number_t stroke_width_;
 #if defined(RENDERER_AGG)
   agg::line_cap_e line_cap_;
   agg::line_join_e line_join_;
@@ -50,9 +64,10 @@ struct InheritedStyle
   Gdiplus::LineCap line_cap_;
   Gdiplus::LineJoin line_join_;
 #endif 
-  double miterlimit_;
-  std::vector<double> stroke_dasharray_;
-  double stroke_dashoffset_;
+  number_t miterlimit_;
+#endif
+  std::vector<number_t> stroke_dasharray_;
+  number_t stroke_dashoffset_;
   boost::optional<svg_string_t> marker_start_, marker_mid_, marker_end_;
 };
 
@@ -64,7 +79,7 @@ struct NoninheritedStyle
     , overflow_clip_(true) // TODO:
   {}
 
-  double opacity_;
+  number_t opacity_;
   bool display_;
   boost::optional<svg_string_t> mask_fragment_, clip_path_fragment_;
   boost::optional<svg_string_t> filter_;
@@ -175,17 +190,21 @@ public:
   void set(svgpp::tag::attribute::color, color_t val)
   { style().color_ = val; }
 
-  void set(svgpp::tag::attribute::stroke_width, double val)
+  void set(svgpp::tag::attribute::stroke_width, number_t val)
+#if defined(RENDERER_SKIA)
+  { style().skPaintStroke_.setStrokeWidth(val); }
+#else
   { style().stroke_width_ = val; }
+#endif
 
-  void set(svgpp::tag::attribute::stroke_opacity, double val)
-  { style().stroke_opacity_ = std::min(1.0, std::max(0.0, val)); }
+  void set(svgpp::tag::attribute::stroke_opacity, number_t val)
+  { style().stroke_opacity_ = std::min(number_t(1), std::max(number_t(0), val)); }
 
-  void set(svgpp::tag::attribute::fill_opacity, double val)
-  { style().fill_opacity_ = std::min(1.0, std::max(0.0, val)); }
+  void set(svgpp::tag::attribute::fill_opacity, number_t val)
+  { style().fill_opacity_ = std::min(number_t(1), std::max(number_t(0), val)); }
 
-  void set(svgpp::tag::attribute::opacity, double val)
-  { style().opacity_ = std::min(1.0, std::max(0.0, val)); }
+  void set(svgpp::tag::attribute::opacity, number_t val)
+  { style().opacity_ = std::min(number_t(1), std::max(number_t(0), val)); }
 
   void set(svgpp::tag::attribute::opacity, svgpp::tag::value::inherit)
   { style().opacity_ = parentStyle_.opacity_; }
@@ -201,6 +220,8 @@ public:
   { style().line_cap_ = agg::butt_cap; }
 #elif defined(RENDERER_GDIPLUS)
   { style().line_cap_ = Gdiplus::LineCapFlat; }
+#elif defined(RENDERER_SKIA)
+  { style().skPaintStroke_.setStrokeCap(SkPaint::kButt_Cap); }
 #endif
 
   void set(svgpp::tag::attribute::stroke_linecap, svgpp::tag::value::round)
@@ -208,6 +229,8 @@ public:
   { style().line_cap_ = agg::round_cap; }
 #elif defined(RENDERER_GDIPLUS)
   { style().line_cap_ = Gdiplus::LineCapRound; }
+#elif defined(RENDERER_SKIA)
+  { style().skPaintStroke_.setStrokeCap(SkPaint::kRound_Cap); }
 #endif
 
   void set(svgpp::tag::attribute::stroke_linecap, svgpp::tag::value::square)
@@ -215,6 +238,8 @@ public:
   { style().line_cap_ = agg::square_cap; }
 #elif defined(RENDERER_GDIPLUS)
   { style().line_cap_ = Gdiplus::LineCapSquare; }
+#elif defined(RENDERER_SKIA)
+  { style().skPaintStroke_.setStrokeCap(SkPaint::kSquare_Cap); }
 #endif
 
   void set(svgpp::tag::attribute::stroke_linejoin, svgpp::tag::value::miter)
@@ -222,6 +247,8 @@ public:
   { style().line_join_ = agg::miter_join; }
 #elif defined(RENDERER_GDIPLUS)
   { style().line_join_ = Gdiplus::LineJoinMiterClipped; }
+#elif defined(RENDERER_SKIA)
+  { style().skPaintStroke_.setStrokeJoin(SkPaint::kMiter_Join); }
 #endif
 
   void set(svgpp::tag::attribute::stroke_linejoin, svgpp::tag::value::round)
@@ -229,6 +256,8 @@ public:
   { style().line_join_ = agg::round_join; }
 #elif defined(RENDERER_GDIPLUS)
   { style().line_join_ = Gdiplus::LineJoinRound; }
+#elif defined(RENDERER_SKIA)
+  { style().skPaintStroke_.setStrokeJoin(SkPaint::kRound_Join); }
 #endif
 
   void set(svgpp::tag::attribute::stroke_linejoin, svgpp::tag::value::bevel)
@@ -236,10 +265,16 @@ public:
   { style().line_join_ = agg::bevel_join; }
 #elif defined(RENDERER_GDIPLUS)
   { style().line_join_ = Gdiplus::LineJoinBevel; }
+#elif defined(RENDERER_SKIA)
+  { style().skPaintStroke_.setStrokeJoin(SkPaint::kBevel_Join); }
 #endif
 
-  void set(svgpp::tag::attribute::stroke_miterlimit, double val)
+  void set(svgpp::tag::attribute::stroke_miterlimit, number_t val)
+#if defined(RENDERER_SKIA)
+  { style().skPaintStroke_.setStrokeMiter(val); }
+#else
   { style().miterlimit_ = val; }
+#endif
 
   void set(svgpp::tag::attribute::stroke_dasharray, svgpp::tag::value::none)
   { style().stroke_dasharray_.clear(); }
@@ -250,7 +285,7 @@ public:
     style().stroke_dasharray_.assign(boost::begin(range), boost::end(range)); 
   }
 
-  void set(svgpp::tag::attribute::stroke_dashoffset, double val)
+  void set(svgpp::tag::attribute::stroke_dashoffset, number_t val)
   { style().stroke_dashoffset_ = val; }
 
   template<class IRI>

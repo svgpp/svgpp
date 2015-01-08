@@ -100,7 +100,7 @@ struct feMerge: FilterElementBase
 struct feFlood: FilterElementBase
 {
   feFlood()
-    : flood_color_(0, 0, 0)
+    : flood_color_(BlackColor())
     , flood_opacity_(1.0)
   {}
 

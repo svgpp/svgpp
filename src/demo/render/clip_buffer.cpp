@@ -318,10 +318,13 @@ namespace
 #elif defined(RENDERER_GDIPLUS)
       transform_.Translate(x_, y_);
 #endif
+#if !defined(RENDERER_SKIA) 
+      // TODO:
       document_traversal::load_referenced_element<
         svgpp::referencing_element<svgpp::tag::element::use_>,
         svgpp::expected_elements<svgpp::traits::shape_elements>
       >::load(element, static_cast<ElementBase &>(*this));
+#endif
     }
     else
       std::cerr << "Element referenced by 'use' not found\n";

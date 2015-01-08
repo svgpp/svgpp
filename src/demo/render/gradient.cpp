@@ -35,8 +35,8 @@ public:
 
   void on_exit_element();
 
-  void set(svgpp::tag::attribute::offset, double val)
-  { data_.offset_ = std::min(1.0, std::max(0.0, val)); }
+  void set(svgpp::tag::attribute::offset, number_t val)
+  { data_.offset_ = std::min(number_t(1), std::max(number_t(0), val)); }
 
   void set(svgpp::tag::attribute::stop_color, svgpp::tag::value::inherit)
   {} // TODO
@@ -47,8 +47,8 @@ public:
   void set(svgpp::tag::attribute::stop_color, color_t color, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
   { data_.color_ = color; }
 
-  void set(svgpp::tag::attribute::stop_opacity, double val)
-  { opacity_ = std::min(1.0, std::max(0.0, val)); }
+  void set(svgpp::tag::attribute::stop_opacity, number_t val)
+  { opacity_ = std::min(number_t(1), std::max(number_t(0), val)); }
 
   void set(svgpp::tag::attribute::stop_opacity, svgpp::tag::value::inherit)
   {} // TODO
@@ -56,7 +56,7 @@ public:
 private:
   GradientBaseContext & parent_;
   GradientStop data_;
-  double opacity_;
+  number_t opacity_;
 };
 
 class GradientBaseContext
@@ -79,8 +79,16 @@ public:
     data_.stops_.push_back(stop);
   }
 
-  void transform_matrix(const boost::array<double, 6> & matrix)
-  { data_.matrix_ = matrix; }
+  void transform_matrix(const boost::array<number_t, 6> & matrix)
+  { 
+#if defined(RENDERER_SKIA)
+    SkMatrix m;
+    m.setAffine(matrix.data());
+    data_.matrix_ = m;
+#else
+    data_.matrix_ = matrix; 
+#endif
+  }
 
   template<class StringRange>
   void set(svgpp::tag::attribute::id, StringRange const & str)
@@ -95,13 +103,25 @@ public:
   { data_.useObjectBoundingBox_ = true; }
 
   void set(svgpp::tag::attribute::spreadMethod, svgpp::tag::value::pad)
+#if defined(RENDERER_SKIA)
+  { data_.spreadMethod_ = SkShader::kClamp_TileMode; }
+#else
   { data_.spreadMethod_ = GradientBase::spreadPad; }
+#endif
 
   void set(svgpp::tag::attribute::spreadMethod, svgpp::tag::value::reflect)
+#if defined(RENDERER_SKIA)
+  { data_.spreadMethod_ = SkShader::kMirror_TileMode; }
+#else
   { data_.spreadMethod_ = GradientBase::spreadReflect; }
+#endif
 
   void set(svgpp::tag::attribute::spreadMethod, svgpp::tag::value::repeat)
+#if defined(RENDERER_SKIA)
+  { data_.spreadMethod_ = SkShader::kRepeat_TileMode; }
+#else
   { data_.spreadMethod_ = GradientBase::spreadRepeat; }
+#endif
 
   bool notify(afterGradientUnitsTag)
   { 
@@ -125,6 +145,8 @@ void GradientStopContext::on_exit_element()
   data_.color_.opacity(opacity_);
 #elif defined(RENDERER_GDIPLUS)
   data_.color_ = Gdiplus::Color(opacity_ * 255, data_.color_.GetR(), data_.color_.GetG(), data_.color_.GetB());
+#elif defined(RENDERER_SKIA)
+  data_.color_ = SkColorSetA(data_.color_, opacity_ * 255);
 #endif
   parent_.addStop(data_);
 }
@@ -148,16 +170,16 @@ public:
 
   using GradientBaseContext::set;
 
-  void set(svgpp::tag::attribute::x1, double val)
+  void set(svgpp::tag::attribute::x1, number_t val)
   { data_.x1_ = val; }
 
-  void set(svgpp::tag::attribute::y1, double val)
+  void set(svgpp::tag::attribute::y1, number_t val)
   { data_.y1_ = val; }
 
-  void set(svgpp::tag::attribute::x2, double val)
+  void set(svgpp::tag::attribute::x2, number_t val)
   { data_.x2_ = val; x2_set_ = true; }
 
-  void set(svgpp::tag::attribute::y2, double val)
+  void set(svgpp::tag::attribute::y2, number_t val)
   { data_.y2_ = val; }
 
 private:
@@ -199,19 +221,19 @@ public:
 
   using GradientBaseContext::set;
 
-  void set(svgpp::tag::attribute::cx, double val)
+  void set(svgpp::tag::attribute::cx, number_t val)
   { cx_set_ = true; data_.cx_ = val; }
 
-  void set(svgpp::tag::attribute::cy, double val)
+  void set(svgpp::tag::attribute::cy, number_t val)
   { cy_set_ = true; data_.cy_ = val; }
 
-  void set(svgpp::tag::attribute::r, double val)
+  void set(svgpp::tag::attribute::r, number_t val)
   { r_set_ = true; data_.r_ = val; }
 
-  void set(svgpp::tag::attribute::fx, double val)
+  void set(svgpp::tag::attribute::fx, number_t val)
   { fx_set_ = true; data_.fx_ = val; }
 
-  void set(svgpp::tag::attribute::fy, double val)
+  void set(svgpp::tag::attribute::fy, number_t val)
   { fy_set_ = true; data_.fy_ = val; }
 
 private:
@@ -271,6 +293,7 @@ boost::optional<Gradient> Gradients::get(
     {
       GradientContext gradient_context(length_factory);
       svgpp::document_traversal<
+        svgpp::number_type<number_t>,
         svgpp::context_factories<gradient_context_factories>,
         svgpp::color_factory<color_factory_t>,
         svgpp::attribute_traversal_policy<attribute_traversal>,
@@ -311,6 +334,6 @@ boost::optional<Gradient> Gradients::get(
       std::cerr << "Error loading paint \"" << std::string(id.begin(), id.end()) << "\": " << e.what() << "\n";
     }
   }
+
   return boost::optional<Gradient>();
 }
-

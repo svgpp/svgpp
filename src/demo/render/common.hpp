@@ -1,6 +1,6 @@
 #pragma once
 
-#define BOOST_PARAMETER_MAX_ARITY 15
+#define BOOST_PARAMETER_MAX_ARITY 17
 
 #if defined(RENDERER_AGG)
 #include <agg_color_rgba.h>
@@ -12,6 +12,8 @@
 #undef max
 #undef small
 #include <vector>
+#elif defined(RENDERER_SKIA)
+#include <SkPaint.h>
 #endif
 
 #include <svgpp/factory/integer_color.hpp>
@@ -24,12 +26,15 @@
 # include "parser_libxml.hpp"
 #elif defined(SVG_PARSER_XERCES)
 # include "parser_xerces.hpp"
+#else
+#error One of XML parsers must be set with SVG_PARSER_xxxx macro
 #endif
 #include <boost/function.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <map>
 
 #if defined(RENDERER_AGG)
+typedef double number_t;
 typedef agg::trans_affine transform_t;
 typedef agg::rgba8 color_t;
 
@@ -46,7 +51,9 @@ struct color_factory_base_t
     return color_type(r, g, b);
   }
 };
+typedef svgpp::factory::color::percentage_adapter<color_factory_base_t> color_factory_t;
 #elif defined(RENDERER_GDIPLUS)
+typedef Gdiplus::REAL number_t;
 typedef Gdiplus::Matrix transform_t;
 typedef Gdiplus::Color color_t;
 
@@ -63,10 +70,30 @@ struct color_factory_base_t
     return color_type(r, g, b);
   }
 };
+typedef svgpp::factory::color::percentage_adapter<color_factory_base_t> color_factory_t;
+#elif defined(RENDERER_SKIA)
+typedef SkScalar number_t;
+typedef SkMatrix transform_t;
+typedef SkColor color_t;
+
+inline color_t BlackColor() { return SK_ColorBLACK; }
+inline color_t TransparentBlackColor() { return SK_ColorTRANSPARENT; }
+inline color_t TransparentWhiteColor() { return 0x00FFFFFF; }
+
+struct color_policy
+{
+  static const SkColor preset_bits = 0xFF000000;
+  static const SkColor r_offset = 16;
+  static const SkColor g_offset = 8;
+  static const SkColor b_offset = 0;
+};
+
+typedef svgpp::factory::color::integer<SkColor, color_policy> color_factory_t;
+#else
+#error One of renderers must be set with RENDERER_xxxx macro
 #endif
 
-typedef svgpp::factory::color::percentage_adapter<color_factory_base_t> color_factory_t;
-typedef svgpp::factory::length::unitless<> length_factory_t;
+typedef svgpp::factory::length::unitless<number_t, number_t> length_factory_t;
 typedef boost::tuple<double, double, double, double> bounding_box_t;
 typedef boost::function<bounding_box_t()> get_bounding_box_func_t;
 
