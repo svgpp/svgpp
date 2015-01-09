@@ -37,7 +37,8 @@ Take a look at :ref:`Tutorial <tutorial>` to get the idea about what it is.
 
 **SVG++ is NOT**
 
-* An SVG viewer or library that produces raster image from SVG (though some demo app with such functionality included)
+* An SVG viewer or library that produces raster image from SVG 
+  (though C++ demo app included, which renders SVG with `AGG <http://antigrain.com/>`_, GDI+ or `Skia <https://code.google.com/p/skia/>`_ graphics library)
 * Renders anything itself
 
 **Contents**
