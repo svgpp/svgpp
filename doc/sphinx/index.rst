@@ -51,5 +51,6 @@ Take a look at :ref:`Tutorial <tutorial>` to get the idea about what it is.
    overview
    reference
    advanced
+   faq
    license
    help

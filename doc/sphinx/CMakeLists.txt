@@ -10,7 +10,8 @@ add_custom_target(
     color.rst 
     document_traversal.rst
     error.rst 
-		help.rst
+    faq.rst
+    help.rst
     index.rst 
     installation.rst
     iri.rst 
