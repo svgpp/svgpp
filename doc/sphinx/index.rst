@@ -6,7 +6,8 @@ About
 
 SVG++ library can be thought of as a framework, containing parsers for various SVG syntaxes, adapters that simplify
 handling of parsed data and a lot of other utilities and helpers for the most common tasks.
-Take a look at :ref:`Tutorial <tutorial>` to get the idea about what it is.
+Take a look at :ref:`Tutorial <tutorial>` to get the idea about what it is. 
+Library sources available at https://github.com/svgpp/svgpp.
 
 **SVG++ features**
 
