@@ -191,17 +191,24 @@ struct ChildContextFactories::apply<ReferencedSymbolOrSvgContext, ElementTag, vo
 {};
 
 typedef 
-  boost::mpl::fold<
-    traits::shape_elements,
-    boost::mpl::set<
-      tag::element::svg,
-      tag::element::g,
-      tag::element::use_
-    >::type,
-    boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
+  boost::mpl::set<
+    // SVG Structural Elements
+    tag::element::svg,
+    tag::element::g,
+    tag::element::use_,
+    // SVG Shape Elements
+    tag::element::circle,
+    tag::element::ellipse,
+    tag::element::line,
+    tag::element::path,
+    tag::element::polygon,
+    tag::element::polyline,
+    tag::element::rect
   >::type processed_elements_t;
 
-// Joining some sequences from traits namespace with chosen attributes
+// This cryptic code just merges predefined sequences traits::shapes_attributes_by_element
+// and traits::viewport_attributes with tag::attribute::transform and tag::attribute::xlink::href 
+// attributes into single MPL sequence
 typedef 
   boost::mpl::fold<
     boost::mpl::protect<

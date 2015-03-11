@@ -277,14 +277,19 @@ struct ColorFactoryBase
 typedef factory::color::percentage_adapter<ColorFactoryBase> ColorFactory;
 
 typedef 
-  boost::mpl::fold<
-    traits::shape_elements,
-    boost::mpl::set<
-      tag::element::svg,
-      tag::element::g,
-      tag::element::use_
-    >::type,
-    boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
+  boost::mpl::set<
+    // SVG Structural Elements
+    tag::element::svg,
+    tag::element::g,
+    tag::element::use_,
+    // SVG Shape Elements
+    tag::element::circle,
+    tag::element::ellipse,
+    tag::element::line,
+    tag::element::path,
+    tag::element::polygon,
+    tag::element::polyline,
+    tag::element::rect
   >::type processed_elements_t;
 
 // Joining some sequences from traits namespace with chosen attributes

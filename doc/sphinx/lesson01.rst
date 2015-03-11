@@ -53,13 +53,18 @@ Library will call methods of *context*, passing the parsed data.
   };
 
   typedef 
-    boost::mpl::fold<
-      traits::shape_elements,
-      boost::mpl::set<
-        tag::element::svg,
-        tag::element::g
-      >::type,
-      boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
+    boost::mpl::set<
+      // SVG Structural Elements
+      tag::element::svg,
+      tag::element::g,
+      // SVG Shape Elements
+      tag::element::circle,
+      tag::element::ellipse,
+      tag::element::line,
+      tag::element::path,
+      tag::element::polygon,
+      tag::element::polyline,
+      tag::element::rect
     >::type processed_elements_t;
 
   void loadSvg(xml_element_t xml_root_element)
@@ -191,8 +196,8 @@ we also must append viewport attributes to the list of processed attributes::
     boost::mpl::fold<
       boost::mpl::protect<
         boost::mpl::joint_view<
-          svgpp::traits::shapes_attributes_by_element, 
-          svgpp::traits::viewport_attributes
+          traits::shapes_attributes_by_element, 
+          traits::viewport_attributes
         >
       >,
       boost::mpl::set<
@@ -200,6 +205,43 @@ we also must append viewport attributes to the list of processed attributes::
       >::type,
       boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
     >::type processed_attributes_t;
+
+Please note that this cryptic code just merges predefined sequences ``traits::shapes_attributes_by_element``
+and ``traits::viewport_attributes`` with ``tag::attribute::transform`` attribute into single MPL sequence
+equivalent to the following::
+
+  typedef boost::mpl::set<
+    // Transform attribute
+    tag::attribute::transform,
+    // Viewport attributes
+    tag::attribute::x, 
+    tag::attribute::y, 
+    tag::attribute::width, 
+    tag::attribute::height, 
+    tag::attribute::viewBox, 
+    tag::attribute::preserveAspectRatio,
+    // Shape attributes for each shape element
+    boost::mpl::pair<tag::element::path,      tag::attribute::d>,
+    boost::mpl::pair<tag::element::rect,      tag::attribute::x>,
+    boost::mpl::pair<tag::element::rect,      tag::attribute::y>,
+    boost::mpl::pair<tag::element::rect,      tag::attribute::width>, 
+    boost::mpl::pair<tag::element::rect,      tag::attribute::height>,
+    boost::mpl::pair<tag::element::rect,      tag::attribute::rx>,
+    boost::mpl::pair<tag::element::rect,      tag::attribute::ry>,
+    boost::mpl::pair<tag::element::circle,    tag::attribute::cx>,
+    boost::mpl::pair<tag::element::circle,    tag::attribute::cy>,
+    boost::mpl::pair<tag::element::circle,    tag::attribute::r>,
+    boost::mpl::pair<tag::element::ellipse,   tag::attribute::cx>,
+    boost::mpl::pair<tag::element::ellipse,   tag::attribute::cy>,
+    boost::mpl::pair<tag::element::ellipse,   tag::attribute::rx>,
+    boost::mpl::pair<tag::element::ellipse,   tag::attribute::ry>,
+    boost::mpl::pair<tag::element::line,      tag::attribute::x1>,
+    boost::mpl::pair<tag::element::line,      tag::attribute::y1>,
+    boost::mpl::pair<tag::element::line,      tag::attribute::x2>,
+    boost::mpl::pair<tag::element::line,      tag::attribute::y2>,
+    boost::mpl::pair<tag::element::polyline,  tag::attribute::points>,
+    boost::mpl::pair<tag::element::polygon,   tag::attribute::points>
+  >::type processed_attributes_t;
 
 Now SVG++ will call the existing method ``transform_matrix`` to set new user coordinate system.
 And we must add some methods that will be passed with information about new viewport::
