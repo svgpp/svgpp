@@ -146,7 +146,7 @@ Setting appropriate XML element type for RapidXML NS parser::
 
   typedef rapidxml_ns::xml_node<> const * xml_element_t;
 
-You can find the full cpp file here: ``src/samples/sample01a.cpp``.
+You can find the full cpp file here: `src/samples/sample01a.cpp <https://github.com/svgpp/svgpp/blob/master/src/samples/sample01a.cpp>`_.
 
 Handling Transformations
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -174,7 +174,7 @@ Passed ``matrix`` array ``[a b c d e f]`` correspond to this matrix:
 
 The :ref:`default <transform-section>` SVG++ behavior is to join all transformations in ``transform`` attribute into single affine transformation matrix.
 
-Source file: ``src/samples/sample01b.cpp``.
+Source file: `src/samples/sample01b.cpp <https://github.com/svgpp/svgpp/blob/master/src/samples/sample01b.cpp>`_.
 
 Handling Viewports
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -250,7 +250,7 @@ And we must add some methods that will be passed with information about new view
   void set_viewbox_size(double viewbox_width, double viewbox_height);
   void disable_rendering();
 
-The full cpp file for this step can be found here: ``src/samples/sample01c.cpp``.
+The full cpp file for this step can be found here: `src/samples/sample01c.cpp <https://github.com/svgpp/svgpp/blob/master/src/samples/sample01c.cpp>`_.
 
 Creating Contexts
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -317,7 +317,7 @@ Lifetime of context object - until processing of element content (child elements
     context_factories<ChildContextFactories>
   >::load_document(xml_root_element, context);
 
-Source file: ``src/samples/sample01d.cpp``.
+Source file: `src/samples/sample01d.cpp <https://github.com/svgpp/svgpp/blob/master/src/samples/sample01d.cpp>`_.
 
 
 The **use** Element Support
@@ -343,7 +343,7 @@ To add support for **use** in our sample we:
     that returns size of the viewport set in referenced **use** element. 
     One of possible variant is creation of new context ``ReferencedSymbolOrSvgContext``.
 
-Full implementation is in file: ``src/samples/sample01e.cpp``.
+Full implementation is in file: `src/samples/sample01e.cpp <https://github.com/svgpp/svgpp/blob/master/src/samples/sample01e.cpp>`_.
 
 Calculating Marker Positions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -360,7 +360,7 @@ Then add *Marker Events* method to ``ShapeContext``::
 
   void marker(marker_vertex v, double x, double y, double directionality, unsigned marker_index);
 
-The sample (``src/samples/sample01f.cpp``) just shows how to get marker positions. 
+The sample (`src/samples/sample01f.cpp <https://github.com/svgpp/svgpp/blob/master/src/samples/sample01f.cpp>`_) just shows how to get marker positions. 
 To implement full marker support we also need to process 
 **marker**, **marker-start**, **marker-mid** and **marker-end** properties
 and process **marker** element (similar to processing of **use** element). 
@@ -409,7 +409,7 @@ that is why so many methods are required to receive all possible values of the p
 Default :ref:`IRI Policy <iri-section>` is used that distinguishes absolute IRIs and local IRI references 
 to fragments in same SVG document.
 
-Source code: ``src/samples/sample01g.cpp``.
+Source code: `src/samples/sample01g.cpp <https://github.com/svgpp/svgpp/blob/master/src/samples/sample01g.cpp>`_.
 
 Custom Color Factory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -442,12 +442,12 @@ from components values, that was read from SVG::
 Usage of ``factory::color::percentage_adapter`` frees us from implementing 
 ``create_from_percent`` method in our *Color Factory*.
 
-Source file: ``src/samples/sample01h.cpp``.
+Source file: `src/samples/sample01h.cpp <https://github.com/svgpp/svgpp/blob/master/src/samples/sample01h.cpp>`_.
 
 Correct Length Handling
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-On next step (``src/samples/sample01i.cpp``) of sample evolution we will add correct handling of *length*,
+On next step (`src/samples/sample01i.cpp <https://github.com/svgpp/svgpp/blob/master/src/samples/sample01i.cpp>`_) of sample evolution we will add correct handling of *length*,
 that takes in account device resolution (dpi) and changes of viewport size by **svg** and **symbol** elements, 
 that affects lengths, which are set in percent. So we:
 
