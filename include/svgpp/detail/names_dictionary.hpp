@@ -198,7 +198,9 @@ inline boost::iterator_range<element_name_to_id::value_type<SVGPP_ITER_CHAR_TYPE
 #undef SVGPP_ON
   };
   BOOST_STATIC_ASSERT(sizeof(map) / sizeof(map[0]) == element_type_count);
-  return boost::make_iterator_range(map);
+  static const boost::iterator_range<element_name_to_id::value_type<SVGPP_ITER_CHAR_TYPE> const *> range 
+    = boost::make_iterator_range(map);
+  return range;
 }
 
 template<>
@@ -214,7 +216,9 @@ inline boost::iterator_range<svg_attribute_name_to_id::value_type<SVGPP_ITER_CHA
 #undef SVGPP_ON_STYLE
 #undef SVGPP_ON_NS
   };
-  return boost::make_iterator_range(map);
+  static const boost::iterator_range<svg_attribute_name_to_id::value_type<SVGPP_ITER_CHAR_TYPE> const *> range 
+    = boost::make_iterator_range(map);
+  return range;
 }
 
 template<>
@@ -235,7 +239,9 @@ inline boost::iterator_range<xlink_attribute_name_to_id::value_type<SVGPP_ITER_C
 #undef SVGPP_ON_NS_xml
   };
   BOOST_STATIC_ASSERT(sizeof(map) / sizeof(map[0]) == 7);
-  return boost::make_iterator_range(map);
+  static const boost::iterator_range<xlink_attribute_name_to_id::value_type<SVGPP_ITER_CHAR_TYPE> const *> range 
+    = boost::make_iterator_range(map);
+  return range;
 }
 
 template<>
@@ -256,7 +262,9 @@ inline boost::iterator_range<xml_attribute_name_to_id::value_type<SVGPP_ITER_CHA
 #undef SVGPP_ON_NS_xml
   };
   BOOST_STATIC_ASSERT(sizeof(map) / sizeof(map[0]) == 3);
-  return boost::make_iterator_range(map);
+  static const boost::iterator_range<xml_attribute_name_to_id::value_type<SVGPP_ITER_CHAR_TYPE> const *> range 
+    = boost::make_iterator_range(map);
+  return range;
 }
 
 template<>
@@ -273,7 +281,9 @@ inline boost::iterator_range<css_property_name_to_id::value_type<SVGPP_ITER_CHAR
 #undef SVGPP_ON_STYLE
   };
   BOOST_STATIC_ASSERT(sizeof(map) / sizeof(map[0]) == styling_attribute_count);
-  return boost::make_iterator_range(map);
+  static const boost::iterator_range<css_property_name_to_id::value_type<SVGPP_ITER_CHAR_TYPE> const *> range 
+    = boost::make_iterator_range(map);
+  return range;
 }
 
 #undef SVGPP_ITER_CHAR_TYPE

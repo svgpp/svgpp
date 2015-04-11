@@ -56,7 +56,8 @@ private:
     for(;;)
     {
       bool skip = false;
-      IteratorT name_begin = end_, name_end;
+      IteratorT name_begin = end_, 
+        name_end = end_; // not used, suppressing "uninitialized" warning
       for(; it_ != end_; ++it_)
       {
         switch (*it_)
@@ -74,7 +75,8 @@ private:
           }
           else
           {
-            IteratorT value_begin = end_, value_end;
+            IteratorT value_begin = end_, 
+              value_end = end_; // not used, suppressing "uninitialized" warning
             for(++it_; it_ != end_ && !skip && *it_ != ';'; ++it_)
               switch (*it_)
               {
