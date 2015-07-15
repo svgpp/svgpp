@@ -31,13 +31,6 @@ public:
     typename length_policy_t::length_factory_type & converter 
       = length_policy_t::length_factory(length_policy_context::get(context));
 
-    Coordinate ref_x = converter.length_to_user_coordinate(
-      ref_x_ ? *ref_x_ : converter.create_length(0, tag::length_units::none()),
-      tag::length_dimension::width());
-    Coordinate ref_y = converter.length_to_user_coordinate(
-      ref_y_ ? *ref_y_ : converter.create_length(0, tag::length_units::none()),
-      tag::length_dimension::height());
-
     Coordinate marker_width = converter.length_to_user_coordinate(
       marker_width_
         ? *marker_width_
@@ -71,6 +64,21 @@ public:
       if (this->viewbox_->template get<2>() < 0 || this->viewbox_->template get<3>() < 0)
         return error_policy::policy::negative_value(error_policy::get(context), tag::attribute::viewBox());
 
+      viewport_events::policy::set_viewbox_size(viewport_events::get(context), 
+        this->viewbox_->template get<2>(), this->viewbox_->template get<3>());
+    }
+
+    // Issue #34: refX and refY should be converted after set_viewbox_size is called,
+    // because it may change viewport size and coefficients for length in percent
+    Coordinate ref_x = converter.length_to_user_coordinate(
+      ref_x_ ? *ref_x_ : converter.create_length(0, tag::length_units::none()),
+      tag::length_dimension::width());
+    Coordinate ref_y = converter.length_to_user_coordinate(
+      ref_y_ ? *ref_y_ : converter.create_length(0, tag::length_units::none()),
+      tag::length_dimension::height());
+
+    if (this->viewbox_)
+    {
       Coordinate translate_x, translate_y, scale_x, scale_y;
       boost::apply_visitor(
         typename base_type::template options_visitor<typename length_policy_t::length_factory_type>(*this->viewbox_,
@@ -81,8 +89,6 @@ public:
       Coordinate dy = -ref_y * scale_y - translate_y;
       viewport_events::policy::set_viewport(viewport_events::get(context), dx, dy, marker_width, marker_height);
       viewport_events::policy::set_viewbox_transform(viewport_events::get(context), translate_x, translate_y, scale_x, scale_y, this->defer_);
-      viewport_events::policy::set_viewbox_size(viewport_events::get(context), 
-        this->viewbox_->template get<2>(), this->viewbox_->template get<3>());
     }
     else
       viewport_events::policy::set_viewport(viewport_events::get(context), -ref_x, -ref_y, marker_width, marker_height);
