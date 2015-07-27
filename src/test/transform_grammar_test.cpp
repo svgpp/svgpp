@@ -2,6 +2,8 @@
 
 #include <gtest/gtest.h>
 
+namespace
+{
 struct test_transform_context
 {
   inline void transform_matrix(boost::array<double, 6> const & m)
@@ -55,12 +57,26 @@ struct test_transform_context
 private:
   std::ostringstream log_;
 };
+}
 
-TEST(transform_grammar, t1)
+using boost::phoenix::ref;
+using namespace svgpp;
+
+typedef svgpp::transform_grammar<std::string::const_iterator, test_transform_context> grammar_t;
+
+#ifdef SVGPP_STRICT_TRANSFORM_SEPARATOR
+#define TEST_PREFIX(n) strict##n
+#else
+#define TEST_PREFIX(n) t##n
+#endif
+
+TEST(transform_grammar, TEST_PREFIX(1))
 {
-  using boost::phoenix::ref;
-  using namespace svgpp;
+#ifdef SVGPP_STRICT_TRANSFORM_SEPARATOR
   std::string const testStr("translate(-10,-20) scale(2), ,rotate(45),translate(5,10)  matrix(1 2 3 4,5 ,6) translate(5.4),,rotate( 67.2,345,768) scale (-98 99e2 ) skewX(3.2) skewY(999)");
+#else
+  std::string const testStr("translate(-10,-20)scale(2), ,rotate(45),translate(5,10)  matrix(1 2 3 4,5 ,6) translate(5.4),,rotate( 67.2,345,768) scale (-98 99e2 ) skewX(3.2)skewY(999)");
+#endif
   test_transform_context expected;
   expected.transform_translate(-10, -20);
   expected.transform_scale(2);
@@ -76,26 +92,43 @@ TEST(transform_grammar, t1)
 
   std::string::const_iterator first = testStr.begin();
   test_transform_context test_context;
-  svgpp::transform_grammar<std::string::const_iterator, test_transform_context> grammar;
+  grammar_t grammar;
   EXPECT_TRUE(qi::phrase_parse(first, testStr.end(), grammar(boost::phoenix::ref(test_context)), boost::spirit::ascii::space));
   EXPECT_TRUE(first == testStr.end());
   EXPECT_EQ(expected.str(), test_context.str());
-  {
-    std::string const testStr2("translate(-10,-20)scale(2)");
-    std::string::const_iterator first2 = testStr2.begin();
-    EXPECT_TRUE(!qi::phrase_parse(first2, testStr2.end(), grammar(boost::phoenix::ref(test_context)), boost::spirit::ascii::space)
-      || first2 != testStr2.end());
-  }
-  {
-    std::string const testStr2("12.3 14.7,");
-    std::string::const_iterator first2 = testStr2.begin();
-    EXPECT_TRUE(!qi::phrase_parse(first2, testStr2.end(), grammar(boost::phoenix::ref(test_context)), boost::spirit::ascii::space)
-      || first2 != testStr2.end());
-  }
-  {
-    std::string const testStr2(",12.3 14.7");
-    std::string::const_iterator first2 = testStr2.begin();
-    EXPECT_TRUE(!qi::phrase_parse(first2, testStr2.end(), grammar(boost::phoenix::ref(test_context)), boost::spirit::ascii::space)
-      || first2 != testStr2.end());
-  }
+}
+
+TEST(transform_grammar, TEST_PREFIX(2))
+{
+  std::string const testStr("translate(-10,-20)scale(2)");
+  std::string::const_iterator first = testStr.begin();
+  test_transform_context test_context;
+  grammar_t grammar;
+  bool parse_result = qi::phrase_parse(first, testStr.end(), grammar(boost::phoenix::ref(test_context)), boost::spirit::ascii::space);
+#ifdef SVGPP_STRICT_TRANSFORM_SEPARATOR
+  EXPECT_TRUE(!parse_result || first != testStr.end());
+#else
+  EXPECT_TRUE(parse_result);
+  EXPECT_TRUE(first == testStr.end());
+#endif
+}
+
+TEST(transform_grammar, TEST_PREFIX(3))
+{
+  std::string const testStr("12.3 14.7,");
+  std::string::const_iterator first = testStr.begin();
+  test_transform_context test_context;
+  grammar_t grammar;
+  EXPECT_TRUE(!qi::phrase_parse(first, testStr.end(), grammar(boost::phoenix::ref(test_context)), boost::spirit::ascii::space)
+    || first != testStr.end());
+}
+
+TEST(transform_grammar, TEST_PREFIX(4))
+{
+  std::string const testStr(",12.3 14.7");
+  std::string::const_iterator first = testStr.begin();
+  test_transform_context test_context;
+  grammar_t grammar;
+  EXPECT_TRUE(!qi::phrase_parse(first, testStr.end(), grammar(boost::phoenix::ref(test_context)), boost::spirit::ascii::space)
+    || first != testStr.end());
 }

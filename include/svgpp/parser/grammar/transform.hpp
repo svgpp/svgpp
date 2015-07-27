@@ -52,7 +52,13 @@ public:
               | skewX(_r1)
               | skewY(_r1)
               )
-              % (+no_skip[comma_wsp]));
+              % 
+#ifdef SVGPP_STRICT_TRANSFORM_SEPARATOR
+                (+no_skip[comma_wsp])
+#else
+                (*lit(','))
+#endif
+            );
 
     matrix 
         =   ( lit("matrix") 

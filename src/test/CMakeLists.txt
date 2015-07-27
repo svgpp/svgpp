@@ -45,6 +45,7 @@ add_executable( ParserGTest
   preserveAspectRatio_test.cpp 
   #supported_value_parsers_test.cpp 
   transform_grammar_test.cpp 
+  transform_strict_grammar_test.cpp 
   urange_grammar_test.cpp 
   value_parser_test.cpp
   value_parser_length_test.cpp 
