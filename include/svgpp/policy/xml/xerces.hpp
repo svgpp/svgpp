@@ -206,7 +206,7 @@ struct element_iterator<xercesc::DOMNode const *>
     return child;
   }
 
-  static iterator_type get_child_elements_and_texts(iterator_type const & xml_node, iterator_type & out_it)
+  static iterator_type get_child_elements_and_texts(iterator_type const & xml_node)
   {
     iterator_type child = xml_node->getFirstChild();
     if (child)

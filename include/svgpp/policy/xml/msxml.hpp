@@ -355,7 +355,7 @@ struct element_iterator<msxml_detail::node_ptr>:
       return iterator_type();
   }
 
-  static iterator_type get_child_elements_and_texts(iterator_type const & xml_node, iterator_type & out_it)
+  static iterator_type get_child_elements_and_texts(iterator_type const & xml_node)
   {
     SVGPP_MSXML_NAMESPACE::IXMLDOMNode * first_child = NULL;
     if (S_OK == xml_node->get_firstChild(&first_child))
