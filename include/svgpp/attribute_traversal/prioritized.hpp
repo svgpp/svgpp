@@ -28,6 +28,11 @@
 #include <boost/type_traits/is_same.hpp>
 #include <boost/parameter.hpp>
 
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable: 4127) // conditional expression is constant
+#endif
+
 namespace svgpp
 {
 
@@ -450,3 +455,7 @@ private:
 };
 
 }
+
+#ifdef _MSC_VER
+# pragma warning(pop)
+#endif

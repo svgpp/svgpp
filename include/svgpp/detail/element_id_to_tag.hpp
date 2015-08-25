@@ -14,6 +14,11 @@
 #include <boost/mpl/has_key.hpp>
 #include <boost/utility/enable_if.hpp>
 
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable: 4127) // conditional expression is constant
+#endif
+
 namespace svgpp { namespace detail 
 {
 
@@ -59,3 +64,6 @@ bool id_to_element_tag(element_type_id id, F & fn)
 
 }}
 
+#ifdef _MSC_VER
+# pragma warning(pop)
+#endif

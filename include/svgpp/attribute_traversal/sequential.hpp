@@ -17,6 +17,11 @@
 #include <svgpp/detail/names_dictionary.hpp>
 #include <boost/mpl/if.hpp>
 
+#ifdef _MSC_VER
+# pragma warning(push)
+# pragma warning(disable: 4127) // conditional expression is constant
+#endif
+
 namespace svgpp
 {
 
@@ -116,3 +121,7 @@ private:
 };
 
 }
+
+#ifdef _MSC_VER
+# pragma warning(pop)
+#endif
