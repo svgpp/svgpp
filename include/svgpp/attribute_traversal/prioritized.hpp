@@ -81,6 +81,15 @@ namespace traversal_detail
     }
   };
 
+  template<class State, class EventTag>
+  struct is_attribute_id_in_sequence_op<State, notify_context<EventTag> >
+  {
+    static bool check_attribute(detail::attribute_id id)
+    {
+      return State::check_attribute(id);
+    }
+  };
+
   struct is_attribute_id_in_sequence_start
   {
     BOOST_CONSTEXPR static bool check_attribute(detail::attribute_id)

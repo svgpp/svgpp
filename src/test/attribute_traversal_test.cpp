@@ -9,6 +9,7 @@
 namespace
 {
   struct after_viewport_attributes_tag {};
+  struct before_deferred_attributes_tag {};
 
   class traversal_context
   {
@@ -52,6 +53,12 @@ namespace
       log_ << "viewport_attributes_loaded\n";
       return true;
     }
+
+    bool notify(before_deferred_attributes_tag)
+    {
+      log_ << "before_deferred_attributes\n";
+      return true;
+    }
   };
 
   char const xml1[] = 
@@ -74,7 +81,10 @@ namespace
     > get_priority_attributes_by_element;
 
     typedef boost::mpl::always<
-      svgpp::traits::document_event_attributes
+      boost::mpl::joint_view<
+        boost::mpl::single_view<svgpp::notify_context<before_deferred_attributes_tag> >,
+        svgpp::traits::document_event_attributes
+      >::type
     > get_deferred_attributes_by_element;
   };
 
@@ -111,6 +121,7 @@ TEST(AttributeTraversal, Prioritized)
     sample_context.load_attribute(attribute_id_font_weight, boost::as_literal("fw value"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_baseline_shift, boost::as_literal("style value"), tag::source::css());
     sample_context.load_attribute(attribute_id_fill, boost::as_literal("fill value"), tag::source::css());
+    sample_context.notify(before_deferred_attributes_tag());
     sample_context.load_attribute(attribute_id_onunload, boost::as_literal("call_onunload()"), tag::source::attribute());
     EXPECT_EQ(sample_context.str(), context.str());
   }
@@ -138,6 +149,7 @@ TEST(AttributeTraversal, Prioritized_Without_Style)
     sample_context.load_attribute(attribute_id_font_weight, boost::as_literal("fw value"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_baseline_shift, boost::as_literal("attr value"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_style, boost::as_literal("baseline-shift:style value;fill: fill value ;"), tag::source::attribute());
+    sample_context.notify(before_deferred_attributes_tag());
     sample_context.load_attribute(attribute_id_onunload, boost::as_literal("call_onunload()"), tag::source::attribute());
     EXPECT_EQ(sample_context.str(), context.str());
   }
