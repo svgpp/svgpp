@@ -77,7 +77,7 @@ namespace traversal_detail
   {
     static bool check_attribute(detail::attribute_id id)
     {
-      return AttributeTag::id == id || State::check_attribute(id);
+      return AttributeTag::attribute_id == id || State::check_attribute(id);
     }
   };
 

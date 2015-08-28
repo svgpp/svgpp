@@ -55,7 +55,7 @@ namespace
   };
 
   char const xml1[] = 
-    TEXT(<some_element x="11" y="12" style="baseline-shift:style value;fill: fill value ;" baseline-shift="attr value" font-weight="fw value" />)
+    TEXT(<some_element onunload="call_onunload()" x="11" y="12" style="baseline-shift:style value;fill: fill value ;" baseline-shift="attr value" font-weight="fw value" />)
     ;
 }
 
@@ -72,6 +72,10 @@ namespace
           svgpp::traits::font_selection_attributes
       >::type
     > get_priority_attributes_by_element;
+
+    typedef boost::mpl::always<
+      svgpp::traits::document_event_attributes
+    > get_deferred_attributes_by_element;
   };
 
   struct traversal_policy_wo_style: traversal_policy
@@ -107,6 +111,7 @@ TEST(AttributeTraversal, Prioritized)
     sample_context.load_attribute(attribute_id_font_weight, boost::as_literal("fw value"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_baseline_shift, boost::as_literal("style value"), tag::source::css());
     sample_context.load_attribute(attribute_id_fill, boost::as_literal("fill value"), tag::source::css());
+    sample_context.load_attribute(attribute_id_onunload, boost::as_literal("call_onunload()"), tag::source::attribute());
     EXPECT_EQ(sample_context.str(), context.str());
   }
 }
@@ -133,6 +138,7 @@ TEST(AttributeTraversal, Prioritized_Without_Style)
     sample_context.load_attribute(attribute_id_font_weight, boost::as_literal("fw value"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_baseline_shift, boost::as_literal("attr value"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_style, boost::as_literal("baseline-shift:style value;fill: fill value ;"), tag::source::attribute());
+    sample_context.load_attribute(attribute_id_onunload, boost::as_literal("call_onunload()"), tag::source::attribute());
     EXPECT_EQ(sample_context.str(), context.str());
   }
 }
@@ -153,6 +159,7 @@ TEST(AttributeTraversal, Sequential)
     using namespace svgpp;
     using namespace svgpp::detail;
     traversal_context sample_context;
+    sample_context.load_attribute(attribute_id_onunload, boost::as_literal("call_onunload()"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_x, boost::as_literal("11"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_y, boost::as_literal("12"), tag::source::attribute());
     sample_context.load_attribute(attribute_id_baseline_shift, boost::as_literal("style value"), tag::source::css());
