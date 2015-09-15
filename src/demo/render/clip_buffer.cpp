@@ -40,7 +40,7 @@ boost::gil::gray8c_view_t ClipBuffer::gilView() const
     reinterpret_cast<const boost::gil::gray8_pixel_t *>(&buffer_[0]), width_);
 }
 
-void ClipBuffer::intersectClipRect(transform_t const & transform, double x, double y, double width, double height)
+void ClipBuffer::intersectClipRect(transform_t const & transform, number_t x, number_t y, number_t width, number_t height)
 {
 #if defined(RENDERER_AGG)
   typedef agg::renderer_scanline_aa_solid<renderer_base_t> renderer_t;
@@ -59,7 +59,7 @@ void ClipBuffer::intersectClipRect(transform_t const & transform, double x, doub
   rasterizer.line_to_d(0, pixfmt.height());
   rasterizer.close_polygon();
 
-  double px = x, py = y;
+  number_t px = x, py = y;
   transform.transform(&px, &py);
   rasterizer.move_to_d(px, py);
   px = x + width; py = y;
@@ -157,7 +157,7 @@ namespace
     void set(svgpp::tag::attribute::clip_rule, svgpp::tag::value::evenodd)
     { nonzero_clip_rule_ = false; }
 
-    void transform_matrix(const boost::array<double, 6> & matrix)
+    void transform_matrix(const boost::array<number_t, 6> & matrix)
     {
 #if defined(RENDERER_AGG)
       transform_.premultiply(agg::trans_affine(matrix.data()));
@@ -188,28 +188,28 @@ namespace
     {}
 
 #if defined(RENDERER_AGG)
-    void path_move_to(double x, double y, svgpp::tag::coordinate::absolute const &)
+    void path_move_to(number_t x, number_t y, svgpp::tag::coordinate::absolute const &)
     { 
       path_storage_.move_to(x, y);
     }
 
-    void path_line_to(double x, double y, svgpp::tag::coordinate::absolute const &)
+    void path_line_to(number_t x, number_t y, svgpp::tag::coordinate::absolute const &)
     { 
       path_storage_.line_to(x, y);
     }
 
     void path_cubic_bezier_to(
-      double x1, double y1, 
-      double x2, double y2, 
-      double x, double y, 
+      number_t x1, number_t y1, 
+      number_t x2, number_t y2, 
+      number_t x, number_t y, 
       svgpp::tag::coordinate::absolute const &)
     { 
       path_storage_.curve4(x1, y1, x2, y2, x, y);
     }
 
     void path_quadratic_bezier_to(
-      double x1, double y1, 
-      double x, double y, 
+      number_t x1, number_t y1, 
+      number_t x, number_t y, 
       svgpp::tag::coordinate::absolute const &)
     { 
       path_storage_.curve3(x1, y1, x, y);
@@ -275,15 +275,15 @@ namespace
     void set(svgpp::tag::attribute::xlink::href, IRI const & fragment)
     { std::cerr << "External references aren't supported\n"; }
 
-    void set(svgpp::tag::attribute::x, double val)
+    void set(svgpp::tag::attribute::x, number_t val)
     { x_ = val; }
 
-    void set(svgpp::tag::attribute::y, double val)
+    void set(svgpp::tag::attribute::y, number_t val)
     { y_ = val; }
 
   private:
     svg_string_t fragment_id_;
-    double x_, y_;
+    number_t x_, y_;
   };
 
   struct context_factories
@@ -305,6 +305,11 @@ namespace
   };
 
   typedef svgpp::document_traversal<
+#if defined(RENDERER_SKIA)
+    svgpp::number_type<SkScalar>,
+#elif defined(RENDERER_GDIPLUS)
+    svgpp::number_type<Gdiplus::REAL>,
+#endif
     svgpp::context_factories<context_factories>,
 		svgpp::processed_elements<processed_elements>,
 		svgpp::processed_attributes<processed_attributes>,

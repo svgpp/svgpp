@@ -108,22 +108,22 @@ inline void AssignMatrix(Gdiplus::Matrix & dest, Gdiplus::Matrix const & src)
 class PathStorage
 {
 public:
-  void path_move_to(double x, double y, svgpp::tag::coordinate::absolute const &)
+  void path_move_to(number_t x, number_t y, svgpp::tag::coordinate::absolute const &)
   { 
     path_points_.push_back(Gdiplus::PointF(x, y));
     path_types_.push_back(Gdiplus::PathPointTypeStart);
   }
 
-  void path_line_to(double x, double y, svgpp::tag::coordinate::absolute const &)
+  void path_line_to(number_t x, number_t y, svgpp::tag::coordinate::absolute const &)
   { 
     path_points_.push_back(Gdiplus::PointF(x, y));
     path_types_.push_back(Gdiplus::PathPointTypeLine);
   }
 
   void path_cubic_bezier_to(
-    double x1, double y1, 
-    double x2, double y2, 
-    double x, double y, 
+    number_t x1, number_t y1,
+    number_t x2, number_t y2,
+    number_t x, number_t y,
     svgpp::tag::coordinate::absolute const &)
   { 
     // TODO:
@@ -136,8 +136,8 @@ public:
   }
 
   void path_quadratic_bezier_to(
-    double x1, double y1, 
-    double x, double y, 
+    number_t x1, number_t y1,
+    number_t x, number_t y,
     svgpp::tag::coordinate::absolute const &)
   { 
     path_points_.push_back(Gdiplus::PointF(x1, y1));

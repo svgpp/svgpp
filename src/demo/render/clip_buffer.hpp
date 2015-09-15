@@ -12,7 +12,7 @@ public:
 
   boost::gil::gray8c_view_t gilView() const;
 
-  void intersectClipRect(transform_t const & transform, double x, double y, double width, double height);
+  void intersectClipRect(transform_t const & transform, number_t x, number_t y, number_t width, number_t height);
   void intersectClipPath(XMLDocument & xml_document, svg_string_t const & id, transform_t const & transform);
 
 private:
