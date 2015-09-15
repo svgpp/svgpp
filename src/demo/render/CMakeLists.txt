@@ -32,6 +32,7 @@ set(DEMO_SOURCES
   clip_buffer.cpp 
   filter.hpp
   filter.cpp
+  svgpp_parser_impl.cpp
 )
 
 set(AGG_DEMO_SOURCES

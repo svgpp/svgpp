@@ -1,5 +1,10 @@
 ﻿#define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 #define BOOST_MPL_LIMIT_SET_SIZE 40
+// Following defines move parts of SVG++ code to svgpp_parser_impl.cpp file
+// reducing compiler memory requirements
+#define SVGPP_USE_EXTERNAL_PATH_DATA_PARSER 1
+#define SVGPP_USE_EXTERNAL_TRANSFORM_PARSER 1
+
 #include "filter.hpp"
 
 #include <svgpp/document_traversal.hpp>

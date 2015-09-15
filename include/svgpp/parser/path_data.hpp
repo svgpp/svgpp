@@ -12,7 +12,12 @@
 #include <svgpp/adapter/path_markers.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
-#include <svgpp/parser/grammar/path_data.hpp>
+#if defined(SVGPP_USE_EXTERNAL_PATH_DATA_PARSER)
+# include <svgpp/parser/external_function/parse_path_data.hpp>
+# include <svgpp/parser/external_function/path_events_interface_proxy.hpp>
+#else
+# include <svgpp/parser/grammar/path_data.hpp>
+#endif
 
 namespace svgpp
 {
@@ -36,23 +41,35 @@ struct value_parser<tag::type::path_data, SVGPP_TEMPLATE_ARGS_PASS>
     typedef detail::bind_context_parameters_wrapper<Context, args2_t> context_t;
     typedef typename detail::unwrap_context<context_t, tag::path_events_policy> path_events_context;
     typedef detail::path_adapter_if_needed<context_t> adapted_context_t; 
+
+    context_t bound_context(context);
+    typename adapted_context_t::type path_adapter(path_events_context::get(bound_context));
+    typename adapted_context_t::adapted_context_holder adapted_path_context(adapted_context_t::adapt_context(bound_context, path_adapter));
+    iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
+#if defined(SVGPP_USE_EXTERNAL_PATH_DATA_PARSER)
+    detail::path_events_interface_proxy<
+      typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::path_events_policy>::type,
+      coordinate_t,
+      typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::path_events_policy>::policy
+    > events_interface_proxy(
+      detail::unwrap_context<typename adapted_context_t::adapted_context, tag::path_events_policy>::get(
+          adapted_path_context));
+    if (detail::parse_path_data<iterator_t, coordinate_t>(it, end, events_interface_proxy)
+      && it == end)
+#else
     typedef path_data_grammar<
       iterator_t, 
       typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::path_events_policy>::type,
       coordinate_t,
       typename detail::unwrap_context<typename adapted_context_t::adapted_context, tag::path_events_policy>::policy
     > path_data_grammar;
-
-    context_t bound_context(context);
-    typename adapted_context_t::type path_adapter(path_events_context::get(bound_context));
-    typename adapted_context_t::adapted_context_holder adapted_path_context(adapted_context_t::adapt_context(bound_context, path_adapter));
     SVGPP_STATIC_IF_SAFE const path_data_grammar grammar;
-    iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     if (qi::phrase_parse(it, end, grammar(boost::phoenix::ref(
         detail::unwrap_context<typename adapted_context_t::adapted_context, tag::path_events_policy>::get(
           adapted_path_context))), 
         typename path_data_grammar::skipper_type()) 
       && it == end)
+#endif
     {
       return true;
     }
