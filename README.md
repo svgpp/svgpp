@@ -1,4 +1,4 @@
-SVG++ library 1.0
+SVG++ library 1.1
 =======================
 
 Please visit http://svgpp.org/ for description, tutorial and reference.

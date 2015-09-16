@@ -12,7 +12,7 @@ Including ``svgpp/svgpp.hpp`` will be sufficient for most projects.
 
 Library was tested with this compilers:
 
-* Visual Studio 2010, 2012, 2013
+* Visual Studio 2010, 2012, 2013, 2015
 * GCC 4.8 (in C++11 mode it requires Boost >= 1.56)
 * Clang 3.2
 

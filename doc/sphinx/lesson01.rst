@@ -411,6 +411,11 @@ to fragments in same SVG document.
 
 Source code: `src/samples/sample01g.cpp <https://github.com/svgpp/svgpp/blob/master/src/samples/sample01g.cpp>`_.
 
+.. note::
+  ``svgpp_parser_impl.cpp`` file was added to the project and a couple of macros was added at the start of the ``sample01g.cpp`` 
+  to get around Visual C++ 2015 "compiler out of memory" problem. 
+  See :ref:`description <external-parser_section>` of this solution.
+
 Custom Color Factory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
