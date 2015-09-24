@@ -1,3 +1,5 @@
+.. _text_section:
+
 Character Data
 ====================
 

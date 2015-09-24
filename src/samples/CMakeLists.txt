@@ -20,6 +20,7 @@ add_executable( Sample01f sample01f.cpp )
 add_executable( Sample01g sample01g.cpp svgpp_parser_impl.cpp)
 add_executable( Sample01h sample01h.cpp svgpp_parser_impl.cpp)
 add_executable( Sample01i sample01i.cpp svgpp_parser_impl.cpp)
+add_executable( Sample01j sample01j.cpp svgpp_parser_impl.cpp)
 
 add_executable( SampleGradient sample_gradient.cpp )
 add_executable( SampleFilter sample_filter.cpp )

@@ -542,3 +542,23 @@ To do so we will use :ref:`get_priority_attributes_by_element <get_priority_attr
 
 Now we are sure that ``BaseContext::set_viewport`` (and ``BaseContext::set_viewbox_size``) 
 will be called before other attributes are processed.
+
+
+Text Handling
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+On the next step (`src/samples/sample01j.cpp <https://github.com/svgpp/svgpp/blob/master/src/samples/sample01j.cpp>`_) 
+we will implement basic handling of **text** elements:
+
+  * Create new ``TextContext`` child of ``BaseContext`` that will receive **text** element data.
+    ``set_text`` :ref:`method <text_section>` will be called by SVG++ to pass character data content of element::
+
+      template<class Range>
+      void set_text(Range const & text)
+      {
+        text_content_.append(boost::begin(text), boost::end(text));
+      }
+
+  * Add specialization of **ChildContextFactories** class that will create ``TextContext`` class for
+    **text** elements (``tag::element::text``).
+  * Add ``tag::element::text`` to the list of processed elements ``processed_elements_t``.
