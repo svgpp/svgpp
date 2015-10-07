@@ -1,1 +1,0 @@
-SET PATH=C:\Program Files (x86)\CMake\bin\;%PATH%
