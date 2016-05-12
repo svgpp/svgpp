@@ -22,7 +22,9 @@
   </target>
     
   <target name="compile" depends="run_cmake">
-    <exec executable="make" dir="${build_dir}" failonerror="true"/>
+    <exec executable="/usr/bin/time" dir="${build_dir}" failonerror="true">
+      <arg line="-v make"/>
+    </exec>
   </target>
   
   <target name="unittests" depends="run_cmake">
