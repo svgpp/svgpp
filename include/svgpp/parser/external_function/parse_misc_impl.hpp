@@ -7,6 +7,9 @@
 
 #pragma once
 
+#include <boost/spirit/include/qi.hpp>
+#include <svgpp/config.hpp>
+#include <svgpp/parser/detail/common.hpp>
 #include <svgpp/parser/external_function/parse_misc.hpp>
 
 #define SVGPP_PARSE_MISC_IMPL(IteratorType, CoordinateType) \
