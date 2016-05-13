@@ -9,6 +9,7 @@
 
 #include <boost/optional.hpp>
 #include <boost/tuple/tuple.hpp>
+#include <boost/range/iterator_range.hpp>
 #include <svgpp/definitions.hpp>
 
 namespace svgpp { namespace detail 
