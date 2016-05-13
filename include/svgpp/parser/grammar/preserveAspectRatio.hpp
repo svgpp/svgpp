@@ -39,7 +39,7 @@ struct preserveAspectRatio_value
 
 template <class Iterator>
 class preserveAspectRatio_grammar:
-  public qi::grammar<Iterator, preserveAspectRatio_value, qi::locals<bool, preserveAspectRatio_value::align_type, bool> >
+  public qi::grammar<Iterator, preserveAspectRatio_value(), qi::locals<bool, preserveAspectRatio_value::align_type, bool> >
 {
 public:
   preserveAspectRatio_grammar()
