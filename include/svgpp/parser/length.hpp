@@ -14,9 +14,8 @@
 #include <svgpp/detail/adapt_context.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
 #include <svgpp/parser/external_function/parse_length.hpp>
-#if defined(SVGPP_USE_EXTERNAL_LENGTH_PARSER)
+#if !defined(SVGPP_USE_EXTERNAL_LENGTH_PARSER)
 # include <svgpp/parser/external_function/parse_length_impl.hpp>
-#else
 # include <svgpp/parser/grammar/length.hpp>
 #endif
 #include <svgpp/parser/detail/common.hpp>

@@ -52,6 +52,17 @@
 #include "clip_buffer.hpp"
 #include "filter.hpp"
 
+namespace boost {
+  namespace mpl {
+
+#   define BOOST_PP_ITERATION_PARAMS_1 \
+    (3,(51, 60, <boost/mpl/set/aux_/numbered.hpp>))
+#   include BOOST_PP_ITERATE()
+
+  }
+}
+
+
 class Transformable;
 class Canvas;
 class Path;
@@ -192,29 +203,54 @@ template<class ElementTag>
 struct child_context_factories::apply<Marker, ElementTag, void>: child_context_factories::apply<Canvas, ElementTag>
 {};
 
-typedef boost::mpl::set<
-  svgpp::tag::element::svg,
-  svgpp::tag::element::g,
-  svgpp::tag::element::switch_,
-  svgpp::tag::element::a,
-  svgpp::tag::element::use_,
-  svgpp::tag::element::path,
-  svgpp::tag::element::rect,
-  svgpp::tag::element::line,
-  svgpp::tag::element::circle,
-  svgpp::tag::element::ellipse,
-  svgpp::tag::element::polyline,
-  svgpp::tag::element::polygon
->::type processed_elements;
-
-typedef boost::mpl::fold<
-  boost::mpl::protect<
-    boost::mpl::joint_view<
-      svgpp::traits::shapes_attributes_by_element, 
-      svgpp::traits::viewport_attributes
+struct processed_elements
+  : boost::mpl::set<
+      svgpp::tag::element::svg,
+      svgpp::tag::element::g,
+      svgpp::tag::element::switch_,
+      svgpp::tag::element::a,
+      svgpp::tag::element::use_,
+      svgpp::tag::element::path,
+      svgpp::tag::element::rect,
+      svgpp::tag::element::line,
+      svgpp::tag::element::circle,
+      svgpp::tag::element::ellipse,
+      svgpp::tag::element::polyline,
+      svgpp::tag::element::polygon
     >
-  >,
-  boost::mpl::set<
+{};
+
+struct processed_attributes
+  : boost::mpl::set58<
+    // svgpp::traits::shapes_attributes_by_element
+    boost::mpl::pair<svgpp::tag::element::path, svgpp::tag::attribute::d>,
+    boost::mpl::pair<svgpp::tag::element::rect, svgpp::tag::attribute::x>,
+    boost::mpl::pair<svgpp::tag::element::rect, svgpp::tag::attribute::y>,
+    boost::mpl::pair<svgpp::tag::element::rect, svgpp::tag::attribute::width>,
+    boost::mpl::pair<svgpp::tag::element::rect, svgpp::tag::attribute::height>,
+    boost::mpl::pair<svgpp::tag::element::rect, svgpp::tag::attribute::rx>,
+    boost::mpl::pair<svgpp::tag::element::rect, svgpp::tag::attribute::ry>,
+    boost::mpl::pair<svgpp::tag::element::circle, svgpp::tag::attribute::cx>,
+    boost::mpl::pair<svgpp::tag::element::circle, svgpp::tag::attribute::cy>,
+    boost::mpl::pair<svgpp::tag::element::circle, svgpp::tag::attribute::r>,
+    boost::mpl::pair<svgpp::tag::element::ellipse, svgpp::tag::attribute::cx>,
+    boost::mpl::pair<svgpp::tag::element::ellipse, svgpp::tag::attribute::cy>,
+    boost::mpl::pair<svgpp::tag::element::ellipse, svgpp::tag::attribute::rx>,
+    boost::mpl::pair<svgpp::tag::element::ellipse, svgpp::tag::attribute::ry>,
+    boost::mpl::pair<svgpp::tag::element::line, svgpp::tag::attribute::x1>,
+    boost::mpl::pair<svgpp::tag::element::line, svgpp::tag::attribute::y1>,
+    boost::mpl::pair<svgpp::tag::element::line, svgpp::tag::attribute::x2>,
+    boost::mpl::pair<svgpp::tag::element::line, svgpp::tag::attribute::y2>,
+    boost::mpl::pair<svgpp::tag::element::polyline, svgpp::tag::attribute::points>,
+    boost::mpl::pair<svgpp::tag::element::polygon, svgpp::tag::attribute::points>,
+    // svgpp::traits::viewport_attributes
+    svgpp::tag::attribute::x,
+    svgpp::tag::attribute::y,
+    svgpp::tag::attribute::width,
+    svgpp::tag::attribute::height,
+    svgpp::tag::attribute::viewBox,
+    svgpp::tag::attribute::preserveAspectRatio,
+    //
     svgpp::tag::attribute::display,
     svgpp::tag::attribute::transform,
     svgpp::tag::attribute::clip_path,
@@ -247,9 +283,8 @@ typedef boost::mpl::fold<
     svgpp::tag::attribute::orient,
     svgpp::tag::attribute::overflow,
     boost::mpl::pair<svgpp::tag::element::use_, svgpp::tag::attribute::xlink::href>
-  >::type,
-  boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
->::type processed_attributes;
+  >
+{};
 
 #if defined(RENDERER_AGG)
 typedef agg::pixfmt_rgba32 pixfmt_t;
