@@ -7,11 +7,18 @@
 
 #pragma once
 
+#include <boost/mpl/if.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <svgpp/config.hpp>
 #include <svgpp/definitions.hpp>
 #include <svgpp/detail/adapt_context.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
-#include <svgpp/parser/grammar/length.hpp>
+#include <svgpp/parser/external_function/parse_length.hpp>
+#if defined(SVGPP_USE_EXTERNAL_LENGTH_PARSER)
+# include <svgpp/parser/external_function/parse_length_impl.hpp>
+#else
+# include <svgpp/parser/grammar/length.hpp>
+#endif
 #include <svgpp/parser/detail/common.hpp>
 #include <svgpp/parser/detail/finite_function_iterator.hpp>
 #include <svgpp/parser/detail/parse_list_iterator.hpp>
@@ -39,15 +46,9 @@ struct value_parser<tag::type::length, SVGPP_TEMPLATE_ARGS_PASS>
 
     typename length_policy_t::length_factory_type & length_factory 
       = length_policy_t::length_factory(length_policy_context::get(context));
-    SVGPP_STATIC_IF_SAFE const length_grammar<
-      PropertySource, 
-      iterator_t, 
-      typename length_policy_t::length_factory_type, 
-      direction_t
-    > length_grammar;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     typename length_policy_t::length_factory_type::length_type value;
-    if (boost::spirit::qi::parse(it, end, length_grammar(boost::phoenix::cref(length_factory)), value) 
+    if (detail::parse_length<direction_t, PropertySource>(length_factory, it, end, value)
       && it == end)
     {
       args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, source, value);
@@ -70,16 +71,13 @@ struct value_parser<tag::type::list_of<tag::type::length>, SVGPP_TEMPLATE_ARGS_P
     typedef typename traits::length_dimension_by_attribute<AttributeTag>::type direction_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     return parseT<
-      boost::mpl::bind<
-        boost::mpl::quote5<length_grammar>, 
-        PropertySource, iterator_t, boost::mpl::_1, direction_t, boost::mpl::_2
-      >,
-      AttributeTag, Context, AttributeValue, PropertySource>
+      detail::length_grammar_tag,
+      AttributeTag, Context, AttributeValue, PropertySource, direction_t>
       (tag, context, attribute_value, property_source);
   }
 
 protected:
-  template<class LengthGrammarFunc, class AttributeTag, class Context, class AttributeValue, class PropertySource>
+  template<class LengthGrammarTag, class AttributeTag, class Context, class AttributeValue, class PropertySource, class Direction>
   static bool parseT(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
                                     PropertySource property_source)
   {
@@ -102,13 +100,34 @@ protected:
     typedef detail::finite_function_iterator<parse_list_iterator_t> output_iterator_t;
 
     length_factory_t & length_factory = length_policy_t::length_factory(length_policy_context::get(context));
-    SVGPP_STATIC_IF_SAFE const typename boost::mpl::apply<
-      LengthGrammarFunc, 
-      length_factory_t, 
-      typename length_factory_t::number_type
-    >::type length_grammar;
     length_rule_t length_rule;
+#ifdef SVGPP_USE_EXTERNAL_LENGTH_PARSER
+    length_rule %= detail::get_length_rule<
+      Direction,
+      length_factory_t,
+      iterator_t,
+      PropertySource
+    >(LengthGrammarTag())(boost::phoenix::ref(length_factory));
+#else
+    SVGPP_STATIC_IF_SAFE const typename boost::mpl::if_<
+      boost::is_same<LengthGrammarTag, detail::length_grammar_tag>,
+      length_grammar<
+        PropertySource, 
+        iterator_t, 
+        length_factory_t, 
+        Direction,
+        typename length_factory_t::number_type
+      >,
+      percentage_or_length_css_grammar<
+        iterator_t, 
+        length_factory_t, 
+        Direction,
+        typename length_factory_t::number_type
+      >
+    >::type length_grammar;
     length_rule %= length_grammar(boost::phoenix::ref(length_factory));
+#endif
+
     SVGPP_STATIC_IF_SAFE const separator_t separator_grammar;
     parse_list_iterator_t parse_list(
       boost::begin(attribute_value), boost::end(attribute_value), 

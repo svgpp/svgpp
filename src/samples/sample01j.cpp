@@ -1,11 +1,11 @@
 #define BOOST_PARAMETER_MAX_ARITY 11
 // Following defines move parts of SVG++ code to svgpp_parser_impl.cpp file
 // reducing compiler memory requirements
-#define SVGPP_USE_EXTERNAL_PATH_DATA_PARSER 1
-#define SVGPP_USE_EXTERNAL_TRANSFORM_PARSER 1
-#define SVGPP_USE_EXTERNAL_PRESERVE_ASPECT_RATIO_PARSER 1
-#define SVGPP_USE_EXTERNAL_PAINT_PARSER 1
-#define SVGPP_USE_EXTERNAL_MISC_PARSER 1
+#define SVGPP_USE_EXTERNAL_PATH_DATA_PARSER
+#define SVGPP_USE_EXTERNAL_TRANSFORM_PARSER
+#define SVGPP_USE_EXTERNAL_PRESERVE_ASPECT_RATIO_PARSER
+#define SVGPP_USE_EXTERNAL_PAINT_PARSER
+#define SVGPP_USE_EXTERNAL_MISC_PARSER
 
 #include <rapidxml_ns/rapidxml_ns.hpp>
 #include <svgpp/policy/xml/rapidxml_ns.hpp>

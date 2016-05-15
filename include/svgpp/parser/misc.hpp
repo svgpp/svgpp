@@ -11,7 +11,6 @@
 #include <svgpp/definitions.hpp>
 #include <svgpp/parser/detail/common.hpp>
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
-#include <svgpp/parser/grammar/length.hpp>
 #include <svgpp/parser/external_function/parse_preserveAspectRatio.hpp>
 #if !defined(SVGPP_USE_EXTERNAL_PRESERVE_ASPECT_RATIO_PARSER)
 # include <svgpp/parser/external_function/parse_preserveAspectRatio_impl.hpp>
@@ -208,10 +207,6 @@ struct value_parser<tag::attribute::clip, SVGPP_TEMPLATE_ARGS_PASS>
   {
     // 'auto' and 'inherit' values must be checked outside
 
-    namespace qi = boost::spirit::qi;
-    namespace phx = boost::phoenix;
-    using qi::_1;
-
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     typedef typename boost::parameter::parameters<
@@ -221,47 +216,10 @@ struct value_parser<tag::attribute::clip, SVGPP_TEMPLATE_ARGS_PASS>
     typedef typename length_policy_context::template bind<args2_t>::type length_policy_t;
     typename length_policy_t::length_factory_type & length_factory 
       = length_policy_t::length_factory(length_policy_context::get(context));
-    SVGPP_STATIC_IF_SAFE const length_grammar<
-      PropertySource, 
-      iterator_t, 
-      typename length_policy_t::length_factory_type, 
-      tag::length_dimension::width
-    > length_grammar_x;
-    SVGPP_STATIC_IF_SAFE const length_grammar<
-      PropertySource, 
-      iterator_t, 
-      typename length_policy_t::length_factory_type, 
-      tag::length_dimension::height
-    > length_grammar_y;
 
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     typename length_policy_t::length_factory_type::length_type rect[4];
-    // Initializing with values for 'auto'
-    for(int i=0; i<4; ++i)
-      rect[i] = length_factory.create_length(0, tag::length_units::none()); 
-    const qi::rule<iterator_t> rule = 
-      detail::no_case_if_css(property_source)
-      [
-        qi::lit("rect") >> *detail::character_encoding_namespace::space >> qi::lit('(')
-        >> *detail::character_encoding_namespace::space
-        >>  ( qi::lit("auto") 
-            | length_grammar_y(phx::cref(length_factory)) [phx::ref(rect[0]) = qi::_1]
-            )
-        >> +detail::character_encoding_namespace::space
-        >>  ( qi::lit("auto")
-            | length_grammar_x(phx::cref(length_factory)) [phx::ref(rect[1]) = qi::_1]
-            )
-        >> +detail::character_encoding_namespace::space
-        >>  ( qi::lit("auto")
-            | length_grammar_y(phx::cref(length_factory)) [phx::ref(rect[2]) = qi::_1]
-            )
-        >> +detail::character_encoding_namespace::space
-        >>  ( qi::lit("auto")
-            | length_grammar_x(phx::cref(length_factory)) [phx::ref(rect[3]) = qi::_1]
-            )
-        >> *detail::character_encoding_namespace::space >> qi::lit(')')
-      ];
-    if (qi::parse(it, end, rule) && it == end)
+    if (detail::parse_clip(length_factory, it, end, property_source, rect) && it == end)
     {
       args_t::value_events_policy::set(args_t::value_events_context::get(context), 
         tag, property_source, tag::value::rect(), rect[0], rect[1], rect[2], rect[3]);
@@ -289,7 +247,7 @@ struct value_parser<tag::attribute::enable_background, SVGPP_TEMPLATE_ARGS_PASS>
 
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     coordinate_t x, y, width, height;
-    if (detail::parse_enable_background(it, end, x, y, width, height, property_source) && it == end)
+    if (detail::parse_enable_background(it, end, property_source, x, y, width, height) && it == end)
     {
       args_t::value_events_policy::set(args_t::value_events_context::get(context), 
         tag, property_source, tag::value::new_(), x, y, width, height);

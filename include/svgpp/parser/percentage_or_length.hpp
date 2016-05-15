@@ -33,14 +33,9 @@ struct value_parser<tag::type::percentage_or_length, SVGPP_TEMPLATE_ARGS_PASS>
 
     typename length_policy_t::length_factory_type & length_factory 
       = length_policy_t::length_factory(length_policy_context::get(context));
-    SVGPP_STATIC_IF_SAFE const percentage_or_length_css_grammar<
-      iterator_t, 
-      typename length_policy_t::length_factory_type, 
-      direction_t
-    > length_grammar;
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     typename length_policy_t::length_factory_type::length_type value;
-    if (boost::spirit::qi::parse(it, end, length_grammar(boost::phoenix::ref(length_factory)), value) 
+    if (detail::parse_percentage_or_length<direction_t>(length_factory, it, end, value)
       && it == end)
     {
       args_t::value_events_policy::set(args_t::value_events_context::get(context), tag, property_source, value);
@@ -65,14 +60,12 @@ struct value_parser<tag::type::list_of<tag::type::percentage_or_length>, SVGPP_T
   static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
                                     tag::source::css property_source)
   {
-    typedef typename traits::length_dimension_by_attribute<AttributeTag>::type direction_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     return base_type::template parseT<
-      boost::mpl::bind<
-        boost::mpl::quote4<percentage_or_length_css_grammar>, 
-        iterator_t, boost::mpl::_1, direction_t, boost::mpl::_2
-      >,
-      AttributeTag, Context, AttributeValue, tag::source::css>
+      detail::percentage_or_length_grammar_tag,
+      AttributeTag, Context, AttributeValue, 
+      tag::source::css, 
+      tag::length_dimension::not_width_nor_height>
       (tag, context, attribute_value, property_source);
   }
 };

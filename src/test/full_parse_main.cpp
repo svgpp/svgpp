@@ -2,6 +2,17 @@
 #include <rapidxml_ns/rapidxml_ns_utils.hpp>
 #include <boost/timer/timer.hpp>
 
+#include <svgpp/parser/external_function/parse_all_impl.hpp>
+
+SVGPP_PARSE_PATH_DATA_IMPL(char const *, double)
+SVGPP_PARSE_TRANSFORM_IMPL(char const *, double)
+SVGPP_PARSE_PAINT_IMPL(char const *, svgpp::factory::color::default_factory, svgpp::factory::icc_color::default_factory)
+SVGPP_PARSE_COLOR_IMPL(char const *, svgpp::factory::color::default_factory, svgpp::factory::icc_color::default_factory)
+SVGPP_PARSE_PRESERVE_ASPECT_RATIO_IMPL(char const *)
+SVGPP_PARSE_MISC_IMPL(char const *, double)
+SVGPP_PARSE_CLIP_IMPL(char const *, svgpp::factory::length::default_factory)
+SVGPP_PARSE_LENGTH_IMPL(char const *, svgpp::factory::length::default_factory)
+
 int main(int argc, char * argv[])
 {
   if (argc < 2)

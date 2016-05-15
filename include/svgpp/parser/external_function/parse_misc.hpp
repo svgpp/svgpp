@@ -18,9 +18,16 @@ bool parse_viewBox(Iterator & it, Iterator end, Coordinate & x, Coordinate & y, 
 template<class Iterator, class Coordinate>
 bool parse_bbox(Iterator & it, Iterator end, Coordinate & lo_x, Coordinate & lo_y, Coordinate & hi_x, Coordinate & hi_y);
 
-template<class Iterator, class Coordinate, class PropertySource>
+template<class Iterator, class PropertySource, class Coordinate>
 bool parse_enable_background(Iterator & it, Iterator end, 
-  Coordinate & x, Coordinate & y, Coordinate & w, Coordinate & h,
-  PropertySource);
+  PropertySource,
+  Coordinate & x, Coordinate & y, Coordinate & w, Coordinate & h);
+
+template<class LengthFactory, class Iterator, class PropertySource>
+bool parse_clip(
+  LengthFactory & length_factory,
+  Iterator & it, Iterator end,
+  PropertySource property_source,
+  typename LengthFactory::length_type * out_rect);
 
 }}
