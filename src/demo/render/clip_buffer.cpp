@@ -299,6 +299,18 @@ namespace
     typedef svgpp::factory::context::on_stack<Path> type;
   };
 
+  length_factory_t length_factory_instance;
+
+  struct length_policy_t
+  {
+    typedef length_factory_t const length_factory_type;
+
+    static length_factory_type & length_factory(ElementBase const &)
+    {
+      return length_factory_instance;
+    }
+  };
+
   typedef svgpp::document_traversal<
 #if defined(RENDERER_SKIA)
     svgpp::number_type<SkScalar>,
@@ -309,7 +321,8 @@ namespace
 		svgpp::processed_elements<processed_elements>,
 		svgpp::processed_attributes<processed_attributes>,
     svgpp::path_policy<path_policy>,
-    svgpp::transform_events_policy<svgpp::policy::transform_events::forward_to_method<ElementBase> >
+    svgpp::transform_events_policy<svgpp::policy::transform_events::forward_to_method<ElementBase> >,
+    svgpp::length_policy<length_policy_t>
   > document_traversal;
 
   void Use::on_exit_element()

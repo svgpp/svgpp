@@ -1118,6 +1118,21 @@ private:
   }
 };
 
+namespace
+{
+  length_factory_t length_factory_instance;
+
+  struct length_policy_t
+  {
+    typedef length_factory_t const length_factory_type;
+
+    static length_factory_type & length_factory(ElementWithRegionContext const &)
+    {
+      return length_factory_instance;
+    }
+  };
+}
+
 IFilterViewPtr Filters::get(svg_string_t const & id, length_factory_t const &, Input const & input)
 {
   try
@@ -1128,6 +1143,7 @@ IFilterViewPtr Filters::get(svg_string_t const & id, length_factory_t const &, I
       svgpp::document_traversal<
         svgpp::context_factories<context_factories>,
         svgpp::color_factory<color_factory_t>,
+        svgpp::length_policy<length_policy_t>,
         svgpp::processed_elements<
           boost::mpl::set<
             svgpp::tag::element::filter,
