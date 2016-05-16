@@ -164,13 +164,12 @@ private:
 template <
   class Iterator, 
   class LengthFactory, 
-  class PercentageDirectionTag, 
   class Number = typename LengthFactory::number_type
 >
 class percentage_or_length_css_grammar:
   public qi::grammar<Iterator, typename LengthFactory::length_type(LengthFactory const &), qi::locals<Number> >
 {
-  typedef percentage_or_length_css_grammar<Iterator, LengthFactory, PercentageDirectionTag, Number> this_type;
+  typedef percentage_or_length_css_grammar<Iterator, LengthFactory, Number> this_type;
 public:
   typedef typename LengthFactory::length_type length_type; 
 
@@ -203,7 +202,7 @@ private:
 
   static length_type call_make_length_percent(LengthFactory const & length_factory, Number value)
   {
-    return length_factory.create_length(value, tag::length_units::percent(), PercentageDirectionTag());
+    return length_factory.create_length(value, tag::length_units::percent(), tag::length_dimension::not_width_nor_height());
   }
 };
 

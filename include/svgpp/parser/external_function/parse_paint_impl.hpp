@@ -14,12 +14,12 @@
 
 #define SVGPP_PARSE_PAINT_IMPL(IteratorType, ColorFactory, IccColorFactory) \
   template bool svgpp::detail::parse_paint<ColorFactory, IccColorFactory, IteratorType, svgpp::tag::source::attribute>( \
-    IccColorFactory &, IteratorType &, IteratorType, svgpp::tag::source::attribute, \
+    IccColorFactory const &, IteratorType &, IteratorType, svgpp::tag::source::attribute, \
     svgpp::detail::paint_option &, svgpp::detail::paint_option &, \
     boost::tuple<ColorFactory::color_type, boost::optional<IccColorFactory::icc_color_type> > &, \
     boost::iterator_range<IteratorType> &); \
   template bool svgpp::detail::parse_paint<ColorFactory, IccColorFactory, IteratorType, svgpp::tag::source::css>( \
-    IccColorFactory &, IteratorType &, IteratorType, svgpp::tag::source::css, \
+    IccColorFactory const &, IteratorType &, IteratorType, svgpp::tag::source::css, \
     svgpp::detail::paint_option &, svgpp::detail::paint_option &, \
     boost::tuple<ColorFactory::color_type, boost::optional<IccColorFactory::icc_color_type> > &, \
     boost::iterator_range<IteratorType> &);
@@ -29,7 +29,7 @@ namespace svgpp { namespace detail
 
 template<class ColorFactory, class IccColorFactory, class Iterator, class PropertySource>
 bool parse_paint(
-  IccColorFactory & icc_color_factory,
+  IccColorFactory const & icc_color_factory,
   Iterator & it, Iterator end, PropertySource property_source,
   paint_option & out_main_option, paint_option & out_funciri_suboption,
   boost::tuple<

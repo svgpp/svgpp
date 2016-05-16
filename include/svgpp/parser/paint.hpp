@@ -52,7 +52,7 @@ struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
         typename color_factory_t::color_type, boost::optional<typename icc_color_factory_t::icc_color_type>
       > color;
       typename boost::iterator_range<iterator_t> iri;
-      if (detail::parse_paint<color_factory_t, icc_color_factory_t>(
+      if (detail::parse_paint<color_factory_t>(
           icc_color_policy_t::icc_color_factory(icc_color_context_t::get(context)),
           it, end, property_source,
           main_option, funciri_suboption,

@@ -15,31 +15,31 @@ namespace svgpp { namespace detail
 
 template<class Direction, class PropertySource, class LengthFactory, class Iterator>
 bool parse_length(
-  LengthFactory & length_factory,
+  LengthFactory const & length_factory,
   Iterator & it, Iterator end,
   typename LengthFactory::length_type & out_length);
 
-template<class Direction, class LengthFactory, class Iterator>
+template<class LengthFactory, class Iterator>
 bool parse_percentage_or_length(
-  LengthFactory & length_factory,
+  LengthFactory const & length_factory,
   Iterator & it, Iterator end,
   typename LengthFactory::length_type & out_length);
 
 struct length_grammar_tag {};
 struct percentage_or_length_grammar_tag {};
 
-template<class Direction, class LengthFactory, class Iterator, class PropertySource>
+template<class Direction, class Iterator, class PropertySource, class LengthFactory>
 boost::spirit::qi::grammar<
   Iterator, 
   typename LengthFactory::length_type(LengthFactory const &), 
   boost::spirit::qi::locals<typename LengthFactory::length_type> 
-> const & get_length_rule(length_grammar_tag);
+> const & get_length_rule(length_grammar_tag, LengthFactory const &);
 
-template<class Direction, class LengthFactory, class Iterator, class PropertySource>
+template<class Direction, class Iterator, class PropertySource, class LengthFactory>
 boost::spirit::qi::grammar<
   Iterator,
   typename LengthFactory::length_type(LengthFactory const &),
   boost::spirit::qi::locals<typename LengthFactory::length_type>
-> const & get_length_rule(percentage_or_length_grammar_tag);
+> const & get_length_rule(percentage_or_length_grammar_tag, LengthFactory const &);
 
 }}

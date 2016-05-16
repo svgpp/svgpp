@@ -25,10 +25,10 @@
 
 #define SVGPP_PARSE_CLIP_IMPL(IteratorType, LengthFactoryType) \
   template bool svgpp::detail::parse_clip<LengthFactoryType, IteratorType, svgpp::tag::source::css>( \
-    LengthFactoryType &, IteratorType &, IteratorType, svgpp::tag::source::css, \
+    LengthFactoryType const &, IteratorType &, IteratorType, svgpp::tag::source::css, \
     LengthFactoryType::length_type *); \
   template bool svgpp::detail::parse_clip<LengthFactoryType, IteratorType, svgpp::tag::source::attribute>( \
-    LengthFactoryType &, IteratorType &, IteratorType, svgpp::tag::source::attribute, \
+    LengthFactoryType const &, IteratorType &, IteratorType, svgpp::tag::source::attribute, \
     LengthFactoryType::length_type *); 
 
 namespace svgpp { namespace detail 
@@ -91,7 +91,7 @@ bool parse_enable_background(Iterator & it, Iterator end,
 
 template<class LengthFactory, class Iterator, class PropertySource>
 bool parse_clip(
-  LengthFactory & length_factory,
+  LengthFactory const & length_factory,
   Iterator & it, Iterator end,
   PropertySource property_source,
   typename LengthFactory::length_type * out_rect)

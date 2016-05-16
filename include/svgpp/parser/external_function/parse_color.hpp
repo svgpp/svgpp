@@ -8,6 +8,7 @@
 #pragma once
 
 #include <boost/optional.hpp>
+#include <boost/tuple/tuple.hpp>
 #include <svgpp/definitions.hpp>
 
 namespace svgpp { namespace detail 
@@ -20,7 +21,7 @@ bool parse_color(
 
 template<class ColorFactory, class IccColorFactory, class Iterator, class PropertySource>
 bool parse_color_optional_icc_color(
-  IccColorFactory & icc_color_factory,
+  IccColorFactory const & icc_color_factory,
   Iterator & it, Iterator end, PropertySource property_source,
   boost::tuple<
     typename ColorFactory::color_type, boost::optional<typename IccColorFactory::icc_color_type>

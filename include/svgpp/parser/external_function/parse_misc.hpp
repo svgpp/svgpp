@@ -25,7 +25,7 @@ bool parse_enable_background(Iterator & it, Iterator end,
 
 template<class LengthFactory, class Iterator, class PropertySource>
 bool parse_clip(
-  LengthFactory & length_factory,
+  LengthFactory const & length_factory,
   Iterator & it, Iterator end,
   PropertySource property_source,
   typename LengthFactory::length_type * out_rect);

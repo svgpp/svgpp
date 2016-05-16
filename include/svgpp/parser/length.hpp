@@ -103,10 +103,9 @@ protected:
 #ifdef SVGPP_USE_EXTERNAL_LENGTH_PARSER
     length_rule %= detail::get_length_rule<
       Direction,
-      length_factory_t,
       iterator_t,
       PropertySource
-    >(LengthGrammarTag())(boost::phoenix::ref(length_factory));
+    >(LengthGrammarTag(), length_factory)(boost::phoenix::ref(length_factory));
 #else
     SVGPP_STATIC_IF_SAFE const typename boost::mpl::if_<
       boost::is_same<LengthGrammarTag, detail::length_grammar_tag>,
@@ -120,7 +119,6 @@ protected:
       percentage_or_length_css_grammar<
         iterator_t, 
         length_factory_t, 
-        Direction,
         typename length_factory_t::number_type
       >
     >::type length_grammar;

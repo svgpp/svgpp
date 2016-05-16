@@ -26,7 +26,7 @@ namespace svgpp { namespace factory
 
   namespace icc_color
   {
-    typedef const stub default_factory;
+    typedef stub default_factory;
 
     template<class Context>
     struct by_context

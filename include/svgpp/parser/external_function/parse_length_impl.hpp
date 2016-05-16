@@ -15,37 +15,40 @@
 
 #define SVGPP_PARSE_LENGTH_IMPL(IteratorType, LengthFactoryType) \
   template bool svgpp::detail::parse_length<svgpp::tag::length_dimension::width,                 svgpp::tag::source::attribute, LengthFactoryType, IteratorType> \
-    (LengthFactoryType &, IteratorType &, IteratorType, LengthFactoryType::length_type &); \
+    (LengthFactoryType const &, IteratorType &, IteratorType, LengthFactoryType::length_type &); \
   template bool svgpp::detail::parse_length<svgpp::tag::length_dimension::height,                svgpp::tag::source::attribute, LengthFactoryType, IteratorType> \
-    (LengthFactoryType &, IteratorType &, IteratorType, LengthFactoryType::length_type &); \
+    (LengthFactoryType const &, IteratorType &, IteratorType, LengthFactoryType::length_type &); \
   template bool svgpp::detail::parse_length<svgpp::tag::length_dimension::not_width_nor_height,  svgpp::tag::source::attribute, LengthFactoryType, IteratorType> \
-    (LengthFactoryType &, IteratorType &, IteratorType, LengthFactoryType::length_type &); \
+    (LengthFactoryType const &, IteratorType &, IteratorType, LengthFactoryType::length_type &); \
   template bool svgpp::detail::parse_length<svgpp::tag::length_dimension::not_width_nor_height,  svgpp::tag::source::css,       LengthFactoryType, IteratorType> \
-    (LengthFactoryType &, IteratorType &, IteratorType, LengthFactoryType::length_type &); \
+    (LengthFactoryType const &, IteratorType &, IteratorType, LengthFactoryType::length_type &); \
+  \
+  template bool svgpp::detail::parse_percentage_or_length<LengthFactoryType, IteratorType> \
+    (LengthFactoryType const &, IteratorType &, IteratorType, LengthFactoryType::length_type &); \
   \
   template boost::spirit::qi::grammar< \
       IteratorType, LengthFactoryType::length_type(LengthFactoryType const &), \
       boost::spirit::qi::locals<LengthFactoryType::length_type> \
-    > const & svgpp::detail::get_length_rule<svgpp::tag::length_dimension::width,                LengthFactoryType, IteratorType, svgpp::tag::source::attribute>(length_grammar_tag); \
+    > const & svgpp::detail::get_length_rule<svgpp::tag::length_dimension::width,                IteratorType, svgpp::tag::source::attribute, LengthFactoryType>(length_grammar_tag, LengthFactoryType const &); \
   template boost::spirit::qi::grammar< \
       IteratorType, LengthFactoryType::length_type(LengthFactoryType const &), \
       boost::spirit::qi::locals<LengthFactoryType::length_type> \
-    > const & svgpp::detail::get_length_rule<svgpp::tag::length_dimension::height,               LengthFactoryType, IteratorType, svgpp::tag::source::attribute>(length_grammar_tag); \
+    > const & svgpp::detail::get_length_rule<svgpp::tag::length_dimension::height,               IteratorType, svgpp::tag::source::attribute, LengthFactoryType>(length_grammar_tag, LengthFactoryType const &); \
   template boost::spirit::qi::grammar< \
       IteratorType, LengthFactoryType::length_type(LengthFactoryType const &), \
       boost::spirit::qi::locals<LengthFactoryType::length_type> \
-    > const & svgpp::detail::get_length_rule<svgpp::tag::length_dimension::not_width_nor_height, LengthFactoryType, IteratorType, svgpp::tag::source::attribute>(length_grammar_tag); \
+    > const & svgpp::detail::get_length_rule<svgpp::tag::length_dimension::not_width_nor_height, IteratorType, svgpp::tag::source::attribute, LengthFactoryType>(length_grammar_tag, LengthFactoryType const &); \
   template boost::spirit::qi::grammar< \
       IteratorType, LengthFactoryType::length_type(LengthFactoryType const &), \
       boost::spirit::qi::locals<LengthFactoryType::length_type> \
-    > const & svgpp::detail::get_length_rule<svgpp::tag::length_dimension::not_width_nor_height, LengthFactoryType, IteratorType, svgpp::tag::source::css      >(length_grammar_tag); 
+    > const & svgpp::detail::get_length_rule<svgpp::tag::length_dimension::not_width_nor_height, IteratorType, svgpp::tag::source::css,       LengthFactoryType>(length_grammar_tag, LengthFactoryType const &); 
 
 namespace svgpp { namespace detail 
 {
 
 template<class Direction, class PropertySource, class LengthFactory, class Iterator>
 bool parse_length(
-  LengthFactory & length_factory,
+  LengthFactory const & length_factory,
   Iterator & it, Iterator end,
   typename LengthFactory::length_type & out_length)
 {
@@ -58,26 +61,25 @@ bool parse_length(
   return boost::spirit::qi::parse(it, end, length_grammar(boost::phoenix::cref(length_factory)), out_length);
 }
 
-template<class Direction, class LengthFactory, class Iterator>
+template<class LengthFactory, class Iterator>
 bool parse_percentage_or_length(
-  LengthFactory & length_factory,
+  LengthFactory const & length_factory,
   Iterator & it, Iterator end,
   typename LengthFactory::length_type & out_length)
 {
   SVGPP_STATIC_IF_SAFE const percentage_or_length_css_grammar<
     Iterator,
-    LengthFactory,
-    Direction
+    LengthFactory
   > length_grammar;
   return boost::spirit::qi::parse(it, end, length_grammar(boost::phoenix::cref(length_factory)), out_length);
 }
 
-template<class Direction, class LengthFactory, class Iterator, class PropertySource>
+template<class Direction, class Iterator, class PropertySource, class LengthFactory>
 boost::spirit::qi::grammar<
   Iterator,
   typename LengthFactory::length_type(LengthFactory const &),
   boost::spirit::qi::locals<typename LengthFactory::length_type>
-> const & get_length_rule(length_grammar_tag)
+> const & get_length_rule(length_grammar_tag, LengthFactory const &)
 {
   static const length_grammar<
     PropertySource,
@@ -88,18 +90,17 @@ boost::spirit::qi::grammar<
   return length_grammar;
 }
 
-template<class Direction, class LengthFactory, class Iterator, class PropertySource>
+template<class Direction, class Iterator, class PropertySource, class LengthFactory>
 boost::spirit::qi::grammar<
   Iterator,
   typename LengthFactory::length_type(LengthFactory const &),
   boost::spirit::qi::locals<typename LengthFactory::length_type>
-> const & get_length_rule(percentage_or_length_grammar_tag)
+> const & get_length_rule(percentage_or_length_grammar_tag, LengthFactory const &)
 {
   static const percentage_or_length_css_grammar<
     PropertySource,
     Iterator,
-    LengthFactory,
-    Direction
+    LengthFactory
   > length_grammar;
   return length_grammar;
 }

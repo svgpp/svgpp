@@ -27,7 +27,7 @@ enum paint_option
 
 template<class ColorFactory, class IccColorFactory, class Iterator, class PropertySource>
 bool parse_paint(
-  IccColorFactory & icc_color_factory,
+  IccColorFactory const & icc_color_factory,
   Iterator & it, Iterator end, PropertySource property_source, 
   paint_option & out_main_option, paint_option & out_funciri_suboption, 
   boost::tuple<
