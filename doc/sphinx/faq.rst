@@ -53,17 +53,29 @@ the parser produces.
 
 Before first SVG++ header is included some macro should be defined for each parser to be moved::
 
-  #define SVGPP_USE_EXTERNAL_PATH_DATA_PARSER 1
-  #define SVGPP_USE_EXTERNAL_TRANSFORM_PARSER 1
+  #define SVGPP_USE_EXTERNAL_PATH_DATA_PARSER
+  #define SVGPP_USE_EXTERNAL_TRANSFORM_PARSER
+  #define SVGPP_USE_EXTERNAL_PRESERVE_ASPECT_RATIO_PARSER
+  #define SVGPP_USE_EXTERNAL_PAINT_PARSER
+  #define SVGPP_USE_EXTERNAL_MISC_PARSER
+  #define SVGPP_USE_EXTERNAL_COLOR_PARSER
+  #define SVGPP_USE_EXTERNAL_LENGTH_PARSER
+
 
 And new source file should be added to the project that contains instantiations for some templates with 
 parameters used in the application::
 
-  #include <svgpp/parser/external_function/parse_path_data_impl.hpp>
-  #include <svgpp/parser/external_function/parse_transform_impl.hpp>
+  #include <svgpp/parser/external_function/parse_all_impl.hpp>
 
   SVGPP_PARSE_PATH_DATA_IMPL(const char *, double)
   SVGPP_PARSE_TRANSFORM_IMPL(const char *, double)
+  SVGPP_PARSE_PAINT_IMPL    (const char *, color_factory_t, svgpp::factory::icc_color::default_factory)
+  SVGPP_PARSE_COLOR_IMPL    (const char *, color_factory_t, svgpp::factory::icc_color::default_factory)
+  SVGPP_PARSE_PRESERVE_ASPECT_RATIO_IMPL(const char *)
+  SVGPP_PARSE_MISC_IMPL     (const char *, double)
+  SVGPP_PARSE_CLIP_IMPL     (const char *, length_factory_t)
+  SVGPP_PARSE_LENGTH_IMPL   (const char *, length_factory_t)
 
-First parameters to ``SVGPP_PARSE_PATH_DATA_IMPL()`` and ``SVGPP_PARSE_TRANSFORM_IMPL()`` macros are type of iterators
-that are provided by used XML parser policy. And the second parameters are *coordinate* and *number* types used.
+First parameters to ``SVGPP_PARSE_..._IMPL()`` macros are type of iterators
+that are provided by used XML parser policy. 
+And the other parameters are *coordinate* type or different factories types used.

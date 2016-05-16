@@ -1,4 +1,4 @@
-SVG++ library 1.1
+SVG++ library 1.2
 =======================
 
 Please visit http://svgpp.org/ for description, tutorial and reference.
@@ -41,3 +41,8 @@ Take a look at [Tutorial](http://svgpp.org/lesson01.html) to get the idea about 
 * An SVG viewer or library that produces raster image from SVG 
   (though C++ demo app included, which renders SVG with [AGG](http://antigrain.com), GDI+ or [Skia](https://code.google.com/p/skia/) graphics library)
 * Renders anything itself
+
+####What's new####
+
+SVG++ update 1.2 focuses on reducing compiler memory usage by allowing separation 
+of template heavy Boost.Spirit code to other compilation unit.
