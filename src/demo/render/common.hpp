@@ -1,6 +1,15 @@
 #pragma once
 
 #define BOOST_PARAMETER_MAX_ARITY 17
+// Following defines move parts of SVG++ code to svgpp_parser_impl.cpp file
+// reducing compiler memory requirements
+#define SVGPP_USE_EXTERNAL_PATH_DATA_PARSER
+#define SVGPP_USE_EXTERNAL_TRANSFORM_PARSER
+#define SVGPP_USE_EXTERNAL_PRESERVE_ASPECT_RATIO_PARSER
+#define SVGPP_USE_EXTERNAL_PAINT_PARSER
+#define SVGPP_USE_EXTERNAL_MISC_PARSER
+#define SVGPP_USE_EXTERNAL_COLOR_PARSER
+#define SVGPP_USE_EXTERNAL_LENGTH_PARSER
 
 #if defined(RENDERER_AGG)
 #include <agg_color_rgba.h>

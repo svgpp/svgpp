@@ -193,4 +193,6 @@ private:
   NumberType em_coefficient_, ex_coefficient_;
 };
 
+typedef unitless<> default_factory;
+
 }}}

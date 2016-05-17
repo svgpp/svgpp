@@ -1,20 +1,25 @@
 #define BOOST_PARAMETER_MAX_ARITY 11
 // Following defines move parts of SVG++ code to svgpp_parser_impl.cpp file
 // reducing compiler memory requirements
-#define SVGPP_USE_EXTERNAL_PATH_DATA_PARSER 1
-#define SVGPP_USE_EXTERNAL_TRANSFORM_PARSER 1
+#define SVGPP_USE_EXTERNAL_PATH_DATA_PARSER
+#define SVGPP_USE_EXTERNAL_TRANSFORM_PARSER
+#define SVGPP_USE_EXTERNAL_PRESERVE_ASPECT_RATIO_PARSER
+#define SVGPP_USE_EXTERNAL_PAINT_PARSER
+#define SVGPP_USE_EXTERNAL_MISC_PARSER
 
 #include <rapidxml_ns/rapidxml_ns.hpp>
 #include <svgpp/policy/xml/rapidxml_ns.hpp>
 #include <svgpp/svgpp.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/variant.hpp>
+#include <boost/mpl/set/set30.hpp>
+
+#include "sample01j.hpp"
 
 using namespace svgpp;
 
 typedef rapidxml_ns::xml_node<> const * xml_element_t;
 
-typedef boost::tuple<unsigned char, unsigned char, unsigned char> color_t;
 typedef boost::variant<tag::value::none, tag::value::currentColor, color_t> SolidPaint;
 struct IRIPaint
 {
@@ -340,17 +345,6 @@ struct ChildContextFactories::apply<BaseContext, tag::element::text>
   typedef factory::context::on_stack<TextContext> type;
 };
 
-struct ColorFactoryBase
-{
-  typedef color_t color_type;
-
-  static color_type create(unsigned char r, unsigned char g, unsigned char b)
-  {
-    return color_t(r, g, b);
-  }
-};
-typedef factory::color::percentage_adapter<ColorFactoryBase> ColorFactory;
-
 struct AttributeTraversal: policy::attribute_traversal::default_policy
 {
   typedef boost::mpl::if_<
@@ -378,8 +372,9 @@ struct AttributeTraversal: policy::attribute_traversal::default_policy
   > get_priority_attributes_by_element;
 };
 
-typedef 
-  boost::mpl::set<
+
+struct processed_elements_t
+  : boost::mpl::set<
     // SVG Structural Elements
     tag::element::svg,
     tag::element::g,
@@ -394,25 +389,46 @@ typedef
     tag::element::rect,
     // Text Element
     tag::element::text
-  >::type processed_elements_t;
+    >
+{};
 
 // Joining some sequences from traits namespace with chosen attributes
-typedef 
-  boost::mpl::fold<
-    boost::mpl::protect<
-      boost::mpl::joint_view<
-        traits::shapes_attributes_by_element, 
-        traits::viewport_attributes
-      >
-    >,
-    boost::mpl::set<
-      tag::attribute::transform,
-      tag::attribute::stroke,
-      tag::attribute::stroke_width,
-      boost::mpl::pair<tag::element::use_, tag::attribute::xlink::href>
-    >::type,
-    boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
-  >::type processed_attributes_t;
+struct processed_attributes_t
+  : boost::mpl::set30<
+      svgpp::tag::attribute::transform,
+      svgpp::tag::attribute::stroke,
+      svgpp::tag::attribute::stroke_width,
+      boost::mpl::pair<svgpp::tag::element::use_, svgpp::tag::attribute::xlink::href>,
+      // traits::shapes_attributes_by_element, 
+      boost::mpl::pair<tag::element::path, tag::attribute::d>,
+      boost::mpl::pair<tag::element::rect, tag::attribute::x>,
+      boost::mpl::pair<tag::element::rect, tag::attribute::y>,
+      boost::mpl::pair<tag::element::rect, tag::attribute::width>,
+      boost::mpl::pair<tag::element::rect, tag::attribute::height>,
+      boost::mpl::pair<tag::element::rect, tag::attribute::rx>,
+      boost::mpl::pair<tag::element::rect, tag::attribute::ry>,
+      boost::mpl::pair<tag::element::circle, tag::attribute::cx>,
+      boost::mpl::pair<tag::element::circle, tag::attribute::cy>,
+      boost::mpl::pair<tag::element::circle, tag::attribute::r>,
+      boost::mpl::pair<tag::element::ellipse, tag::attribute::cx>,
+      boost::mpl::pair<tag::element::ellipse, tag::attribute::cy>,
+      boost::mpl::pair<tag::element::ellipse, tag::attribute::rx>,
+      boost::mpl::pair<tag::element::ellipse, tag::attribute::ry>,
+      boost::mpl::pair<tag::element::line, tag::attribute::x1>,
+      boost::mpl::pair<tag::element::line, tag::attribute::y1>,
+      boost::mpl::pair<tag::element::line, tag::attribute::x2>,
+      boost::mpl::pair<tag::element::line, tag::attribute::y2>,
+      boost::mpl::pair<tag::element::polyline, tag::attribute::points>,
+      boost::mpl::pair<tag::element::polygon, tag::attribute::points>,
+      // traits::viewport_attributes
+      tag::attribute::x,
+      tag::attribute::y,
+      tag::attribute::width,
+      tag::attribute::height,
+      tag::attribute::viewBox,
+      tag::attribute::preserveAspectRatio
+    >
+{};
 
 typedef
   document_traversal<
@@ -423,7 +439,8 @@ typedef
     markers_policy<policy::markers::calculate_always>,
     color_factory<ColorFactory>,
     length_policy<policy::length::forward_to_method<BaseContext> >,
-    attribute_traversal_policy<AttributeTraversal>
+    attribute_traversal_policy<AttributeTraversal>,
+    transform_events_policy<policy::transform_events::forward_to_method<BaseContext> > // Same as default, but less instantiations
   > document_traversal_t;
 
 void loadSvg(xml_element_t xml_root_element)
@@ -435,6 +452,10 @@ void loadSvg(xml_element_t xml_root_element)
 
 xml_element_t FindCurrentDocumentElementById(std::string const &) { return NULL; }
 
+struct processed_elements_with_symbol_t
+  : boost::mpl::insert<processed_elements_t::type, tag::element::symbol>::type
+{};
+
 void UseContext::on_exit_element()
 {
   if (xml_element_t element = FindCurrentDocumentElementById(fragment_id_))
@@ -444,9 +465,7 @@ void UseContext::on_exit_element()
     document_traversal_t::load_referenced_element<
       referencing_element<tag::element::use_>,
       expected_elements<traits::reusable_elements>,
-      processed_elements<
-        boost::mpl::insert<processed_elements_t, tag::element::symbol>::type 
-      >
+      processed_elements<processed_elements_with_symbol_t>
     >::load(element, *this);
   }
   else

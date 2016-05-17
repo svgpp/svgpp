@@ -1,9 +1,5 @@
 ﻿#define BOOST_MPL_CFG_NO_PREPROCESSED_HEADERS
 #define BOOST_MPL_LIMIT_SET_SIZE 40
-// Following defines move parts of SVG++ code to svgpp_parser_impl.cpp file
-// reducing compiler memory requirements
-#define SVGPP_USE_EXTERNAL_PATH_DATA_PARSER 1
-#define SVGPP_USE_EXTERNAL_TRANSFORM_PARSER 1
 
 #include "filter.hpp"
 
@@ -1122,6 +1118,21 @@ private:
   }
 };
 
+namespace
+{
+  length_factory_t length_factory_instance;
+
+  struct length_policy_t
+  {
+    typedef length_factory_t const length_factory_type;
+
+    static length_factory_type & length_factory(ElementWithRegionContext const &)
+    {
+      return length_factory_instance;
+    }
+  };
+}
+
 IFilterViewPtr Filters::get(svg_string_t const & id, length_factory_t const &, Input const & input)
 {
   try
@@ -1132,6 +1143,7 @@ IFilterViewPtr Filters::get(svg_string_t const & id, length_factory_t const &, I
       svgpp::document_traversal<
         svgpp::context_factories<context_factories>,
         svgpp::color_factory<color_factory_t>,
+        svgpp::length_policy<length_policy_t>,
         svgpp::processed_elements<
           boost::mpl::set<
             svgpp::tag::element::filter,
