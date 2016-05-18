@@ -32,14 +32,14 @@ template<class Direction, class Iterator, class PropertySource, class LengthFact
 boost::spirit::qi::grammar<
   Iterator, 
   typename LengthFactory::length_type(LengthFactory const &), 
-  boost::spirit::qi::locals<typename LengthFactory::length_type> 
+  boost::spirit::qi::locals<typename LengthFactory::number_type> 
 > const & get_length_rule(length_grammar_tag, LengthFactory const &);
 
 template<class Direction, class Iterator, class PropertySource, class LengthFactory>
 boost::spirit::qi::grammar<
   Iterator,
   typename LengthFactory::length_type(LengthFactory const &),
-  boost::spirit::qi::locals<typename LengthFactory::length_type>
+  boost::spirit::qi::locals<typename LengthFactory::number_type>
 > const & get_length_rule(percentage_or_length_grammar_tag, LengthFactory const &);
 
 }}

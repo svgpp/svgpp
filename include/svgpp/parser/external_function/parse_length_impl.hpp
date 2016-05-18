@@ -28,19 +28,19 @@
   \
   template boost::spirit::qi::grammar< \
       IteratorType, LengthFactoryType::length_type(LengthFactoryType const &), \
-      boost::spirit::qi::locals<LengthFactoryType::length_type> \
+      boost::spirit::qi::locals<LengthFactoryType::number_type> \
     > const & svgpp::detail::get_length_rule<svgpp::tag::length_dimension::width,                IteratorType, svgpp::tag::source::attribute, LengthFactoryType>(length_grammar_tag, LengthFactoryType const &); \
   template boost::spirit::qi::grammar< \
       IteratorType, LengthFactoryType::length_type(LengthFactoryType const &), \
-      boost::spirit::qi::locals<LengthFactoryType::length_type> \
+      boost::spirit::qi::locals<LengthFactoryType::number_type> \
     > const & svgpp::detail::get_length_rule<svgpp::tag::length_dimension::height,               IteratorType, svgpp::tag::source::attribute, LengthFactoryType>(length_grammar_tag, LengthFactoryType const &); \
   template boost::spirit::qi::grammar< \
       IteratorType, LengthFactoryType::length_type(LengthFactoryType const &), \
-      boost::spirit::qi::locals<LengthFactoryType::length_type> \
+      boost::spirit::qi::locals<LengthFactoryType::number_type> \
     > const & svgpp::detail::get_length_rule<svgpp::tag::length_dimension::not_width_nor_height, IteratorType, svgpp::tag::source::attribute, LengthFactoryType>(length_grammar_tag, LengthFactoryType const &); \
   template boost::spirit::qi::grammar< \
       IteratorType, LengthFactoryType::length_type(LengthFactoryType const &), \
-      boost::spirit::qi::locals<LengthFactoryType::length_type> \
+      boost::spirit::qi::locals<LengthFactoryType::number_type> \
     > const & svgpp::detail::get_length_rule<svgpp::tag::length_dimension::not_width_nor_height, IteratorType, svgpp::tag::source::css,       LengthFactoryType>(length_grammar_tag, LengthFactoryType const &); 
 
 namespace svgpp { namespace detail 
@@ -78,7 +78,7 @@ template<class Direction, class Iterator, class PropertySource, class LengthFact
 boost::spirit::qi::grammar<
   Iterator,
   typename LengthFactory::length_type(LengthFactory const &),
-  boost::spirit::qi::locals<typename LengthFactory::length_type>
+  boost::spirit::qi::locals<typename LengthFactory::number_type>
 > const & get_length_rule(length_grammar_tag, LengthFactory const &)
 {
   static const length_grammar<
@@ -94,7 +94,7 @@ template<class Direction, class Iterator, class PropertySource, class LengthFact
 boost::spirit::qi::grammar<
   Iterator,
   typename LengthFactory::length_type(LengthFactory const &),
-  boost::spirit::qi::locals<typename LengthFactory::length_type>
+  boost::spirit::qi::locals<typename LengthFactory::number_type>
 > const & get_length_rule(percentage_or_length_grammar_tag, LengthFactory const &)
 {
   static const percentage_or_length_css_grammar<
