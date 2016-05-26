@@ -46,3 +46,18 @@ Take a look at [Tutorial](http://svgpp.org/lesson01.html) to get the idea about 
 
 SVG++ update 1.2 focuses on reducing compiler memory usage by allowing separation 
 of template heavy Boost.Spirit code to other compilation unit.
+
+####How to Help####
+
+* *CSS Processor.* Processing CSS is outside of SVG++ scope, but it'll be nice to have some generic implementation of CSS 
+selectors to use at preprocessing stage. 
+* *SVG Filter Effects.* Some filters are already implemented in demo application but the complete solution requires more efforts. 
+Generic enough parts may fit in SVG++ source base. Usage of Boost.GIL may make the code more reusable.
+* *Animation.* Implementation of animation in the demo application. Probably some utilities may get to SVG++.
+* Try to reduce compiler memory usage by switching to some C++11 metaprogramming library (brigand?).
+Evaluate upgrade to Boost.Spirit 3.0.
+* Extend demo with Cairo support?
+* More wrappers for XML parsers?  
+* Evolve demo to fully functional SVG rendering component for one of the graphic engines. 
+A major gap in demo's SVG implementation is text and font support. It'll be too complex to make it cross-engine, but
+for the single engine chosen and probably with third-party libraries like FreeType it's pretty feasible.
