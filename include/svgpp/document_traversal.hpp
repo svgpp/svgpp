@@ -16,7 +16,6 @@
 #include <svgpp/policy/document_traversal_control.hpp>
 #include <svgpp/policy/text_events.hpp>
 #include <svgpp/traits/child_element_types.hpp>
-#include <svgpp/traits/element_with_text_content.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/parameter.hpp>
 #include <boost/static_assert.hpp>
@@ -191,7 +190,7 @@ public:
   static typename boost::enable_if<
     boost::mpl::and_<
       boost::mpl::empty<typename traits::child_element_types<ElementTag>::type>,
-      boost::mpl::not_<traits::element_with_text_content<ElementTag> > >, bool>::type
+      boost::mpl::not_<boost::mpl::has_key<ExpectedChildElements, tag::text_content> > >, bool>::type
   load_element_content(XMLElement const &, Context const &, ElementTag)
   {
     return true;
@@ -201,7 +200,7 @@ public:
   static typename boost::disable_if<
     boost::mpl::or_<
       boost::mpl::empty<typename traits::child_element_types<ElementTag>::type>,
-      traits::element_with_text_content<ElementTag> >, bool>::type
+      boost::mpl::has_key<ExpectedChildElements, tag::text_content> >, bool>::type
   load_element_content(XMLElement const & xml_element, Context & context, ElementTag element_tag)
   {
     typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 
@@ -224,7 +223,7 @@ public:
   }
 
   template<class ExpectedChildElements, class XMLElement, class Context, class ElementTag>
-  static typename boost::enable_if<traits::element_with_text_content<ElementTag>, bool>::type
+  static typename boost::enable_if<boost::mpl::has_key<ExpectedChildElements, tag::text_content>, bool>::type
   load_element_content(XMLElement const & xml_element, Context & context, ElementTag element_tag)
   {
     typedef typename boost::parameter::value_type<args, tag::xml_element_policy, 

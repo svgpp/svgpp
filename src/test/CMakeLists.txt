@@ -34,7 +34,8 @@ add_executable( ParserGTest
   dictionary_test.cpp
   attribute_traversal_test.cpp 
   css_style_iterator_test.cpp 
-	clock_value_grammar_test.cpp 
+	clock_value_grammar_test.cpp
+  document_traversal_a_test.cpp  
   icc_color_grammar_test.cpp 
   length_factory_test.cpp 
   list_of_points_test.cpp 

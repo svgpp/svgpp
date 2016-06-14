@@ -143,4 +143,7 @@ namespace length_dimension
 
 struct iri_fragment {}; // Prefixes fragment part of IRI in arguments list
 
+struct text_content; // Used in child element sequences together with tag::element::* tags to
+                     // mark elements that should handle character data content
+
 }} // namespace tag

@@ -1,4 +1,4 @@
-SVG++ library 1.2
+SVG++ library 1.2.1
 =======================
 
 Please visit http://svgpp.org/ for description, tutorial and reference.
@@ -44,8 +44,9 @@ Take a look at [Tutorial](http://svgpp.org/lesson01.html) to get the idea about 
 
 ####What's new####
 
-SVG++ update 1.2 focuses on reducing compiler memory usage by allowing separation 
-of template heavy Boost.Spirit code to other compilation unit.
+* SVG++ update 1.2.1 fixes handling text content inside `<a>` element that is a child of `<text>` element.
+* SVG++ update 1.2 focuses on reducing compiler memory usage by allowing separation 
+  of template heavy Boost.Spirit code to other compilation unit.
 
 ####How to Help####
 

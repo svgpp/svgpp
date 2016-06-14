@@ -23,14 +23,22 @@ template<class ElementTag, class Enable = void>
 struct child_element_types;
 
 template<class ElementTag>
-struct child_element_types<ElementTag, typename boost::enable_if<boost::mpl::has_key<boost::mpl::set16<
-  tag::element::altGlyph, tag::element::foreignObject, tag::element::script, tag::element::style, // Actually "Any elements or character data"
-  tag::element::glyphRef, tag::element::desc, tag::element::hkern, tag::element::title, tag::element::font_face_format,
-  tag::element::font_face_name, tag::element::metadata, tag::element::vkern,
+struct child_element_types<ElementTag, typename boost::enable_if<boost::mpl::has_key<boost::mpl::set10<
+  tag::element::foreignObject, tag::element::glyphRef, tag::element::hkern, tag::element::font_face_format,
+  tag::element::font_face_name, tag::element::vkern,
   tag::element::feFuncA, tag::element::feFuncR, tag::element::feFuncG, tag::element::feFuncB
 >, ElementTag> >::type>
 {
   typedef boost::mpl::set0<> type;
+};
+
+template<class ElementTag>
+struct child_element_types<ElementTag, typename boost::enable_if<boost::mpl::has_key<boost::mpl::set6<
+  tag::element::altGlyph, tag::element::desc, tag::element::metadata, 
+  tag::element::script, tag::element::style, tag::element::title
+>, ElementTag> >::type>
+{
+  typedef boost::mpl::set1<tag::text_content> type;
 };
 
 template<class ElementTag>
@@ -96,12 +104,13 @@ struct child_element_types<tag::element::text, void>
       boost::mpl::joint_view<
         traits::animation_elements,
         traits::descriptive_elements>,
-      boost::mpl::set5<
+      boost::mpl::set6<
         tag::element::altGlyph,
         tag::element::textPath,
         tag::element::tref,
         tag::element::tspan,
-        tag::element::a
+        tag::element::a,
+        tag::text_content
       >,
       boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
     >::type type;
@@ -114,14 +123,15 @@ struct child_element_types<ElementTag, typename boost::enable_if<boost::mpl::has
   typedef 
     boost::mpl::fold<
       traits::descriptive_elements,
-      boost::mpl::set7<
+      boost::mpl::set8<
         tag::element::a,
         tag::element::altGlyph,
         tag::element::animate,
         tag::element::animateColor,
         tag::element::set,
         tag::element::tref,
-        tag::element::tspan
+        tag::element::tspan,
+        tag::text_content
       >,
       boost::mpl::insert<boost::mpl::_1, boost::mpl::_2>
     >::type type;
