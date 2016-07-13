@@ -510,6 +510,7 @@ inline bool attribute_id_to_tag(tag::element::feGaussianBlur, attribute_id id, F
   {
 #include <svgpp/detail/dict/enumerate_core_attributes.inc>
 #include <svgpp/detail/dict/enumerate_presentation_attributes.inc>
+#include <svgpp/detail/dict/enumerate_filter_primitive_attributes.inc>
     SVGPP_ON(class_)
     SVGPP_ON(style)
     SVGPP_ON(in)
