@@ -38,31 +38,31 @@ template<class Iterator, class Coordinate>
 bool parse_viewBox(Iterator & it, Iterator end, Coordinate & x, Coordinate & y, Coordinate & w, Coordinate & h)
 {
   namespace qi = boost::spirit::qi;
-  using namespace boost::phoenix;
+  namespace phx = boost::phoenix;
   using qi::_1;
 
   SVGPP_STATIC_IF_SAFE const qi::real_parser<Coordinate, detail::svg_real_policies<Coordinate> > number;
   SVGPP_STATIC_IF_SAFE const detail::comma_wsp_rule_no_skip<Iterator> comma_wsp;
   return qi::parse(it, end,
-    number[ref(x) = _1] >> comma_wsp >>
-    number[ref(y) = _1] >> comma_wsp >>
-    number[ref(w) = _1] >> comma_wsp >>
-    number[ref(h) = _1]);
+    number[phx::ref(x) = _1] >> comma_wsp >>
+    number[phx::ref(y) = _1] >> comma_wsp >>
+    number[phx::ref(w) = _1] >> comma_wsp >>
+    number[phx::ref(h) = _1]);
 }
 
 template<class Iterator, class Coordinate>
 bool parse_bbox(Iterator & it, Iterator end, Coordinate & lo_x, Coordinate & lo_y, Coordinate & hi_x, Coordinate & hi_y)
 {
   namespace qi = boost::spirit::qi;
-  using namespace boost::phoenix;
+  namespace phx = boost::phoenix;
   using qi::_1;
 
   SVGPP_STATIC_IF_SAFE const qi::real_parser<Coordinate, detail::svg_real_policies<Coordinate> > number;
   return qi::parse(it, end,
-    number[ref(lo_x) = _1] >> qi::lit(',') >>
-    number[ref(lo_y) = _1] >> qi::lit(',') >>
-    number[ref(hi_x) = _1] >> qi::lit(',') >>
-    number[ref(hi_y) = _1]);
+    number[phx::ref(lo_x) = _1] >> qi::lit(',') >>
+    number[phx::ref(lo_y) = _1] >> qi::lit(',') >>
+    number[phx::ref(hi_x) = _1] >> qi::lit(',') >>
+    number[phx::ref(hi_y) = _1]);
 }
 
 template<class Iterator, class PropertySource, class Coordinate>

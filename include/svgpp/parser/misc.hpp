@@ -174,7 +174,7 @@ struct value_parser<boost::mpl::pair<tag::element::stop, tag::attribute::offset>
                                     tag::source::attribute property_source)
   {
     namespace qi = boost::spirit::qi;
-    using namespace boost::phoenix;
+    namespace phx = boost::phoenix;
     using qi::_1;
 
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
@@ -185,7 +185,7 @@ struct value_parser<boost::mpl::pair<tag::element::stop, tag::attribute::offset>
     SVGPP_STATIC_IF_SAFE const qi::real_parser<coordinate_t, detail::number_policies<coordinate_t, tag::source::attribute> > number;
     coordinate_t value;
     bool percentage = false;
-    if (qi::parse(it, end, number[ref(value) = _1] >> -(qi::lit('%')[ref(percentage) = true])) && it == end)
+    if (qi::parse(it, end, number[phx::ref(value) = _1] >> -(qi::lit('%')[phx::ref(percentage) = true])) && it == end)
     {
       args_t::value_events_policy::set(args_t::value_events_context::get(context), 
         tag, property_source, percentage ? value / 100 : value);

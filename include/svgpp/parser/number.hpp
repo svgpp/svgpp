@@ -89,7 +89,7 @@ struct value_parser<tag::type::number_optional_number, SVGPP_TEMPLATE_ARGS_PASS>
                                     tag::source::attribute property_source)
   {
     namespace qi = boost::spirit::qi;
-    using namespace boost::phoenix;
+    namespace phx = boost::phoenix;
     using qi::_1;
 
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
@@ -102,10 +102,10 @@ struct value_parser<tag::type::number_optional_number, SVGPP_TEMPLATE_ARGS_PASS>
     coordinate_t value1, value2;
     bool two_values = false;
     if (qi::parse(it, end, 
-          number [ref(value1) = _1] 
+          number [phx::ref(value1) = _1] 
           >> -(
               comma_wsp 
-              >> number [ref(value2) = _1, ref(two_values) = true]
+              >> number [phx::ref(value2) = _1, phx::ref(two_values) = true]
               )
       ) && it == end)
     {
