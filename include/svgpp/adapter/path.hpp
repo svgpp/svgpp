@@ -437,8 +437,8 @@ public:
     EventsPolicy::path_quadratic_bezier_to(output_context, x, y, tag);
     if (this->last_quadratic_bezier_cp_valid)
       set_quadratic_cp(
-      2 * current_x - this->last_quadratic_bezier_cp_x,
-      2 * current_y - this->last_quadratic_bezier_cp_y);
+        2 * current_x - this->last_quadratic_bezier_cp_x,
+        2 * current_y - this->last_quadratic_bezier_cp_y);
     else
       set_quadratic_cp(current_x, current_y);
     current_x += x;
@@ -462,7 +462,8 @@ public:
     path_cubic_bezier_to<Policy>(
       current_x * k1 + xk, current_y * k1 + yk,
       x * k1 + xk, y * k1 + yk,
-      x, y, tag);
+      x, y, tag, false);
+    set_quadratic_cp(x1, y1);
   }
 
   template<class Policy>
@@ -479,10 +480,13 @@ public:
     const coordinate_type k2 = 2./3.;
     coordinate_type xk = k2 * x1;
     coordinate_type yk = k2 * y1;
+    const coordinate_type x1_absolute = x1 + current_x;
+    const coordinate_type y1_absolute = y1 + current_y;
     path_cubic_bezier_to<Policy>(
       xk, yk,
       x * k1 + xk, y * k1 + yk,
-      x, y, tag);
+      x, y, tag, false);
+    set_quadratic_cp(x1_absolute, y1_absolute);
   }
 
   template<class Policy>
@@ -493,12 +497,14 @@ public:
     coordinate_type y2, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::coordinate::absolute tag)
+    tag::coordinate::absolute tag,
+    bool do_set_cubic_cp = true)
   {
     current_x = x;
     current_y = y;
     EventsPolicy::path_cubic_bezier_to(output_context, x1, y1, x2, y2, x, y, tag);
-    set_cubic_cp(x2, y2);
+    if (do_set_cubic_cp)
+      set_cubic_cp(x2, y2);
   }
 
   template<class Policy>
@@ -510,7 +516,8 @@ public:
     coordinate_type y2, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::coordinate::relative)
+    tag::coordinate::relative,
+    bool do_set_cubic_cp = true)
   {
     x += current_x;
     y += current_y;
@@ -519,7 +526,8 @@ public:
     x2 += current_x;
     y2 += current_y;
     EventsPolicy::path_cubic_bezier_to(output_context, x1, y1, x2, y2, x, y, tag::coordinate::absolute());
-    set_cubic_cp(x2, y2);
+    if (do_set_cubic_cp)
+      set_cubic_cp(x2, y2);
     current_x = x;
     current_y = y;
   }
@@ -533,10 +541,12 @@ public:
     coordinate_type y2, 
     coordinate_type x, 
     coordinate_type y, 
-    tag::coordinate::relative tag)
+    tag::coordinate::relative tag,
+    bool do_set_cubic_cp = true)
   {
     EventsPolicy::path_cubic_bezier_to(output_context, x1, y1, x2, y2, x, y, tag);
-    set_cubic_cp(x2 + current_x, y2 + current_y);
+    if (do_set_cubic_cp)
+      set_cubic_cp(x2 + current_x, y2 + current_y);
     current_x += x;
     current_y += y;
   }
@@ -642,7 +652,8 @@ public:
         it.p1x(), it.p1y(),
         it.p2x(), it.p2y(),
         it.p3x(), it.p3y(),
-        tag::coordinate::absolute());
+        tag::coordinate::absolute(),
+        false);
   } 
 
   template<class Policy>

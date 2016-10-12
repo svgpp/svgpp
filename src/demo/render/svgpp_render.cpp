@@ -119,10 +119,16 @@ struct path_policy: svgpp::policy::path::raw
   static const bool no_cubic_bezier_shorthand = true;
   static const bool arc_as_cubic_bezier = true; 
 };
+#elif defined(RENDERER_AGG)
+struct path_policy: svgpp::policy::path::no_shorthands
+{
+  static const bool arc_as_cubic_bezier = true; 
+};
 #else
 struct path_policy: svgpp::policy::path::no_shorthands
 {
   static const bool arc_as_cubic_bezier = true; 
+  static const bool quadratic_bezier_as_cubic = true;
 };
 #endif
 

@@ -81,10 +81,18 @@ namespace
     svgpp::tag::element::use_
   >::type processed_elements;
 
+#if defined(RENDERER_GDIPLUS)
+  struct path_policy: svgpp::policy::path::no_shorthands
+  {
+    static const bool arc_as_cubic_bezier = true; 
+    static const bool quadratic_bezier_as_cubic = true;
+  };
+#else
   struct path_policy: svgpp::policy::path::no_shorthands
   {
     static const bool arc_as_cubic_bezier = true; 
   };
+#endif
 
   typedef boost::mpl::fold<
     svgpp::traits::shapes_attributes_by_element,

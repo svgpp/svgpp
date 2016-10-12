@@ -144,17 +144,6 @@ public:
     path_types_.push_back(Gdiplus::PathPointTypeBezier);
   }
 
-  void path_quadratic_bezier_to(
-    number_t x1, number_t y1,
-    number_t x, number_t y,
-    svgpp::tag::coordinate::absolute const &)
-  { 
-    path_points_.push_back(Gdiplus::PointF(x1, y1));
-    path_types_.push_back(Gdiplus::PathPointTypeBezier);
-    path_points_.push_back(Gdiplus::PointF(x, y));
-    path_types_.push_back(Gdiplus::PathPointTypeBezier);
-  }
-
   void path_close_subpath()
   {
     if (!path_types_.empty())
