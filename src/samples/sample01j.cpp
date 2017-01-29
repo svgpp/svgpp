@@ -41,7 +41,7 @@ public:
   {}
 
   void set(tag::attribute::stroke_width, double val)
-    { stroke_width_  = 1; }
+    { stroke_width_ = val; }
 
   void set(tag::attribute::stroke, tag::value::none)
     { stroke_ = tag::value::none(); }
