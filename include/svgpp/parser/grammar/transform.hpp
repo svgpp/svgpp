@@ -76,9 +76,11 @@ public:
             >> number [_a = _1] 
             >> ( ( no_skip[comma_wsp] 
                   >> number [_b = _1] 
-                  >> lit(')') [phx::bind(&transform_grammar::call_translate, _r1, _a, _b)] 
+                  >> lit(')') [phx::bind(static_cast<void (*)(Context&, Number, Number)>
+				  	(&transform_grammar::call_translate), _r1, _a, _b)] 
                 )
-                | lit(')') [phx::bind(&transform_grammar::call_translate, _r1, _a)] 
+                | lit(')') [phx::bind(static_cast<void (*)(Context&, Number)>
+					(&transform_grammar::call_translate), _r1, _a)] 
               );
     scale 
         =   lit("scale") 
@@ -86,9 +88,11 @@ public:
             >> number [_a = _1]
             >> ( ( no_skip[comma_wsp] 
                   >> number [_b = _1] 
-                  >> lit(')') [phx::bind(&transform_grammar::call_scale, _r1, _a, _b)] 
+                  >> lit(')') [phx::bind(static_cast<void (*)(Context&, Number, Number)>
+				  	(&transform_grammar::call_scale), _r1, _a, _b)] 
                 )
-                | lit(')') [phx::bind(&transform_grammar::call_scale, _r1, _a)] 
+                | lit(')') [phx::bind(static_cast<void (*)(Context&, Number)>
+					(&transform_grammar::call_scale), _r1, _a)] 
               );
     rotate 
         =   lit("rotate") 
@@ -98,9 +102,11 @@ public:
                   >> number [_b = _1] 
                   >> no_skip[comma_wsp] 
                   >> number [_c = _1] 
-                  >> lit(')') [phx::bind(&transform_grammar::call_rotate, _r1, _a, _b, _c)] 
+                  >> lit(')') [phx::bind(static_cast<void (*)(Context&, Number, Number, Number)>
+				  	(&transform_grammar::call_rotate), _r1, _a, _b, _c)] 
                 )
-                | lit(')') [phx::bind(&transform_grammar::call_rotate, _r1, _a)] 
+                | lit(')') [phx::bind(static_cast<void (*)(Context&, Number)>
+					(&transform_grammar::call_rotate), _r1, _a)] 
               );
     skewX 
         =   ( lit("skewX") 
