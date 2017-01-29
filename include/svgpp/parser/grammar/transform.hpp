@@ -78,7 +78,7 @@ public:
                   >> number [_b = _1] 
                   >> lit(')') [phx::bind(&transform_grammar::call_translate, _r1, _a, _b)] 
                 )
-                | lit(')') [phx::bind(&transform_grammar::call_translate, _r1, _a)] 
+                | lit(')') [phx::bind(&transform_grammar::call_translate_x, _r1, _a)]
               );
     scale 
         =   lit("scale") 
@@ -88,7 +88,7 @@ public:
                   >> number [_b = _1] 
                   >> lit(')') [phx::bind(&transform_grammar::call_scale, _r1, _a, _b)] 
                 )
-                | lit(')') [phx::bind(&transform_grammar::call_scale, _r1, _a)] 
+                | lit(')') [phx::bind(&transform_grammar::call_scale_uniform, _r1, _a)]
               );
     rotate 
         =   lit("rotate") 
@@ -98,7 +98,7 @@ public:
                   >> number [_b = _1] 
                   >> no_skip[comma_wsp] 
                   >> number [_c = _1] 
-                  >> lit(')') [phx::bind(&transform_grammar::call_rotate, _r1, _a, _b, _c)] 
+                  >> lit(')') [phx::bind(&transform_grammar::call_rotate_about_point, _r1, _a, _b, _c)]
                 )
                 | lit(')') [phx::bind(&transform_grammar::call_rotate, _r1, _a)] 
               );
@@ -136,7 +136,7 @@ private:
     EventsPolicy::transform_translate(context, tx, ty);
   }
 
-  static void call_translate(Context & context, Number tx)
+  static void call_translate_x(Context & context, Number tx)
   {
     EventsPolicy::transform_translate(context, tx);
   }
@@ -146,7 +146,7 @@ private:
     EventsPolicy::transform_scale(context, sx, sy);
   }
 
-  static void call_scale(Context & context, Number scale)
+  static void call_scale_uniform(Context & context, Number scale)
   {
     EventsPolicy::transform_scale(context, scale);
   }
@@ -156,7 +156,7 @@ private:
     EventsPolicy::transform_rotate(context, angle);
   }
 
-  static void call_rotate(Context & context, Number angle, Number cx, Number cy)
+  static void call_rotate_about_point(Context & context, Number angle, Number cx, Number cy)
   {
     EventsPolicy::transform_rotate(context, angle, cx, cy);
   }

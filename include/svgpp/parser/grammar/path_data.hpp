@@ -94,7 +94,7 @@ public:
         >> (smooth_curveto_argument(_r1, _a) % -lit(','));
     smooth_curveto_argument = 
         (coordinate >> -lit(',') >> coordinate >> -lit(',') >> coordinate >> -lit(',') >> coordinate)
-          [phx::bind(&path_data_grammar::call_cubic_bezier_to, _r1, _1, _2, _3, _4, _r2)];
+          [phx::bind(&path_data_grammar::call_cubic_bezier_to_shorthand, _r1, _1, _2, _3, _4, _r2)];
     quadratic_bezier_curveto =
         (lit('Q') [_a = true] | lit('q') [_a = false]) 
         >> (quadratic_bezier_curveto_argument(_r1, _a) % -lit(','));
@@ -106,7 +106,7 @@ public:
         >> (quadratic_bezier_smooth_curveto_argument(_r1, _a) % -lit(','));
     quadratic_bezier_smooth_curveto_argument = 
         (coordinate >> -lit(',') >> coordinate)
-          [phx::bind(&path_data_grammar::call_quadratic_bezier_to, _r1, _1, _2, _r2)];
+          [phx::bind(&path_data_grammar::call_quadratic_bezier_to_shorthand, _r1, _1, _2, _r2)];
     elliptical_arc =
         (lit('A') [_a = true] | lit('a') [_a = false]) 
         >> (elliptical_arc_argument(_r1, _a) % -lit(','));
@@ -173,7 +173,7 @@ private:
       EventsPolicy::path_cubic_bezier_to(context, x1, y1, x2, y2, x, y, tag::coordinate::relative()); 
   }
 
-  static void call_cubic_bezier_to(Context & context, 
+  static void call_cubic_bezier_to_shorthand(Context & context, 
                                         Coordinate x2, Coordinate y2, 
                                         Coordinate x, Coordinate y, 
                                         bool absolute)
@@ -195,7 +195,7 @@ private:
       EventsPolicy::path_quadratic_bezier_to(context, x1, y1, x, y, tag::coordinate::relative()); 
   }
 
-  static void call_quadratic_bezier_to(Context & context, 
+  static void call_quadratic_bezier_to_shorthand(Context & context,
                                         Coordinate x, Coordinate y, 
                                         bool absolute)
   { 
