@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.8)
 
 project(svgpp_test)
 
-set(GTEST_DIR ../../third_party/gtest)
+set(GTEST_DIR ../../third_party/googletest/googletest)
 
 include_directories(
   ../../include
