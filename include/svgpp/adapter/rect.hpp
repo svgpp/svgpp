@@ -149,7 +149,7 @@ struct rounded_rect_to_path_adapter
     else
     {
       typedef typename detail::unwrap_context<Context, tag::path_events_policy> path_events;
-      detail::context_set_rounded_rect<path_events::policy>(path_events::get(context), x, y, width, height, rx, ry);
+      detail::context_set_rounded_rect<typename path_events::policy>(path_events::get(context), x, y, width, height, rx, ry);
     }
   }
 };
