@@ -642,7 +642,7 @@ public:
 
   template<class AttributeValue, class AttributeTag>
   typename boost::enable_if_c<
-    boost::mpl::has_key<typename basic_shapes_policy::convert_to_path, ElementTag>::value
+    !boost::mpl::empty<state_types_sequence>::value
     && boost::mpl::has_key<typename basic_shape_attributes<ElementTag>::type, AttributeTag>::value, bool>::type
   load_attribute_value(AttributeTag attribute_tag, 
                        AttributeValue const & attribute_value, 

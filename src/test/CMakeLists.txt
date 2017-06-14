@@ -2,13 +2,16 @@ cmake_minimum_required (VERSION 2.8)
 
 project(svgpp_test)
 
-set(GTEST_DIR ../../third_party/gtest)
+set(GTEST_DIR ../../third_party/googletest/googletest)
+set(GMOCK_DIR ../../third_party/googletest/googlemock)
 
 include_directories(
   ../../include
   ../../third_party
   ${GTEST_DIR}
   ${GTEST_DIR}/include
+  ${GMOCK_DIR}
+  ${GMOCK_DIR}/include
 )
 
 if (MSVC)
@@ -30,6 +33,7 @@ endforeach()
 
 add_executable( ParserGTest
   ${SOURCES}
+  basic_shapes_test.cpp 
   color_grammar_test.cpp 
   dictionary_test.cpp
   attribute_traversal_test.cpp 
@@ -53,7 +57,8 @@ add_executable( ParserGTest
   value_parser_paint_test.cpp 
 	value_parser_path_test.cpp 
 	value_parser_transform_test.cpp 
-  ${GTEST_DIR}/src/gtest_main.cc 
+  ${GMOCK_DIR}/src/gmock_main.cc 
+  ${GMOCK_DIR}/src/gmock-all.cc 
   ${GTEST_DIR}/src/gtest-all.cc 
 )
 
