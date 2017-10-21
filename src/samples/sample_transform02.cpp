@@ -1,4 +1,5 @@
 #include <svgpp/svgpp.hpp>
+#include <boost/serialization/array_wrapper.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <boost/numeric/ublas/assignment.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
