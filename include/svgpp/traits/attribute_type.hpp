@@ -123,6 +123,8 @@ template<>              struct attribute_type<tag::element::glyphRef, tag::attri
 template<>              struct attribute_type<tag::element::glyphRef, tag::attribute::y           > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::glyphRef, tag::attribute::dx          > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::glyphRef, tag::attribute::dy          > { typedef tag::type::number type; };
+template<>              struct attribute_type<tag::element::fePointLight, tag::attribute::x       > { typedef tag::type::number type; };
+template<>              struct attribute_type<tag::element::fePointLight, tag::attribute::y       > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::fePointLight, tag::attribute::dx      > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::fePointLight, tag::attribute::dy      > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::feSpotLight, tag::attribute::x        > { typedef tag::type::number type; };
