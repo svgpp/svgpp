@@ -125,12 +125,8 @@ template<>              struct attribute_type<tag::element::glyphRef, tag::attri
 template<>              struct attribute_type<tag::element::glyphRef, tag::attribute::dy          > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::fePointLight, tag::attribute::x       > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::fePointLight, tag::attribute::y       > { typedef tag::type::number type; };
-template<>              struct attribute_type<tag::element::fePointLight, tag::attribute::dx      > { typedef tag::type::number type; };
-template<>              struct attribute_type<tag::element::fePointLight, tag::attribute::dy      > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::feSpotLight, tag::attribute::x        > { typedef tag::type::number type; };
 template<>              struct attribute_type<tag::element::feSpotLight, tag::attribute::y        > { typedef tag::type::number type; };
-template<>              struct attribute_type<tag::element::feSpotLight, tag::attribute::dx       > { typedef tag::type::number type; };
-template<>              struct attribute_type<tag::element::feSpotLight, tag::attribute::dy       > { typedef tag::type::number type; };
 
 template<class Element> struct attribute_type<Element, tag::attribute::numOctaves>                { typedef tag::type::integer type; };
 template<class Element> struct attribute_type<Element, tag::attribute::targetX   >                { typedef tag::type::integer type; }; 
