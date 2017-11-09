@@ -243,7 +243,7 @@ template<class Element> struct attribute_type<Element, tag::attribute::font>
 };
 
 /*
-‘font-face’ element attributes:
+'font-face' element attributes:
   font-size (Descriptor) Value:  	all | <length> [, <length>]*
   font-stretch = "all | [ normal | ultra-condensed | extra-condensed | condensed | semi-condensed | semi-expanded | expanded | extra-expanded | ultra-expanded] [, [ normal | ultra-condensed | extra-condensed | condensed | semi-condensed | semi-expanded | expanded | extra-expanded | ultra-expanded] ]*"
   font-style = "all | [ normal | italic | oblique] [, [normal | italic | oblique]]*"
@@ -259,7 +259,7 @@ glyph-name = "<name> [, <name> ]* "
 keySplines = "<list>"
 keyTimes = "<list>"
 panose-1 = "[<integer>]{10}"
-values = "<list>" // ‘animate’, ‘animateColor’, ‘animateMotion’, ‘animateTransform’
+values = "<list>" // 'animate', 'animateColor', 'animateMotion', 'animateTransform'
 */
 
 template<class Element> struct attribute_type<Element, tag::attribute::baseline_shift> 

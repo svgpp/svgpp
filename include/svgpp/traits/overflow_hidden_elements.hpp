@@ -26,7 +26,7 @@ svg, symbol, image, marker, pattern, foreignObject { overflow: hidden }
 The first line of the above user agent style sheet will cause the initial clipping path to be established at the 
 bounds of the initial viewport. Furthermore, it will cause new clipping paths to be established at the bounds of 
 the listed elements, all of which are elements that establish a new viewport. (Refer to the description of SVG's 
-use of the ‘overflow’ property for more information.)
+use of the 'overflow' property for more information.)
 */
 
 typedef boost::mpl::set6<
