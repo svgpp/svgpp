@@ -81,8 +81,8 @@ typedef boost::mpl::set16<
 > filter_primitive_elements;
 
 typedef boost::mpl::set3<
-  tag::element::feDiffuseLighting,
-  tag::element::feSpecularLighting,
+  tag::element::feDistantLight,
+  tag::element::fePointLight,
   tag::element::feSpotLight
 > light_source_elements;
 

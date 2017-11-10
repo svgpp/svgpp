@@ -327,10 +327,11 @@ struct child_element_types<tag::element::switch_, void>
 };
 
 template<class ElementTag>
-struct child_element_types<ElementTag, typename boost::enable_if<boost::mpl::has_key<boost::mpl::set12<
+struct child_element_types<ElementTag, typename boost::enable_if<boost::mpl::has_key<boost::mpl::set14<
   tag::element::feBlend, tag::element::feColorMatrix, tag::element::feComposite, tag::element::feConvolveMatrix, 
-  tag::element::feDisplacementMap, tag::element::feGaussianBlur, tag::element::feMergeNode, tag::element::feMorphology, 
-  tag::element::feOffset, tag::element::feSpotLight, tag::element::feTile, tag::element::feTurbulence>, ElementTag> >::type>
+  tag::element::feDisplacementMap, tag::element::feDistantLight, tag::element::feGaussianBlur, tag::element::feMergeNode,
+  tag::element::feMorphology, tag::element::feOffset, tag::element::fePointLight, tag::element::feSpotLight,
+  tag::element::feTile, tag::element::feTurbulence>, ElementTag> >::type>
 {
   typedef 
     boost::mpl::set2<
