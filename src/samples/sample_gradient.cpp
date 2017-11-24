@@ -218,7 +218,13 @@ struct ContextFactories::apply<ParentContext, svgpp::tag::element::stop>
 
 int main()
 {
-  char text[] = "<linearGradient/>";
+#define TEXT(x) #x
+  char text[] = 
+    TEXT(<linearGradient id="MyGradient" xmlns="http://www.w3.org/2000/svg">)
+    TEXT( <stop offset="5%" stop-color="#F60"/>)
+    TEXT( <stop offset="95%" stop-color="#FF6"/>)
+    TEXT(</linearGradient>);
+
   rapidxml_ns::xml_document<> doc;    // character type defaults to char
   doc.parse<0>(text);  
   if (rapidxml_ns::xml_node<> * gradient_element = doc.first_node())

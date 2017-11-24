@@ -83,7 +83,12 @@ void loadSvg(xml_element_t xml_root_element)
 
 int main()
 {
-  char text[] = "<svg/>";
+#define TEXT(x) #x
+  char text[] = 
+    TEXT(<svg xmlns="http://www.w3.org/2000/svg">)
+    TEXT( <ellipse cx="50" cy="25" rx="20" ry="100" transform="rotate(45 50 25)"/>)
+    TEXT(</svg>);
+
   rapidxml_ns::xml_document<> doc;    // character type defaults to char
   try
   {

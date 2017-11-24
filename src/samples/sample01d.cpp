@@ -9,6 +9,12 @@ typedef rapidxml_ns::xml_node<> const * xml_element_t;
 class BaseContext
 {
 public:
+  BaseContext() 
+  {}
+
+  BaseContext(BaseContext const & parent)
+  {}
+
   void on_exit_element()
   {}
 
@@ -127,7 +133,16 @@ void loadSvg(xml_element_t xml_root_element)
 
 int main()
 {
-  char text[] = "<svg/>";
+#define TEXT(x) #x
+  char text[] = 
+    TEXT(<svg xmlns="http://www.w3.org/2000/svg">)
+    TEXT( <g transform="translate(20,40)">)
+    TEXT(  <svg preserveAspectRatio="xMinYMin meet" viewBox="0 0 30 40" width="50" height="30">)
+    TEXT(   <rect x='.5' y='.5' width='29' height='39'/>)
+    TEXT(  </svg>)
+    TEXT( </g>)
+    TEXT(</svg>);
+
   rapidxml_ns::xml_document<> doc;    // character type defaults to char
   try
   {

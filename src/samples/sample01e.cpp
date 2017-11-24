@@ -217,7 +217,11 @@ void loadSvg(xml_element_t xml_root_element)
   document_traversal_t::load_document(xml_root_element, context);
 }
 
-xml_element_t FindCurrentDocumentElementById(std::string const &) { return NULL; }
+xml_element_t FindCurrentDocumentElementById(std::string const &) 
+{ 
+  // To be implemented.
+  return NULL; 
+}
 
 void UseContext::on_exit_element()
 {
@@ -239,7 +243,16 @@ void UseContext::on_exit_element()
 
 int main()
 {
-  char text[] = "<svg/>";
+#define TEXT(x) #x
+  char text[] = 
+    TEXT(<svg width="10cm" height="3cm" viewBox="0 0 100 30" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">)
+    TEXT( <defs>)
+    TEXT(  <rect id="MyRect" width="60" height="10"/>)
+    TEXT( </defs>)
+    TEXT( <rect x=".1" y=".1" width="99.8" height="29.8"/>)
+    TEXT( <use x="20" y="10" xlink:href="#MyRect"/>)
+    TEXT(</svg>);
+
   rapidxml_ns::xml_document<> doc;    // character type defaults to char
   try
   {

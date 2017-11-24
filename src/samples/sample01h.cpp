@@ -4,6 +4,7 @@
 #define SVGPP_USE_EXTERNAL_TRANSFORM_PARSER 1
 
 #include <rapidxml_ns/rapidxml_ns.hpp>
+#include <rapidxml_ns/rapidxml_ns_utils.hpp>
 #include <svgpp/policy/xml/rapidxml_ns.hpp>
 #include <svgpp/svgpp.hpp>
 #include <boost/tuple/tuple.hpp>
@@ -351,13 +352,20 @@ void UseContext::on_exit_element()
     std::cerr << "Element referenced by 'use' not found\n";
 }
 
-int main()
+int main(int argc, char * argv[])
 {
-  char text[] = "<svg/>";
-  rapidxml_ns::xml_document<> doc;    // character type defaults to char
+  if (argc < 2)
+  {
+    std::cout << "Usage: " << argv[0] << " <svg file name>\n";
+    return 1;
+  }
+
   try
   {
-    doc.parse<0>(text);  
+    rapidxml_ns::file<> xml_file(argv[1]);
+
+    rapidxml_ns::xml_document<> doc;
+    doc.parse<rapidxml_ns::parse_no_string_terminators>(xml_file.data());  
     if (rapidxml_ns::xml_node<> * svg_element = doc.first_node("svg"))
     {
       loadSvg(svg_element);

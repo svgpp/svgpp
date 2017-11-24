@@ -1,5 +1,8 @@
 #include <svgpp/svgpp.hpp>
+#include <boost/version.hpp>
+#if BOOST_VERSION >= 106400
 #include <boost/serialization/array_wrapper.hpp>
+#endif
 #include <boost/math/constants/constants.hpp>
 #include <boost/numeric/ublas/assignment.hpp>
 #include <boost/numeric/ublas/matrix.hpp>
