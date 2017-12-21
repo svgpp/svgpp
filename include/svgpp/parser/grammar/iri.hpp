@@ -27,7 +27,10 @@ public:
     using detail::character_encoding_namespace::char_;
 
     // TODO: More thorough RFC 3987 check
-    rule_ = qi::raw[ + (!char_(')') >> char_) ];
+    rule_
+        =   -qi::lit('"')
+            >> qi::raw[ + (!( char_(')') | char_('"')) >> char_) ]
+            >> -qi::lit('"' );
   }
 
 private:
