@@ -27,7 +27,15 @@ public:
     using detail::character_encoding_namespace::char_;
 
     // TODO: More thorough RFC 3987 check
-    rule_ = qi::raw[ + (!char_(')') >> char_) ];
+    rule_
+        =
+#ifdef SVGPP_ACCEPT_QUOTED_IRI
+            (qi::lit('"')
+            >> qi::raw[ + (!(char_(')') | char_('"')) >> char_) ]
+            >> qi::lit('"' ))
+            |
+#endif
+            qi::raw[ + (!char_(')') >> char_) ];
   }
 
 private:

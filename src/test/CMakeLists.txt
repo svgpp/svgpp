@@ -54,6 +54,7 @@ add_executable( ParserGTest
   urange_grammar_test.cpp 
   value_parser_test.cpp
   value_parser_length_test.cpp 
+  value_parser_paint_ie_test.cpp 
   value_parser_paint_test.cpp 
 	value_parser_path_test.cpp 
 	value_parser_transform_test.cpp 
