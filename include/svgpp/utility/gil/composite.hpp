@@ -33,13 +33,13 @@ struct composite_arithmetic_channel_fn;
 
 // For signed channels we call unsigned analog, converting forward and back
 template<class CompositeModeTag>
-struct composite_channel_fn<CompositeModeTag, gil::bits8s>
+struct composite_channel_fn<CompositeModeTag, boost::int8_t>
 {
-  gil::bits8s operator()(gil::bits8s channel_a, gil::bits8s channel_b, gil::bits8s alpha_a, gil::bits8s alpha_b) const
+  boost::int8_t operator()(boost::int8_t channel_a, boost::int8_t channel_b, boost::int8_t alpha_a, boost::int8_t alpha_b) const
   {
-    typedef gil::detail::channel_convert_to_unsigned<gil::bits8s> to_unsigned;
-    typedef gil::detail::channel_convert_from_unsigned<gil::bits8s> from_unsigned;
-    composite_channel_fn<CompositeModeTag, gil::bits8> converter_unsigned;
+    typedef gil::detail::channel_convert_to_unsigned<boost::int8_t> to_unsigned;
+    typedef gil::detail::channel_convert_from_unsigned<boost::int8_t> from_unsigned;
+    composite_channel_fn<CompositeModeTag, boost::uint8_t> converter_unsigned;
     return from_unsigned()(converter_unsigned(
       to_unsigned()(channel_a), to_unsigned()(channel_b), to_unsigned()(alpha_a), to_unsigned()(alpha_b)));
   }
@@ -47,9 +47,9 @@ struct composite_channel_fn<CompositeModeTag, gil::bits8s>
 
 // Dca' = Sca + Dca x (1 - Sa)
 template<>
-struct composite_channel_fn<tag::value::over, gil::bits8>
+struct composite_channel_fn<tag::value::over, boost::uint8_t>
 {
-  gil::bits8 operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
   {
     return clamp_channel_bits8(channel_a + channel_b * (255 - alpha_a) / 255);
   }
@@ -57,9 +57,9 @@ struct composite_channel_fn<tag::value::over, gil::bits8>
 
 // Da'  = Sa + Da - Sa x Da
 template<>
-struct composite_alpha_fn<tag::value::over, gil::bits8>
+struct composite_alpha_fn<tag::value::over, boost::uint8_t>
 {
-  gil::bits8 operator()(int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int alpha_a, int alpha_b) const
   {
     return clamp_channel_bits8(alpha_a + alpha_b - alpha_a * alpha_b / 255);
   }
@@ -67,9 +67,9 @@ struct composite_alpha_fn<tag::value::over, gil::bits8>
 
 // Dca' = Sca x Da
 template<>
-struct composite_channel_fn<tag::value::in, gil::bits8>
+struct composite_channel_fn<tag::value::in, boost::uint8_t>
 {
-  gil::bits8 operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
   {
     return channel_a * alpha_b / 255;
   }
@@ -77,9 +77,9 @@ struct composite_channel_fn<tag::value::in, gil::bits8>
 
 // Da'  = Sa x Da
 template<>
-struct composite_alpha_fn<tag::value::in, gil::bits8>
+struct composite_alpha_fn<tag::value::in, boost::uint8_t>
 {
-  gil::bits8 operator()(int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int alpha_a, int alpha_b) const
   {
     return alpha_a * alpha_b / 255;
   }
@@ -87,9 +87,9 @@ struct composite_alpha_fn<tag::value::in, gil::bits8>
 
 // Dca' = Sca x (1 - Da)
 template<>
-struct composite_channel_fn<tag::value::out, gil::bits8>
+struct composite_channel_fn<tag::value::out, boost::uint8_t>
 {
-  gil::bits8 operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
   {
     return channel_a * alpha_a * (255 - alpha_b) / 65535;
   }
@@ -97,9 +97,9 @@ struct composite_channel_fn<tag::value::out, gil::bits8>
 
 // Da'  = Sa x (1 - Da)
 template<>
-struct composite_alpha_fn<tag::value::out, gil::bits8>
+struct composite_alpha_fn<tag::value::out, boost::uint8_t>
 {
-  gil::bits8 operator()(int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int alpha_a, int alpha_b) const
   {
     return alpha_a * (255 - alpha_b) / 255;
   }
@@ -107,9 +107,9 @@ struct composite_alpha_fn<tag::value::out, gil::bits8>
 
 // Dca' = Sca x Da + Dca x (1 - Sa)
 template<>
-struct composite_channel_fn<tag::value::atop, gil::bits8>
+struct composite_channel_fn<tag::value::atop, boost::uint8_t>
 {
-  gil::bits8 operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
   {
     return (channel_a * alpha_a + channel_b * (255 - alpha_a)) * alpha_b / 65535;
   }
@@ -117,9 +117,9 @@ struct composite_channel_fn<tag::value::atop, gil::bits8>
 
 // Da'  = Da
 template<>
-struct composite_alpha_fn<tag::value::atop, gil::bits8>
+struct composite_alpha_fn<tag::value::atop, boost::uint8_t>
 {
-  gil::bits8 operator()(gil::bits8 alpha_a, gil::bits8 alpha_b) const
+  boost::uint8_t operator()(boost::uint8_t alpha_a, boost::uint8_t alpha_b) const
   {
     return alpha_b;
   }
@@ -127,9 +127,9 @@ struct composite_alpha_fn<tag::value::atop, gil::bits8>
 
 // Dca' = Sca x (1 - Da) + Dca x (1 - Sa)
 template<>
-struct composite_channel_fn<tag::value::xor_, gil::bits8>
+struct composite_channel_fn<tag::value::xor_, boost::uint8_t>
 {
-  gil::bits8 operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
   {
     return clamp_channel_bits8((channel_a * alpha_a * (255 - alpha_b) + channel_b * alpha_b * (255 - alpha_a)) / 65535);
   }
@@ -137,9 +137,9 @@ struct composite_channel_fn<tag::value::xor_, gil::bits8>
 
 // Da'  = Sa + Da - 2 x Sa x Da
 template<>
-struct composite_alpha_fn<tag::value::xor_, gil::bits8>
+struct composite_alpha_fn<tag::value::xor_, boost::uint8_t>
 {
-  gil::bits8 operator()(int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int alpha_a, int alpha_b) const
   {
     return clamp_channel_bits8((alpha_a + alpha_b - 2 * alpha_a * alpha_b) / 255);
   }
@@ -147,14 +147,14 @@ struct composite_alpha_fn<tag::value::xor_, gil::bits8>
 
 // result = k1*i1*i2 + k2*i1 + k3*i2 + k4
 template<>
-struct composite_arithmetic_channel_fn<gil::bits8>
+struct composite_arithmetic_channel_fn<boost::uint8_t>
 {
   template<class Coefficient>
   composite_arithmetic_channel_fn(Coefficient k1, Coefficient k2, Coefficient k3, Coefficient k4)
     : k1_(k1 * 255), k2_(k2 * 255), k3_(k3 * 255), k4_(k4 * 255)
   {}
 
-  gil::bits8 operator()(int channel_a, int channel_b) const 
+  boost::uint8_t operator()(int channel_a, int channel_b) const 
   {
     return clamp_channel_bits8(k1_ * channel_a * channel_b / 65535 + k2_ * channel_a / 255 + k3_ * channel_b / 255 + k4_);
   }

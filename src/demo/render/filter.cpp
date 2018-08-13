@@ -745,7 +745,7 @@ private:
   boost::gil::rgba8_image_t image_;
 };
 
-typedef boost::array<gil::bits8, 256> ChannelTransferTable;
+typedef boost::array<boost::uint8_t, 256> ChannelTransferTable;
 
 struct ComponentTransferPixel
 {
