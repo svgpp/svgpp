@@ -1376,8 +1376,6 @@ void Path::drawPath()
 
   curved_t curved(path_storage_);
 
-  path_storage_.arrange_orientations_all_paths(agg::path_flags_ccw); // TODO: move out
-  
   EffectivePaint fill = getEffectivePaint(style().fill_paint_);
   if (boost::get<svgpp::tag::value::none>(&fill) == NULL)
   {
