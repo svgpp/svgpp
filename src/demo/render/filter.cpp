@@ -98,17 +98,6 @@ struct feMerge: FilterElementBase
   std::vector<FilterInput> inputs_;
 };
 
-struct feFlood: FilterElementBase
-{
-  feFlood()
-    : flood_color_(BlackColor())
-    , flood_opacity_(1.0)
-  {}
-
-  color_t flood_color_;
-  double flood_opacity_;
-};
-
 struct feColorMatrix: FilterElementBase
 {
   enum Type { mMatrix, mSaturate, mHueRotate, mLuminanceToAlpha };
@@ -123,7 +112,7 @@ struct feColorMatrix: FilterElementBase
 };
 
 
-typedef boost::variant<feBlend, feComponentTransfer, feOffset, feComposite, feMerge, feFlood, 
+typedef boost::variant<feBlend, feComponentTransfer, feOffset, feComposite, feMerge,
   feColorMatrix> FilterElement;
 
 class ElementWithRegionContext
@@ -479,44 +468,6 @@ private:
   FilterInput data_;
 };
 
-class feFloodContext: 
-  public FilterElementBaseContext
-{
-public:
-  feFloodContext(FilterContext & parent)
-    : FilterElementBaseContext(data_)
-    , parent_(parent)
-  {
-  }
-
-  void on_exit_element() const 
-  {
-    parent_.addElement(data_);
-  }
-
-  using FilterElementBaseContext::set;
-  
-  // TODO: inheriting and 'style' handling for flood-color and flood-opacity
-  void set(svgpp::tag::attribute::flood_color, svgpp::tag::value::inherit)
-  {}
-
-  void set(svgpp::tag::attribute::flood_color, svgpp::tag::value::currentColor)
-  {}
-
-  void set(svgpp::tag::attribute::flood_color, color_t color, svgpp::tag::skip_icc_color = svgpp::tag::skip_icc_color())
-  { data_.flood_color_ = color; }
-
-  void set(svgpp::tag::attribute::flood_opacity, double val)
-  { data_.flood_opacity_ = val; }
-
-  void set(svgpp::tag::attribute::flood_opacity, svgpp::tag::value::inherit)
-  {}
-
-private:
-  FilterContext & parent_;
-  feFlood data_;
-};
-
 class feColorMatrixContext: 
   public FilterElementBaseContext,
   public ElementWithInputContext<svgpp::tag::attribute::in>
@@ -601,12 +552,6 @@ template<>
 struct context_factories::apply<feMergeContext, svgpp::tag::element::feMergeNode>
 {
   typedef svgpp::factory::context::on_stack<feMergeNodeContext> type;
-};
-
-template<>
-struct context_factories::apply<FilterContext, svgpp::tag::element::feFlood>
-{
-  typedef svgpp::factory::context::on_stack<feFloodContext> type;
 };
 
 template<>
@@ -888,27 +833,6 @@ private:
   boost::gil::rgba8_image_t image_;
 };
 
-class FloodView: public IFilterView
-{
-public:
-  FloodView(feFlood const & fe)
-    : fe_(fe)
-  {}
-
-  virtual gil::rgba8c_view_t view() 
-  {
-    if (image_.width() == 0)
-    {
-      //image_.recreate(in_->view().dimensions(), gil::rgba8_pixel_t(0, 0, 0, 0), 0);
-    }
-    return gil::const_view(image_);
-  }
-
-private:
-  feFlood const fe_;
-  boost::gil::rgba8_image_t image_;
-};
-
 class ColorMatrixView: public IFilterView
 {
 public:
@@ -1054,14 +978,6 @@ struct FilterElementVisitor:
     lastFilter_ = feView;
   }
 
-  void operator()(feFlood const & fe)
-  {
-    boost::shared_ptr<FloodView> feView(new FloodView(fe));
-    if (!fe.result_.empty())
-      namedFilters_[fe.result_] = feView;
-    lastFilter_ = feView;
-  }
-
   void operator()(feColorMatrix const & fe)
   {
     boost::shared_ptr<ColorMatrixView> feView(new ColorMatrixView(fe, findInput(fe.input_)));
@@ -1156,7 +1072,6 @@ IFilterViewPtr Filters::get(svg_string_t const & id, length_factory_t const &, I
             svgpp::tag::element::feColorMatrix,
             svgpp::tag::element::feComponentTransfer,
             svgpp::tag::element::feComposite,
-            svgpp::tag::element::feFlood,
             svgpp::tag::element::feFuncA,
             svgpp::tag::element::feFuncB,
             svgpp::tag::element::feFuncG,
@@ -1190,8 +1105,6 @@ IFilterViewPtr Filters::get(svg_string_t const & id, length_factory_t const &, I
             boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k2>,
             boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k3>,
             boost::mpl::pair<svgpp::tag::element::feComposite, svgpp::tag::attribute::k4>,
-            boost::mpl::pair<svgpp::tag::element::feFlood, svgpp::tag::attribute::flood_color>,
-            boost::mpl::pair<svgpp::tag::element::feFlood, svgpp::tag::attribute::flood_opacity>,
 
             // transfer function element attributes
             boost::mpl::pair<svgpp::tag::element::feFuncA, svgpp::tag::attribute::type>,
