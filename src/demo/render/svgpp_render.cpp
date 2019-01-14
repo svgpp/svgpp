@@ -1691,7 +1691,7 @@ int main(int argc, char * argv[])
       std::cerr << ": " << e.what() << "\n";
       if (!buffer.isSizeSet()) {
         // Buffer isn't created yet - nothing to save, exiting.
-        return 0;
+        return 1;
       }
     }
     catch(std::exception const & e)
