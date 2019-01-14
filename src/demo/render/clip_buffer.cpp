@@ -40,7 +40,7 @@ void ClipBuffer::intersectClipRect(transform_t const & transform, number_t x, nu
 #if defined(RENDERER_AGG)
   typedef agg::renderer_scanline_aa_solid<renderer_base_t> renderer_t;
 
-  agg::rendering_buffer rbuf(&buffer_[0], width, height, width);
+  agg::rendering_buffer rbuf(&buffer_[0], width_, height_, width_);
   pixfmt_t pixfmt(rbuf);
   renderer_base_t renderer_base(pixfmt);
   agg::scanline_p8 scanline;
