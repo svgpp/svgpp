@@ -14,6 +14,10 @@
 
 #include <svgpp/svgpp.hpp>
 
+#include <boost/gil/image_view.hpp>
+#include <boost/gil/image_view_factory.hpp>
+#include <boost/gil/typedefs.hpp>
+
 #if defined(RENDERER_AGG)
 typedef agg::pixfmt_gray8 pixfmt_t;
 typedef agg::renderer_base<pixfmt_t> renderer_base_t;

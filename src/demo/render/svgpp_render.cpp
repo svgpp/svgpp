@@ -7,7 +7,10 @@
 #include <svgpp/utility/gil/mask.hpp>
 
 #include <boost/bind.hpp>
-#include <boost/gil/gil_all.hpp>
+#include <boost/gil/algorithm.hpp>
+#include <boost/gil/image_view.hpp>
+#include <boost/gil/image_view_factory.hpp>
+#include <boost/gil/typedefs.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/mpl/transform_view.hpp>
 #include <boost/optional.hpp>

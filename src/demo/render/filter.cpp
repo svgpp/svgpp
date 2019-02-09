@@ -8,7 +8,10 @@
 #include <svgpp/utility/gil/composite.hpp>
 #include <svgpp/utility/gil/color_matrix.hpp>
 #include <svgpp/utility/gil/mask.hpp>
-#include <boost/gil/gil_all.hpp>
+#include <boost/gil/algorithm.hpp>
+#include <boost/gil/image.hpp>
+#include <boost/gil/image_view.hpp>
+#include <boost/gil/typedefs.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/noncopyable.hpp>
 #include <boost/variant.hpp>
