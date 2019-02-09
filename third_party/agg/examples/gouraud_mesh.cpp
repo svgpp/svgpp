@@ -12,7 +12,6 @@
 #include "agg_rasterizer_scanline_aa.h"
 #include "agg_span_allocator.h"
 #include "agg_span_gouraud_rgba.h"
-#include "agg_gamma_lut.h"
 #include "agg_arc.h"
 #include "agg_bezier_arc.h"
 #include "agg_pixfmt_rgb.h"
@@ -27,10 +26,10 @@
 
 #include "agg_rasterizer_compound_aa.h"
 
+#define AGG_BGRA32
+#include "pixel_formats.h"
 
 enum { flip_y = true };
-
-typedef agg::pixfmt_bgra32_pre pixfmt;
 
 
 namespace agg
@@ -40,13 +39,13 @@ namespace agg
     {
         double x,y;
         double dx,dy;
-        rgba8 color;
-        rgba8 dc;
+        srgba8 color;
+        srgba8 dc;
 
         mesh_point() {}
         mesh_point(double x_, double y_, 
                    double dx_, double dy_, 
-                   rgba8 c, rgba8 dc_) : 
+                   srgba8 c, srgba8 dc_) : 
             x(x_), y(y_), 
             dx(dx_), dy(dy_), 
             color(c), dc(dc_)
@@ -158,8 +157,8 @@ namespace agg
             {
                 double dx = random(-0.5, 0.5);
                 double dy = random(-0.5, 0.5);
-                rgba8 c(rand() & 0xFF, rand() & 0xFF, rand() & 0xFF);
-                rgba8 dc(rand() & 1, rand() & 1, rand() & 1);
+                srgba8 c(rand() & 0xFF, rand() & 0xFF, rand() & 0xFF);
+                srgba8 dc(rand() & 1, rand() & 1, rand() & 1);
                 m_vertices.add(mesh_point(x, start_y, dx, dy, c, dc));
                 x += cell_w;
             }
@@ -246,8 +245,8 @@ namespace agg
         unsigned i;
         for(i = 1; i < m_vertices.size(); i++)
         {
-            rgba8& c = m_vertices[i].color;
-            rgba8& dc = m_vertices[i].dc;
+            srgba8& c = m_vertices[i].color;
+            srgba8& dc = m_vertices[i].dc;
             int r = c.r + (dc.r ? 5 : -5);
             int g = c.g + (dc.g ? 5 : -5);
             int b = c.b + (dc.b ? 5 : -5);
@@ -310,10 +309,9 @@ namespace agg
     class styles_gouraud
     {
     public:
-        typedef span_gouraud_rgba<rgba8> gouraud_type;
+        typedef span_gouraud_rgba<color_type> gouraud_type;
 
-        template<class Gamma>
-        styles_gouraud(const mesh_ctrl& mesh, const Gamma& gamma)
+        styles_gouraud(const mesh_ctrl& mesh)
         {
             unsigned i;
             for(i = 0; i < mesh.num_triangles(); i++)
@@ -323,12 +321,9 @@ namespace agg
                 const agg::mesh_point& p2 = mesh.vertex(t.p2);
                 const agg::mesh_point& p3 = mesh.vertex(t.p3);
 
-                agg::rgba8 c1 = p1.color; 
-                agg::rgba8 c2 = p2.color; 
-                agg::rgba8 c3 = p3.color;
-                c1.apply_gamma_dir(gamma);
-                c2.apply_gamma_dir(gamma);
-                c3.apply_gamma_dir(gamma);
+                agg::srgba8 c1 = p1.color; 
+                agg::srgba8 c2 = p2.color; 
+                agg::srgba8 c3 = p3.color;
                 gouraud_type gouraud(c1, c2, c3,
                                      p1.x, p1.y, 
                                      p2.x, p2.y,
@@ -340,9 +335,9 @@ namespace agg
 
         bool is_solid(unsigned style) const { return false; }
 
-        rgba8 color(unsigned style) const { return rgba8(0,0,0,0); }
+        color_type color(unsigned style) const { return color_type::no_color(); }
 
-        void generate_span(rgba8* span, int x, int y, unsigned len, unsigned style)
+        void generate_span(color_type* span, int x, int y, unsigned len, unsigned style)
         {
             m_triangles[style].generate(span, x, y, len);
         }
@@ -360,19 +355,17 @@ class the_application : public agg::platform_support
 {
 
 public:
-    typedef agg::renderer_base<pixfmt> renderer_base;
+    typedef agg::renderer_base<pixfmt_pre> renderer_base;
     typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_scanline;
     typedef agg::rasterizer_scanline_aa<> rasterizer_scanline;
     typedef agg::scanline_u8 scanline;
 
     agg::mesh_ctrl      m_mesh;
-    agg::gamma_lut<>    m_gamma;
 
 
     the_application(agg::pix_format_e format, bool flip_y) :
         agg::platform_support(format, flip_y)
     {
-//        m_gamma.gamma(2.0);
     }
 
     virtual void on_init()
@@ -383,7 +376,7 @@ public:
 
     virtual void on_draw()
     {
-        pixfmt pf(rbuf_window());
+        pixfmt_pre pf(rbuf_window());
         renderer_base ren_base(pf);
         ren_base.clear(agg::rgba(0, 0, 0));
         renderer_scanline ren(ren_base);
@@ -393,10 +386,10 @@ public:
         agg::scanline_bin sl_bin;
 
         agg::rasterizer_compound_aa<> rasc;
-        agg::span_allocator<agg::rgba8> alloc;
+        agg::span_allocator<color_type> alloc;
 
         unsigned i;
-        agg::styles_gouraud styles(m_mesh, m_gamma);
+        agg::styles_gouraud styles(m_mesh);
         start_timer();
         rasc.reset();
         //rasc.clip_box(40, 40, width() - 40, height() - 40);
@@ -430,12 +423,6 @@ public:
 
         ras.add_path(pt);
         agg::render_scanlines_aa_solid(ras, sl, ren_base, agg::rgba(1,1,1));
-
-
-        if(m_gamma.gamma() != 1.0)
-        {
-            pf.apply_gamma_inv(m_gamma);
-        }
     }
 
     virtual void on_mouse_move(int x, int y, unsigned flags) 
@@ -481,7 +468,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgra32, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example");
 
     if(app.init(400, 400, 0))//agg::window_resize))

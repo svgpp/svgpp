@@ -11,6 +11,9 @@
 #include "ctrl/agg_slider_ctrl.h"
 #include "ctrl/agg_cbox_ctrl.h"
 
+#define AGG_BGR24
+//#define AGG_BGR96
+#include "pixel_formats.h"
 
 enum flip_y_e { flip_y = true };
 
@@ -30,7 +33,7 @@ namespace agg
         unsigned num_paths() { return m_ctrl.num_paths(); }
         void     rewind(unsigned path_id) { m_pipeline.rewind(path_id); }
         unsigned vertex(double* x, double* y) { return m_pipeline.vertex(x, y); }
-        const ColorT& color(unsigned i) const { return m_ctrl.color(i); } 
+        const ColorT color(unsigned i) const { return m_ctrl.color(i); } 
 
     private:
         Ctrl&     m_ctrl;
@@ -102,9 +105,9 @@ namespace agg
 
 class the_application : public agg::platform_support
 {
-    agg::slider_ctrl<agg::rgba8> m_slider1;
-    agg::slider_ctrl<agg::rgba8> m_slider_spiral;
-    agg::slider_ctrl<agg::rgba8> m_slider_base_y;
+    agg::slider_ctrl<color_type> m_slider1;
+    agg::slider_ctrl<color_type> m_slider_spiral;
+    agg::slider_ctrl<color_type> m_slider_base_y;
 
 public:
     the_application(agg::pix_format_e format, bool flip_y) :
@@ -143,10 +146,10 @@ public:
 
     virtual void on_draw()
     {
-        typedef agg::renderer_base<agg::pixfmt_bgr24> ren_base;
+        typedef agg::renderer_base<pixfmt> ren_base;
         typedef agg::renderer_scanline_aa_solid<ren_base> renderer;
 
-        agg::pixfmt_bgr24 pixf(rbuf_window());
+        pixfmt pixf(rbuf_window());
         ren_base rb(pixf);
         renderer ren(rb);
         agg::scanline_u8 sl;
@@ -160,7 +163,7 @@ public:
         agg::render_ctrl(ras, sl, rb, m_slider_base_y);
  
 
-        typedef agg::conv_segmentator<agg::slider_ctrl<agg::rgba8> > conv_segmentator_type;
+        typedef agg::conv_segmentator<agg::slider_ctrl<color_type> > conv_segmentator_type;
         typedef agg::conv_transform<conv_segmentator_type, agg::trans_polar> conv_transform_type;
 
         agg::trans_polar trans;
@@ -173,8 +176,8 @@ public:
         conv_segmentator_type segm(m_slider1);
         conv_transform_type pipeline(segm, trans);
 
-        agg::transformed_control<agg::rgba8, 
-                                 agg::slider_ctrl<agg::rgba8>, 
+        agg::transformed_control<agg::srgba8, 
+                                 agg::slider_ctrl<color_type>, 
                                  conv_transform_type>  ctrl(m_slider1, pipeline);
 
 
@@ -187,7 +190,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example. Polar Transformer");
 
     if(app.init(600, 400, agg::window_resize))

@@ -19,7 +19,7 @@
 #ifndef AGG_SIMUL_EQ_INCLUDED
 #define AGG_SIMUL_EQ_INCLUDED
 
-#include <math.h>
+#include <cmath>
 #include "agg_basics.h"
 
 namespace agg
@@ -51,7 +51,7 @@ namespace agg
             unsigned i;
             for(i = row; i < Rows; i++)
             {
-                if((tmp = fabs(m[i][row])) > max_val && tmp != 0.0)
+                if((tmp = std::fabs(m[i][row])) > max_val && tmp != 0.0)
                 {
                     max_val = tmp;
                     k = i;

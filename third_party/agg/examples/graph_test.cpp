@@ -22,16 +22,18 @@
 #include "agg_span_gradient.h"
 #include "agg_span_interpolator_linear.h"
 #include "agg_pixfmt_rgb.h"
+#include "agg_pixfmt_rgba.h"
 #include "ctrl/agg_slider_ctrl.h"
 #include "ctrl/agg_rbox_ctrl.h"
 #include "ctrl/agg_cbox_ctrl.h"
 #include "platform/agg_platform_support.h"
 
+#define AGG_BGR24
+//#define AGG_BGR96
+#include "pixel_formats.h"
+
 enum flip_y_e { flip_y = true };
 
-
-typedef agg::pixfmt_bgr24 pixfmt;
-typedef pixfmt::color_type color_type;
 typedef agg::renderer_base<pixfmt> base_renderer;
 typedef agg::renderer_primitives<base_renderer> primitives_renderer;
 
@@ -586,12 +588,12 @@ public:
 
                 if(m_type.cur_item() < 4)
                 {
-                    ren_fine.color(agg::rgba8(r, g, b, a));
+                    ren_fine.color(agg::srgba8(r, g, b, a));
                     agg::render_scanlines(ras, m_sl, ren_fine);
                 }
                 else
                 {
-                    ren_draft.color(agg::rgba8(r, g, b, a));
+                    ren_draft.color(agg::srgba8(r, g, b, a));
                     agg::render_scanlines(ras, m_sl, ren_draft);
                 }
             }
@@ -623,7 +625,7 @@ public:
             int b = rand() & 0x7F;
             int a = 255;
             if(m_translucent.status()) a = 80;
-            prim.line_color(agg::rgba8(r, g, b, a));
+            prim.line_color(agg::srgba8(r, g, b, a));
             ras.add_path(s);
         }
     }
@@ -651,7 +653,7 @@ public:
             int b = rand() & 0x7F;
             int a = 255;
             if(m_translucent.status()) a = 80;
-            prim.line_color(agg::rgba8(r, g, b, a));
+            prim.line_color(agg::srgba8(r, g, b, a));
             ras.add_path(s);
         }
     }
@@ -679,7 +681,7 @@ public:
             int b = rand() & 0x7F;
             int a = 255;
             if(m_translucent.status()) a = 80;
-            prim.line_color(agg::rgba8(r, g, b, a));
+            prim.line_color(agg::srgba8(r, g, b, a));
             ras.add_path(s);
         }
     }
@@ -910,7 +912,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example. Line Join");
 
     if(app.init(600+100, 500+30, agg::window_resize))

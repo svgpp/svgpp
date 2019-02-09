@@ -5,6 +5,7 @@
 all:
 	cd aa_demo; make
 	cd aa_test; make
+	cd agg2d_demo; make
 	cd alpha_gradient; make
 	cd alpha_mask; make
 	cd alpha_mask2; make
@@ -32,7 +33,7 @@ all:
 	cd image_transforms; make
 	cd image_perspective; make
 	cd image_resample; make
-	cd images1; make
+	cd image1; make
 	cd line_patterns; make
 	cd lion; make
 	cd lion_lens; make

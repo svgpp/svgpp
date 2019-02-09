@@ -141,7 +141,7 @@ namespace agg
     //------------------------------------------------------------------------
     bool trans_affine::is_valid(double epsilon) const
     {
-        return fabs(sx) > epsilon && fabs(sy) > epsilon;
+        return std::fabs(sx) > epsilon && std::fabs(sy) > epsilon;
     }
 
     //------------------------------------------------------------------------
@@ -164,7 +164,7 @@ namespace agg
         double y2 = 0.0;
         transform(&x1, &y1);
         transform(&x2, &y2);
-        return atan2(y2-y1, x2-x1);
+        return std::atan2(y2-y1, x2-x1);
     }
 
     //------------------------------------------------------------------------

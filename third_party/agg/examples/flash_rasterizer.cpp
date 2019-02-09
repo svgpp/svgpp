@@ -15,17 +15,16 @@
 #include "agg_rasterizer_scanline_aa.h"
 #include "agg_rasterizer_compound_aa.h"
 #include "agg_span_allocator.h"
-#include "agg_gamma_lut.h"
 #include "agg_pixfmt_rgba.h"
 #include "agg_bounding_rect.h"
 #include "agg_color_gray.h"
 #include "platform/agg_platform_support.h"
 
-
+#define AGG_BGRA32
+//#define AGG_BGRA128
+#include "pixel_formats.h"
 
 enum { flip_y = false };
-
-typedef agg::pixfmt_bgra32_pre pixfmt;
 
 
 
@@ -233,8 +232,8 @@ namespace agg
     class test_styles
     {
     public:
-        test_styles(const rgba8* solid_colors, 
-                    const rgba8* gradient) : 
+        test_styles(const color_type* solid_colors, 
+                    const color_type* gradient) : 
             m_solid_colors(solid_colors),
             m_gradient(gradient)
         {}
@@ -248,7 +247,7 @@ namespace agg
 
         // Just returns a color
         //---------------------------------------------
-        const rgba8& color(unsigned style) const 
+        const color_type& color(unsigned style) const 
         { 
             return m_solid_colors[style]; 
         }
@@ -257,14 +256,14 @@ namespace agg
         // can be a span generator, so that, parameter "style"
         // isn't used here.
         //---------------------------------------------
-        void generate_span(rgba8* span, int x, int y, unsigned len, unsigned style)
+        void generate_span(color_type* span, int x, int y, unsigned len, unsigned style)
         {
-            memcpy(span, m_gradient + x, sizeof(rgba8) * len);
+            memcpy(span, m_gradient + x, sizeof(color_type) * len);
         }
 
     private:
-        const rgba8* m_solid_colors;
-        const rgba8* m_gradient;
+        const color_type* m_solid_colors;
+        const color_type* m_gradient;
     };
 
 
@@ -282,10 +281,9 @@ class the_application : public agg::platform_support
 
 public:
     agg::compound_shape        m_shape;
-    agg::rgba8                 m_colors[100];
+    color_type                 m_colors[100];
     agg::trans_affine          m_scale;
-    agg::gamma_lut<>           m_gamma;
-    agg::pod_array<agg::rgba8> m_gradient;
+    agg::pod_array<color_type> m_gradient;
     int                        m_point_idx;
     int                        m_hit_x;
     int                        m_hit_y;
@@ -296,17 +294,14 @@ public:
         m_hit_x(-1),
         m_hit_y(-1)
     {
-        m_gamma.gamma(2.0);
-
         for(unsigned i = 0; i < 100; i++)
         {
-            m_colors[i] = agg::rgba8(
+            m_colors[i] = agg::srgba8(
                 (rand() & 0xFF), 
                 (rand() & 0xFF), 
                 (rand() & 0xFF), 
                 230);
 
-            m_colors[i].apply_gamma_dir(m_gamma);
             m_colors[i].premultiply();
         }
     }
@@ -326,11 +321,11 @@ public:
 
     virtual void on_draw()
     {
-        typedef agg::renderer_base<pixfmt> renderer_base;
+        typedef agg::renderer_base<pixfmt_pre> renderer_base;
         typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_scanline;
         typedef agg::scanline_u8 scanline;
 
-        pixfmt pixf(rbuf_window());
+        pixfmt_pre pixf(rbuf_window());
         renderer_base ren_base(pixf);
         ren_base.clear(agg::rgba(1.0, 1.0, 0.95));
         renderer_scanline ren(ren_base);
@@ -338,8 +333,8 @@ public:
         unsigned i;
         unsigned w = unsigned(width());
         m_gradient.resize(w);
-        agg::rgba8 c1(255, 0, 0, 180);
-        agg::rgba8 c2(0, 0, 255, 180);
+        agg::srgba8 c1(255, 0, 0, 180);
+        agg::srgba8 c2(0, 0, 255, 180);
         for(i = 0; i < w; i++)
         {
             m_gradient[i] = c1.gradient(c2, i / width());
@@ -354,7 +349,7 @@ public:
         agg::conv_stroke<agg::conv_transform<agg::compound_shape> > stroke(shape);
 
         agg::test_styles style_handler(m_colors, m_gradient.data());
-        agg::span_allocator<agg::rgba8> alloc;
+        agg::span_allocator<color_type> alloc;
 
         m_shape.approximation_scale(m_scale.scale());
 
@@ -403,7 +398,7 @@ public:
                 if(m_shape.style(i).line >= 0)
                 {
                     ras.add_path(stroke, m_shape.style(i).path_id);
-                    ren.color(agg::rgba8(0,0,0, 128));
+                    ren.color(agg::srgba8(0,0,0, 128));
                     agg::render_scanlines(ras, sl, ren);
                 }
             }
@@ -433,11 +428,6 @@ public:
         ras.add_path(ts);
         ren.color(agg::rgba(0,0,0));
         agg::render_scanlines(ras, sl, ren);
-
-        if(m_gamma.gamma() != 1.0)
-        {
-            pixf.apply_gamma_inv(m_gamma);
-        }
     }
 
     
@@ -536,7 +526,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgra32, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example - Flash Rasterizer");
     const char* fname = "shapes.txt";
     if(argc > 1) fname = argv[1];

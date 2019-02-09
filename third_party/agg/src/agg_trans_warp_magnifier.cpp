@@ -13,7 +13,7 @@
 //          http://www.antigrain.com
 //----------------------------------------------------------------------------
 
-#include <math.h>
+#include <cmath>
 #include "agg_trans_warp_magnifier.h"
 
 namespace agg
@@ -24,7 +24,7 @@ namespace agg
     {
         double dx = *x - m_xc;
         double dy = *y - m_yc;
-        double r = sqrt(dx * dx + dy * dy);
+        double r = std::sqrt(dx * dx + dy * dy);
         if(r < m_radius)
         {
             *x = m_xc + dx * m_magn;
@@ -44,7 +44,7 @@ namespace agg
         //-----------------
         double dx = *x - m_xc;
         double dy = *y - m_yc;
-        double r = sqrt(dx * dx + dy * dy);
+        double r = std::sqrt(dx * dx + dy * dy);
 
         if(r < m_radius * m_magn) 
         {

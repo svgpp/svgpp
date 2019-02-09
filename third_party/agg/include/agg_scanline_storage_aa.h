@@ -24,9 +24,9 @@
 #ifndef AGG_SCANLINE_STORAGE_AA_INCLUDED
 #define AGG_SCANLINE_STORAGE_AA_INCLUDED
 
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstring>
+#include <cstdlib>
+#include <limits>
 #include "agg_array.h"
 
 
@@ -97,13 +97,13 @@ namespace agg
             if(idx >= 0)
             {
                 T* ptr = &m_cells[idx];
-                memcpy(ptr, cells, sizeof(T) * num_cells);
+                std::memcpy(ptr, cells, sizeof(T) * num_cells);
                 return idx;
             }
             extra_span s;
             s.len = num_cells;
             s.ptr = pod_allocator<T>::allocate(num_cells);
-            memcpy(s.ptr, cells, sizeof(T) * num_cells);
+            std::memcpy(s.ptr, cells, sizeof(T) * num_cells);
             m_extra_storage.add(s);
             return -int(m_extra_storage.size());
         }
@@ -144,7 +144,7 @@ namespace agg
                 extra_span dst;
                 dst.len = src.len;
                 dst.ptr = pod_allocator<T>::allocate(dst.len);
-                memcpy(dst.ptr, src.ptr, dst.len * sizeof(T));
+                std::memcpy(dst.ptr, src.ptr, dst.len * sizeof(T));
                 m_extra_storage.add(dst);
             }
         }
@@ -198,7 +198,7 @@ namespace agg
                 };
 
                 const_iterator() : m_storage(0) {}
-                const_iterator(const embedded_scanline& sl) :
+                const_iterator(embedded_scanline& sl) :
                     m_storage(sl.m_storage),
                     m_span_idx(sl.m_scanline.start_span)
                 {
@@ -223,7 +223,7 @@ namespace agg
                     m_span.covers = m_storage->covers_by_index(s.covers_id);
                 }
 
-                const scanline_storage_aa* m_storage;
+                scanline_storage_aa* m_storage;
                 unsigned                   m_span_idx;
                 span                       m_span;
             };
@@ -263,10 +263,10 @@ namespace agg
             m_covers(),
             m_spans(256-2),         // Block increment size
             m_scanlines(),
-            m_min_x( 0x7FFFFFFF),
-            m_min_y( 0x7FFFFFFF),
-            m_max_x(-0x7FFFFFFF),
-            m_max_y(-0x7FFFFFFF),
+            m_min_x(std::numeric_limits<int>::max()),
+            m_min_y(std::numeric_limits<int>::max()),
+            m_max_x(std::numeric_limits<int>::min()),
+            m_max_y(std::numeric_limits<int>::min()),
             m_cur_scanline(0)
         {
             m_fake_scanline.y = 0;
@@ -284,10 +284,10 @@ namespace agg
             m_covers.remove_all();
             m_scanlines.remove_all();
             m_spans.remove_all();
-            m_min_x =  0x7FFFFFFF;
-            m_min_y =  0x7FFFFFFF;
-            m_max_x = -0x7FFFFFFF;
-            m_max_y = -0x7FFFFFFF;
+            m_min_x = std::numeric_limits<int>::max();
+            m_min_y = std::numeric_limits<int>::max();
+            m_max_x = std::numeric_limits<int>::min();
+            m_max_y = std::numeric_limits<int>::min();
             m_cur_scanline = 0;
         }
 
@@ -312,7 +312,7 @@ namespace agg
 
                 sp.x         = span_iterator->x;
                 sp.len       = span_iterator->len;
-                int len      = abs(int(sp.len));
+                int len      = std::abs(int(sp.len));
                 sp.covers_id = 
                     m_covers.add_cells(span_iterator->covers, 
                                        unsigned(len));
@@ -479,12 +479,12 @@ namespace agg
 
                     if(sp.len < 0)
                     {
-                        memcpy(data, covers, sizeof(T));
+                        std::memcpy(data, covers, sizeof(T));
                         data += sizeof(T);
                     }
                     else
                     {
-                        memcpy(data, covers, unsigned(sp.len) * sizeof(T));
+                        std::memcpy(data, covers, unsigned(sp.len) * sizeof(T));
                         data += sizeof(T) * unsigned(sp.len);
                     }
                 }
@@ -557,9 +557,9 @@ namespace agg
                 };
 
                 const_iterator() : m_ptr(0) {}
-                const_iterator(const embedded_scanline& sl) :
-                    m_ptr(sl.m_ptr),
-                    m_dx(sl.m_dx)
+                const_iterator(const embedded_scanline* sl) :
+                    m_ptr(sl->m_ptr),
+                    m_dx(sl->m_dx)
                 {
                     init_span();
                 }
@@ -613,7 +613,7 @@ namespace agg
             void     reset(int, int)     {}
             unsigned num_spans()   const { return m_num_spans;  }
             int      y()           const { return m_y;          }
-            const_iterator begin() const { return const_iterator(*this); }
+            const_iterator begin() const { return const_iterator(this); }
 
 
         private:
@@ -655,10 +655,10 @@ namespace agg
             m_ptr(0),
             m_dx(0),
             m_dy(0),
-            m_min_x(0x7FFFFFFF),
-            m_min_y(0x7FFFFFFF),
-            m_max_x(-0x7FFFFFFF),
-            m_max_y(-0x7FFFFFFF)
+            m_min_x(std::numeric_limits<int>::max()),
+            m_min_y(std::numeric_limits<int>::max()),
+            m_max_x(std::numeric_limits<int>::min()),
+            m_max_y(std::numeric_limits<int>::min())
         {}
 
         //--------------------------------------------------------------------
@@ -669,10 +669,10 @@ namespace agg
             m_ptr(data),
             m_dx(iround(dx)),
             m_dy(iround(dy)),
-            m_min_x(0x7FFFFFFF),
-            m_min_y(0x7FFFFFFF),
-            m_max_x(-0x7FFFFFFF),
-            m_max_y(-0x7FFFFFFF)
+            m_min_x(std::numeric_limits<int>::max()),
+            m_min_y(std::numeric_limits<int>::max()),
+            m_max_x(std::numeric_limits<int>::min()),
+            m_max_y(std::numeric_limits<int>::min())
         {}
 
         //--------------------------------------------------------------------
@@ -683,10 +683,10 @@ namespace agg
             m_ptr   = data;
             m_dx    = iround(dx);
             m_dy    = iround(dy);
-            m_min_x = 0x7FFFFFFF;
-            m_min_y = 0x7FFFFFFF;
-            m_max_x = -0x7FFFFFFF;
-            m_max_y = -0x7FFFFFFF;
+            m_min_x = std::numeric_limits<int>::max();
+            m_min_y = std::numeric_limits<int>::max();
+            m_max_x = std::numeric_limits<int>::min();
+            m_max_y = std::numeric_limits<int>::min();
         }
 
     private:

@@ -20,6 +20,13 @@
 #include "ctrl/agg_cbox_ctrl.h"
 #include "ctrl/agg_rbox_ctrl.h"
 
+//#define AGG_GRAY8 
+//#define AGG_GRAY32
+#define AGG_BGR24
+//#define AGG_BGR96
+//#define AGG_BGRA32 
+//#define AGG_BGRA128
+#include "pixel_formats.h"
 
 enum flip_y_e { flip_y = true };
 
@@ -90,13 +97,13 @@ void make_arrows(agg::path_storage& ps);
 
 class the_application : public agg::platform_support
 {
-    agg::rbox_ctrl<agg::rgba8> m_polygons;
-    agg::rbox_ctrl<agg::rgba8> m_operation;
+    agg::rbox_ctrl<color_type> m_polygons;
+    agg::rbox_ctrl<color_type> m_operation;
 
     typedef agg::amask_no_clip_gray8 alpha_mask_type;
     //typedef agg::alpha_mask_gray8 alpha_mask_type;
 
-    typedef agg::pixfmt_bgr24 pixfmt_type;
+    typedef pixfmt pixfmt_type;
 
     unsigned char* m_alpha_buf;
     agg::rendering_buffer m_alpha_mask_rbuf;
@@ -168,23 +175,23 @@ public:
         m_alpha_buf = new unsigned char[cx * cy];
         m_alpha_mask_rbuf.attach(m_alpha_buf, cx, cy, cx);
 
-        typedef agg::renderer_base<agg::pixfmt_gray8> ren_base;
+        typedef agg::renderer_base<agg::pixfmt_sgray8> ren_base;
         typedef agg::renderer_scanline_aa_solid<ren_base> renderer;
 
-        agg::pixfmt_gray8 pixf(m_alpha_mask_rbuf);
+        agg::pixfmt_sgray8 pixf(m_alpha_mask_rbuf);
         ren_base rb(pixf);
         renderer ren(rb);
 
         start_timer();
         if(m_operation.cur_item() == 0)
         {
-            rb.clear(agg::gray8(0));
-            ren.color(agg::gray8(255));
+            rb.clear(agg::sgray8(0));
+            ren.color(agg::sgray8(255));
         }
         else 
         {
-            rb.clear(agg::gray8(255));
-            ren.color(agg::gray8(0));
+            rb.clear(agg::sgray8(255));
+            ren.color(agg::sgray8(0));
         }
         m_ras.add_path(vs);
         agg::render_scanlines(m_ras, m_sl, ren);
@@ -549,7 +556,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example. Alpha-Mask as a Polygon Clipper");
 
     if(app.init(640, 520, agg::window_resize))

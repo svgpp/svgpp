@@ -10,7 +10,8 @@
 #include "ctrl/agg_slider_ctrl.h"
 #include "agg_svg_parser.h"
 
-//#include "agg_gamma_lut.h"
+#define AGG_BGR24
+#include "../pixel_formats.h"
 
 enum { flip_y = false };
 
@@ -19,10 +20,10 @@ class the_application : public agg::platform_support
 {
     agg::svg::path_renderer m_path;
 
-    agg::slider_ctrl<agg::rgba8> m_expand;
-    agg::slider_ctrl<agg::rgba8> m_gamma;
-    agg::slider_ctrl<agg::rgba8> m_scale;
-    agg::slider_ctrl<agg::rgba8> m_rotate;
+    agg::slider_ctrl<color_type> m_expand;
+    agg::slider_ctrl<color_type> m_gamma;
+    agg::slider_ctrl<color_type> m_scale;
+    agg::slider_ctrl<color_type> m_rotate;
 
     double m_min_x;
     double m_min_y;
@@ -80,7 +81,6 @@ public:
     {
         agg::svg::parser p(m_path);
         p.parse(fname);
-        m_path.arrange_orientations();
         m_path.bounding_rect(&m_min_x, &m_min_y, &m_max_x, &m_max_y);
         caption(p.title());
     }

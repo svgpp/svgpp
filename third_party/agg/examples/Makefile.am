@@ -7,7 +7,7 @@ W32TTP=truetype_test trans_curve1 trans_curve2
 endif
 
 if ENABLE_FT
-FTP=freetype_test   ### these dont work : trans_curve2_ft trans_curve1_ft
+FTP=freetype_test trans_curve2_ft trans_curve1_ft
 endif
 
 if ENABLE_GPC
@@ -219,12 +219,12 @@ freetype_test_CXXFLAGS=@FREETYPE_CFLAGS@
 freetype_test_LDFLAGS=  $(top_builddir)/font_freetype/libaggfontfreetype.la  $(top_builddir)/src/platform/@PREFERED_PLATFORM@/libaggplatform@PREFERED_PLATFORM@.la $(top_builddir)/src/libagg.la
 
 
-trans_curve2_ft_SOURCES=trans_curve2_ft.cpp
+trans_curve2_ft_SOURCES=trans_curve2_ft.cpp interactive_polygon.cpp
 trans_curve2_ft_CXXFLAGS=@FREETYPE_CFLAGS@
 trans_curve2_ft_LDFLAGS=  $(top_builddir)/font_freetype/libaggfontfreetype.la  $(top_builddir)/src/platform/@PREFERED_PLATFORM@/libaggplatform@PREFERED_PLATFORM@.la $(top_builddir)/src/libagg.la
 
 
-trans_curve1_ft_SOURCES=trans_curve1_ft.cpp
+trans_curve1_ft_SOURCES=trans_curve1_ft.cpp interactive_polygon.cpp
 trans_curve1_ft_CXXFLAGS=@FREETYPE_CFLAGS@
 trans_curve1_ft_LDFLAGS=  $(top_builddir)/font_freetype/libaggfontfreetype.la  $(top_builddir)/src/platform/@PREFERED_PLATFORM@/libaggplatform@PREFERED_PLATFORM@.la $(top_builddir)/src/libagg.la
 

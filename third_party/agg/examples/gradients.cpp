@@ -16,14 +16,17 @@
 #include "ctrl/agg_gamma_ctrl.h"
 #include "platform/agg_platform_support.h"
 
-
+//#define AGG_GRAY8
 //#define AGG_GRAY16
+//#define AGG_GRAY32
 #define AGG_BGR24
 //#define AGG_RGB24
 //#define AGG_RGB_AAA
 //#define AGG_RGBA32 
 //#define AGG_ARGB32 
 //#define AGG_ABGR32
+//#define AGG_BGR96
+//#define AGG_BGRA128
 //#define AGG_RGB565
 //#define AGG_RGB555
 #include "pixel_formats.h"
@@ -77,12 +80,12 @@ struct color_function_profile
 
 class the_application : public agg::platform_support
 {
-    agg::gamma_ctrl<agg::rgba8>  m_profile;
-    agg::spline_ctrl<agg::rgba8> m_spline_r;
-    agg::spline_ctrl<agg::rgba8> m_spline_g;
-    agg::spline_ctrl<agg::rgba8> m_spline_b;
-    agg::spline_ctrl<agg::rgba8> m_spline_a;
-    agg::rbox_ctrl<agg::rgba8>   m_rbox;
+    agg::gamma_ctrl<color_type>  m_profile;
+    agg::spline_ctrl<color_type> m_spline_r;
+    agg::spline_ctrl<color_type> m_spline_g;
+    agg::spline_ctrl<color_type> m_spline_b;
+    agg::spline_ctrl<color_type> m_spline_a;
+    agg::rbox_ctrl<color_type>   m_rbox;
 
     double m_pdx;
     double m_pdy;
@@ -484,7 +487,7 @@ public:
             int i;
             for(i = 0; i < 256; i++)
             {
-                color_type c = agg::rgba(m_spline_r.spline()[i], 
+                agg::srgba8 c = agg::rgba(m_spline_r.spline()[i], 
                                          m_spline_g.spline()[i],
                                          m_spline_b.spline()[i],
                                          m_spline_a.spline()[i]);

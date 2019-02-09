@@ -16,7 +16,6 @@
 // Stroke generator
 //
 //----------------------------------------------------------------------------
-#include <math.h>
 #include "agg_vcgen_stroke.h"
 #include "agg_shorten_path.h"
 

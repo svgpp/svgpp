@@ -17,6 +17,10 @@
 #include "ctrl/agg_cbox_ctrl.h"
 #include "platform/agg_platform_support.h"
 
+#define AGG_BGRA32
+//#define AGG_BGRA128
+#include "pixel_formats.h"
+
 enum flip_y_e { flip_y = true };
 
 
@@ -146,8 +150,6 @@ public:
     //------------------------------------------------------------------------
     virtual void on_draw()
     {
-        typedef agg::pixfmt_bgra32 pixfmt; 
-        typedef pixfmt::color_type color_type; 
         typedef agg::renderer_base<pixfmt> renderer_base;
         typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_solid;
        
@@ -246,7 +248,7 @@ public:
 
         typedef agg::span_interpolator_linear<> interpolator_type;
         interpolator_type interpolator(image_mtx);
-        agg::span_allocator<agg::rgba8> sa;
+        agg::span_allocator<color_type> sa;
 
         // "hardcoded" bilinear filter
         //------------------------------------------
@@ -418,7 +420,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgra32, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("Image Affine Transformations with filtering");
 
     const char* img_name = "spheres";

@@ -16,10 +16,15 @@
 #include "agg_ellipse.h"
 #include "platform/agg_platform_support.h"
 
+#define AGG_BGR24
+//#define AGG_BGR48
+//#define AGG_BGR96
+#include "pixel_formats.h"
+
 enum flip_y_e { flip_y = true };
 
 agg::path_storage g_path;
-agg::rgba8        g_colors[100];
+agg::srgba8        g_colors[100];
 unsigned          g_path_idx[100];
 unsigned          g_npaths = 0;
 double            g_x1 = 0;
@@ -35,7 +40,7 @@ double            g_skew_y = 0;
 int               g_nclick = 0;
 
 
-unsigned parse_lion(agg::path_storage& ps, agg::rgba8* colors, unsigned* path_idx);
+unsigned parse_lion(agg::path_storage& ps, agg::srgba8* colors, unsigned* path_idx);
 void parse_lion()
 {
     g_npaths = parse_lion(g_path, g_colors, g_path_idx);
@@ -76,15 +81,15 @@ public:
         m_alpha_buf = new unsigned char[cx * cy];
         g_alpha_mask_rbuf.attach(m_alpha_buf, cx, cy, cx);
 
-        typedef agg::renderer_base<agg::pixfmt_gray8> ren_base;
+        typedef agg::renderer_base<agg::pixfmt_sgray8> ren_base;
         typedef agg::renderer_scanline_aa_solid<ren_base> renderer;
 
-        agg::pixfmt_gray8 pixf(g_alpha_mask_rbuf);
+        agg::pixfmt_sgray8 pixf(g_alpha_mask_rbuf);
         ren_base rb(pixf);
         renderer r(rb);
         agg::scanline_p8 sl;
 
-        rb.clear(agg::gray8(0));
+        rb.clear(agg::sgray8(0));
 
         agg::ellipse ell;
 
@@ -98,7 +103,7 @@ public:
                      100);
 
             g_rasterizer.add_path(ell);
-            r.color(agg::gray8(rand() & 0xFF, rand() & 0xFF));
+            r.color(agg::sgray8(rand() & 0xFF, rand() & 0xFF));
             agg::render_scanlines(g_rasterizer, sl, r);
         }
     }
@@ -115,15 +120,15 @@ public:
         int height = rbuf_window().height();
 
         typedef agg::scanline_u8_am<agg::alpha_mask_gray8> scanline_type;
-        typedef agg::renderer_base<agg::pixfmt_bgr24> ren_base;
+        typedef agg::renderer_base<pixfmt> ren_base;
         typedef agg::renderer_scanline_aa_solid<ren_base> renderer;
 
-        agg::pixfmt_bgr24 pixf(rbuf_window());
+        pixfmt pixf(rbuf_window());
         ren_base rb(pixf);
         renderer r(rb);
 
         scanline_type sl(g_alpha_mask);
-        rb.clear(agg::rgba8(255, 255, 255));
+        rb.clear(agg::srgba8(255, 255, 255));
 
         agg::trans_affine mtx;
         mtx *= agg::trans_affine_translation(-g_base_dx, -g_base_dy);
@@ -181,7 +186,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example. Lion with Alpha-Masking");
 
     if(app.init(512, 400, agg::window_resize))

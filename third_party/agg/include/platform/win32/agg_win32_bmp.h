@@ -21,7 +21,6 @@
 
 
 #include <windows.h>
-#include <stdio.h>
 
 
 namespace agg

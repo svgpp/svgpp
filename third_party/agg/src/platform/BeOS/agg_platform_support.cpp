@@ -16,7 +16,7 @@
 //----------------------------------------------------------------------------
 
 #include <new>
-#include <stdio.h>
+#include <cstdio>
 
 #include <Alert.h>
 #include <Application.h>
@@ -30,7 +30,7 @@
 #include <View.h>
 #include <Window.h>
 
-#include <string.h>
+#include <cstring>
 #include "platform/agg_platform_support.h"
 #include "util/agg_color_conv_rgb8.h"
 
@@ -637,15 +637,15 @@ class platform_specific {
                             if (ret >= B_OK) {
                                 ret = path.GetParent(&path);
                                 if (ret >= B_OK) {
-                                    sprintf(fAppPath, "%s", path.Path());
+                                    std::sprintf(fAppPath, "%s", path.Path());
                                 } else {
-                                    fprintf(stderr, "getting app parent folder failed: %s\n", strerror(ret));
+                                    std::fprintf(stderr, "getting app parent folder failed: %s\n", std::strerror(ret));
                                 }
                             } else {
-                                fprintf(stderr, "making app path failed: %s\n", strerror(ret));
+                                std::fprintf(stderr, "making app path failed: %s\n", std::strerror(ret));
                             }
                         } else {
-                            fprintf(stderr, "GetAppInfo() failed: %s\n", strerror(ret));
+                            std::fprintf(stderr, "GetAppInfo() failed: %s\n", std::strerror(ret));
                         }
                     }
                     ~platform_specific()
@@ -719,7 +719,7 @@ class platform_specific {
         m_initial_width(10),
         m_initial_height(10)
     {
-        strcpy(m_caption, "Anti-Grain Geometry Application");
+        std::strcpy(m_caption, "Anti-Grain Geometry Application");
     }
 
 
@@ -732,7 +732,7 @@ class platform_specific {
     //------------------------------------------------------------------------
     void platform_support::caption(const char* cap)
     {
-        strcpy(m_caption, cap);
+        std::strcpy(m_caption, cap);
         m_specific->SetTitle(cap);
     }
 
@@ -793,7 +793,7 @@ class platform_specific {
 
     const char* platform_support::full_file_name(const char* file_name)
     {
-        sprintf(m_specific->fFilePath, "%s/%s", m_specific->fAppPath, file_name);
+        std::sprintf(m_specific->fFilePath, "%s/%s", m_specific->fAppPath, file_name);
         return m_specific->fFilePath;
     }
 
@@ -804,7 +804,7 @@ class platform_specific {
         if (idx < max_images)
         {
             char path[B_PATH_NAME_LENGTH];
-            sprintf(path, "%s/%s%s", m_specific->fAppPath, file, img_ext());
+            std::sprintf(path, "%s/%s%s", m_specific->fAppPath, file, img_ext());
             BBitmap* transBitmap = BTranslationUtils::GetBitmap(path);
             if (transBitmap && transBitmap->IsValid()) {
                 if(transBitmap->ColorSpace() != B_RGB32 && transBitmap->ColorSpace() != B_RGBA32) {
@@ -842,7 +842,7 @@ class platform_specific {
                 }
                 BBitmap* bitmap = new (nothrow) BBitmap(transBitmap->Bounds(), 0, format);
                 if (!bitmap || !bitmap->IsValid()) {
-                    fprintf(stderr, "failed to allocate temporary bitmap!\n");
+                    std::fprintf(stderr, "failed to allocate temporary bitmap!\n");
                     delete transBitmap;
                     delete bitmap;
                     return false;
@@ -903,7 +903,7 @@ class platform_specific {
                 return true;
 
             } else {
-                fprintf(stderr, "failed to load bitmap: '%s'\n", full_file_name(file));
+                std::fprintf(stderr, "failed to load bitmap: '%s'\n", full_file_name(file));
             }
         }
         return false;

@@ -6,7 +6,6 @@
 #include "agg_conv_transform.h"
 
 #include "agg_rendering_buffer.h"
-#include "agg_pixfmt_rgb.h"
 #include "agg_span_allocator.h"
 #include "agg_span_image_filter_rgb.h"
 #include "agg_image_accessors.h"
@@ -19,6 +18,9 @@
 #include "ctrl/agg_spline_ctrl.h"
 #include "platform/agg_platform_support.h"
 
+#define AGG_BGR24
+#include "pixel_formats.h"
+
 enum flip_y_e { flip_y = true };
 
 
@@ -26,10 +28,9 @@ namespace agg
 {
     
     //--------------------------------------------------------------------
-    class span_conv_brightness_alpha_rgb8
+    class span_conv_brightness_alpha
     {
     public:
-        typedef rgba8 color_type;
         typedef int8u alpha_type;
 
         enum array_size_e
@@ -37,17 +38,21 @@ namespace agg
             array_size = 256 * 3
         };
 
-        span_conv_brightness_alpha_rgb8(const alpha_type* alpha_array) :
+        span_conv_brightness_alpha(const alpha_type* alpha_array) :
             m_alpha_array(alpha_array)
         {
         }
 
         void prepare() {}
+
         void generate(color_type* span, int x, int y, unsigned len) const
         {
             do
             {
-                span->a = m_alpha_array[span->r + span->g + span->b];
+                // It's a bit of a hack, but we can treat the 8-bit alpha value as a cover.
+                color_type::calc_type x = span->r + span->g + span->b;
+                cover_type cover = m_alpha_array[int(x * array_size / (3 * color_type::full_value()))];
+                span->a = color_type::mult_cover(color_type::full_value(), cover);
                 ++span;
             }
             while(--len);
@@ -64,12 +69,12 @@ namespace agg
 
 class the_application : public agg::platform_support
 {
-    agg::spline_ctrl<agg::rgba8> m_alpha;
+    agg::spline_ctrl<color_type> m_alpha;
     double     m_x[50];
     double     m_y[50];
     double     m_rx[50];
     double     m_ry[50];
-    agg::rgba8 m_colors[50];
+    color_type m_colors[50];
 
 public:
     the_application(agg::pix_format_e format, bool flip_y) :
@@ -100,7 +105,7 @@ public:
             m_y[i]  = rand() % int(height());
             m_rx[i] = rand() % 60 + 10;
             m_ry[i] = rand() % 60 + 10;
-            m_colors[i] = agg::rgba8(rand() & 0xFF, 
+            m_colors[i] = agg::srgba8(rand() & 0xFF, 
                                      rand() & 0xFF, 
                                      rand() & 0xFF, 
                                      rand() & 0xFF);
@@ -111,7 +116,6 @@ public:
 
     virtual void on_draw()
     {
-        typedef agg::pixfmt_bgr24 pixfmt;
         typedef agg::renderer_base<pixfmt> renderer_base;
 
         pixfmt pixf(rbuf_window());
@@ -128,18 +132,18 @@ public:
         agg::trans_affine img_mtx = src_mtx;
         img_mtx.invert();
 
-        typedef agg::span_allocator<agg::rgba8> span_alloc;
+        typedef agg::span_allocator<color_type> span_alloc;
 
         unsigned i;
 
-        unsigned char brightness_alpha_array[agg::span_conv_brightness_alpha_rgb8::array_size];
-        for(i = 0; i < agg::span_conv_brightness_alpha_rgb8::array_size; i++)
+        unsigned char brightness_alpha_array[agg::span_conv_brightness_alpha::array_size];
+        for(i = 0; i < agg::span_conv_brightness_alpha::array_size; i++)
         {
             brightness_alpha_array[i] = 
                 agg::int8u(m_alpha.value(double(i) / 
-                         double(agg::span_conv_brightness_alpha_rgb8::array_size)) * 255.0);
+                         double(agg::span_conv_brightness_alpha::array_size)) * 255.0);
         }
-        agg::span_conv_brightness_alpha_rgb8 color_alpha(brightness_alpha_array);
+        agg::span_conv_brightness_alpha color_alpha(brightness_alpha_array);
 
 
 
@@ -148,7 +152,7 @@ public:
         typedef agg::span_image_filter_rgb_bilinear<img_source_type,
                                                     interpolator_type> span_gen;
         typedef agg::span_converter<span_gen,
-                                    agg::span_conv_brightness_alpha_rgb8> span_conv;
+                                    agg::span_conv_brightness_alpha> span_conv;
 
 
         span_alloc sa;
@@ -191,11 +195,11 @@ public:
             FILE* fd = fopen(full_file_name("alpha"), "w");
 
             int i;
-            for(i = 0; i < agg::span_conv_brightness_alpha_rgb8::array_size; i++)
+            for(i = 0; i < agg::span_conv_brightness_alpha::array_size; i++)
             {
                 int alpha = 
                     agg::int8u(m_alpha.value(double(i) / 
-                             double(agg::span_conv_brightness_alpha_rgb8::array_size)) * 255.0);
+                             double(agg::span_conv_brightness_alpha::array_size)) * 255.0);
                 if(i % 32 == 0) fprintf(fd, "\n");
                 fprintf(fd, "%3d, ", alpha);
             }
@@ -215,7 +219,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("Image Affine Transformations with Alpha-function");
 
     const char* img_name = "spheres";

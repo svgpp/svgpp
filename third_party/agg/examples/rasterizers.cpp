@@ -14,6 +14,7 @@
 #include "platform/agg_platform_support.h"
 
 #define AGG_BGR24
+//#define AGG_BGR96
 #include "pixel_formats.h"
 
 
@@ -28,9 +29,9 @@ class the_application : public agg::platform_support
     double m_dx;
     double m_dy;
     int    m_idx;
-    agg::slider_ctrl<agg::rgba8>  m_gamma;
-    agg::slider_ctrl<agg::rgba8>  m_alpha;
-    agg::cbox_ctrl<agg::rgba8>    m_test;
+    agg::slider_ctrl<color_type>  m_gamma;
+    agg::slider_ctrl<color_type>  m_alpha;
+    agg::cbox_ctrl<color_type>    m_test;
     agg::rasterizer_scanline_aa<> m_ras;
     agg::scanline_p8              m_sl_p8;
     agg::scanline_bin             m_sl_bin;

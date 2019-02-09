@@ -18,17 +18,15 @@
 #include "ctrl/agg_cbox_ctrl.h"
 #include "platform/agg_platform_support.h"
 
+#define AGG_BGR24
+//#define AGG_BGR96
+#include "pixel_formats.h"
 
-#include "agg_pixfmt_rgb.h"
 #include "agg_span_image_filter_rgb.h"
 #define span_image_filter          span_image_filter_rgb
 #define span_image_filter_nn       span_image_filter_rgb_nn
 #define span_image_filter_bilinear span_image_filter_rgb_bilinear_clip
 #define span_image_filter_2x2      span_image_filter_rgb_2x2
-#define pix_format agg::pix_format_bgr24
-typedef agg::pixfmt_bgr24 pixfmt;
-typedef agg::pixfmt_bgr24_pre pixfmt_pre;
-typedef pixfmt::color_type color_type;
 
 enum flip_y_e { flip_y = true };
 

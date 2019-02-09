@@ -100,7 +100,7 @@ namespace agg
         }
           
         void line_color(const ColorT& c) { m_color = c; }
-        const ColorT& color(unsigned i) const { return m_color; } 
+        const ColorT& color(unsigned) const { return m_color; } 
 
     private:
         bezier_ctrl(const bezier_ctrl<ColorT>&);

@@ -21,13 +21,14 @@
 enum flip_y_e { flip_y = true };
 
 #define AGG_BGR24
+//#define AGG_RGB565
 #include "pixel_formats.h"
 
 
 class the_application : public agg::platform_support
 {
-    agg::slider_ctrl<agg::rgba8> m_angle;
-    agg::slider_ctrl<agg::rgba8> m_scale;
+    agg::slider_ctrl<color_type> m_angle;
+    agg::slider_ctrl<color_type> m_scale;
 
 public:
     the_application(agg::pix_format_e format, bool flip_y) :
@@ -202,12 +203,12 @@ int agg_main(int argc, char* argv[])
 /*
 E:\agg23\examples\image1.cpp(111) : error C2664: 
 
-  '__thiscall agg::span_image_filter_gray_bilinear<struct agg::gray8,
+  '__thiscall agg::span_image_filter_gray_bilinear<struct agg::sgray8,
                                                    struct agg::order_bgra,
-                                                   class agg::span_interpolator_linear<class agg::trans_affine,8> >::agg::span_image_filter_gray_bilinear<struct agg::gray8,struct agg::order_bgra,class agg::span_interpolator_linear<class agg::trans_affine,8> >(class agg::span_interpolator_linear<class agg::trans_affine,8> &,const class agg::row_ptr_cache<unsigned char> &,const struct agg::gray8 &,struct agg::order_bgra &)' : 
+                                                   class agg::span_interpolator_linear<class agg::trans_affine,8> >::agg::span_image_filter_gray_bilinear<struct agg::sgray8,struct agg::order_bgra,class agg::span_interpolator_linear<class agg::trans_affine,8> >(class agg::span_interpolator_linear<class agg::trans_affine,8> &,const class agg::row_ptr_cache<unsigned char> &,const struct agg::sgray8 &,struct agg::order_bgra &)' : 
 
 cannot convert parameter 1 from 
 
-'class agg::span_allocator<struct agg::gray8>' to 
+'class agg::span_allocator<struct agg::sgray8>' to 
 'class agg::span_interpolator_linear<class agg::trans_affine,8> &'
 */

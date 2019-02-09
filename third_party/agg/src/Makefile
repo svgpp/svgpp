@@ -7,6 +7,7 @@ agg_arc.cpp \
 agg_arrowhead.cpp \
 agg_bezier_arc.cpp \
 agg_bspline.cpp \
+agg_color_rgba.cpp \
 agg_curves.cpp \
 agg_vcgen_contour.cpp \
 agg_vcgen_dash.cpp \

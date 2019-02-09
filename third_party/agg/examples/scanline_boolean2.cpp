@@ -11,7 +11,6 @@
 #include "agg_conv_curve.h"
 #include "agg_conv_stroke.h"
 #include "agg_gsv_text.h"
-#include "agg_pixfmt_rgb.h"
 #include "agg_scanline_boolean_algebra.h"
 #include "agg_scanline_storage_aa.h"
 #include "agg_scanline_storage_bin.h"
@@ -21,6 +20,9 @@
 #include "ctrl/agg_cbox_ctrl.h"
 #include "ctrl/agg_rbox_ctrl.h"
 
+#define AGG_BGR24
+//#define AGG_BGR96
+#include "pixel_formats.h"
 
 enum flip_y_e { flip_y = true };
 
@@ -106,12 +108,10 @@ void make_arrows(agg::path_storage& ps);
 
 class the_application : public agg::platform_support
 {
-    typedef agg::pixfmt_bgr24 pixfmt_type;
-
-    agg::rbox_ctrl<agg::rgba8> m_polygons;
-    agg::rbox_ctrl<agg::rgba8> m_fill_rule;
-    agg::rbox_ctrl<agg::rgba8> m_scanline_type;
-    agg::rbox_ctrl<agg::rgba8> m_operation;
+    agg::rbox_ctrl<color_type> m_polygons;
+    agg::rbox_ctrl<color_type> m_fill_rule;
+    agg::rbox_ctrl<color_type> m_scanline_type;
+    agg::rbox_ctrl<color_type> m_operation;
     double m_x;
     double m_y;
 
@@ -176,8 +176,8 @@ public:
                 case 6: op = agg::sbool_b_minus_a; break;
             }
 
-            typedef agg::renderer_base<pixfmt_type> renderer_base;
-            pixfmt_type pixf(rbuf_window());
+            typedef agg::renderer_base<pixfmt> renderer_base;
+            pixfmt pixf(rbuf_window());
             renderer_base rb(pixf);
 
             double t1 = 0.0;
@@ -322,9 +322,9 @@ public:
     template<class Rasterizer>
     unsigned render_sbool(Rasterizer& ras1, Rasterizer& ras2)
     {
-        pixfmt_type pf(rbuf_window());
-        agg::renderer_base<pixfmt_type> rb(pf);
-        agg::renderer_scanline_aa_solid<agg::renderer_base<pixfmt_type> > ren(rb);
+        pixfmt pf(rbuf_window());
+        agg::renderer_base<pixfmt> rb(pf);
+        agg::renderer_scanline_aa_solid<agg::renderer_base<pixfmt> > ren(rb);
         agg::scanline_p8 sl;
 
         ras1.filling_rule(m_fill_rule.cur_item() ? agg::fill_non_zero : agg::fill_even_odd);
@@ -602,10 +602,10 @@ public:
 
     virtual void on_draw()
     {
-        typedef agg::renderer_base<pixfmt_type> base_ren_type;
+        typedef agg::renderer_base<pixfmt> base_ren_type;
         typedef agg::renderer_scanline_aa_solid<base_ren_type> renderer_solid;
 
-        agg::pixfmt_bgr24 pf(rbuf_window());
+        pixfmt pf(rbuf_window());
         base_ren_type ren_base(pf);
         renderer_solid ren_solid(ren_base);
         ren_base.clear(agg::rgba(1,1,1));
@@ -662,7 +662,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example. Scanline Boolean");
 
     if(app.init(655, 520, agg::window_resize))

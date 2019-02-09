@@ -19,6 +19,7 @@
 #ifndef AGG_CONV_MARKER_INCLUDED
 #define AGG_CONV_MARKER_INCLUDED
 
+#include <cmath>
 #include "agg_basics.h"
 #include "agg_trans_affine.h"
 
@@ -117,7 +118,7 @@ namespace agg
                 }
                 ++m_num_markers;
                 m_mtx = m_transform;
-                m_mtx *= trans_affine_rotation(atan2(y2 - y1, x2 - x1));
+                m_mtx *= trans_affine_rotation(std::atan2(y2 - y1, x2 - x1));
                 m_mtx *= trans_affine_translation(x1, y1);
                 m_marker_shapes->rewind(m_marker - 1);
                 m_status = polygon;

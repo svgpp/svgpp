@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <cassert>
 #include "agg_rendering_buffer.h"
 #include "agg_renderer_base.h"
 #include "agg_rasterizer_scanline_aa.h"
@@ -14,28 +15,28 @@
 #include "ctrl/agg_slider_ctrl.h"
 #include "ctrl/agg_rbox_ctrl.h"
 
+//#define AGG_BGRA32
+#define AGG_BGRA128
+#include "pixel_formats.h"
 
 enum flip_y_e { flip_y = true };
 
-typedef agg::rgba8 color;
-typedef color::value_type value_type;
-typedef agg::order_bgra order;
-typedef agg::int32u pixel_type;
+typedef color_type color;
+typedef component_order order;
 typedef agg::rendering_buffer rbuf_type;
-#define pix_format agg::pix_format_bgra32
 
 typedef agg::blender_rgba<color, order> prim_blender_type; 
-typedef agg::pixfmt_alpha_blend_rgba<prim_blender_type, rbuf_type, pixel_type> prim_pixfmt_type;
+typedef agg::pixfmt_alpha_blend_rgba<prim_blender_type, rbuf_type> prim_pixfmt_type;
 typedef agg::renderer_base<prim_pixfmt_type> prim_ren_base_type;
 
 void force_comp_op_link()
 {
     // For unknown reason Digital Mars C++ doesn't want to link these 
     // functions if they are not specified explicitly. 
-    value_type p[4] = {0};
-    agg::comp_op_rgba_invert_rgb <color, order>::blend_pix(p,0,0,0,0,0);
-    agg::comp_op_rgba_invert     <color, order>::blend_pix(p,0,0,0,0,0);
-    agg::comp_op_rgba_contrast   <color, order>::blend_pix(p,0,0,0,0,0);
+    color_type::value_type p[4] = {0};
+    //agg::comp_op_rgba_invert_rgb <color, order>::blend_pix(p,0,0,0,0,0);
+    //agg::comp_op_rgba_invert     <color, order>::blend_pix(p,0,0,0,0,0);
+    //agg::comp_op_rgba_contrast   <color, order>::blend_pix(p,0,0,0,0,0);
     agg::comp_op_rgba_darken     <color, order>::blend_pix(p,0,0,0,0,0);
     agg::comp_op_rgba_lighten    <color, order>::blend_pix(p,0,0,0,0,0);
     agg::comp_op_rgba_color_dodge<color, order>::blend_pix(p,0,0,0,0,0);
@@ -48,7 +49,7 @@ void force_comp_op_link()
     agg::comp_op_rgba_dst_atop   <color, order>::blend_pix(p,0,0,0,0,0);
     agg::comp_op_rgba_xor        <color, order>::blend_pix(p,0,0,0,0,0);
     agg::comp_op_rgba_plus       <color, order>::blend_pix(p,0,0,0,0,0);
-    agg::comp_op_rgba_minus      <color, order>::blend_pix(p,0,0,0,0,0);
+    //agg::comp_op_rgba_minus      <color, order>::blend_pix(p,0,0,0,0,0);
     agg::comp_op_rgba_multiply   <color, order>::blend_pix(p,0,0,0,0,0);
     agg::comp_op_rgba_screen     <color, order>::blend_pix(p,0,0,0,0,0);
     agg::comp_op_rgba_overlay    <color, order>::blend_pix(p,0,0,0,0,0);
@@ -62,45 +63,6 @@ void force_comp_op_link()
     agg::comp_op_rgba_dst_out    <color, order>::blend_pix(p,0,0,0,0,0);
     agg::comp_op_rgba_clear      <color, order>::blend_pix(p,0,0,0,0,0);
 }
-
-namespace agg
-{
-
-    //========================================================================
-    template<> struct gradient_linear_color<color>
-    {
-        typedef color color_type;
-        enum base_scale_e { base_shift = color_type::base_shift };
-
-        gradient_linear_color() {}
-        gradient_linear_color(const color_type& c1, const color_type& c2) :
-            m_c1(c1), m_c2(c2) {}
-
-        static unsigned size() { return 256; }
-        color_type operator [] (unsigned v) const 
-        {
-            color_type c;
-            typedef color_type::value_type value_type;
-            v <<= base_shift - 8;
-            c.r = (value_type)((((m_c2.r - m_c1.r) * v) + (m_c1.r << base_shift)) >> base_shift);
-            c.g = (value_type)((((m_c2.g - m_c1.g) * v) + (m_c1.g << base_shift)) >> base_shift);
-            c.b = (value_type)((((m_c2.b - m_c1.b) * v) + (m_c1.b << base_shift)) >> base_shift);
-            c.a = (value_type)((((m_c2.a - m_c1.a) * v) + (m_c1.a << base_shift)) >> base_shift);
-            return c;
-        }
-
-        void colors(const color_type& c1, const color_type& c2)
-        {
-            m_c1 = c1;
-            m_c2 = c2;
-        }
-
-        color_type m_c1;
-        color_type m_c2;
-    };
-
-}
-
 
 
 
@@ -204,14 +166,14 @@ class the_application : public agg::platform_support
 {
     agg::slider_ctrl<color>    m_alpha_src;
     agg::slider_ctrl<color>    m_alpha_dst;
-    agg::rbox_ctrl<agg::rgba8> m_comp_op;
+    agg::rbox_ctrl<color_type> m_comp_op;
 
 public:
     the_application(agg::pix_format_e format, bool flip_y) :
         agg::platform_support(format, flip_y),
         m_alpha_src(5, 5,    400, 11,    !flip_y),
         m_alpha_dst(5, 5+15, 400, 11+15, !flip_y),
-        m_comp_op(420, 5.0, 420+170.0, 395.0, !flip_y)
+        m_comp_op(420, 5.0, 420+170.0, 340.0, !flip_y)
     {
         m_alpha_src.label("Src Alpha=%.2f");
         m_alpha_src.value(0.75);
@@ -235,7 +197,7 @@ public:
         m_comp_op.add_item("dst-atop");
         m_comp_op.add_item("xor");
         m_comp_op.add_item("plus");
-        m_comp_op.add_item("minus");
+        //m_comp_op.add_item("minus");
         m_comp_op.add_item("multiply");
         m_comp_op.add_item("screen");
         m_comp_op.add_item("overlay");
@@ -247,9 +209,9 @@ public:
         m_comp_op.add_item("soft-light");
         m_comp_op.add_item("difference");
         m_comp_op.add_item("exclusion");
-        m_comp_op.add_item("contrast");
-        m_comp_op.add_item("invert");
-        m_comp_op.add_item("invert-rgb");
+        //m_comp_op.add_item("contrast");
+        //m_comp_op.add_item("invert");
+        //m_comp_op.add_item("invert-rgb");
         m_comp_op.cur_item(3);
         add_ctrl(m_comp_op);
     }
@@ -276,38 +238,26 @@ public:
 
         rb.blend_from(prim_pixfmt_type(rbuf_img(1)), 
                       0, 250, 180, 
-                      unsigned(m_alpha_dst.value() * 255));
+                      agg::cover_type(m_alpha_dst.value() * agg::cover_full));
 
         circle(rb, 
-               agg::rgba8(0xFD, 0xF0, 0x6F, unsigned(m_alpha_dst.value() * 255)), 
-               agg::rgba8(0xFE, 0x9F, 0x34, unsigned(m_alpha_dst.value() * 255)),
+               agg::srgba8(0xFD, 0xF0, 0x6F, unsigned(m_alpha_dst.value() * 255)), 
+               agg::srgba8(0xFE, 0x9F, 0x34, unsigned(m_alpha_dst.value() * 255)),
                70*3, 100+24*3, 37*3, 100+79*3,
                m_alpha_dst.value());
 
         ren_pixf.comp_op(m_comp_op.cur_item());
 
-        if(m_comp_op.cur_item() == 25) // Contrast
-        {
-            double v = m_alpha_src.value();
-            src_shape(renderer, 
-                      agg::rgba(v, v, v), 
-                      agg::rgba(v, v, v),
-                      300+50, 100+24*3, 107+50, 100+79*3);
-        }
-        else
-        {
-
-            src_shape(renderer, 
-                      agg::rgba8(0x7F, 0xC1, 0xFF, unsigned(m_alpha_src.value() * 255)), 
-                      agg::rgba8(0x05, 0x00, 0x5F, unsigned(m_alpha_src.value() * 255)),
-                      300+50, 100+24*3, 107+50, 100+79*3);
+        src_shape(renderer, 
+                    agg::srgba8(0x7F, 0xC1, 0xFF, unsigned(m_alpha_src.value() * 255)), 
+                    agg::srgba8(0x05, 0x00, 0x5F, unsigned(m_alpha_src.value() * 255)),
+                    300+50, 100+24*3, 107+50, 100+79*3);
 /*
-            src_shape(renderer, 
-                      agg::rgba8(0xFF, 0xFF, 0xFF, unsigned(m_alpha_src.value() * 255)), 
-                      agg::rgba8(0xFF, 0xFF, 0xFF, unsigned(m_alpha_src.value() * 255)),
-                      300+50, 100+24*3, 107+50, 100+79*3);
+        src_shape(renderer, 
+                    agg::srgba8(0xFF, 0xFF, 0xFF, unsigned(m_alpha_src.value() * 255)), 
+                    agg::srgba8(0xFF, 0xFF, 0xFF, unsigned(m_alpha_src.value() * 255)),
+                    300+50, 100+24*3, 107+50, 100+79*3);
 */
-        }
     }
 
 
@@ -315,7 +265,7 @@ public:
     {
         prim_pixfmt_type pixf(rbuf_window());
         prim_ren_base_type rb(pixf);
-        rb.clear(agg::rgba8(255, 255, 255));
+        rb.clear(agg::srgba8(255, 255, 255));
 
         unsigned y;
         for(y = 0; y < rb.height(); y += 8)
@@ -323,7 +273,7 @@ public:
             unsigned x;
             for(x = ((y >> 3) & 1) << 3; x < rb.width(); x += 16)
             {
-                rb.copy_bar(x, y, x+7, y+7, agg::rgba8(0xdf, 0xdf, 0xdf));
+                rb.copy_bar(x, y, x+7, y+7, agg::srgba8(0xdf, 0xdf, 0xdf));
             }
         }
 
@@ -331,11 +281,11 @@ public:
 
         prim_pixfmt_type pixf2(rbuf_img(0));
         prim_ren_base_type rb2(pixf2);
-        rb2.clear(agg::rgba8(0,0,0,0));
-        //rb2.clear(agg::rgba8(255,255,255,255));
+        rb2.clear(agg::srgba8(0,0,0,0));
+        //rb2.clear(agg::srgba8(255,255,255,255));
 
         typedef agg::blender_rgba_pre<color, order> blender_type_pre; 
-        typedef agg::pixfmt_alpha_blend_rgba<blender_type_pre, rbuf_type, pixel_type> pixfmt_pre;
+        typedef agg::pixfmt_alpha_blend_rgba<blender_type_pre, rbuf_type> pixfmt_pre;
         typedef agg::renderer_base<pixfmt_pre> ren_base_pre;
 
         pixfmt_pre pixf_pre(rbuf_window());

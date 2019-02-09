@@ -15,6 +15,7 @@
 #ifndef AGG_RASTERIZER_OUTLINE_AA_INCLUDED
 #define AGG_RASTERIZER_OUTLINE_AA_INCLUDED
 
+#include <cmath>
 #include "agg_basics.h"
 #include "agg_line_aa_basics.h"
 #include "agg_vertex_sequence.h"
@@ -49,7 +50,7 @@ namespace agg
         {
             double dx = val.x - x;
             double dy = val.y - y;
-            return (len = uround(sqrt(dx * dx + dy * dy))) > 
+            return (len = uround(std::sqrt(dx * dx + dy * dy))) > 
                    (line_subpixel_scale + line_subpixel_scale / 2);
         }
     };

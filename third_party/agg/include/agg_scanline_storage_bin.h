@@ -25,9 +25,8 @@
 #ifndef AGG_SCANLINE_STORAGE_BIN_INCLUDED
 #define AGG_SCANLINE_STORAGE_BIN_INCLUDED
 
-#include <string.h>
-#include <stdlib.h>
-#include <math.h>
+#include <cstdlib>
+#include <limits>
 #include "agg_array.h"
 
 
@@ -64,9 +63,9 @@ namespace agg
             {
             public:
                 const_iterator() : m_storage(0) {}
-                const_iterator(const embedded_scanline& sl) :
-                    m_storage(sl.m_storage),
-                    m_span_idx(sl.m_scanline.start_span)
+                const_iterator(const embedded_scanline* sl) :
+                    m_storage(sl->m_storage),
+                    m_span_idx(sl->m_scanline.start_span)
                 {
                     m_span = m_storage->span_by_index(m_span_idx);
                 }
@@ -90,7 +89,7 @@ namespace agg
 
 
             //-----------------------------------------------------------
-            embedded_scanline(const scanline_storage_bin& storage) :
+            embedded_scanline(scanline_storage_bin& storage) :
                 m_storage(&storage)
             {
                 setup(0);
@@ -100,7 +99,7 @@ namespace agg
             void     reset(int, int)     {}
             unsigned num_spans()   const { return m_scanline.num_spans;  }
             int      y()           const { return m_scanline.y;          }
-            const_iterator begin() const { return const_iterator(*this); }
+            const_iterator begin() const { return const_iterator(this); }
 
             //-----------------------------------------------------------
             void setup(unsigned scanline_idx)
@@ -110,7 +109,7 @@ namespace agg
             }
 
         private:
-            const scanline_storage_bin* m_storage;
+            scanline_storage_bin*       m_storage;
             scanline_data               m_scanline;
             unsigned                    m_scanline_idx;
         };
@@ -120,10 +119,10 @@ namespace agg
         scanline_storage_bin() :
             m_spans(256-2),         // Block increment size
             m_scanlines(),
-            m_min_x( 0x7FFFFFFF),
-            m_min_y( 0x7FFFFFFF),
-            m_max_x(-0x7FFFFFFF),
-            m_max_y(-0x7FFFFFFF),
+            m_min_x(std::numeric_limits<int>::max()),
+            m_min_y(std::numeric_limits<int>::max()),
+            m_max_x(std::numeric_limits<int>::min()),
+            m_max_y(std::numeric_limits<int>::min()),
             m_cur_scanline(0)
         {
             m_fake_scanline.y = 0;
@@ -139,10 +138,10 @@ namespace agg
         {
             m_scanlines.remove_all();
             m_spans.remove_all();
-            m_min_x =  0x7FFFFFFF;
-            m_min_y =  0x7FFFFFFF;
-            m_max_x = -0x7FFFFFFF;
-            m_max_y = -0x7FFFFFFF;
+            m_min_x = std::numeric_limits<int>::max();
+            m_min_y = std::numeric_limits<int>::max();
+            m_max_x = std::numeric_limits<int>::min();
+            m_max_y = std::numeric_limits<int>::min();
             m_cur_scanline = 0;
         }
 
@@ -165,7 +164,7 @@ namespace agg
             {
                 span_data sp;
                 sp.x   = span_iterator->x;
-                sp.len = (int32)abs((int)(span_iterator->len));
+                sp.len = (int32)std::abs((int)(span_iterator->len));
                 m_spans.add(sp);
                 int x1 = sp.x;
                 int x2 = sp.x + sp.len - 1;
@@ -362,9 +361,9 @@ namespace agg
                 };
 
                 const_iterator() : m_ptr(0) {}
-                const_iterator(const embedded_scanline& sl) :
-                    m_ptr(sl.m_ptr),
-                    m_dx(sl.m_dx)
+                const_iterator(const embedded_scanline* sl) :
+                    m_ptr(sl->m_ptr),
+                    m_dx(sl->m_dx)
                 {
                     m_span.x   = read_int32() + m_dx;
                     m_span.len = read_int32();
@@ -405,7 +404,7 @@ namespace agg
             void     reset(int, int)     {}
             unsigned num_spans()   const { return m_num_spans;  }
             int      y()           const { return m_y;          }
-            const_iterator begin() const { return const_iterator(*this); }
+            const_iterator begin() const { return const_iterator(this); }
 
 
         private:
@@ -447,10 +446,10 @@ namespace agg
             m_ptr(0),
             m_dx(0),
             m_dy(0),
-            m_min_x(0x7FFFFFFF),
-            m_min_y(0x7FFFFFFF),
-            m_max_x(-0x7FFFFFFF),
-            m_max_y(-0x7FFFFFFF)
+            m_min_x(std::numeric_limits<int>::max()),
+            m_min_y(std::numeric_limits<int>::max()),
+            m_max_x(std::numeric_limits<int>::min()),
+            m_max_y(std::numeric_limits<int>::min())
         {}
 
         //--------------------------------------------------------------------
@@ -461,10 +460,10 @@ namespace agg
             m_ptr(data),
             m_dx(iround(dx)),
             m_dy(iround(dy)),
-            m_min_x(0x7FFFFFFF),
-            m_min_y(0x7FFFFFFF),
-            m_max_x(-0x7FFFFFFF),
-            m_max_y(-0x7FFFFFFF)
+            m_min_x(std::numeric_limits<int>::max()),
+            m_min_y(std::numeric_limits<int>::max()),
+            m_max_x(std::numeric_limits<int>::min()),
+            m_max_y(std::numeric_limits<int>::min())
         {}
 
         //--------------------------------------------------------------------
@@ -475,10 +474,10 @@ namespace agg
             m_ptr   = data;
             m_dx    = iround(dx);
             m_dy    = iround(dy);
-            m_min_x = 0x7FFFFFFF;
-            m_min_y = 0x7FFFFFFF;
-            m_max_x = -0x7FFFFFFF;
-            m_max_y = -0x7FFFFFFF;
+            m_min_x = std::numeric_limits<int>::max();
+            m_min_y = std::numeric_limits<int>::max();
+            m_max_x = std::numeric_limits<int>::min();
+            m_max_y = std::numeric_limits<int>::min();
         }
 
     private:

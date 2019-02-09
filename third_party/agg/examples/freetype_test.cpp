@@ -16,13 +16,13 @@
 #include "ctrl/agg_cbox_ctrl.h"
 #include "ctrl/agg_rbox_ctrl.h"
 
+#define AGG_BGR24
+//#define AGG_BGR96
+#include "pixel_formats.h"
 
 enum flip_y_e { flip_y = true };
 bool font_flip_y = !flip_y;
 
-
-#define pix_format agg::pix_format_bgr24
-typedef agg::pixfmt_bgr24 pixfmt_type;
 
 
 static char text[] = 
@@ -104,7 +104,7 @@ static char text[] =
 "it was decided not to introduce such an object like color in "
 "order not to restrict the possibilities in advance. Instead, "
 "there are objects that operate with concrete color spaces. "
-"Currently there are agg::rgba and agg::rgba8 that operate "
+"Currently there are agg::rgba and agg::srgba8 that operate "
 "with the most popular RGB color space (strictly speaking there's "
 "RGB plus Alpha). The RGB color space is used with different "
 "pixel formats, like 24-bit RGB or 32-bit RGBA with different "
@@ -162,20 +162,20 @@ template<class VS> void dump_path(VS& path)
 
 class the_application : public agg::platform_support
 {
-    typedef agg::renderer_base<pixfmt_type> base_ren_type;
+    typedef agg::renderer_base<pixfmt> base_ren_type;
     typedef agg::renderer_scanline_aa_solid<base_ren_type> renderer_solid;
     typedef agg::renderer_scanline_bin_solid<base_ren_type> renderer_bin;
     typedef agg::font_engine_freetype_int32 font_engine_type;
     typedef agg::font_cache_manager<font_engine_type> font_manager_type;
 
-    agg::rbox_ctrl<agg::rgba8>   m_ren_type;
-    agg::slider_ctrl<agg::rgba8> m_height;
-    agg::slider_ctrl<agg::rgba8> m_width;
-    agg::slider_ctrl<agg::rgba8> m_weight;
-    agg::slider_ctrl<agg::rgba8> m_gamma;
-    agg::cbox_ctrl<agg::rgba8>   m_hinting;
-    agg::cbox_ctrl<agg::rgba8>   m_kerning;
-    agg::cbox_ctrl<agg::rgba8>   m_performance;
+    agg::rbox_ctrl<color_type>   m_ren_type;
+    agg::slider_ctrl<color_type> m_height;
+    agg::slider_ctrl<color_type> m_width;
+    agg::slider_ctrl<color_type> m_weight;
+    agg::slider_ctrl<color_type> m_gamma;
+    agg::cbox_ctrl<color_type>   m_hinting;
+    agg::cbox_ctrl<color_type>   m_kerning;
+    agg::cbox_ctrl<color_type>   m_performance;
     font_engine_type             m_feng;
     font_manager_type            m_fman;
     double                       m_old_height;
@@ -318,14 +318,14 @@ public:
                     {
                     default: break;
                     case agg::glyph_data_mono:
-                        ren_bin.color(agg::rgba8(0, 0, 0));
+                        ren_bin.color(agg::srgba8(0, 0, 0));
                         agg::render_scanlines(m_fman.mono_adaptor(), 
                                               m_fman.mono_scanline(), 
                                               ren_bin);
                         break;
 
                     case agg::glyph_data_gray8:
-                        ren_solid.color(agg::rgba8(0, 0, 0));
+                        ren_solid.color(agg::srgba8(0, 0, 0));
                         agg::render_scanlines(m_fman.gray8_adaptor(), 
                                               m_fman.gray8_scanline(), 
                                               ren_solid);
@@ -344,7 +344,7 @@ public:
                         {
                             ras.add_path(m_contour);
                         }
-                        ren_solid.color(agg::rgba8(0, 0, 0));
+                        ren_solid.color(agg::srgba8(0, 0, 0));
                         agg::render_scanlines(ras, sl, ren_solid);
 //dump_path(m_fman.path_adaptor());
                         break;
@@ -370,7 +370,7 @@ public:
 
     virtual void on_draw()
     {
-        pixfmt_type pf(rbuf_window());
+        pixfmt pf(rbuf_window());
         base_ren_type ren_base(pf);
         renderer_solid ren_solid(ren_base);
         renderer_bin ren_bin(ren_base);
@@ -425,7 +425,7 @@ public:
     {
         if(m_performance.status())
         {
-            pixfmt_type pf(rbuf_window());
+            pixfmt pf(rbuf_window());
             base_ren_type ren_base(pf);
             renderer_solid ren_solid(ren_base);
             renderer_bin ren_bin(ren_base);
