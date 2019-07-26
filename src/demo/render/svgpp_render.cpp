@@ -7,7 +7,10 @@
 #include <svgpp/utility/gil/mask.hpp>
 
 #include <boost/bind.hpp>
-#include <boost/gil/gil_all.hpp>
+#include <boost/gil/algorithm.hpp>
+#include <boost/gil/image_view.hpp>
+#include <boost/gil/image_view_factory.hpp>
+#include <boost/gil/typedefs.hpp>
 #include <boost/mpl/set.hpp>
 #include <boost/mpl/transform_view.hpp>
 #include <boost/optional.hpp>
@@ -1376,8 +1379,6 @@ void Path::drawPath()
 
   curved_t curved(path_storage_);
 
-  path_storage_.arrange_orientations_all_paths(agg::path_flags_ccw); // TODO: move out
-  
   EffectivePaint fill = getEffectivePaint(style().fill_paint_);
   if (boost::get<svgpp::tag::value::none>(&fill) == NULL)
   {
@@ -1691,6 +1692,10 @@ int main(int argc, char * argv[])
           << "\"";
 #endif
       std::cerr << ": " << e.what() << "\n";
+      if (!buffer.isSizeSet()) {
+        // Buffer isn't created yet - nothing to save, exiting.
+        return 1;
+      }
     }
     catch(std::exception const & e)
     {

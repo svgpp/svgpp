@@ -572,6 +572,7 @@ namespace agg
                 case marker_dash:              dash(x, y, r);              break;
                 case marker_dot:               dot(x, y, r);               break;
                 case marker_pixel:             pixel(x, y, r);             break;
+                case end_of_markers: break;
             }
         }
 
@@ -613,6 +614,7 @@ namespace agg
                 case marker_dash:              do { dash             (int(*x), int(*y), int(r)); ++x; ++y; } while(--n); break;
                 case marker_dot:               do { dot              (int(*x), int(*y), int(r)); ++x; ++y; } while(--n); break;
                 case marker_pixel:             do { pixel            (int(*x), int(*y), int(r)); ++x; ++y; } while(--n); break;
+                case end_of_markers: break;
             }                                                                                  
         }
         
@@ -641,6 +643,7 @@ namespace agg
                 case marker_dash:              do { dash             (int(*x), int(*y), int(*r)); ++x; ++y; ++r; } while(--n); break;
                 case marker_dot:               do { dot              (int(*x), int(*y), int(*r)); ++x; ++y; ++r; } while(--n); break;
                 case marker_pixel:             do { pixel            (int(*x), int(*y), int(*r)); ++x; ++y; ++r; } while(--n); break;
+                case end_of_markers: break;
             }                                                                                  
         }
         
@@ -669,6 +672,7 @@ namespace agg
                 case marker_dash:              do { base_type::fill_color(*fc); dash             (int(*x), int(*y), int(*r)); ++x; ++y; ++r; ++fc; } while(--n); break;
                 case marker_dot:               do { base_type::fill_color(*fc); dot              (int(*x), int(*y), int(*r)); ++x; ++y; ++r; ++fc; } while(--n); break;
                 case marker_pixel:             do { base_type::fill_color(*fc); pixel            (int(*x), int(*y), int(*r)); ++x; ++y; ++r; ++fc; } while(--n); break;
+                case end_of_markers: break;
             }
         }
         
@@ -697,6 +701,7 @@ namespace agg
                 case marker_dash:              do { base_type::fill_color(*fc); base_type::line_color(*lc); dash             (int(*x), int(*y), int(*r)); ++x; ++y; ++r; ++fc; ++lc; } while(--n); break;
                 case marker_dot:               do { base_type::fill_color(*fc); base_type::line_color(*lc); dot              (int(*x), int(*y), int(*r)); ++x; ++y; ++r; ++fc; ++lc; } while(--n); break;
                 case marker_pixel:             do { base_type::fill_color(*fc); base_type::line_color(*lc); pixel            (int(*x), int(*y), int(*r)); ++x; ++y; ++r; ++fc; ++lc; } while(--n); break;
+                case end_of_markers: break;
             }
         }
     };

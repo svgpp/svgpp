@@ -21,12 +21,14 @@
 #include "platform/agg_platform_support.h"
 #include "interactive_polygon.h"
 
-#define AGG_BGR24 
+#define AGG_BGR24
 //#define AGG_RGB24
 //#define AGG_BGRA32 
 //#define AGG_RGBA32 
 //#define AGG_ARGB32 
 //#define AGG_ABGR32
+//#define AGG_BGR96
+//#define AGG_BGRA128
 //#define AGG_RGB565
 //#define AGG_RGB555
 #include "pixel_formats.h"
@@ -76,10 +78,10 @@ public:
 
     agg::interactive_polygon     m_quad1;
     agg::interactive_polygon     m_quad2;
-    agg::rbox_ctrl<agg::rgba8>   m_trans_type;
-    agg::cbox_ctrl<agg::rgba8>   m_reset;
-    agg::slider_ctrl<agg::rgba8> m_mul1;
-    agg::slider_ctrl<agg::rgba8> m_mul2;
+    agg::rbox_ctrl<color_type>   m_trans_type;
+    agg::cbox_ctrl<color_type>   m_reset;
+    agg::slider_ctrl<color_type> m_mul1;
+    agg::slider_ctrl<color_type> m_mul2;
 
     the_application(agg::pix_format_e format, bool flip_y) :
         agg::platform_support(format, flip_y),
@@ -161,11 +163,11 @@ public:
         ras1.filling_rule(agg::fill_even_odd);
 
 
-        r.color(agg::rgba8(240, 255, 200, 100));
+        r.color(agg::srgba8(240, 255, 200, 100));
         ras1.add_path(ps1);
         agg::render_scanlines(ras1, sl, r);
 
-        r.color(agg::rgba8(255, 240, 240, 100));
+        r.color(agg::srgba8(255, 240, 240, 100));
         ras2.add_path(ps2);
         agg::render_scanlines(ras2, sl, r);
 
@@ -179,7 +181,7 @@ public:
         sbool_scanline_type sl2;
         sbool_renderer_type sren(rb);
 
-        sren.color(agg::rgba8(0, 0, 0));
+        sren.color(agg::srgba8(0, 0, 0));
 
         agg::sbool_combine_shapes_aa(op, ras1, ras2, sl1, sl2, sl_result, sren);
 

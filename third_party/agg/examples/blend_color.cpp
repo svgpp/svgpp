@@ -21,13 +21,26 @@
 #include "platform/agg_platform_support.h"
 
 //#define AGG_GRAY8
+//#define AGG_GRAY16
+//#define AGG_GRAY32
 #define AGG_BGR24
+//#define AGG_RGB24
 //#define AGG_BGR48 
-//#define AGG_RGB_AAA
+//#define AGG_RGB48
+//#define AGG_BGR96
+//#define AGG_RGB96
 //#define AGG_BGRA32
-//#define AGG_RGBA32 
-//#define AGG_ARGB32 
+//#define AGG_RGBA32
+//#define AGG_ARGB32
 //#define AGG_ABGR32
+//#define AGG_BGRA64
+//#define AGG_RGBA64 
+//#define AGG_ARGB64 
+//#define AGG_ABGR64
+//#define AGG_BGRA128
+//#define AGG_RGBA128
+//#define AGG_ARGB128
+//#define AGG_ABGR128
 //#define AGG_RGB565
 //#define AGG_RGB555
 #include "pixel_formats.h"
@@ -299,9 +312,9 @@ enum flip_y_e { flip_y = true };
 
 class the_application : public agg::platform_support
 {
-    agg::rbox_ctrl<agg::rgba8>    m_method;
-    agg::slider_ctrl<agg::rgba8>  m_radius;
-    agg::polygon_ctrl<agg::rgba8> m_shadow_ctrl;
+    agg::rbox_ctrl<color_type>    m_method;
+    agg::slider_ctrl<color_type>  m_radius;
+    agg::polygon_ctrl<color_type> m_shadow_ctrl;
 
     agg::path_storage             m_path;
     typedef agg::conv_curve<agg::path_storage> shape_type;
@@ -410,7 +423,7 @@ public:
         const agg::int8u* p = g_gradient_colors;
         for(i = 0; i < 256; i++)
         {
-            m_color_lut[i] = agg::rgba8(p[0], p[1], p[2], (i > 63) ? 255 : i * 4);//p[3]);
+            m_color_lut[i] = agg::srgba8(p[0], p[1], p[2], (i > 63) ? 255 : i * 4);//p[3]);
             //m_color_lut[i].premultiply();
             p += 4;
         }
@@ -426,14 +439,14 @@ public:
 
     virtual void on_draw()
     {
-        typedef agg::pixfmt_gray8 pixfmt_gray8;
+        typedef agg::pixfmt_sgray8 pixfmt_gray8;
         typedef agg::renderer_base<pixfmt_gray8> ren_base_gray8;
 
         m_ras.clip_box(0,0, width(), height());
 
         pixfmt_gray8 pixf_gray8(m_gray8_rbuf);
         ren_base_gray8 renb_gray8(pixf_gray8);
-        renb_gray8.clear(agg::gray8(0));
+        renb_gray8.clear(agg::sgray8(0));
 
         // Testing enhanced compositing operations. 
         // Uncomment and replace renb.blend_from_* to renb_blend.blend_from_*
@@ -461,7 +474,7 @@ public:
 
         // Render shadow
         m_ras.add_path(shadow_trans);
-        agg::render_scanlines_aa_solid(m_ras, m_sl, renb_gray8, agg::gray8(255));
+        agg::render_scanlines_aa_solid(m_ras, m_sl, renb_gray8, agg::sgray8(255));
 
         // Calculate the bounding box and extend it by the blur radius
         agg::rect_d bbox;
@@ -488,7 +501,7 @@ public:
             if(m_method.cur_item() == 0)
             {
                 renb.blend_from_color(pixf2, 
-                                      agg::rgba8(0, 100, 0), 
+                                      agg::srgba8(0, 100, 0), 
                                       0, 
                                       int(bbox.x1), 
                                       int(bbox.y1));

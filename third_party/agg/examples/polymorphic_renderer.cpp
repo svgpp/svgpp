@@ -32,7 +32,7 @@ namespace agg
     class polymorphic_renderer_solid_rgba8_base
     {
     public:
-        typedef rgba8       color_type;
+        typedef srgba8       color_type;
         typedef scanline_p8 scanline_type;
 
         virtual ~polymorphic_renderer_solid_rgba8_base() {}
@@ -40,7 +40,7 @@ namespace agg
         //--------------------------------------------------------------------
         virtual void clear(const color_type& c) = 0;
         virtual void color(const color_type& c) = 0;
-        virtual const color_type& color() const = 0;
+        virtual const color_type color() const = 0;
         virtual void prepare() = 0;
         virtual void render(const scanline_type&) = 0;
     };
@@ -69,7 +69,7 @@ namespace agg
             m_ren.color(c);
         }
 
-        virtual const color_type& color() const
+        virtual const color_type color() const
         {
             return m_ren.color();
         }
@@ -140,8 +140,8 @@ public:
         agg::scanline_p8 sl;
         if(ren) 
         {
-            ren->clear(agg::rgba8(255, 255, 255));
-            ren->color(agg::rgba8(80, 30, 20));
+            ren->clear(agg::srgba8(255, 255, 255));
+            ren->color(agg::srgba8(80, 30, 20));
             ras.add_path(path);
             agg::render_scanlines(ras, sl, *ren);
         }

@@ -52,11 +52,11 @@ public:
     font_engine_type             m_feng;
     font_manager_type            m_fman;
     agg::interactive_polygon     m_poly;
-    agg::slider_ctrl<agg::rgba8> m_num_points;
-    agg::cbox_ctrl<agg::rgba8>   m_close;
-    agg::cbox_ctrl<agg::rgba8>   m_preserve_x_scale;
-    agg::cbox_ctrl<agg::rgba8>   m_fixed_len;
-    agg::cbox_ctrl<agg::rgba8>   m_animate;
+    agg::slider_ctrl<color_type> m_num_points;
+    agg::cbox_ctrl<color_type>   m_close;
+    agg::cbox_ctrl<color_type>   m_preserve_x_scale;
+    agg::cbox_ctrl<color_type>   m_fixed_len;
+    agg::cbox_ctrl<color_type>   m_animate;
     double                       m_dx[6];
     double                       m_dy[6];
     bool                         m_prev_animate;
@@ -163,7 +163,7 @@ public:
                     {
                         ras.reset();
                         ras.add_path(ftrans);
-                        r.color(agg::rgba8(0, 0, 0));
+                        r.color(agg::srgba8(0, 0, 0));
                         agg::render_scanlines(ras, sl, r);
                     }
 
@@ -187,7 +187,7 @@ public:
 
         stroke.width(2.0);
 
-        r.color(agg::rgba8(170, 50, 20, 100));
+        r.color(agg::srgba8(170, 50, 20, 100));
         ras.add_path(stroke);
         agg::render_scanlines(ras, sl, r);
 

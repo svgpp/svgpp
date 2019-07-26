@@ -10,12 +10,14 @@
 #include "ctrl/agg_slider_ctrl.h"
 #include "platform/agg_platform_support.h"
 
-#define AGG_BGR24 
+#define AGG_BGR24
 //#define AGG_RGB24
 //#define AGG_BGRA32 
 //#define AGG_RGBA32 
 //#define AGG_ARGB32 
 //#define AGG_ABGR32
+//#define AGG_BGR96
+//#define AGG_BGRA128
 //#define AGG_RGB565
 //#define AGG_RGB555
 #include "pixel_formats.h"
@@ -26,14 +28,14 @@ enum flip_y_e { flip_y = false };
 struct path_attributes
 {
     unsigned   index;
-    agg::rgba8 fill_color;
-    agg::rgba8 stroke_color;
+    agg::srgba8 fill_color;
+    agg::srgba8 stroke_color;
     double     stroke_width;
 
     path_attributes() {}
     path_attributes(unsigned idx, 
-                    const agg::rgba8& fill,
-                    const agg::rgba8& stroke,
+                    const agg::srgba8& fill,
+                    const agg::srgba8& stroke,
                     double width) :
       index(idx),
       fill_color(fill),
@@ -155,11 +157,11 @@ class the_application : public agg::platform_support
 {
     double m_dx;
     double m_dy;
-    agg::cbox_ctrl<agg::rgba8> m_rotate;
-    agg::cbox_ctrl<agg::rgba8> m_even_odd;
-    agg::cbox_ctrl<agg::rgba8> m_draft;
-    agg::cbox_ctrl<agg::rgba8> m_roundoff;
-    agg::slider_ctrl<agg::rgba8> m_angle_delta;
+    agg::cbox_ctrl<color_type> m_rotate;
+    agg::cbox_ctrl<color_type> m_even_odd;
+    agg::cbox_ctrl<color_type> m_draft;
+    agg::cbox_ctrl<color_type> m_roundoff;
+    agg::slider_ctrl<color_type> m_angle_delta;
     bool m_redraw_flag;
 
 public:
@@ -175,15 +177,15 @@ public:
         m_angle_delta.label("Step=%4.3f degree");
 
         g_attr[g_npaths++] = path_attributes(g_path.start_new_path(),
-                                             agg::rgba8(255, 255, 0),
-                                             agg::rgba8(0,   0,   0),
+                                             agg::srgba8(255, 255, 0),
+                                             agg::srgba8(0,   0,   0),
                                              1.0);
 
         g_path.concat_poly(g_poly_bulb, AGG_POLY_SIZE(g_poly_bulb), true);
 
         g_attr[g_npaths++] = path_attributes(g_path.start_new_path(),
-                                             agg::rgba8(255,  255, 200),
-                                             agg::rgba8(90,   0,   0),
+                                             agg::srgba8(255,  255, 200),
+                                             agg::srgba8(90,   0,   0),
                                              0.7);
 
         g_path.concat_poly(g_poly_beam1, AGG_POLY_SIZE(g_poly_beam1), true); 
@@ -192,8 +194,8 @@ public:
         g_path.concat_poly(g_poly_beam4, AGG_POLY_SIZE(g_poly_beam4), true); 
 
         g_attr[g_npaths++] = path_attributes(g_path.start_new_path(),
-                                             agg::rgba8(0, 0, 0),
-                                             agg::rgba8(0, 0, 0),
+                                             agg::srgba8(0, 0, 0),
+                                             agg::srgba8(0, 0, 0),
                                              0.0);
 
         g_path.concat_poly(g_poly_fig1, AGG_POLY_SIZE(g_poly_fig1), true); 
@@ -238,7 +240,7 @@ public:
         if(m_redraw_flag)
         {
             g_rasterizer.gamma(agg::gamma_none());
-            rbase.clear(agg::rgba8(255,255,255));
+            rbase.clear(agg::srgba8(255,255,255));
             g_rasterizer.filling_rule(agg::fill_non_zero);
             agg::render_ctrl(g_rasterizer, g_scanline, rbase, m_rotate);
             agg::render_ctrl(g_rasterizer, g_scanline, rbase, m_even_odd);
@@ -253,7 +255,7 @@ public:
                            int(32.0 * rbuf_window().height() / m_dy), 
                            rbuf_window().width(), 
                            rbuf_window().height(), 
-                           agg::rgba8(255,255,255));
+                           agg::srgba8(255,255,255));
         }
 
 

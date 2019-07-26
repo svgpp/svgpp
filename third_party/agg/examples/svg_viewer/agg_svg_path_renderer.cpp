@@ -1,6 +1,8 @@
 //----------------------------------------------------------------------------
 // Anti-Grain Geometry - Version 2.3
 // Copyright (C) 2002-2005 Maxim Shemanarev (http://www.antigrain.com)
+// Copyright (c) 2008 Rene Rebe <rene@exactcode.de> [arc parser code]
+// Copyright (c) 2017 John Horigan <john@glyphic.com> [align_subpath()]
 //
 // Permission to copy, use, modify, sell and distribute this software 
 // is granted provided this copyright notice appears in all copies. 
@@ -18,6 +20,7 @@
 //----------------------------------------------------------------------------
 
 #include <stdio.h>
+#include <cmath>
 #include "agg_svg_path_renderer.h"
 
 namespace agg
@@ -126,7 +129,6 @@ namespace svg
     //------------------------------------------------------------------------
     void path_renderer::curve3(double x, double y, bool rel)           // T, t
     {
-//        throw exception("curve3(x, y) : NOT IMPLEMENTED YET");
         if(rel) 
         {
             m_storage.curve3_rel(x, y);
@@ -154,7 +156,6 @@ namespace svg
     void path_renderer::curve4(double x2, double y2,                   // S, s
                                double x,  double y, bool rel)
     {
-        //throw exception("curve4(x2, y2, x, y) : NOT IMPLEMENTED YET");
         if(rel) 
         {
             m_storage.curve4_rel(x2, y2, x, y);
@@ -165,9 +166,35 @@ namespace svg
     }
 
     //------------------------------------------------------------------------
+    void path_renderer::arc(double rx, double ry,
+                            double angle,
+                            bool large_arc_flag,
+                            bool sweep_flag,
+                            double x, double y, bool rel)
+    {
+      angle = deg2rad (angle);
+      if(rel)
+      {
+          m_storage.arc_rel(rx, ry, angle, large_arc_flag, sweep_flag, x, y);
+      } else
+      {
+          m_storage.arc_to(rx, ry, angle, large_arc_flag, sweep_flag, x, y);
+      }
+    }
+
+    //------------------------------------------------------------------------
     void path_renderer::close_subpath()
     {
         m_storage.end_poly(path_flags_close);
+    }
+
+    //------------------------------------------------------------------------
+    // If the end points of a subpath are very, very close then make them
+    // exactly equal so that AGG is not confused.
+    //------------------------------------------------------------------------
+    void path_renderer::align_subpath(unsigned start_idx)
+    {
+        m_storage.align_path(start_idx);
     }
 
     //------------------------------------------------------------------------
@@ -277,17 +304,24 @@ namespace svg
     //------------------------------------------------------------------------
     void path_renderer::parse_path(path_tokenizer& tok)
     {
+	unsigned move_idx = 0;
         while(tok.next())
         {
             double arg[10];
             char cmd = tok.last_command();
+	    if (m_storage.total_vertices() == 0 && !(cmd == 'M' || cmd == 'm')) 
+	    {
+		throw exception("path element data attributes must begin with a 'move to'");
+	    }
             unsigned i;
             switch(cmd)
             {
                 case 'M': case 'm':
+		    align_subpath(move_idx);
                     arg[0] = tok.last_number();
                     arg[1] = tok.next(cmd);
                     move_to(arg[0], arg[1], cmd == 'm');
+		    move_idx = m_storage.total_vertices() - 1;
                     break;
 
                 case 'L': case 'l':
@@ -338,9 +372,17 @@ namespace svg
                     break;
 
                 case 'A': case 'a':
-                    throw exception("parse_path: Command A: NOT IMPLEMENTED YET");
+                    arg[0] = tok.last_number();
+                    for(i = 1; i < 7; ++i)
+                    {
+                        arg[i] = tok.next(cmd);
+                    }
+                    arc(arg[0], arg[1], arg[2], arg[3], arg[4], arg[5], arg[6],
+                        cmd == 'a');
+                    break;
 
                 case 'Z': case 'z':
+		    align_subpath(move_idx);
                     close_subpath();
                     break;
 
@@ -352,6 +394,8 @@ namespace svg
                 }
             }
         }
+        align_subpath(move_idx);
+        m_storage.start_new_path();
     }
 
 }

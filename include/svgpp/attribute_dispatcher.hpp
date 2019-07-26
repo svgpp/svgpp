@@ -23,9 +23,9 @@
 #include <svgpp/traits/attribute_groups.hpp>
 #include <svgpp/traits/attribute_type.hpp>
 #include <boost/utility/enable_if.hpp>
+#include <boost/fusion/include/accumulate.hpp>
 #include <boost/fusion/include/as_vector.hpp>
 #include <boost/fusion/include/at_key.hpp>
-#include <boost/fusion/include/for_each.hpp>
 #include <boost/fusion/include/mpl.hpp>
 #include <boost/mpl/contains.hpp>
 #include <boost/mpl/empty_base.hpp>
@@ -202,16 +202,17 @@ public:
 };
 
 template<class Context, SVGPP_TEMPLATE_ARGS>
-class on_exit_attributes_functor: boost::noncopyable
+class on_exit_attributes_functor
 {
 public:
+  typedef bool result_type;
+
   on_exit_attributes_functor(Context & context)
     : context_(context)
-    , result_(true)
   {}
 
   template<typename T>
-  void operator()(T & state) const
+  bool operator()(bool previous_succeeded, T & state) const
   {
     typedef typename boost::parameter::parameters<
       boost::parameter::optional<tag::error_policy>,
@@ -222,18 +223,12 @@ public:
       boost::parameter::optional<tag::marker_events_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args_t;
 
-    result_ = state.on_exit_attributes(detail::bind_context_parameters<args_t>(context_)) 
-      && result_;
-  }
-
-  bool succeeded() const 
-  {
-    return result_;
+    return state.on_exit_attributes(detail::bind_context_parameters<args_t>(context_)) 
+      && previous_succeeded;
   }
 
 private:
   Context & context_;
-  mutable bool result_; // boost::fusion::for_each doesn't permit non-const functor
 };
 
 }
@@ -447,8 +442,7 @@ public:
     viewport_attributes_applied_ = true;
 
     detail::on_exit_attributes_functor<Context, SVGPP_TEMPLATE_ARGS_PASS> fn(this->context_);
-    boost::fusion::for_each(states_, fn);
-    return fn.succeeded();
+    return boost::fusion::accumulate(states_, true, fn);
   }
 
 private:
@@ -564,8 +558,7 @@ public:
     viewport_attributes_applied_ = true;
 
     detail::on_exit_attributes_functor<Context, SVGPP_TEMPLATE_ARGS_PASS> fn(this->context_);
-    boost::fusion::for_each(states_, fn);
-    return fn.succeeded();
+    return boost::fusion::accumulate(states_, true, fn);
   }
 
 private:
@@ -634,8 +627,7 @@ public:
   bool on_exit_attributes()
   {
     on_exit_attributes_functor<Context, SVGPP_TEMPLATE_ARGS_PASS> fn(this->context_);
-    boost::fusion::for_each(states_, fn);
-    return fn.succeeded();
+    return boost::fusion::accumulate(states_, true, fn);
   }
 
   using base_type::load_attribute_value; 

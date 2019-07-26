@@ -19,7 +19,7 @@
 #ifndef AGG_MATH_INCLUDED
 #define AGG_MATH_INCLUDED
 
-#include <math.h>
+#include <cmath>
 #include "agg_basics.h"
 
 namespace agg
@@ -58,7 +58,7 @@ namespace agg
     {
         double dx = x2-x1;
         double dy = y2-y1;
-        return sqrt(dx * dx + dy * dy);
+        return std::sqrt(dx * dx + dy * dy);
     }
 
     //--------------------------------------------------------calc_sq_distance
@@ -76,7 +76,7 @@ namespace agg
     {
         double dx = x2-x1;
         double dy = y2-y1;
-        double d = sqrt(dx * dx + dy * dy);
+        double d = std::sqrt(dx * dx + dy * dy);
         if(d < vertex_dist_epsilon)
         {
             return calc_distance(x1, y1, x, y);
@@ -139,7 +139,7 @@ namespace agg
     {
         double num = (ay-cy) * (dx-cx) - (ax-cx) * (dy-cy);
         double den = (bx-ax) * (dy-cy) - (by-ay) * (dx-cx);
-        if(fabs(den) < intersection_epsilon) return false;
+        if(std::fabs(den) < intersection_epsilon) return false;
         double r = num / den;
         *x = ax + r * (bx-ax);
         *y = ay + r * (by-ay);
@@ -181,7 +181,7 @@ namespace agg
     {
         double dx = x2 - x1;
         double dy = y2 - y1;
-        double d = sqrt(dx*dx + dy*dy); 
+        double d = std::sqrt(dx*dx + dy*dy); 
         *x =  thickness * dy / d;
         *y = -thickness * dx / d;
     }
@@ -200,7 +200,7 @@ namespace agg
         double dx3=0.0;
         double dy3=0.0; 
         double loc = cross_product(x1, y1, x2, y2, x3, y3);
-        if(fabs(loc) > intersection_epsilon)
+        if(std::fabs(loc) > intersection_epsilon)
         {
             if(cross_product(x1, y1, x2, y2, x3, y3) > 0.0) 
             {
@@ -370,19 +370,19 @@ namespace agg
         }
         double d = 1E-6;
         double b = 0;
-        if(fabs(x) <= d) 
+        if(std::fabs(x) <= d) 
         {
             if(n != 0) return 0;
             return 1;
         }
         double b1 = 0; // b1 is the value from the previous iteration
         // Set up a starting order for recurrence
-        int m1 = (int)fabs(x) + 6;
-        if(fabs(x) > 5) 
+        int m1 = (int)std::fabs(x) + 6;
+        if(std::fabs(x) > 5) 
         {
-            m1 = (int)(fabs(1.4 * x + 60 / x));
+            m1 = (int)(std::fabs(1.4 * x + 60 / x));
         }
-        int m2 = (int)(n + 2 + fabs(x) / 4);
+        int m2 = (int)(n + 2 + std::fabs(x) / 4);
         if (m1 > m2) 
         {
             m2 = m1;
@@ -422,7 +422,7 @@ namespace agg
             }
             c4 += c6;
             b /= c4;
-            if(fabs(b - b1) < d)
+            if(std::fabs(b - b1) < d)
             {
                 return b;
             }

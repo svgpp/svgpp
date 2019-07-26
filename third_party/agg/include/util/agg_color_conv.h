@@ -20,7 +20,7 @@
 #ifndef AGG_COLOR_CONV_INCLUDED
 #define AGG_COLOR_CONV_INCLUDED
 
-#include <string.h>
+#include <cstring>
 #include "agg_basics.h"
 #include "agg_rendering_buffer.h"
 
@@ -72,11 +72,55 @@ namespace agg
                           const int8u* src,
                           unsigned width) const
         {
-            memmove(dst, src, width*BPP);
+            std::memmove(dst, src, width*BPP);
         }
     };
 
 
+    // Generic pixel converter.
+    template<class DstFormat, class SrcFormat>
+    struct conv_pixel
+    {
+        void operator()(void* dst, const void* src) const
+        {
+            // Read a pixel from the source format and write it to the destination format.
+            DstFormat::write_plain_color(dst, SrcFormat::read_plain_color(src));
+        }
+    };
+
+    // Generic row converter. Uses conv_pixel to convert individual pixels.
+    template<class DstFormat, class SrcFormat>
+    struct conv_row
+    {
+        void operator()(void* dst, const void* src, unsigned width) const
+        {
+            conv_pixel<DstFormat, SrcFormat> conv;
+            do
+            {
+                conv(dst, src);
+                dst = (int8u*)dst + DstFormat::pix_width;
+                src = (int8u*)src + SrcFormat::pix_width;
+            }
+            while (--width);
+        }
+    };
+
+    // Specialization for case where source and destination formats are identical.
+    template<class Format>
+    struct conv_row<Format, Format>
+    {
+        void operator()(void* dst, const void* src, unsigned width) const
+        {
+            std::memmove(dst, src, width * Format::pix_width);
+        }
+    };
+
+    // Top-level conversion function, converts one pixel format to any other.
+    template<class DstFormat, class SrcFormat, class RenBuf>
+    void convert(RenBuf* dst, const RenBuf* src)
+    {
+        color_conv(dst, src, conv_row<DstFormat, SrcFormat>());
+    }
 }
 
 

@@ -28,6 +28,7 @@ enum flip_y_e { flip_y = true };
 //#define AGG_RGBA32 
 //#define AGG_ARGB32 
 //#define AGG_ABGR32
+//#define AGG_BGRA128
 //#define AGG_RGB565
 //#define AGG_RGB555
 #include "pixel_formats.h"
@@ -162,8 +163,8 @@ public:
         stroke.width(m_pattern_size.value() / 15.0);
 
         delete [] m_pattern;
-        m_pattern = new agg::int8u[size * size * 4];
-        m_pattern_rbuf.attach(m_pattern, size, size, size*4);
+        m_pattern = new agg::int8u[size * size * pixfmt::pix_width];
+        m_pattern_rbuf.attach(m_pattern, size, size, size * pixfmt::pix_width);
 
         pixfmt pixf(m_pattern_rbuf);
         agg::renderer_base<pixfmt> rb(pixf);
@@ -172,11 +173,11 @@ public:
         rb.clear(agg::rgba_pre(0.4, 0.0, 0.1, m_pattern_alpha.value())); // Pattern background color
 
         m_ras.add_path(smooth);
-        rs.color(agg::rgba8(110,130,50));
+        rs.color(agg::srgba8(110,130,50));
         agg::render_scanlines(m_ras, m_sl, rs);
 
         m_ras.add_path(stroke);
-        rs.color(agg::rgba8(0,50,80));
+        rs.color(agg::srgba8(0,50,80));
         agg::render_scanlines(m_ras, m_sl, rs);
     }
 

@@ -14,12 +14,14 @@
 #include "platform/agg_platform_support.h"
 #include "interactive_polygon.h"
 
-#define AGG_BGR24 
+#define AGG_BGR24
 //#define AGG_RGB24
 //#define AGG_BGRA32 
 //#define AGG_RGBA32 
 //#define AGG_ARGB32 
 //#define AGG_ABGR32
+//#define AGG_BGR96
+//#define AGG_BGRA128
 //#define AGG_RGB565
 //#define AGG_RGB555
 #include "pixel_formats.h"
@@ -52,11 +54,11 @@ public:
     font_engine_type             m_feng;
     font_manager_type            m_fman;
     agg::interactive_polygon     m_poly;
-    agg::slider_ctrl<agg::rgba8> m_num_points;
-    agg::cbox_ctrl<agg::rgba8>   m_close;
-    agg::cbox_ctrl<agg::rgba8>   m_preserve_x_scale;
-    agg::cbox_ctrl<agg::rgba8>   m_fixed_len;
-    agg::cbox_ctrl<agg::rgba8>   m_animate;
+    agg::slider_ctrl<color_type> m_num_points;
+    agg::cbox_ctrl<color_type>   m_close;
+    agg::cbox_ctrl<color_type>   m_preserve_x_scale;
+    agg::cbox_ctrl<color_type>   m_fixed_len;
+    agg::cbox_ctrl<color_type>   m_animate;
     double                       m_dx[6];
     double                       m_dy[6];
     bool                         m_prev_animate;
@@ -163,7 +165,7 @@ public:
                     {
                         ras.reset();
                         ras.add_path(ftrans);
-                        r.color(agg::rgba8(0, 0, 0));
+                        r.color(agg::srgba8(0, 0, 0));
                         agg::render_scanlines(ras, sl, r);
                     }
 
@@ -183,7 +185,7 @@ public:
 
         stroke.width(2.0);
 
-        r.color(agg::rgba8(170, 50, 20, 100));
+        r.color(agg::srgba8(170, 50, 20, 100));
         ras.add_path(stroke);
         agg::render_scanlines(ras, sl, r);
 

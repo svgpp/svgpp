@@ -13,13 +13,8 @@
 #include "ctrl/agg_slider_ctrl.h"
 #include "platform/agg_platform_support.h"
 
-
-#include "agg_pixfmt_rgb.h"
-#define pix_format agg::pix_format_bgr24
-typedef agg::pixfmt_bgr24 pixfmt;
-typedef agg::rgba8 color_type;
-typedef agg::order_bgr component_order;
-
+#define AGG_BGR24
+#include "pixel_formats.h"
 
 enum { flip_y = true };
 
@@ -31,7 +26,7 @@ class the_application : public agg::platform_support
     typedef agg::gamma_lut<agg::int8u, agg::int8u> gamma_lut_type;
     typedef agg::gradient_radial_focus gradient_func_type;
     typedef agg::gradient_reflect_adaptor<gradient_func_type> gradient_adaptor_type;
-    typedef agg::gradient_lut<agg::color_interpolator<agg::rgba8>, 1024> color_func_type;
+    typedef agg::gradient_lut<agg::color_interpolator<agg::srgba8>, 1024> color_func_type;
     typedef agg::span_interpolator_linear<> interpolator_type;
     typedef agg::span_allocator<color_type> span_allocator_type;
     typedef agg::span_gradient<color_type, 
@@ -39,7 +34,7 @@ class the_application : public agg::platform_support
                                gradient_adaptor_type, 
                                color_func_type> span_gradient_type;
     
-    agg::slider_ctrl<agg::rgba8>    m_gamma;
+    agg::slider_ctrl<color_type>    m_gamma;
 
     agg::scanline_u8                m_scanline;
     agg::rasterizer_scanline_aa<>   m_rasterizer;
@@ -58,7 +53,7 @@ public:
         m_mouse_x(200), m_mouse_y(200)
     {
         m_gamma.range(0.5, 2.5);
-        m_gamma.value(1.8);
+        m_gamma.value(1.0);
         m_gamma.label("Gamma = %.3f");
         add_ctrl(m_gamma);
         m_gamma.no_transform();
@@ -79,22 +74,22 @@ public:
     {
         m_gradient_lut.remove_all();
 
-        m_gradient_lut.add_color(0.0, agg::rgba8_gamma_dir(agg::rgba8(0, 255, 0),   m_gamma_lut));
-        m_gradient_lut.add_color(0.2, agg::rgba8_gamma_dir(agg::rgba8(120, 0, 0),   m_gamma_lut));
-        m_gradient_lut.add_color(0.7, agg::rgba8_gamma_dir(agg::rgba8(120, 120, 0), m_gamma_lut));
-        m_gradient_lut.add_color(1.0, agg::rgba8_gamma_dir(agg::rgba8(0, 0, 255),   m_gamma_lut));
+        m_gradient_lut.add_color(0.0, agg::rgba8_gamma_dir(agg::srgba8(0, 255, 0),   m_gamma_lut));
+        m_gradient_lut.add_color(0.2, agg::rgba8_gamma_dir(agg::srgba8(120, 0, 0),   m_gamma_lut));
+        m_gradient_lut.add_color(0.7, agg::rgba8_gamma_dir(agg::srgba8(120, 120, 0), m_gamma_lut));
+        m_gradient_lut.add_color(1.0, agg::rgba8_gamma_dir(agg::srgba8(0, 0, 255),   m_gamma_lut));
 
-        //m_gradient_lut.add_color(0.0, agg::rgba8::from_wavelength(380, m_gamma.value()));
-        //m_gradient_lut.add_color(0.1, agg::rgba8::from_wavelength(420, m_gamma.value()));
-        //m_gradient_lut.add_color(0.2, agg::rgba8::from_wavelength(460, m_gamma.value()));
-        //m_gradient_lut.add_color(0.3, agg::rgba8::from_wavelength(500, m_gamma.value()));
-        //m_gradient_lut.add_color(0.4, agg::rgba8::from_wavelength(540, m_gamma.value()));
-        //m_gradient_lut.add_color(0.5, agg::rgba8::from_wavelength(580, m_gamma.value()));
-        //m_gradient_lut.add_color(0.6, agg::rgba8::from_wavelength(620, m_gamma.value()));
-        //m_gradient_lut.add_color(0.7, agg::rgba8::from_wavelength(660, m_gamma.value()));
-        //m_gradient_lut.add_color(0.8, agg::rgba8::from_wavelength(700, m_gamma.value()));
-        //m_gradient_lut.add_color(0.9, agg::rgba8::from_wavelength(740, m_gamma.value()));
-        //m_gradient_lut.add_color(1.0, agg::rgba8::from_wavelength(780, m_gamma.value()));
+        //m_gradient_lut.add_color(0.0, agg::srgba8::from_wavelength(380, m_gamma.value()));
+        //m_gradient_lut.add_color(0.1, agg::srgba8::from_wavelength(420, m_gamma.value()));
+        //m_gradient_lut.add_color(0.2, agg::srgba8::from_wavelength(460, m_gamma.value()));
+        //m_gradient_lut.add_color(0.3, agg::srgba8::from_wavelength(500, m_gamma.value()));
+        //m_gradient_lut.add_color(0.4, agg::srgba8::from_wavelength(540, m_gamma.value()));
+        //m_gradient_lut.add_color(0.5, agg::srgba8::from_wavelength(580, m_gamma.value()));
+        //m_gradient_lut.add_color(0.6, agg::srgba8::from_wavelength(620, m_gamma.value()));
+        //m_gradient_lut.add_color(0.7, agg::srgba8::from_wavelength(660, m_gamma.value()));
+        //m_gradient_lut.add_color(0.8, agg::srgba8::from_wavelength(700, m_gamma.value()));
+        //m_gradient_lut.add_color(0.9, agg::srgba8::from_wavelength(740, m_gamma.value()));
+        //m_gradient_lut.add_color(1.0, agg::srgba8::from_wavelength(780, m_gamma.value()));
 
         m_gradient_lut.build_lut();
     }

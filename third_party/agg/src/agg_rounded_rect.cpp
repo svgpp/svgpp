@@ -17,7 +17,7 @@
 //
 //----------------------------------------------------------------------------
 
-#include <math.h>
+#include <cmath>
 #include "agg_rounded_rect.h"
 
 
@@ -78,8 +78,8 @@ namespace agg
     //--------------------------------------------------------------------
     void rounded_rect::normalize_radius()
     {
-        double dx = fabs(m_y2 - m_y1);
-        double dy = fabs(m_x2 - m_x1);
+        double dx = std::fabs(m_y2 - m_y1);
+        double dy = std::fabs(m_x2 - m_x1);
 
         double k = 1.0;
         double t;

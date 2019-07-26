@@ -11,7 +11,6 @@
 #include "agg_scanline_p.h"
 #include "agg_renderer_scanline.h"
 #include "agg_pixfmt_rgba.h"
-#include "agg_gamma_lut.h"
 #include "agg_span_allocator.h"
 #include "agg_span_image_filter_rgba.h"
 #include "agg_span_interpolator_linear.h"
@@ -21,25 +20,26 @@
 #include "ctrl/agg_cbox_ctrl.h"
 #include "platform/agg_platform_support.h"
 
+#define AGG_BGRA32
+#include "pixel_formats.h"
+
 enum flip_y_e { flip_y = true };
 
-enum { l = 255 };
-static agg::int8u g_image[] = 
+using agg::rgba;
+
+static rgba g_image[] = 
 {
-   0,l,0,l,  0,0,l,l,  l,l,l,l,  l,0,0,l,
-   l,0,0,l,  0,0,0,l,  l,l,l,l,  l,l,l,l,
-   l,l,l,l,  l,l,l,l,  0,0,l,l,  l,0,0,l,
-   0,0,l,l,  l,l,l,l,  0,0,0,l,  0,l,0,l
+    rgba(0,1,0,1), rgba(1,0,0,1), rgba(1,1,1,1), rgba(0,0,1,1), 
+    rgba(0,0,1,1), rgba(0,0,0,1), rgba(1,1,1,1), rgba(1,1,1,1), 
+    rgba(1,1,1,1), rgba(1,1,1,1), rgba(1,0,0,1), rgba(0,0,1,1), 
+    rgba(1,0,0,1), rgba(1,1,1,1), rgba(0,0,0,1), rgba(0,1,0,1)
 };
 
 class the_application : public agg::platform_support
 {
-    typedef agg::pixfmt_bgra32 pixfmt;
-    typedef agg::pixfmt_bgra32_pre pixfmt_pre;
     typedef agg::renderer_base<pixfmt> renderer_base;
     typedef agg::renderer_base<pixfmt_pre> renderer_base_pre;
 
-    agg::slider_ctrl<agg::rgba> m_gamma;
     agg::slider_ctrl<agg::rgba> m_radius;
     agg::rbox_ctrl<agg::rgba>   m_filters;
     agg::cbox_ctrl<agg::rgba>   m_normalize;
@@ -54,8 +54,7 @@ class the_application : public agg::platform_support
 public:
     the_application(agg::pix_format_e format, bool flip_y) :
         agg::platform_support(format, flip_y),
-        m_gamma (115,  5,    500-5, 11,     !flip_y),
-        m_radius(115,  5+15, 500-5, 11+15,  !flip_y),
+        m_radius(115,  5, 500-5, 11,  !flip_y),
         m_filters(0.0, 0.0, 110.0, 210.0, !flip_y),
         m_normalize  (8.0, 215.0, "Normalize Filter", !flip_y),
         m_cur_angle(0.0),
@@ -65,7 +64,6 @@ public:
         m_time1(0),
         m_time2(0)
     {
-        add_ctrl(m_gamma);
         add_ctrl(m_radius);
         add_ctrl(m_filters);
         add_ctrl(m_normalize);
@@ -75,10 +73,6 @@ public:
         m_radius.label("Filter Radius=%.3f");
         m_radius.range(2.0, 8.0);
         m_radius.value(4.0);
-
-        m_gamma.label("Gamma=%.3f");
-        m_gamma.range(0.5, 3.0);
-        m_gamma.value(1.0);
 
         m_filters.add_item("simple (NN)");
         m_filters.add_item("bilinear");
@@ -120,16 +114,20 @@ public:
         agg::rasterizer_scanline_aa<> ras;
         agg::scanline_u8 sl;
 
-        agg::rendering_buffer img_rbuf(g_image, 4, 4, 4*4);
+        agg::pod_array<agg::int8u> image(4 * 4 * pixfmt::pix_width);
+        agg::rendering_buffer img_rbuf(image.data(), 4, 4, 4 * pixfmt::pix_width);
+        pixfmt img_pixf(img_rbuf);
+        for (int y = 0; y < 4; ++y)
+            for (int x = 0; x < 4; ++x)
+                img_pixf.copy_pixel(x, y, g_image[4 * y + x]);
 
         double para[] = { 200, 40, 200+300, 40, 200+300, 40+300, 200, 40+300 };
         agg::trans_affine img_mtx(para, 0,0,4,4);
 
         typedef agg::span_interpolator_linear<> interpolator_type;
         interpolator_type interpolator(img_mtx); 
-        agg::span_allocator<agg::rgba8> sa;
+        agg::span_allocator<color_type> sa;
 
-        pixfmt img_pixf(img_rbuf);
         typedef agg::image_accessor_clone<pixfmt> img_source_type;
         img_source_type source(img_pixf);
 
@@ -196,9 +194,6 @@ public:
                 span_gen_type sg(source, interpolator, filter);
                 agg::render_scanlines_aa(ras, sl, rb, sa, sg);
 
-                agg::gamma_lut<agg::int8u, agg::int8u, 8, 8> gamma(m_gamma.value());
-                pixf.apply_gamma_inv(gamma);
-
                 double x_start = 5.0;
                 double x_end   = 195.0;
                 double y_start = 235.0;
@@ -218,7 +213,7 @@ public:
                     p.line_to(x+0.5, y_end);
                     ras.add_path(stroke);
                     agg::render_scanlines_aa_solid(ras, sl, rb, 
-                                                   agg::rgba8(0, 0, 0, i == 8 ? 255 : 100));
+                                                   agg::srgba8(0, 0, 0, i == 8 ? 255 : 100));
                 }
                 
                 double ys = y_start + (y_end - y_start) / 6.0;
@@ -226,7 +221,7 @@ public:
                 p.move_to(x_start, ys);
                 p.line_to(x_end,   ys);
                 ras.add_path(stroke);
-                agg::render_scanlines_aa_solid(ras, sl, rb, agg::rgba8(0, 0, 0));
+                agg::render_scanlines_aa_solid(ras, sl, rb, agg::srgba8(0, 0, 0));
 
                 double radius = filter.radius();
                 unsigned n = unsigned(radius * 256 * 2);
@@ -244,12 +239,11 @@ public:
                               ys + dy * weights[i] / agg::image_filter_scale);
                 }
                 ras.add_path(stroke);
-                agg::render_scanlines_aa_solid(ras, sl, rb, agg::rgba8(100, 0, 0));
+                agg::render_scanlines_aa_solid(ras, sl, rb, agg::srgba8(100, 0, 0));
             }
             break;
         }
 
-        agg::render_ctrl(ras, sl, rb, m_gamma);
         if(m_filters.cur_item() >= 14)
         {
             agg::render_ctrl(ras, sl, rb, m_radius);
@@ -266,7 +260,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgra32, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("Image transformation filters comparison");
 
     if(app.init(500, 340, 0))

@@ -415,9 +415,9 @@ namespace agg
                 m_value1 = m_value2 - dv;
             }
             return true;
+        default:
+            return false;
         }
-
-        return false;
     }
 
 
@@ -430,7 +430,7 @@ namespace agg
 
 
     //------------------------------------------------------------------------
-    bool scale_ctrl_impl::on_arrow_keys(bool left, bool right, bool down, bool up)
+    bool scale_ctrl_impl::on_arrow_keys(bool /*left*/, bool /*right*/, bool /*down*/, bool /*up*/)
     {
 /*
         if(right || up)

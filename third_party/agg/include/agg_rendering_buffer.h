@@ -20,6 +20,7 @@
 #ifndef AGG_RENDERING_BUFFER_INCLUDED
 #define AGG_RENDERING_BUFFER_INCLUDED
 
+#include <cstring>
 #include "agg_array.h"
 
 namespace agg
@@ -56,14 +57,14 @@ namespace agg
         //--------------------------------------------------------------------
         void attach(T* buf, unsigned width, unsigned height, int stride)
         {
-			m_buf = m_start = buf;
-			m_width = width;
-			m_height = height;
-			m_stride = stride;
-			if(stride < 0) 
+            m_buf = m_start = buf;
+            m_width = width;
+            m_height = height;
+            m_stride = stride;
+            if(stride < 0) 
             { 
-				m_start = m_buf - int(height - 1) * stride;
-			}
+                m_start = m_buf - (AGG_INT64)(height - 1) * stride;
+            }
         }
 
         //--------------------------------------------------------------------
@@ -78,13 +79,13 @@ namespace agg
         }
 
         //--------------------------------------------------------------------
-		AGG_INLINE       T* row_ptr(int, int y, unsigned) 
+        AGG_INLINE       T* row_ptr(int, int y, unsigned) 
         { 
-            return m_start + y * m_stride; 
+            return m_start + y * (AGG_INT64)m_stride; 
         }
-		AGG_INLINE       T* row_ptr(int y)       { return m_start + y * m_stride; }
-		AGG_INLINE const T* row_ptr(int y) const { return m_start + y * m_stride; }
-		AGG_INLINE row_data row    (int y) const 
+        AGG_INLINE       T* row_ptr(int y)       { return m_start + y * (AGG_INT64)m_stride; }
+        AGG_INLINE const T* row_ptr(int y) const { return m_start + y * (AGG_INT64)m_stride; }
+        AGG_INLINE row_data row    (int y) const 
         { 
             return row_data(0, m_width-1, row_ptr(y)); 
         }
@@ -105,7 +106,7 @@ namespace agg
             unsigned w = width();
             for (y = 0; y < h; y++)
             {
-                memcpy(row_ptr(0, y, w), src.row_ptr(y), l);
+                std::memcpy(row_ptr(0, y, w), src.row_ptr(y), l);
             }
         }
 
@@ -181,7 +182,7 @@ namespace agg
 
             if(stride < 0)
             {
-                row_ptr = m_buf - int(height - 1) * stride;
+                row_ptr = m_buf - (AGG_INT64)(height - 1) * stride;
             }
 
             T** rows = &m_rows[0];
@@ -235,7 +236,7 @@ namespace agg
             unsigned w = width();
             for (y = 0; y < h; y++)
             {
-                memcpy(row_ptr(0, y, w), src.row_ptr(y), l);
+                std::memcpy(row_ptr(0, y, w), src.row_ptr(y), l);
             }
         }
 

@@ -30,7 +30,7 @@
 #if defined(__MWERKS__)
 #include "console.h"
 #endif
-#include <string.h>
+#include <cstring>
 #include <unistd.h>
 #include "platform/agg_platform_support.h"
 #include "platform/mac/agg_mac_pmap.h"
@@ -102,7 +102,7 @@ pascal void DoPeriodicTask (EventLoopTimerRef theTimer, void* userData);
         m_input_flags(0),
         m_redraw_flag(true)
     {
-        memset(m_keymap, 0, sizeof(m_keymap));
+        std::memset(m_keymap, 0, sizeof(m_keymap));
 
         //Keyboard input is not yet fully supported nor tested
         //m_keymap[VK_PAUSE]       = key_pause;
@@ -447,7 +447,7 @@ pascal void DoPeriodicTask (EventLoopTimerRef theTimer, void* userData);
         m_initial_width(10),
         m_initial_height(10)
     {
-        strcpy(m_caption, "Anti-Grain Geometry Application");
+        std::strcpy(m_caption, "Anti-Grain Geometry Application");
     }
 
 
@@ -462,7 +462,7 @@ pascal void DoPeriodicTask (EventLoopTimerRef theTimer, void* userData);
     //------------------------------------------------------------------------
     void platform_support::caption(const char* cap)
     {
-        strcpy(m_caption, cap);
+        std::strcpy(m_caption, cap);
         if(m_specific->m_window)
         {
         	SetWindowTitleWithCFString (m_specific->m_window, CFStringCreateWithCStringNoCopy (nil, cap, kCFStringEncodingASCII, nil));
@@ -637,15 +637,15 @@ pascal void DoPeriodicTask (EventLoopTimerRef theTimer, void* userData);
         if(idx < max_images)
         {
             char fn[1024];
-            strcpy(fn, file);
-            int len = strlen(fn);
+            std::strcpy(fn, file);
+            int len = std::strlen(fn);
 #if defined(__MWERKS__)
             if(len < 4 || stricmp(fn + len - 4, ".BMP") != 0)
 #else
 	        if(len < 4 || strncasecmp(fn + len - 4, ".BMP", 4) != 0)
 #endif
             {
-                strcat(fn, ".bmp");
+                std::strcat(fn, ".bmp");
             }
             return m_specific->load_pmap(fn, idx, &m_rbuf_img[idx]);
         }
@@ -660,15 +660,15 @@ pascal void DoPeriodicTask (EventLoopTimerRef theTimer, void* userData);
         if(idx < max_images)
         {
             char fn[1024];
-            strcpy(fn, file);
-            int len = strlen(fn);
+            std::strcpy(fn, file);
+            int len = std::strlen(fn);
 #if defined(__MWERKS__)
             if(len < 4 || stricmp(fn + len - 4, ".BMP") != 0)
 #else
 	        if(len < 4 || strncasecmp(fn + len - 4, ".BMP", 4) != 0)
 #endif
             {
-                strcat(fn, ".bmp");
+                std::strcat(fn, ".bmp");
             }
             return m_specific->save_pmap(fn, idx, &m_rbuf_img[idx]);
         }
@@ -1044,7 +1044,7 @@ int main(int argc, char* argv[])
     // Check if we are launched by double-clicking under OSX 
 	// Get rid of extra argument, this will confuse the standard argument parsing
 	// calls used in the examples to get the name of the image file to be used
-    if ( argc >= 2 && strncmp (argv[1], "-psn", 4) == 0 ) {
+    if ( argc >= 2 && std::strncmp(argv[1], "-psn", 4) == 0 ) {
         argc = 1;
     } 
 

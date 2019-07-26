@@ -16,7 +16,7 @@
 #ifndef AGG_BASICS_INCLUDED
 #define AGG_BASICS_INCLUDED
 
-#include <math.h>
+#include <cmath>
 #include "agg_config.h"
 
 //---------------------------------------------------------AGG_CUSTOM_ALLOCATOR
@@ -143,9 +143,17 @@ namespace agg
         __asm mov eax, dword ptr [t]
     }
 #pragma warning(pop)
+    AGG_INLINE int ifloor(double v)
+    {
+        return int(floor(v));
+    }
     AGG_INLINE unsigned ufloor(double v)         //-------ufloor
     {
         return unsigned(floor(v));
+    }
+    AGG_INLINE int iceil(double v)
+    {
+        return int(ceil(v));
     }
     AGG_INLINE unsigned uceil(double v)          //--------uceil
     {
@@ -160,13 +168,21 @@ namespace agg
     {
         return unsigned(v);
     }
+    AGG_INLINE int ifloor(double v)
+    {
+        return int(std::floor(v));
+    }
     AGG_INLINE unsigned ufloor(double v)
     {
-        return unsigned(floor(v));
+        return unsigned(std::floor(v));
+    }
+    AGG_INLINE int iceil(double v)
+    {
+        return int(std::ceil(v));
     }
     AGG_INLINE unsigned uceil(double v)
     {
-        return unsigned(ceil(v));
+        return unsigned(std::ceil(v));
     }
 #else
     AGG_INLINE int iround(double v)
@@ -177,13 +193,22 @@ namespace agg
     {
         return unsigned(v + 0.5);
     }
+    AGG_INLINE int ifloor(double v)
+    {
+        int i = int(v);
+        return i - (i > v);
+    }
     AGG_INLINE unsigned ufloor(double v)
     {
         return unsigned(v);
     }
+    AGG_INLINE int iceil(double v)
+    {
+        return int(std::ceil(v));
+    }
     AGG_INLINE unsigned uceil(double v)
     {
-        return unsigned(ceil(v));
+        return unsigned(std::ceil(v));
     }
 #endif
 
@@ -203,7 +228,7 @@ namespace agg
     {
         AGG_INLINE static unsigned mul(unsigned a, unsigned b)
         {
-            register unsigned q = a * b + (1 << (Shift-1));
+            unsigned q = a * b + (1 << (Shift-1));
             return (q + (q >> Shift)) >> Shift;
         }
     };
@@ -229,7 +254,7 @@ namespace agg
     {
         poly_subpixel_shift = 8,                      //----poly_subpixel_shift
         poly_subpixel_scale = 1<<poly_subpixel_shift, //----poly_subpixel_scale 
-        poly_subpixel_mask  = poly_subpixel_scale-1,  //----poly_subpixel_mask 
+        poly_subpixel_mask  = poly_subpixel_scale-1   //----poly_subpixel_mask 
     };
 
     //----------------------------------------------------------filling_rule_e
@@ -295,6 +320,12 @@ namespace agg
         bool hit_test(T x, T y) const
         {
             return (x >= x1 && x <= x2 && y >= y1 && y <= y2);
+        }
+        
+        bool overlaps(const self_type& r) const
+        {
+            return !(r.x1 > x2 || r.x2 < x1
+                  || r.y1 > y2 || r.y2 < y1);
         }
     };
 
@@ -520,9 +551,22 @@ namespace agg
     //------------------------------------------------------------is_equal_eps
     template<class T> inline bool is_equal_eps(T v1, T v2, T epsilon)
     {
-        return fabs(v1 - v2) <= double(epsilon);
-    }
+	bool neg1 = v1 < 0.0;
+	bool neg2 = v2 < 0.0;
 
+	if (neg1 != neg2)
+	    return std::fabs(v1) < epsilon && std::fabs(v2) < epsilon;
+
+        int int1, int2;
+	std::frexp(v1, &int1);
+	std::frexp(v2, &int2);
+	int min12 = int1 < int2 ? int1 : int2;
+
+	v1 = std::ldexp(v1, -min12);
+	v2 = std::ldexp(v2, -min12);
+
+	return std::fabs(v1 - v2) < epsilon;
+    }
 }
 
 

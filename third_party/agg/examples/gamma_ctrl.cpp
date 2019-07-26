@@ -10,12 +10,14 @@
 #include "ctrl/agg_gamma_ctrl.h"
 #include "platform/agg_platform_support.h"
 
-#define AGG_BGR24 
+#define AGG_BGR24
 //#define AGG_RGB24
+//#define AGG_BGR96
 //#define AGG_BGRA32 
 //#define AGG_RGBA32 
 //#define AGG_ARGB32 
 //#define AGG_ABGR32
+//#define AGG_BGRA128
 //#define AGG_RGB565
 //#define AGG_RGB555
 #include "pixel_formats.h"
@@ -23,7 +25,7 @@
 enum flip_y_e { flip_y = true };
 
 
-agg::gamma_ctrl<agg::rgba8> g_ctrl(10.0, 10.0, 300.0, 200.0, !flip_y);
+agg::gamma_ctrl<color_type> g_ctrl(10.0, 10.0, 300.0, 200.0, !flip_y);
 
 void read_gamma(const char* fname)
 {
@@ -110,7 +112,7 @@ public:
 
         pixfmt pixf(rbuf_window());
         ren_base rb(pixf);
-        agg::rgba8 color;
+        agg::srgba8 color;
         rb.clear(agg::rgba(1, 1, 1));
 
         g_ctrl.text_size(10.0, 12.0);
@@ -125,7 +127,7 @@ public:
         agg::ellipse ellipse;
         agg::conv_stroke<agg::ellipse> poly(ellipse);
         agg::conv_transform<agg::conv_stroke<agg::ellipse> > tpoly(poly, trans_affine_resizing());
-        color = agg::rgba8(0, 0, 0);
+        color = agg::srgba8(0, 0, 0);
 
         ellipse.init(ecenter, 220, ewidth, 15, 100);
         poly.width(2.0);
@@ -137,7 +139,7 @@ public:
         ras.add_path(tpoly, 0);
         agg::render_scanlines_aa_solid(ras, sl, rb, color);
 
-        color = agg::rgba8(127, 127, 127);
+        color = agg::srgba8(127, 127, 127);
 
         ellipse.init(ecenter, 260, ewidth, 15, 100);
         poly.width(2.0);
@@ -149,7 +151,7 @@ public:
         ras.add_path(tpoly, 0);
         agg::render_scanlines_aa_solid(ras, sl, rb, color);
 
-        color = agg::rgba8(192, 192, 192);
+        color = agg::srgba8(192, 192, 192);
 
         ellipse.init(ecenter, 300, ewidth, 15, 100);
         poly.width(2.0);

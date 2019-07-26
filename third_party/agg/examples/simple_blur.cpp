@@ -20,10 +20,14 @@
 #include "agg_ellipse.h"
 #include "platform/agg_platform_support.h"
 
+// Note: example currently only supports 8-bit color
+#define AGG_BGR24
+#include "pixel_formats.h"
+
 enum flip_y_e { flip_y = true };
 
 agg::path_storage g_path;
-agg::rgba8        g_colors[100];
+agg::srgba8        g_colors[100];
 unsigned          g_path_idx[100];
 unsigned          g_npaths = 0;
 double            g_x1 = 0;
@@ -41,7 +45,7 @@ int               g_nclick = 0;
 
 
 
-unsigned parse_lion(agg::path_storage& ps, agg::rgba8* colors, unsigned* path_idx);
+unsigned parse_lion(agg::path_storage& ps, agg::srgba8* colors, unsigned* path_idx);
 void parse_lion()
 {
     g_npaths = parse_lion(g_path, g_colors, g_path_idx);
@@ -52,98 +56,73 @@ void parse_lion()
 }
 
 
-
-
-
-
-namespace agg
+template<class Order> class span_simple_blur_rgb24
 {
-    template<class Order> class span_simple_blur_rgb24
+public:
+    //--------------------------------------------------------------------
+    span_simple_blur_rgb24() : m_source_image(0) {}
+
+    //--------------------------------------------------------------------
+    span_simple_blur_rgb24(const agg::rendering_buffer& src) : 
+        m_source_image(&src) {}
+
+    //--------------------------------------------------------------------
+    void source_image(const agg::rendering_buffer& src) { m_source_image = &src; }
+    const agg::rendering_buffer& source_image() const { return *m_source_image; }
+
+    //--------------------------------------------------------------------
+    void prepare() {}
+
+    //--------------------------------------------------------------------
+    void generate(color_type* span, int x, int y, int len)
     {
-    public:
-        //--------------------------------------------------------------------
-        typedef rgba8 color_type;
-        
-        //--------------------------------------------------------------------
-        span_simple_blur_rgb24() : m_source_image(0) {}
-
-        //--------------------------------------------------------------------
-        span_simple_blur_rgb24(const rendering_buffer& src) : 
-            m_source_image(&src) {}
-
-        //--------------------------------------------------------------------
-        void source_image(const rendering_buffer& src) { m_source_image = &src; }
-        const rendering_buffer& source_image() const { return *m_source_image; }
-
-        //--------------------------------------------------------------------
-        void prepare() {}
-
-        //--------------------------------------------------------------------
-        void generate(color_type* span, int x, int y, int len)
+        if(y < 1 || y >= int(m_source_image->height() - 1))
         {
-            if(y < 1 || y >= int(m_source_image->height() - 1))
-            {
-                do
-                {
-                    *span++ = rgba8(0,0,0,0);
-                }
-                while(--len);
-                return;
-            }
-
             do
             {
-                int color[4];
-                color[0] = color[1] = color[2] = color[3] = 0;
-                if(x > 0 && x < int(m_source_image->width()-1))
-                {
-                    int i = 3;
-                    do
-                    {
-                        const int8u* ptr = m_source_image->row_ptr(y - i + 2) + (x - 1) * 3;
-
-                        color[0] += *ptr++;
-                        color[1] += *ptr++;
-                        color[2] += *ptr++;
-                        color[3] += 255;
-
-                        color[0] += *ptr++;
-                        color[1] += *ptr++;
-                        color[2] += *ptr++;
-                        color[3] += 255;
-
-                        color[0] += *ptr++;
-                        color[1] += *ptr++;
-                        color[2] += *ptr++;
-                        color[3] += 255;
-                    }
-                    while(--i);
-                    color[0] /= 9;
-                    color[1] /= 9;
-                    color[2] /= 9;
-                    color[3] /= 9;
-                }
-                *span++ = rgba8(color[Order::R], color[Order::G], color[Order::B], color[3]);
-                ++x;
+                *span++ = color_type::no_color();
             }
             while(--len);
+            return;
         }
 
-    private:
-        const rendering_buffer* m_source_image;
-    };
+        do
+        {
+            color_type::calc_type color[3];
+            color[0] = color[1] = color[2] = 0;
+            if(x > 0 && x < int(m_source_image->width()-1))
+            {
+                int i = 3;
+                do
+                {
+                    const agg::int8u* ptr = m_source_image->row_ptr(y - i + 2) + (x - 1) * 3;
 
-}
+                    color[0] += *ptr++;
+                    color[1] += *ptr++;
+                    color[2] += *ptr++;
 
+                    color[0] += *ptr++;
+                    color[1] += *ptr++;
+                    color[2] += *ptr++;
 
+                    color[0] += *ptr++;
+                    color[1] += *ptr++;
+                    color[2] += *ptr++;
+                }
+                while(--i);
+                color[0] /= 9;
+                color[1] /= 9;
+                color[2] /= 9;
+            }
+            *span++ = color_type(color[Order::R], color[Order::G], color[Order::B]);
+            ++x;
+        }
+        while(--len);
+    }
 
-
-
-
-
-
-
-
+private:
+    const agg::rendering_buffer* m_source_image;
+};
 
 
 class the_application : public agg::platform_support
@@ -170,7 +149,6 @@ public:
 
     virtual void on_draw()
     {
-        typedef agg::pixfmt_bgr24 pixfmt;
         typedef agg::renderer_base<pixfmt> renderer_base;
         typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_solid;
         
@@ -218,8 +196,8 @@ public:
         ras2.add_path(ell_stroke2);
         agg::render_scanlines(ras2, sl, rs);
 
-        typedef agg::span_simple_blur_rgb24<agg::order_bgr> span_blur_gen;
-        typedef agg::span_allocator<span_blur_gen::color_type> span_blur_alloc;
+        typedef span_simple_blur_rgb24<component_order> span_blur_gen;
+        typedef agg::span_allocator<color_type> span_blur_alloc;
 
         span_blur_alloc sa;
         span_blur_gen sg;
@@ -265,7 +243,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example. Lion with Alpha-Masking");
 
     if(app.init(512, 400, agg::window_resize))

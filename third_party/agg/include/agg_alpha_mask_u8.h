@@ -19,7 +19,7 @@
 #ifndef AGG_ALPHA_MASK_U8_INCLUDED
 #define AGG_ALPHA_MASK_U8_INCLUDED
 
-#include <string.h>
+#include <cstring>
 #include "agg_basics.h"
 #include "agg_rendering_buffer.h"
 
@@ -105,7 +105,7 @@ namespace agg
 
             if(y < 0 || y > ymax)
             {
-                memset(dst, 0, num_pix * sizeof(cover_type));
+                std::memset(dst, 0, num_pix * sizeof(cover_type));
                 return;
             }
 
@@ -114,10 +114,10 @@ namespace agg
                 count += x;
                 if(count <= 0) 
                 {
-                    memset(dst, 0, num_pix * sizeof(cover_type));
+                    std::memset(dst, 0, num_pix * sizeof(cover_type));
                     return;
                 }
-                memset(covers, 0, -x * sizeof(cover_type));
+                std::memset(covers, 0, -x * sizeof(cover_type));
                 covers -= x;
                 x = 0;
             }
@@ -128,10 +128,10 @@ namespace agg
                 count -= rest;
                 if(count <= 0) 
                 {
-                    memset(dst, 0, num_pix * sizeof(cover_type));
+                    std::memset(dst, 0, num_pix * sizeof(cover_type));
                     return;
                 }
-                memset(covers + count, 0, rest * sizeof(cover_type));
+                std::memset(covers + count, 0, rest * sizeof(cover_type));
             }
 
             const int8u* mask = m_rbuf->row_ptr(y) + x * Step + Offset;
@@ -155,7 +155,7 @@ namespace agg
 
             if(y < 0 || y > ymax)
             {
-                memset(dst, 0, num_pix * sizeof(cover_type));
+                std::memset(dst, 0, num_pix * sizeof(cover_type));
                 return;
             }
 
@@ -164,10 +164,10 @@ namespace agg
                 count += x;
                 if(count <= 0) 
                 {
-                    memset(dst, 0, num_pix * sizeof(cover_type));
+                    std::memset(dst, 0, num_pix * sizeof(cover_type));
                     return;
                 }
-                memset(covers, 0, -x * sizeof(cover_type));
+                std::memset(covers, 0, -x * sizeof(cover_type));
                 covers -= x;
                 x = 0;
             }
@@ -178,10 +178,10 @@ namespace agg
                 count -= rest;
                 if(count <= 0) 
                 {
-                    memset(dst, 0, num_pix * sizeof(cover_type));
+                    std::memset(dst, 0, num_pix * sizeof(cover_type));
                     return;
                 }
-                memset(covers + count, 0, rest * sizeof(cover_type));
+                std::memset(covers + count, 0, rest * sizeof(cover_type));
             }
 
             const int8u* mask = m_rbuf->row_ptr(y) + x * Step + Offset;
@@ -207,7 +207,7 @@ namespace agg
 
             if(x < 0 || x > xmax)
             {
-                memset(dst, 0, num_pix * sizeof(cover_type));
+                std::memset(dst, 0, num_pix * sizeof(cover_type));
                 return;
             }
 
@@ -216,10 +216,10 @@ namespace agg
                 count += y;
                 if(count <= 0) 
                 {
-                    memset(dst, 0, num_pix * sizeof(cover_type));
+                    std::memset(dst, 0, num_pix * sizeof(cover_type));
                     return;
                 }
-                memset(covers, 0, -y * sizeof(cover_type));
+                std::memset(covers, 0, -y * sizeof(cover_type));
                 covers -= y;
                 y = 0;
             }
@@ -230,10 +230,10 @@ namespace agg
                 count -= rest;
                 if(count <= 0) 
                 {
-                    memset(dst, 0, num_pix * sizeof(cover_type));
+                    std::memset(dst, 0, num_pix * sizeof(cover_type));
                     return;
                 }
-                memset(covers + count, 0, rest * sizeof(cover_type));
+                std::memset(covers + count, 0, rest * sizeof(cover_type));
             }
 
             const int8u* mask = m_rbuf->row_ptr(y) + x * Step + Offset;
@@ -256,7 +256,7 @@ namespace agg
 
             if(x < 0 || x > xmax)
             {
-                memset(dst, 0, num_pix * sizeof(cover_type));
+                std::memset(dst, 0, num_pix * sizeof(cover_type));
                 return;
             }
 
@@ -265,10 +265,10 @@ namespace agg
                 count += y;
                 if(count <= 0) 
                 {
-                    memset(dst, 0, num_pix * sizeof(cover_type));
+                    std::memset(dst, 0, num_pix * sizeof(cover_type));
                     return;
                 }
-                memset(covers, 0, -y * sizeof(cover_type));
+                std::memset(covers, 0, -y * sizeof(cover_type));
                 covers -= y;
                 y = 0;
             }
@@ -279,10 +279,10 @@ namespace agg
                 count -= rest;
                 if(count <= 0) 
                 {
-                    memset(dst, 0, num_pix * sizeof(cover_type));
+                    std::memset(dst, 0, num_pix * sizeof(cover_type));
                     return;
                 }
-                memset(covers + count, 0, rest * sizeof(cover_type));
+                std::memset(covers + count, 0, rest * sizeof(cover_type));
             }
 
             const int8u* mask = m_rbuf->row_ptr(y) + x * Step + Offset;

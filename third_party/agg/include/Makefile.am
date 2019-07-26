@@ -44,4 +44,6 @@ agginclude_HEADERS = \
 	agg_embedded_raster_fonts.h  agg_scanline_storage_bin.h      agg_vpgen_clip_polyline.h \
 	agg_font_cache_manager.h     agg_scanline_u.h                agg_vpgen_segmentator.h \
 	agg_gamma_functions.h        agg_shorten_path.h \
-	agg_gamma_lut.h              agg_simul_eq.h
+	agg_gamma_lut.h              agg_simul_eq.h \
+	agg_font_cache_manager2.h    agg_pixfmt_base.h               agg_rasterizer_scanline_aa_nogamma.h \
+	agg_span_gradient_contour.h  agg_span_gradient_image.h

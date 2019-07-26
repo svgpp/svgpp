@@ -17,7 +17,8 @@
 //
 //----------------------------------------------------------------------------
 
-#include <string.h>
+#include <cstring>
+#include <cstdio>
 #include "platform/agg_platform_support.h"
 #include "SDL.h"
 #include "SDL_byteorder.h"
@@ -70,7 +71,7 @@ namespace agg
         m_cur_x(0),
         m_cur_y(0)
     {
-        memset(m_surf_img, 0, sizeof(m_surf_img));
+        std::memset(m_surf_img, 0, sizeof(m_surf_img));
 
         switch(m_format)
         {
@@ -218,7 +219,7 @@ namespace agg
         m_flip_y(flip_y)
     {
         SDL_Init(SDL_INIT_VIDEO);
-        strcpy(m_caption, "Anti-Grain Geometry Application");
+        std::strcpy(m_caption, "Anti-Grain Geometry Application");
     }
 
 
@@ -233,7 +234,7 @@ namespace agg
     //------------------------------------------------------------------------
     void platform_support::caption(const char* cap)
     {
-        strcpy(m_caption, cap);
+        std::strcpy(m_caption, cap);
         if(m_specific->m_initialized)
         {
             SDL_WM_SetCaption(cap, 0);
@@ -265,7 +266,7 @@ namespace agg
         m_specific->m_surf_screen = SDL_SetVideoMode(width, height, m_bpp, wflags);
         if(m_specific->m_surf_screen == 0) 
         {
-            fprintf(stderr, 
+            std::fprintf(stderr, 
                     "Unable to set %dx%d %d bpp video: %s\n", 
                     width, 
                     height, 
@@ -290,7 +291,7 @@ namespace agg
 
         if(m_specific->m_surf_window == 0) 
         {
-            fprintf(stderr, 
+            std::fprintf(stderr, 
                     "Unable to create image buffer %dx%d %d bpp: %s\n", 
                     width, 
                     height, 
@@ -547,17 +548,17 @@ if(m_ctrls.on_mouse_button_down(m_specific->m_cur_x,
             if(m_specific->m_surf_img[idx]) SDL_FreeSurface(m_specific->m_surf_img[idx]);
 
             char fn[1024];
-            strcpy(fn, file);
-            int len = strlen(fn);
-            if(len < 4 || strcmp(fn + len - 4, ".bmp") != 0)
+            std::strcpy(fn, file);
+            int len = std::strlen(fn);
+            if(len < 4 || std::strcmp(fn + len - 4, ".bmp") != 0)
             {
-                strcat(fn, ".bmp");
+                std::strcat(fn, ".bmp");
             }
 
             SDL_Surface* tmp_surf = SDL_LoadBMP(fn);
             if (tmp_surf == 0) 
             {
-                fprintf(stderr, "Couldn't load %s: %s\n", fn, SDL_GetError());
+                std::fprintf(stderr, "Couldn't load %s: %s\n", fn, SDL_GetError());
                 return false;
             }
 
@@ -609,11 +610,11 @@ if(m_ctrls.on_mouse_button_down(m_specific->m_cur_x,
         if(idx < max_images && m_specific->m_surf_img[idx])
         {
             char fn[1024];
-            strcpy(fn, file);
-            int len = strlen(fn);
-            if(len < 4 || strcmp(fn + len - 4, ".bmp") != 0)
+            std::strcpy(fn, file);
+            int len = std::strlen(fn);
+            if(len < 4 || std::strcmp(fn + len - 4, ".bmp") != 0)
             {
-                strcat(fn, ".bmp");
+                std::strcat(fn, ".bmp");
             }
             return SDL_SaveBMP(m_specific->m_surf_img[idx], fn) == 0;
         }
@@ -641,7 +642,7 @@ if(m_ctrls.on_mouse_button_down(m_specific->m_cur_x,
                                       m_specific->m_amask);
             if(m_specific->m_surf_img[idx] == 0) 
             {
-                fprintf(stderr, "Couldn't create image: %s\n", SDL_GetError());
+                std::fprintf(stderr, "Couldn't create image: %s\n", SDL_GetError());
                 return false;
             }
 
@@ -673,7 +674,7 @@ if(m_ctrls.on_mouse_button_down(m_specific->m_cur_x,
     //------------------------------------------------------------------------
     void platform_support::message(const char* msg)
     {
-        fprintf(stderr, "%s\n", msg);
+        std::fprintf(stderr, "%s\n", msg);
     }
 
     //------------------------------------------------------------------------

@@ -16,7 +16,7 @@
 #ifndef AGG_GLYPH_RASTER_BIN_INCLUDED
 #define AGG_GLYPH_RASTER_BIN_INCLUDED
 
-#include <string.h>
+#include <cstring>
 #include "agg_basics.h"
 
 namespace agg
@@ -42,7 +42,7 @@ namespace agg
         {
             int t = 1;
             if(*(char*)&t == 0) m_big_endian = true;
-            memset(m_span, 0, sizeof(m_span));
+            std::memset(m_span, 0, sizeof(m_span));
         }
 
         //--------------------------------------------------------------------
