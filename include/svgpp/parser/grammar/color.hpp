@@ -71,7 +71,7 @@ public:
               >> *space 
               >> ')' 
             )
-        |   detail::color_keywords::symbols_ [_val = phx::bind(&color_grammar::color_keyword, _1)];
+        |   detail::character_encoding_namespace::no_case_type()[detail::color_keywords::symbols_ [_val = phx::bind(&color_grammar::color_keyword, _1)]];
 
     hex_rule 
         =   lit('#') 
