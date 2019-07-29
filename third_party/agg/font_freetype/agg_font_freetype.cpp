@@ -14,7 +14,8 @@
 //----------------------------------------------------------------------------
 
 
-#include <stdio.h>
+#include <cstdio>
+#include <cstring>
 #include "agg_font_freetype.h"
 #include "agg_bitset_iterator.h"
 #include "agg_renderer_scanline.h"
@@ -572,7 +573,7 @@ namespace agg
         unsigned i;
         for(i = 0; i < m_num_faces; ++i)
         {
-            if(strcmp(face_name, m_face_names[i]) == 0) return i;
+            if(std::strcmp(face_name, m_face_names[i]) == 0) return i;
         }
         return -1;
     }
@@ -624,10 +625,10 @@ namespace agg
                 {
                     delete [] m_face_names[0];
                     FT_Done_Face(m_faces[0]);
-                    memcpy(m_faces, 
+                    std::memcpy(m_faces, 
                            m_faces + 1, 
                            (m_max_faces - 1) * sizeof(FT_Face));
-                    memcpy(m_face_names, 
+                    std::memcpy(m_face_names, 
                            m_face_names + 1, 
                            (m_max_faces - 1) * sizeof(char*));
                     m_num_faces = m_max_faces - 1;
@@ -651,8 +652,8 @@ namespace agg
 
                 if(m_last_error == 0)
                 {
-                    m_face_names[m_num_faces] = new char [strlen(font_name) + 1];
-                    strcpy(m_face_names[m_num_faces], font_name);
+                    m_face_names[m_num_faces] = new char [std::strlen(font_name) + 1];
+                    std::strcpy(m_face_names[m_num_faces], font_name);
                     m_cur_face = m_faces[m_num_faces];
                     m_name     = m_face_names[m_num_faces];
                     ++m_num_faces;
@@ -742,13 +743,14 @@ namespace agg
     }
 
     //------------------------------------------------------------------------
-    bool font_engine_freetype_base::char_map(FT_Encoding char_map)
+    bool font_engine_freetype_base::char_map(FT_Encoding map)
     {
         if(m_cur_face)
         {
-            m_last_error = FT_Select_Charmap(m_cur_face, m_char_map);
+            m_last_error = FT_Select_Charmap(m_cur_face, map);
             if(m_last_error == 0)
             {
+                m_char_map = map;
                 update_signature();
                 return true;
             }
@@ -815,7 +817,7 @@ namespace agg
     {
         if(m_cur_face && m_name)
         {
-            unsigned name_len = strlen(m_name);
+            unsigned name_len = std::strlen(m_name);
             if(name_len > m_name_len)
             {
                 delete [] m_signature;
@@ -837,7 +839,7 @@ namespace agg
                 gamma_hash = calc_crc32(gamma_table, sizeof(gamma_table));
             }
 
-            sprintf(m_signature, 
+            std::sprintf(m_signature, 
                     "%s,%u,%d,%d,%d:%dx%d,%d,%d,%08X", 
                     m_name,
                     m_char_map,
@@ -856,14 +858,14 @@ namespace agg
                 double mtx[6];
                 char buf[100];
                 m_affine.store_to(mtx);
-                sprintf(buf, ",%08X%08X%08X%08X%08X%08X", 
+                std::sprintf(buf, ",%08X%08X%08X%08X%08X%08X", 
                     dbl_to_plain_fx(mtx[0]), 
                     dbl_to_plain_fx(mtx[1]), 
                     dbl_to_plain_fx(mtx[2]), 
                     dbl_to_plain_fx(mtx[3]), 
                     dbl_to_plain_fx(mtx[4]), 
                     dbl_to_plain_fx(mtx[5]));
-                strcat(m_signature, buf);
+                std::strcat(m_signature, buf);
             }
             ++m_change_stamp;
         }

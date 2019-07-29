@@ -17,7 +17,7 @@
 #define AGG_PIXFMT_AMASK_ADAPTOR_INCLUDED
 
 
-#include <string.h>
+#include <cstring>
 #include "agg_array.h"
 #include "agg_rendering_buffer.h"
 
@@ -48,23 +48,23 @@ namespace agg
         void init_span(unsigned len)
         {
             realloc_span(len);
-            memset(&m_span[0], amask_type::cover_full, len * sizeof(cover_type));
+            std::memset(&m_span[0], amask_type::cover_full, len * sizeof(cover_type));
         }
 
         void init_span(unsigned len, const cover_type* covers)
         {
             realloc_span(len);
-            memcpy(&m_span[0], covers, len * sizeof(cover_type));
+            std::memcpy(&m_span[0], covers, len * sizeof(cover_type));
         }
 
 
     public:
-        pixfmt_amask_adaptor(pixfmt_type& pixf, const amask_type& mask) :
+        pixfmt_amask_adaptor(pixfmt_type& pixf, amask_type& mask) :
             m_pixf(&pixf), m_mask(&mask), m_span()
         {}
 
-        void attach_pixfmt(pixfmt_type& pixf)          { m_pixf = &pixf; }
-        void attach_alpha_mask(const amask_type& mask) { m_mask = &mask; }
+        void attach_pixfmt(pixfmt_type& pixf) { m_pixf = &pixf; }
+        void attach_alpha_mask(amask_type& mask) { m_mask = &mask; }
 
         //--------------------------------------------------------------------
         template<class PixFmt2>
@@ -109,7 +109,7 @@ namespace agg
         void blend_hline(int x, int y,
                          unsigned len, 
                          const color_type& c,
-                         cover_type cover)
+                         cover_type)
         {
             init_span(len);
             m_mask->combine_hspan(x, y, &m_span[0], len);
@@ -130,7 +130,7 @@ namespace agg
         void blend_vline(int x, int y,
                          unsigned len, 
                          const color_type& c,
-                         cover_type cover)
+                         cover_type)
         {
             init_span(len);
             m_mask->combine_vspan(x, y, &m_span[0], len);

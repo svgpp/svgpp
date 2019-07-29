@@ -17,7 +17,6 @@
 //
 //----------------------------------------------------------------------------
 
-#include <math.h>
 #include "agg_vcgen_contour.h"
 
 namespace agg

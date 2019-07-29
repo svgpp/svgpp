@@ -4,7 +4,6 @@
 #include "agg_rasterizer_scanline_aa.h"
 #include "agg_scanline_u.h"
 #include "agg_renderer_scanline.h"
-#include "agg_pixfmt_rgb.h"
 #include "agg_span_allocator.h"
 #include "agg_span_gradient.h"
 #include "agg_span_interpolator_linear.h"
@@ -15,6 +14,9 @@
 #include "ctrl/agg_slider_ctrl.h"
 #include "ctrl/agg_cbox_ctrl.h"
 
+#define AGG_BGR24
+//#define AGG_BGR96
+#include "pixel_formats.h"
 
 enum flip_y_e { flip_y = true };
 
@@ -46,9 +48,8 @@ private:
 class the_application : public agg::platform_support
 {
 public:
-    typedef agg::pixfmt_bgr24 pixfmt;
     typedef agg::renderer_base<pixfmt> ren_base;
-    typedef agg::glyph_raster_bin<agg::rgba8> glyph_gen;
+    typedef agg::glyph_raster_bin<color_type> glyph_gen;
 
     the_application(agg::pix_format_e format, bool flip_y) :
         agg::platform_support(format, flip_y)
@@ -137,11 +138,11 @@ public:
         // Rendering raster text with a custom span generator, gradient
 
         typedef agg::span_interpolator_linear<> interpolator_type;
-        typedef agg::span_allocator<agg::rgba8> span_alloc_type;
-        typedef agg::span_gradient<agg::rgba8, 
+        typedef agg::span_allocator<color_type> span_alloc_type;
+        typedef agg::span_gradient<color_type, 
                                    interpolator_type, 
                                    gradient_sine_repeat_adaptor<agg::gradient_circle>, 
-                                   agg::gradient_linear_color<agg::rgba8> > span_gen_type;
+                                   agg::gradient_linear_color<color_type> > span_gen_type;
         typedef agg::renderer_scanline_aa<ren_base, 
                                           span_alloc_type,
                                           span_gen_type> ren_type;
@@ -149,7 +150,7 @@ public:
         agg::trans_affine mtx;
         gradient_sine_repeat_adaptor<agg::gradient_circle> grad_func;
         grad_func.periods(5);
-        agg::gradient_linear_color<agg::rgba8> color_func;
+        agg::gradient_linear_color<color_type> color_func;
         color_func.colors(agg::rgba(1.0,0,0), agg::rgba(0,0.5,0));
         interpolator_type inter(mtx);
         span_alloc_type sa;
@@ -165,7 +166,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example. Raster Text");
 
     if(app.init(640, 480, agg::window_resize))

@@ -22,7 +22,7 @@ struct TransformEventsPolicy
     matrix_t m(3, 3);
     m <<=
       matrix[0], matrix[2], matrix[4],
-      matrix[1], matrix[3], matrix[4],
+      matrix[1], matrix[3], matrix[5],
       0, 0, 1;
     transform = ublas::prod(transform, m);
   }

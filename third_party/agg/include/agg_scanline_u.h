@@ -24,6 +24,7 @@
 #ifndef AGG_SCANLINE_U_INCLUDED
 #define AGG_SCANLINE_U_INCLUDED
 
+#include <cstring>
 #include "agg_array.h"
 
 namespace agg
@@ -62,7 +63,7 @@ namespace agg
     //
     // scanline_u8::const_iterator span = sl.begin();
     // 
-    // unsigned char* row = m_rbuf->row(y); // The the address of the beginning 
+    // unsigned char* row = m_rbuf->row(y); // The address of the beginning 
     //                                      // of the current row
     // 
     // unsigned num_spans = sl.num_spans(); // Number of spans. It's guaranteed that
@@ -168,7 +169,7 @@ namespace agg
         void add_cells(int x, unsigned len, const cover_type* covers)
         {
             x -= m_min_x;
-            memcpy(&m_covers[x], covers, len * sizeof(cover_type));
+            std::memcpy(&m_covers[x], covers, len * sizeof(cover_type));
             if(x == m_last_x+1)
             {
                 m_cur_span->len += (coord_type)len;
@@ -187,7 +188,7 @@ namespace agg
         void add_span(int x, unsigned len, unsigned cover)
         {
             x -= m_min_x;
-            memset(&m_covers[x], cover, len);
+            std::memset(&m_covers[x], cover, len);
             if(x == m_last_x+1)
             {
                 m_cur_span->len += (coord_type)len;
@@ -252,7 +253,7 @@ namespace agg
         typedef base_type::coord_type coord_type;
 
         scanline_u8_am() : base_type(), m_alpha_mask(0) {}
-        scanline_u8_am(const AlphaMask& am) : base_type(), m_alpha_mask(&am) {}
+        scanline_u8_am(AlphaMask& am) : base_type(), m_alpha_mask(&am) {}
 
         //--------------------------------------------------------------------
         void finalize(int span_y)
@@ -275,7 +276,7 @@ namespace agg
         }
 
     private:
-        const AlphaMask* m_alpha_mask;
+        AlphaMask* m_alpha_mask;
     };
 
 
@@ -383,7 +384,7 @@ namespace agg
         void add_cells(int x, unsigned len, const cover_type* covers)
         {
             x -= m_min_x;
-            memcpy(&m_covers[x], covers, len * sizeof(cover_type));
+            std::memcpy(&m_covers[x], covers, len * sizeof(cover_type));
             if(x == m_last_x+1)
             {
                 m_spans.last().len += coord_type(len);
@@ -401,7 +402,7 @@ namespace agg
         void add_span(int x, unsigned len, unsigned cover)
         {
             x -= m_min_x;
-            memset(&m_covers[x], cover, len);
+            std::memset(&m_covers[x], cover, len);
             if(x == m_last_x+1)
             {
                 m_spans.last().len += coord_type(len);
@@ -458,14 +459,14 @@ namespace agg
     class scanline32_u8_am : public scanline32_u8
     {
     public:
-        typedef scanline_u8           base_type;
+        typedef scanline32_u8         base_type;
         typedef AlphaMask             alpha_mask_type;
         typedef base_type::cover_type cover_type;
         typedef base_type::coord_type coord_type;
 
 
         scanline32_u8_am() : base_type(), m_alpha_mask(0) {}
-        scanline32_u8_am(const AlphaMask& am) : base_type(), m_alpha_mask(&am) {}
+        scanline32_u8_am(AlphaMask& am) : base_type(), m_alpha_mask(&am) {}
 
         //--------------------------------------------------------------------
         void finalize(int span_y)
@@ -488,7 +489,7 @@ namespace agg
         }
 
     private:
-        const AlphaMask* m_alpha_mask;
+        AlphaMask* m_alpha_mask;
     };
 
 

@@ -19,7 +19,7 @@
 //----------------------------------------------------------------------------
 
 
-#include <math.h>
+#include <cmath>
 #include "agg_bezier_arc.h"
 
 
@@ -39,8 +39,8 @@ namespace agg
                        double start_angle, double sweep_angle,
                        double* curve)
     {
-        double x0 = cos(sweep_angle / 2.0);
-        double y0 = sin(sweep_angle / 2.0);
+        double x0 = std::cos(sweep_angle / 2.0);
+        double y0 = std::sin(sweep_angle / 2.0);
         double tx = (1.0 - x0) * 4.0 / 3.0;
         double ty = y0 - tx * x0 / y0;
         double px[4];
@@ -54,8 +54,8 @@ namespace agg
         px[3] =  x0;
         py[3] =  y0;
 
-        double sn = sin(start_angle + sweep_angle / 2.0);
-        double cs = cos(start_angle + sweep_angle / 2.0);
+        double sn = std::sin(start_angle + sweep_angle / 2.0);
+        double cs = std::cos(start_angle + sweep_angle / 2.0);
 
         unsigned i;
         for(i = 0; i < 4; i++)
@@ -73,18 +73,18 @@ namespace agg
                           double start_angle, 
                           double sweep_angle)
     {
-        start_angle = fmod(start_angle, 2.0 * pi);
+        start_angle = std::fmod(start_angle, 2.0 * pi);
         if(sweep_angle >=  2.0 * pi) sweep_angle =  2.0 * pi;
         if(sweep_angle <= -2.0 * pi) sweep_angle = -2.0 * pi;
 
-        if(fabs(sweep_angle) < 1e-10)
+        if(std::fabs(sweep_angle) < 1e-10)
         {
             m_num_vertices = 4;
             m_cmd = path_cmd_line_to;
-            m_vertices[0] = x + rx * cos(start_angle);
-            m_vertices[1] = y + ry * sin(start_angle);
-            m_vertices[2] = x + rx * cos(start_angle + sweep_angle);
-            m_vertices[3] = y + ry * sin(start_angle + sweep_angle);
+            m_vertices[0] = x + rx * std::cos(start_angle);
+            m_vertices[1] = y + ry * std::sin(start_angle);
+            m_vertices[2] = x + rx * std::cos(start_angle + sweep_angle);
+            m_vertices[3] = y + ry * std::sin(start_angle + sweep_angle);
             return;
         }
 
@@ -152,8 +152,8 @@ namespace agg
         double dx2 = (x0 - x2) / 2.0;
         double dy2 = (y0 - y2) / 2.0;
 
-        double cos_a = cos(angle);
-        double sin_a = sin(angle);
+        double cos_a = std::cos(angle);
+        double sin_a = std::sin(angle);
 
         // Calculate (x1, y1)
         //------------------------
@@ -172,8 +172,8 @@ namespace agg
         double radii_check = px1/prx + py1/pry;
         if(radii_check > 1.0) 
         {
-            rx = sqrt(radii_check) * rx;
-            ry = sqrt(radii_check) * ry;
+            rx = std::sqrt(radii_check) * rx;
+            ry = std::sqrt(radii_check) * ry;
             prx = rx * rx;
             pry = ry * ry;
             if(radii_check > 10.0) m_radii_ok = false;
@@ -183,7 +183,7 @@ namespace agg
         //------------------------
         double sign = (large_arc_flag == sweep_flag) ? -1.0 : 1.0;
         double sq   = (prx*pry - prx*py1 - pry*px1) / (prx*py1 + pry*px1);
-        double coef = sign * sqrt((sq < 0) ? 0 : sq);
+        double coef = sign * std::sqrt((sq < 0) ? 0 : sq);
         double cx1  = coef *  ((rx * y1) / ry);
         double cy1  = coef * -((ry * x1) / rx);
 
@@ -205,23 +205,23 @@ namespace agg
 
         // Calculate the angle start
         //------------------------
-        n = sqrt(ux*ux + uy*uy);
+        n = std::sqrt(ux*ux + uy*uy);
         p = ux; // (1 * ux) + (0 * uy)
         sign = (uy < 0) ? -1.0 : 1.0;
         double v = p / n;
         if(v < -1.0) v = -1.0;
         if(v >  1.0) v =  1.0;
-        double start_angle = sign * acos(v);
+        double start_angle = sign * std::acos(v);
 
         // Calculate the sweep angle
         //------------------------
-        n = sqrt((ux*ux + uy*uy) * (vx*vx + vy*vy));
+        n = std::sqrt((ux*ux + uy*uy) * (vx*vx + vy*vy));
         p = ux * vx + uy * vy;
         sign = (ux * vy - uy * vx < 0) ? -1.0 : 1.0;
         v = p / n;
         if(v < -1.0) v = -1.0;
         if(v >  1.0) v =  1.0;
-        double sweep_angle = sign * acos(v);
+        double sweep_angle = sign * std::acos(v);
         if(!sweep_flag && sweep_angle > 0) 
         {
             sweep_angle -= pi * 2.0;

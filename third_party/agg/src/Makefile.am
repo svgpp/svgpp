@@ -9,6 +9,7 @@ libagg_la_SOURCES =  agg_arc.cpp \
 										 agg_arrowhead.cpp \
 										 agg_bezier_arc.cpp \
 										 agg_bspline.cpp \
+										 agg_color_rgba.cpp \
 										 agg_curves.cpp \
 										 agg_embedded_raster_fonts.cpp \
 										 agg_gsv_text.cpp \

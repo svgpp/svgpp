@@ -12,11 +12,13 @@
 #include "interactive_polygon.h"
 
 #define AGG_BGR24 
+//#define AGG_BGR96
 //#define AGG_RGB24
 //#define AGG_BGRA32 
 //#define AGG_RGBA32 
 //#define AGG_ARGB32 
 //#define AGG_ABGR32
+//#define AGG_BGRA128
 //#define AGG_RGB565
 //#define AGG_RGB555
 #include "pixel_formats.h"
@@ -35,8 +37,8 @@ public:
     typedef agg::scanline_p8 scanline_type;
 
     agg::interactive_polygon     m_poly;
-    agg::slider_ctrl<agg::rgba8> m_num_points;
-    agg::cbox_ctrl<agg::rgba8>   m_close;
+    agg::slider_ctrl<color_type> m_num_points;
+    agg::cbox_ctrl<color_type>   m_close;
     int                          m_flip;
 
     the_application(agg::pix_format_e format, bool flip_y) :

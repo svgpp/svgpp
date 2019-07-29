@@ -153,7 +153,7 @@ static char g_lion[] =
 
 
 
-unsigned parse_lion(agg::path_storage& path, agg::rgba8* colors, unsigned* path_idx)
+unsigned parse_lion(agg::path_storage& path, agg::srgba8* colors, unsigned* path_idx)
 {
     // Parse the lion and then detect its bounding
     // box and arrange polygons orientations (make all polygons

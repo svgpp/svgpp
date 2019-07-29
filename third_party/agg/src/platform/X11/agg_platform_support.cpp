@@ -17,16 +17,19 @@
 //
 //----------------------------------------------------------------------------
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <ctype.h>
-#include <time.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <cctype>
+#include <ctime>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xatom.h>
 #include <X11/keysym.h>
 #include "agg_basics.h"
+#include "agg_pixfmt_gray.h"
+#include "agg_pixfmt_rgb.h"
+#include "agg_pixfmt_rgba.h"
 #include "util/agg_color_conv_rgb8.h"
 #include "platform/agg_platform_support.h"
 
@@ -66,7 +69,7 @@ namespace agg
         bool m_resize_flag;
         bool m_initialized;
         //bool m_wait_mode;
-        clock_t m_sw_start;
+        std::clock_t m_sw_start;
     };
 
 
@@ -95,7 +98,7 @@ namespace agg
         m_initialized(false)
         //m_wait_mode(true)
     {
-        memset(m_buf_img, 0, sizeof(m_buf_img));
+        std::memset(m_buf_img, 0, sizeof(m_buf_img));
 
         unsigned i;
         for(i = 0; i < 256; i++)
@@ -170,7 +173,16 @@ namespace agg
         {
         default: break;
         case pix_format_gray8:
+        case pix_format_sgray8:
             m_bpp = 8;
+            break;
+
+        case pix_format_gray16:
+            m_bpp = 16;
+            break;
+
+        case pix_format_gray32:
+            m_bpp = 32;
             break;
 
         case pix_format_rgb565:
@@ -180,6 +192,8 @@ namespace agg
 
         case pix_format_rgb24:
         case pix_format_bgr24:
+        case pix_format_srgb24:
+        case pix_format_sbgr24:
             m_bpp = 24;
             break;
 
@@ -187,10 +201,38 @@ namespace agg
         case pix_format_abgr32:
         case pix_format_argb32:
         case pix_format_rgba32:
+        case pix_format_sbgra32:
+        case pix_format_sabgr32:
+        case pix_format_sargb32:
+        case pix_format_srgba32:
             m_bpp = 32;
             break;
+
+        case pix_format_rgb48:
+        case pix_format_bgr48:
+            m_bpp = 48;
+            break;
+
+        case pix_format_bgra64:
+        case pix_format_abgr64:
+        case pix_format_argb64:
+        case pix_format_rgba64:
+            m_bpp = 64;
+            break;
+
+        case pix_format_rgb96:
+        case pix_format_bgr96:
+            m_bpp = 96;
+            break;
+
+        case pix_format_bgra128:
+        case pix_format_abgr128:
+        case pix_format_argb128:
+        case pix_format_rgba128:
+            m_bpp = 128;
+            break;
         }
-        m_sw_start = clock();
+        m_sw_start = std::clock();
     }
 
     //------------------------------------------------------------------------
@@ -205,7 +247,7 @@ namespace agg
         tp.value = (unsigned char *)capt;
         tp.encoding = XA_WM_NAME;
         tp.format = 8;
-        tp.nitems = strlen(capt);
+        tp.nitems = std::strlen(capt);
         XSetWMName(m_display, m_window, &tp);
         XStoreName(m_display, m_window, capt);
         XSetIconName(m_display, m_window, capt);
@@ -278,14 +320,36 @@ namespace agg
                     switch(m_format)
                     {
                         default: break;
-                        case pix_format_rgb555: color_conv(&rbuf_tmp, src, color_conv_rgb555_to_rgba32()); break;
-                        case pix_format_rgb565: color_conv(&rbuf_tmp, src, color_conv_rgb565_to_rgba32()); break;
-                        case pix_format_rgb24:  color_conv(&rbuf_tmp, src, color_conv_rgb24_to_rgba32());  break;
-                        case pix_format_bgr24:  color_conv(&rbuf_tmp, src, color_conv_bgr24_to_rgba32());  break;
-                        case pix_format_rgba32: color_conv(&rbuf_tmp, src, color_conv_rgba32_to_rgba32()); break;
-                        case pix_format_argb32: color_conv(&rbuf_tmp, src, color_conv_argb32_to_rgba32()); break;
-                        case pix_format_bgra32: color_conv(&rbuf_tmp, src, color_conv_bgra32_to_rgba32()); break;
-                        case pix_format_abgr32: color_conv(&rbuf_tmp, src, color_conv_abgr32_to_rgba32()); break;
+                        case pix_format_sgray8:   convert<pixfmt_srgba32, pixfmt_sgray8>(&rbuf_tmp, src);    break;
+                        case pix_format_gray8:    convert<pixfmt_srgba32, pixfmt_gray8>(&rbuf_tmp, src);     break;
+                        case pix_format_gray16:   convert<pixfmt_srgba32, pixfmt_gray16>(&rbuf_tmp, src);    break;
+                        case pix_format_gray32:   convert<pixfmt_srgba32, pixfmt_gray32>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb555:   color_conv(&rbuf_tmp, src, color_conv_rgb555_to_rgba32()); break;
+                        case pix_format_rgb565:   color_conv(&rbuf_tmp, src, color_conv_rgb565_to_rgba32()); break;
+                        case pix_format_srgb24:   convert<pixfmt_srgba32, pixfmt_srgb24>(&rbuf_tmp, src);    break;
+                        case pix_format_sbgr24:   convert<pixfmt_srgba32, pixfmt_sbgr24>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb24:    convert<pixfmt_srgba32, pixfmt_rgb24>(&rbuf_tmp, src);     break;
+                        case pix_format_bgr24:    convert<pixfmt_srgba32, pixfmt_bgr24>(&rbuf_tmp, src);     break;
+                        case pix_format_srgba32:  convert<pixfmt_srgba32, pixfmt_srgba32>(&rbuf_tmp, src);   break;
+                        case pix_format_sargb32:  convert<pixfmt_srgba32, pixfmt_sargb32>(&rbuf_tmp, src);   break;
+                        case pix_format_sabgr32:  convert<pixfmt_srgba32, pixfmt_sabgr32>(&rbuf_tmp, src);   break;
+                        case pix_format_sbgra32:  convert<pixfmt_srgba32, pixfmt_sbgra32>(&rbuf_tmp, src);   break;
+                        case pix_format_rgba32:   convert<pixfmt_srgba32, pixfmt_rgba32>(&rbuf_tmp, src);    break;
+                        case pix_format_argb32:   convert<pixfmt_srgba32, pixfmt_argb32>(&rbuf_tmp, src);    break;
+                        case pix_format_abgr32:   convert<pixfmt_srgba32, pixfmt_abgr32>(&rbuf_tmp, src);    break;
+                        case pix_format_bgra32:   convert<pixfmt_srgba32, pixfmt_bgra32>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb48:    convert<pixfmt_srgba32, pixfmt_rgb48>(&rbuf_tmp, src);     break;
+                        case pix_format_bgr48:    convert<pixfmt_srgba32, pixfmt_bgr48>(&rbuf_tmp, src);     break;
+                        case pix_format_rgba64:   convert<pixfmt_srgba32, pixfmt_rgba64>(&rbuf_tmp, src);    break;
+                        case pix_format_argb64:   convert<pixfmt_srgba32, pixfmt_argb64>(&rbuf_tmp, src);    break;
+                        case pix_format_abgr64:   convert<pixfmt_srgba32, pixfmt_abgr64>(&rbuf_tmp, src);    break;
+                        case pix_format_bgra64:   convert<pixfmt_srgba32, pixfmt_bgra64>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb96:    convert<pixfmt_srgba32, pixfmt_rgb96>(&rbuf_tmp, src);     break;
+                        case pix_format_bgr96:    convert<pixfmt_srgba32, pixfmt_bgr96>(&rbuf_tmp, src);     break;
+                        case pix_format_rgba128:  convert<pixfmt_srgba32, pixfmt_rgba128>(&rbuf_tmp, src);   break;
+                        case pix_format_argb128:  convert<pixfmt_srgba32, pixfmt_argb128>(&rbuf_tmp, src);   break;
+                        case pix_format_abgr128:  convert<pixfmt_srgba32, pixfmt_abgr128>(&rbuf_tmp, src);   break;
+                        case pix_format_bgra128:  convert<pixfmt_srgba32, pixfmt_bgra128>(&rbuf_tmp, src);   break;
                     }
                     break;
                     
@@ -293,14 +357,36 @@ namespace agg
                     switch(m_format)
                     {
                         default: break;
+                        case pix_format_sgray8:   convert<pixfmt_sabgr32, pixfmt_sgray8>(&rbuf_tmp, src);    break;
+                        case pix_format_gray8:    convert<pixfmt_sabgr32, pixfmt_gray8>(&rbuf_tmp, src);     break;
+                        case pix_format_gray16:   convert<pixfmt_sabgr32, pixfmt_gray16>(&rbuf_tmp, src);    break;
+                        case pix_format_gray32:   convert<pixfmt_sabgr32, pixfmt_gray32>(&rbuf_tmp, src);    break;
                         case pix_format_rgb555: color_conv(&rbuf_tmp, src, color_conv_rgb555_to_abgr32()); break;
                         case pix_format_rgb565: color_conv(&rbuf_tmp, src, color_conv_rgb565_to_abgr32()); break;
-                        case pix_format_rgb24:  color_conv(&rbuf_tmp, src, color_conv_rgb24_to_abgr32());  break;
-                        case pix_format_bgr24:  color_conv(&rbuf_tmp, src, color_conv_bgr24_to_abgr32());  break;
-                        case pix_format_abgr32: color_conv(&rbuf_tmp, src, color_conv_abgr32_to_abgr32()); break;
-                        case pix_format_rgba32: color_conv(&rbuf_tmp, src, color_conv_rgba32_to_abgr32()); break;
-                        case pix_format_argb32: color_conv(&rbuf_tmp, src, color_conv_argb32_to_abgr32()); break;
-                        case pix_format_bgra32: color_conv(&rbuf_tmp, src, color_conv_bgra32_to_abgr32()); break;
+                        case pix_format_srgb24:   convert<pixfmt_sabgr32, pixfmt_srgb24>(&rbuf_tmp, src);    break;
+                        case pix_format_sbgr24:   convert<pixfmt_sabgr32, pixfmt_sbgr24>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb24:    convert<pixfmt_sabgr32, pixfmt_rgb24>(&rbuf_tmp, src);     break;
+                        case pix_format_bgr24:    convert<pixfmt_sabgr32, pixfmt_bgr24>(&rbuf_tmp, src);     break;
+                        case pix_format_srgba32:  convert<pixfmt_sabgr32, pixfmt_srgba32>(&rbuf_tmp, src);   break;
+                        case pix_format_sargb32:  convert<pixfmt_sabgr32, pixfmt_sargb32>(&rbuf_tmp, src);   break;
+                        case pix_format_sabgr32:  convert<pixfmt_sabgr32, pixfmt_sabgr32>(&rbuf_tmp, src);   break;
+                        case pix_format_sbgra32:  convert<pixfmt_sabgr32, pixfmt_sbgra32>(&rbuf_tmp, src);   break;
+                        case pix_format_rgba32:   convert<pixfmt_sabgr32, pixfmt_rgba32>(&rbuf_tmp, src);    break;
+                        case pix_format_argb32:   convert<pixfmt_sabgr32, pixfmt_argb32>(&rbuf_tmp, src);    break;
+                        case pix_format_abgr32:   convert<pixfmt_sabgr32, pixfmt_abgr32>(&rbuf_tmp, src);    break;
+                        case pix_format_bgra32:   convert<pixfmt_sabgr32, pixfmt_bgra32>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb48:    convert<pixfmt_sabgr32, pixfmt_rgb48>(&rbuf_tmp, src);     break;
+                        case pix_format_bgr48:    convert<pixfmt_sabgr32, pixfmt_bgr48>(&rbuf_tmp, src);     break;
+                        case pix_format_rgba64:   convert<pixfmt_sabgr32, pixfmt_rgba64>(&rbuf_tmp, src);    break;
+                        case pix_format_argb64:   convert<pixfmt_sabgr32, pixfmt_argb64>(&rbuf_tmp, src);    break;
+                        case pix_format_abgr64:   convert<pixfmt_sabgr32, pixfmt_abgr64>(&rbuf_tmp, src);    break;
+                        case pix_format_bgra64:   convert<pixfmt_sabgr32, pixfmt_bgra64>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb96:    convert<pixfmt_sabgr32, pixfmt_rgb96>(&rbuf_tmp, src);     break;
+                        case pix_format_bgr96:    convert<pixfmt_sabgr32, pixfmt_bgr96>(&rbuf_tmp, src);     break;
+                        case pix_format_rgba128:  convert<pixfmt_sabgr32, pixfmt_rgba128>(&rbuf_tmp, src);   break;
+                        case pix_format_argb128:  convert<pixfmt_sabgr32, pixfmt_argb128>(&rbuf_tmp, src);   break;
+                        case pix_format_abgr128:  convert<pixfmt_sabgr32, pixfmt_abgr128>(&rbuf_tmp, src);   break;
+                        case pix_format_bgra128:  convert<pixfmt_sabgr32, pixfmt_bgra128>(&rbuf_tmp, src);   break;
                     }
                     break;
                     
@@ -308,14 +394,36 @@ namespace agg
                     switch(m_format)
                     {
                         default: break;
+                        case pix_format_sgray8:   convert<pixfmt_sargb32, pixfmt_sgray8>(&rbuf_tmp, src);    break;
+                        case pix_format_gray8:    convert<pixfmt_sargb32, pixfmt_gray8>(&rbuf_tmp, src);     break;
+                        case pix_format_gray16:   convert<pixfmt_sargb32, pixfmt_gray16>(&rbuf_tmp, src);    break;
+                        case pix_format_gray32:   convert<pixfmt_sargb32, pixfmt_gray32>(&rbuf_tmp, src);    break;
                         case pix_format_rgb555: color_conv(&rbuf_tmp, src, color_conv_rgb555_to_argb32()); break;
                         case pix_format_rgb565: color_conv(&rbuf_tmp, src, color_conv_rgb565_to_argb32()); break;
-                        case pix_format_rgb24:  color_conv(&rbuf_tmp, src, color_conv_rgb24_to_argb32());  break;
-                        case pix_format_bgr24:  color_conv(&rbuf_tmp, src, color_conv_bgr24_to_argb32());  break;
-                        case pix_format_rgba32: color_conv(&rbuf_tmp, src, color_conv_rgba32_to_argb32()); break;
-                        case pix_format_argb32: color_conv(&rbuf_tmp, src, color_conv_argb32_to_argb32()); break;
-                        case pix_format_abgr32: color_conv(&rbuf_tmp, src, color_conv_abgr32_to_argb32()); break;
-                        case pix_format_bgra32: color_conv(&rbuf_tmp, src, color_conv_bgra32_to_argb32()); break;
+                        case pix_format_srgb24:   convert<pixfmt_sargb32, pixfmt_srgb24>(&rbuf_tmp, src);    break;
+                        case pix_format_sbgr24:   convert<pixfmt_sargb32, pixfmt_sbgr24>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb24:    convert<pixfmt_sargb32, pixfmt_rgb24>(&rbuf_tmp, src);     break;
+                        case pix_format_bgr24:    convert<pixfmt_sargb32, pixfmt_bgr24>(&rbuf_tmp, src);     break;
+                        case pix_format_srgba32:  convert<pixfmt_sargb32, pixfmt_srgba32>(&rbuf_tmp, src);   break;
+                        case pix_format_sargb32:  convert<pixfmt_sargb32, pixfmt_sargb32>(&rbuf_tmp, src);   break;
+                        case pix_format_sabgr32:  convert<pixfmt_sargb32, pixfmt_sabgr32>(&rbuf_tmp, src);   break;
+                        case pix_format_sbgra32:  convert<pixfmt_sargb32, pixfmt_sbgra32>(&rbuf_tmp, src);   break;
+                        case pix_format_rgba32:   convert<pixfmt_sargb32, pixfmt_rgba32>(&rbuf_tmp, src);    break;
+                        case pix_format_argb32:   convert<pixfmt_sargb32, pixfmt_argb32>(&rbuf_tmp, src);    break;
+                        case pix_format_abgr32:   convert<pixfmt_sargb32, pixfmt_abgr32>(&rbuf_tmp, src);    break;
+                        case pix_format_bgra32:   convert<pixfmt_sargb32, pixfmt_bgra32>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb48:    convert<pixfmt_sargb32, pixfmt_rgb48>(&rbuf_tmp, src);     break;
+                        case pix_format_bgr48:    convert<pixfmt_sargb32, pixfmt_bgr48>(&rbuf_tmp, src);     break;
+                        case pix_format_rgba64:   convert<pixfmt_sargb32, pixfmt_rgba64>(&rbuf_tmp, src);    break;
+                        case pix_format_argb64:   convert<pixfmt_sargb32, pixfmt_argb64>(&rbuf_tmp, src);    break;
+                        case pix_format_abgr64:   convert<pixfmt_sargb32, pixfmt_abgr64>(&rbuf_tmp, src);    break;
+                        case pix_format_bgra64:   convert<pixfmt_sargb32, pixfmt_bgra64>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb96:    convert<pixfmt_sargb32, pixfmt_rgb96>(&rbuf_tmp, src);     break;
+                        case pix_format_bgr96:    convert<pixfmt_sargb32, pixfmt_bgr96>(&rbuf_tmp, src);     break;
+                        case pix_format_rgba128:  convert<pixfmt_sargb32, pixfmt_rgba128>(&rbuf_tmp, src);   break;
+                        case pix_format_argb128:  convert<pixfmt_sargb32, pixfmt_argb128>(&rbuf_tmp, src);   break;
+                        case pix_format_abgr128:  convert<pixfmt_sargb32, pixfmt_abgr128>(&rbuf_tmp, src);   break;
+                        case pix_format_bgra128:  convert<pixfmt_sargb32, pixfmt_bgra128>(&rbuf_tmp, src);   break;
                     }
                     break;
                     
@@ -323,14 +431,36 @@ namespace agg
                     switch(m_format)
                     {
                         default: break;
-                        case pix_format_rgb555: color_conv(&rbuf_tmp, src, color_conv_rgb555_to_bgra32()); break;
-                        case pix_format_rgb565: color_conv(&rbuf_tmp, src, color_conv_rgb565_to_bgra32()); break;
-                        case pix_format_rgb24:  color_conv(&rbuf_tmp, src, color_conv_rgb24_to_bgra32());  break;
-                        case pix_format_bgr24:  color_conv(&rbuf_tmp, src, color_conv_bgr24_to_bgra32());  break;
-                        case pix_format_rgba32: color_conv(&rbuf_tmp, src, color_conv_rgba32_to_bgra32()); break;
-                        case pix_format_argb32: color_conv(&rbuf_tmp, src, color_conv_argb32_to_bgra32()); break;
-                        case pix_format_abgr32: color_conv(&rbuf_tmp, src, color_conv_abgr32_to_bgra32()); break;
-                        case pix_format_bgra32: color_conv(&rbuf_tmp, src, color_conv_bgra32_to_bgra32()); break;
+                        case pix_format_sgray8:   convert<pixfmt_sbgra32, pixfmt_sgray8>(&rbuf_tmp, src);    break;
+                        case pix_format_gray8:    convert<pixfmt_sbgra32, pixfmt_gray8>(&rbuf_tmp, src);     break;
+                        case pix_format_gray16:   convert<pixfmt_sbgra32, pixfmt_gray16>(&rbuf_tmp, src);    break;
+                        case pix_format_gray32:   convert<pixfmt_sbgra32, pixfmt_gray32>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb555:   color_conv(&rbuf_tmp, src, color_conv_rgb555_to_bgra32()); break;
+                        case pix_format_rgb565:   color_conv(&rbuf_tmp, src, color_conv_rgb565_to_bgra32()); break;
+                        case pix_format_srgb24:   convert<pixfmt_sbgra32, pixfmt_srgb24>(&rbuf_tmp, src);    break;
+                        case pix_format_sbgr24:   convert<pixfmt_sbgra32, pixfmt_sbgr24>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb24:    convert<pixfmt_sbgra32, pixfmt_rgb24>(&rbuf_tmp, src);     break;
+                        case pix_format_bgr24:    convert<pixfmt_sbgra32, pixfmt_bgr24>(&rbuf_tmp, src);     break;
+                        case pix_format_srgba32:  convert<pixfmt_sbgra32, pixfmt_srgba32>(&rbuf_tmp, src);   break;
+                        case pix_format_sargb32:  convert<pixfmt_sbgra32, pixfmt_sargb32>(&rbuf_tmp, src);   break;
+                        case pix_format_sabgr32:  convert<pixfmt_sbgra32, pixfmt_sabgr32>(&rbuf_tmp, src);   break;
+                        case pix_format_sbgra32:  convert<pixfmt_sbgra32, pixfmt_sbgra32>(&rbuf_tmp, src);   break;
+                        case pix_format_rgba32:   convert<pixfmt_sbgra32, pixfmt_rgba32>(&rbuf_tmp, src);    break;
+                        case pix_format_argb32:   convert<pixfmt_sbgra32, pixfmt_argb32>(&rbuf_tmp, src);    break;
+                        case pix_format_abgr32:   convert<pixfmt_sbgra32, pixfmt_abgr32>(&rbuf_tmp, src);    break;
+                        case pix_format_bgra32:   convert<pixfmt_sbgra32, pixfmt_bgra32>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb48:    convert<pixfmt_sbgra32, pixfmt_rgb48>(&rbuf_tmp, src);     break;
+                        case pix_format_bgr48:    convert<pixfmt_sbgra32, pixfmt_bgr48>(&rbuf_tmp, src);     break;
+                        case pix_format_rgba64:   convert<pixfmt_sbgra32, pixfmt_rgba64>(&rbuf_tmp, src);    break;
+                        case pix_format_argb64:   convert<pixfmt_sbgra32, pixfmt_argb64>(&rbuf_tmp, src);    break;
+                        case pix_format_abgr64:   convert<pixfmt_sbgra32, pixfmt_abgr64>(&rbuf_tmp, src);    break;
+                        case pix_format_bgra64:   convert<pixfmt_sbgra32, pixfmt_bgra64>(&rbuf_tmp, src);    break;
+                        case pix_format_rgb96:    convert<pixfmt_sbgra32, pixfmt_rgb96>(&rbuf_tmp, src);     break;
+                        case pix_format_bgr96:    convert<pixfmt_sbgra32, pixfmt_bgr96>(&rbuf_tmp, src);     break;
+                        case pix_format_rgba128:  convert<pixfmt_sbgra32, pixfmt_rgba128>(&rbuf_tmp, src);   break;
+                        case pix_format_argb128:  convert<pixfmt_sbgra32, pixfmt_argb128>(&rbuf_tmp, src);   break;
+                        case pix_format_abgr128:  convert<pixfmt_sbgra32, pixfmt_abgr128>(&rbuf_tmp, src);   break;
+                        case pix_format_bgra128:  convert<pixfmt_sbgra32, pixfmt_bgra128>(&rbuf_tmp, src);   break;
                     }
                     break;
             }
@@ -360,7 +490,7 @@ namespace agg
         m_initial_width(10),
         m_initial_height(10)
     {
-        strcpy(m_caption, "AGG Application");
+        std::strcpy(m_caption, "AGG Application");
     }
 
     //------------------------------------------------------------------------
@@ -374,7 +504,7 @@ namespace agg
     //------------------------------------------------------------------------
     void platform_support::caption(const char* cap)
     {
-        strcpy(m_caption, cap);
+        std::strcpy(m_caption, cap);
         if(m_specific->m_initialized)
         {
             m_specific->caption(cap);
@@ -403,7 +533,7 @@ namespace agg
         m_specific->m_display = XOpenDisplay(NULL);
         if(m_specific->m_display == 0) 
         {
-            fprintf(stderr, "Unable to open DISPLAY!\n");
+            std::fprintf(stderr, "Unable to open DISPLAY!\n");
             return false;
         }
         
@@ -416,7 +546,7 @@ namespace agg
         unsigned long g_mask = m_specific->m_visual->green_mask;
         unsigned long b_mask = m_specific->m_visual->blue_mask;
                 
-//printf("depth=%d, red=%08x, green=%08x, blue=%08x\n",
+//std::printf("depth=%d, red=%08x, green=%08x, blue=%08x\n",
 //       m_specific->m_depth,
 //       m_specific->m_visual->red_mask,
 //       m_specific->m_visual->green_mask,
@@ -442,7 +572,7 @@ namespace agg
 //                                     TrueColor, 
 //                                     &vi)) 
 //                 {
-// //                     printf("TrueColor  depth=%d, red=%08x, green=%08x, blue=%08x, bits=%d\n",
+// //                     std::printf("TrueColor  depth=%d, red=%08x, green=%08x, blue=%08x, bits=%d\n",
 // //                         vi.depth,
 // //                         vi.visual->red_mask,
 // //                         vi.visual->green_mask,
@@ -461,7 +591,7 @@ namespace agg
 //                                     DirectColor, 
 //                                     &vi)) 
 //                 {
-// //                     printf("DirectColor depth=%d, red=%08x, green=%08x, blue=%08x, bits=%d\n",
+// //                     std::printf("DirectColor depth=%d, red=%08x, green=%08x, blue=%08x, bits=%d\n",
 // //                         vi.depth,
 // //                         vi.visual->red_mask,
 // //                         vi.visual->green_mask,
@@ -480,7 +610,7 @@ namespace agg
         if(m_specific->m_depth < 15 ||
            r_mask == 0 || g_mask == 0 || b_mask == 0)
         {
-            fprintf(stderr,
+            std::fprintf(stderr,
                    "There's no Visual compatible with minimal AGG requirements:\n"
                    "At least 15-bit color depth and True- or DirectColor class.\n\n");
             XCloseDisplay(m_specific->m_display);
@@ -570,16 +700,16 @@ namespace agg
         
         if(m_specific->m_sys_format == pix_format_undefined)
         {
-            fprintf(stderr,
+            std::fprintf(stderr,
                    "RGB masks are not compatible with AGG pixel formats:\n"
-                   "R=%08x, R=%08x, B=%08x\n", r_mask, g_mask, b_mask);
+                   "R=%08lx, R=%08lx, B=%08lx\n", r_mask, g_mask, b_mask);
             XCloseDisplay(m_specific->m_display);
             return false;
         }
                 
         
         
-        memset(&m_specific->m_window_attributes, 
+        std::memset(&m_specific->m_window_attributes, 
                0, 
                sizeof(m_specific->m_window_attributes)); 
         
@@ -613,7 +743,7 @@ namespace agg
         m_specific->m_buf_window = 
             new unsigned char[width * height * (m_bpp / 8)];
 
-        memset(m_specific->m_buf_window, 255, width * height * (m_bpp / 8));
+        std::memset(m_specific->m_buf_window, 255, width * height * (m_bpp / 8));
         
         m_rbuf_window.attach(m_specific->m_buf_window,
                              width,
@@ -1009,17 +1139,17 @@ namespace agg
         if(idx < max_images)
         {
             char buf[1024];
-            strcpy(buf, file);
-            int len = strlen(buf);
+            std::strcpy(buf, file);
+            int len = std::strlen(buf);
             if(len < 4 || strcasecmp(buf + len - 4, ".ppm") != 0)
             {
-                strcat(buf, ".ppm");
+                std::strcat(buf, ".ppm");
             }
             
-            FILE* fd = fopen(buf, "rb");
+            FILE* fd = std::fopen(buf, "rb");
             if(fd == 0) return false;
 
-            if((len = fread(buf, 1, 1022, fd)) == 0)
+            if((len = std::fread(buf, 1, 1022, fd)) == 0)
             {
                 fclose(fd);
                 return false;
@@ -1028,60 +1158,62 @@ namespace agg
             
             if(buf[0] != 'P' && buf[1] != '6')
             {
-                fclose(fd);
+                std::fclose(fd);
                 return false;
             }
             
             char* ptr = buf + 2;
             
-            while(*ptr && !isdigit(*ptr)) ptr++;
+            while(*ptr && !std::isdigit((unsigned char)(*ptr))) ptr++;
             if(*ptr == 0)
             {
-                fclose(fd);
+                std::fclose(fd);
                 return false;
             }
             
-            unsigned width = atoi(ptr);
+            unsigned width = std::atoi(ptr);
             if(width == 0 || width > 4096)
             {
-                fclose(fd);
+                std::fclose(fd);
                 return false;
             }
-            while(*ptr && isdigit(*ptr)) ptr++;
-            while(*ptr && !isdigit(*ptr)) ptr++;
+            while(*ptr && isdigit((unsigned char)(*ptr))) ptr++;
+            while(*ptr && !isdigit((unsigned char)(*ptr))) ptr++;
             if(*ptr == 0)
             {
-                fclose(fd);
+                std::fclose(fd);
                 return false;
             }
-            unsigned height = atoi(ptr);
+            unsigned height = std::atoi(ptr);
             if(height == 0 || height > 4096)
             {
-                fclose(fd);
+                std::fclose(fd);
                 return false;
             }
-            while(*ptr && isdigit(*ptr)) ptr++;
-            while(*ptr && !isdigit(*ptr)) ptr++;
-            if(atoi(ptr) != 255)
+            while(*ptr && isdigit((unsigned char)(*ptr))) ptr++;
+            while(*ptr && !isdigit((unsigned char)(*ptr))) ptr++;
+            if(std::atoi(ptr) != 255)
             {
-                fclose(fd);
+                std::fclose(fd);
                 return false;
             }
-            while(*ptr && isdigit(*ptr)) ptr++;
+            while(*ptr && isdigit((unsigned char)(*ptr))) ptr++;
             if(*ptr == 0)
             {
-                fclose(fd);
+                std::fclose(fd);
                 return false;
             }
             ptr++;
-            fseek(fd, long(ptr - buf), SEEK_SET);
+            std::fseek(fd, long(ptr - buf), SEEK_SET);
             
             create_img(idx, width, height);
             bool ret = true;
             
             if(m_format == pix_format_rgb24)
             {
-                fread(m_specific->m_buf_img[idx], 1, width * height * 3, fd);
+                std::size_t sz = std::fread(m_specific->m_buf_img[idx], 1, width * height * 3, fd);
+                if (sz != width * height * 3)
+                    ret = false;
             }
             else
             {
@@ -1094,10 +1226,28 @@ namespace agg
                                   -width * 3 :
                                    width * 3);
                 
-                fread(buf_img, 1, width * height * 3, fd);
+                std::size_t sz = std::fread(buf_img, 1, width * height * 3, fd);
+                if (sz != width * height * 3)
+                    ret = false;
                 
                 switch(m_format)
                 {
+                    case pix_format_sgray8:
+                        convert<pixfmt_sgray8, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_gray8:
+                        convert<pixfmt_gray8, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_gray16:
+                        convert<pixfmt_gray16, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_gray32:
+                        convert<pixfmt_gray32, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
                     case pix_format_rgb555:
                         color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_rgb555());
                         break;
@@ -1106,24 +1256,96 @@ namespace agg
                         color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_rgb565());
                         break;
                         
+                    case pix_format_sbgr24:
+                        convert<pixfmt_sbgr24, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_rgb24:
+                        convert<pixfmt_rgb24, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
                     case pix_format_bgr24:
-                        color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_bgr24());
+                        convert<pixfmt_bgr24, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_srgba32:
+                        convert<pixfmt_srgba32, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_sargb32:
+                        convert<pixfmt_sargb32, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_sbgra32:
+                        convert<pixfmt_sbgra32, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_sabgr32:
+                        convert<pixfmt_sabgr32, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
                         break;
                         
                     case pix_format_rgba32:
-                        color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_rgba32());
+                        convert<pixfmt_rgba32, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
                         break;
                         
                     case pix_format_argb32:
-                        color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_argb32());
+                        convert<pixfmt_argb32, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
                         break;
                         
                     case pix_format_bgra32:
-                        color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_bgra32());
+                        convert<pixfmt_bgra32, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
                         break;
                         
                     case pix_format_abgr32:
-                        color_conv(m_rbuf_img+idx, &rbuf_img, color_conv_rgb24_to_abgr32());
+                        convert<pixfmt_abgr32, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_rgb48:
+                        convert<pixfmt_rgb48, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_bgr48:
+                        convert<pixfmt_bgr48, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_rgba64:
+                        convert<pixfmt_rgba64, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_argb64:
+                        convert<pixfmt_argb64, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_bgra64:
+                        convert<pixfmt_bgra64, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_abgr64:
+                        convert<pixfmt_abgr64, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_rgb96:
+                        convert<pixfmt_rgb96, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_bgr96:
+                        convert<pixfmt_bgr96, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_rgba128:
+                        convert<pixfmt_rgba128, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_argb128:
+                        convert<pixfmt_argb128, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_bgra128:
+                        convert<pixfmt_bgra128, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
+                        break;
+                        
+                    case pix_format_abgr128:
+                        convert<pixfmt_abgr128, pixfmt_srgb24>(m_rbuf_img+idx, &rbuf_img);
                         break;
                         
                     default:
@@ -1132,7 +1354,7 @@ namespace agg
                 delete [] buf_img;
             }
                         
-            fclose(fd);
+            std::fclose(fd);
             return ret;
         }
         return false;
@@ -1147,20 +1369,20 @@ namespace agg
         if(idx < max_images &&  rbuf_img(idx).buf())
         {
             char buf[1024];
-            strcpy(buf, file);
-            int len = strlen(buf);
+            std::strcpy(buf, file);
+            int len = std::strlen(buf);
             if(len < 4 || strcasecmp(buf + len - 4, ".ppm") != 0)
             {
-                strcat(buf, ".ppm");
+                std::strcat(buf, ".ppm");
             }
             
-            FILE* fd = fopen(buf, "wb");
+            FILE* fd = std::fopen(buf, "wb");
             if(fd == 0) return false;
             
             unsigned w = rbuf_img(idx).width();
             unsigned h = rbuf_img(idx).height();
             
-            fprintf(fd, "P6\n%d %d\n255\n", w, h);
+            std::fprintf(fd, "P6\n%d %d\n255\n", w, h);
                 
             unsigned y; 
             unsigned char* tmp_buf = new unsigned char [w * 3];
@@ -1169,6 +1391,22 @@ namespace agg
                 const unsigned char* src = rbuf_img(idx).row_ptr(m_flip_y ? h - 1 - y : y);
                 switch(m_format)
                 {
+                    case pix_format_sgray8:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_sgray8>());
+                        break;
+                        
+                    case pix_format_gray8:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_gray8>());
+                        break;
+                        
+                    case pix_format_gray16:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_gray16>());
+                        break;
+                        
+                    case pix_format_gray32:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_gray32>());
+                        break;
+                        
                     default: break;
                     case pix_format_rgb555:
                         color_conv_row(tmp_buf, src, w, color_conv_rgb555_to_rgb24());
@@ -1178,34 +1416,106 @@ namespace agg
                         color_conv_row(tmp_buf, src, w, color_conv_rgb565_to_rgb24());
                         break;
                         
+                    case pix_format_sbgr24:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_sbgr24>());
+                        break;
+                        
+                    case pix_format_srgb24:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_srgb24>());
+                        break;
+                       
                     case pix_format_bgr24:
-                        color_conv_row(tmp_buf, src, w, color_conv_bgr24_to_rgb24());
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_bgr24>());
                         break;
                         
                     case pix_format_rgb24:
-                        color_conv_row(tmp_buf, src, w, color_conv_rgb24_to_rgb24());
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_rgb24>());
                         break;
                        
+                    case pix_format_srgba32:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_srgba32>());
+                        break;
+                        
+                    case pix_format_sargb32:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_sargb32>());
+                        break;
+                        
+                    case pix_format_sbgra32:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_sbgra32>());
+                        break;
+                        
+                    case pix_format_sabgr32:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_sabgr32>());
+                        break;
+
                     case pix_format_rgba32:
-                        color_conv_row(tmp_buf, src, w, color_conv_rgba32_to_rgb24());
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_rgba32>());
                         break;
                         
                     case pix_format_argb32:
-                        color_conv_row(tmp_buf, src, w, color_conv_argb32_to_rgb24());
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_argb32>());
                         break;
                         
                     case pix_format_bgra32:
-                        color_conv_row(tmp_buf, src, w, color_conv_bgra32_to_rgb24());
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_bgra32>());
                         break;
                         
                     case pix_format_abgr32:
-                        color_conv_row(tmp_buf, src, w, color_conv_abgr32_to_rgb24());
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_abgr32>());
+                        break;
+
+                    case pix_format_bgr48:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_bgr48>());
+                        break;
+                        
+                    case pix_format_rgb48:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_rgb48>());
+                        break;
+                       
+                    case pix_format_rgba64:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_rgba64>());
+                        break;
+                        
+                    case pix_format_argb64:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_argb64>());
+                        break;
+                        
+                    case pix_format_bgra64:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_bgra64>());
+                        break;
+                        
+                    case pix_format_abgr64:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_abgr64>());
+                        break;
+
+                    case pix_format_bgr96:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_bgr96>());
+                        break;
+                        
+                    case pix_format_rgb96:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_rgb96>());
+                        break;
+                       
+                    case pix_format_rgba128:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_rgba128>());
+                        break;
+                        
+                    case pix_format_argb128:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_argb128>());
+                        break;
+                        
+                    case pix_format_bgra128:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_bgra128>());
+                        break;
+                        
+                    case pix_format_abgr128:
+                        color_conv_row(tmp_buf, src, w, conv_row<pixfmt_srgb24, pixfmt_abgr128>());
                         break;
                 }
-                fwrite(tmp_buf, 1, w * 3, fd);
+                std::fwrite(tmp_buf, 1, w * 3, fd);
             }
             delete [] tmp_buf;
-            fclose(fd);
+            std::fclose(fd);
             return true;
         }
         return false;
@@ -1246,7 +1556,7 @@ namespace agg
     //------------------------------------------------------------------------
     void platform_support::message(const char* msg)
     {
-        fprintf(stderr, "%s\n", msg);
+        std::fprintf(stderr, "%s\n", msg);
     }
 
     //------------------------------------------------------------------------
@@ -1258,7 +1568,7 @@ namespace agg
     //------------------------------------------------------------------------
     double platform_support::elapsed_time() const
     {
-        clock_t stop = clock();
+        std::clock_t stop = std::clock();
         return double(stop - m_specific->m_sw_start) * 1000.0 / CLOCKS_PER_SEC;
     }
 

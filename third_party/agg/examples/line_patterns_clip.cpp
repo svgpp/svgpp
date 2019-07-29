@@ -19,10 +19,11 @@
 #include "ctrl/agg_bezier_ctrl.h"
 #include "platform/agg_platform_support.h"
 
+#define AGG_BGRA32
+//#define AGG_BGRA128
+#include "pixel_formats.h"
 
 enum flip_y_e { flip_y = true };
-
-typedef agg::pixfmt_bgr24 pixfmt;
 
 
 static agg::int8u brightness_to_alpha[256 * 3] = 
@@ -78,18 +79,22 @@ static agg::int8u brightness_to_alpha[256 * 3] =
 };
 
 
-class pattern_src_brightness_to_alpha_rgba8
+class pattern_src_brightness_to_alpha
 {
 public:
-    pattern_src_brightness_to_alpha_rgba8(agg::rendering_buffer& rb) : 
+    pattern_src_brightness_to_alpha(agg::rendering_buffer& rb) : 
         m_rb(&rb), m_pf(*m_rb) {}
 
     unsigned width()  const { return m_pf.width();  }
     unsigned height() const { return m_pf.height(); }
-    agg::rgba8 pixel(int x, int y) const
+    color_type pixel(int x, int y) const
     {
-        agg::rgba8 c = m_pf.pixel(x, y);
-        c.a = brightness_to_alpha[c.r + c.g + c.b];
+        color_type c = m_pf.pixel(x, y);
+        // It's a bit of a hack, but we can treat the 8-bit alpha value as a cover.
+        color_type::calc_type sum = c.r + c.g + c.b;
+        int i = int(sum * sizeof(brightness_to_alpha) / (3 * color_type::full_value()));
+        agg::cover_type cover = brightness_to_alpha[i];
+        c.a = color_type::mult_cover(color_type::full_value(), cover);
         return c;
     }
 
@@ -101,10 +106,10 @@ private:
 
 class the_application : public agg::platform_support
 {
-    agg::rgba8 m_ctrl_color;
-    agg::polygon_ctrl<agg::rgba8> m_line1;
-    agg::slider_ctrl<agg::rgba8>  m_scale_x;
-    agg::slider_ctrl<agg::rgba8>  m_start_x;
+    agg::srgba8 m_ctrl_color;
+    agg::polygon_ctrl<color_type> m_line1;
+    agg::slider_ctrl<color_type>  m_scale_x;
+    agg::slider_ctrl<color_type>  m_start_x;
     agg::trans_affine             m_scale;
 
 public:
@@ -182,9 +187,9 @@ public:
         // Any agg::renderer_base<> or derived
         // is good for the use as a source.
         //-----------------------------------
-        pattern_src_brightness_to_alpha_rgba8 p1(rbuf_img(0));
+        pattern_src_brightness_to_alpha p1(rbuf_img(0));
 
-        agg::pattern_filter_bilinear_rgba8 fltr;           // Filtering functor
+        agg::pattern_filter_bilinear_rgba<color_type> fltr;           // Filtering functor
 
         // agg::line_image_pattern is the main container for the patterns. It creates
         // a copy of the patterns extended according to the needs of the filter.
@@ -193,7 +198,7 @@ public:
         // version agg::line_image_pattern_pow2 because it works about 15-25 percent
         // faster than agg::line_image_pattern (because of using simple masking instead 
         // of expensive '%' operation). 
-        typedef agg::line_image_pattern<agg::pattern_filter_bilinear_rgba8> pattern_type;
+        typedef agg::line_image_pattern<agg::pattern_filter_bilinear_rgba<color_type> > pattern_type;
         typedef agg::renderer_base<pixfmt> base_ren_type;
         typedef agg::renderer_outline_image<base_ren_type, pattern_type> renderer_img_type;
         typedef agg::rasterizer_outline_aa<renderer_img_type, agg::line_coord_sat> rasterizer_img_type;
@@ -217,7 +222,7 @@ public:
         profile.smoother_width(10.0);                    //optional
         profile.width(8.0);                              //mandatory!
         renderer_line_type ren_line(ren_base, profile);
-        ren_line.color(agg::rgba8(0,0,127));            //mandatory!
+        ren_line.color(agg::srgba8(0,0,127));            //mandatory!
         rasterizer_line_type ras_line(ren_line);
         ras_line.round_cap(true);                       //optional
         //ras_line.line_join(agg::outline_no_join);     //optional
@@ -326,13 +331,13 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example. Clipping Lines with Image Patterns");
 
     if(!app.load_img(0, "1"))
     {
         char buf[256];
-        sprintf(buf, "There must be file 1%s\n", app.img_ext(), app.img_ext());
+        sprintf(buf, "There must be file 1%s\n", app.img_ext());
         app.message(buf);
         return 1;
     }

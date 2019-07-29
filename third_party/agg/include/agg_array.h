@@ -15,8 +15,8 @@
 #ifndef AGG_ARRAY_INCLUDED
 #define AGG_ARRAY_INCLUDED
 
-#include <stddef.h>
-#include <string.h>
+#include <cstddef>
+#include <cstring>
 #include "agg_basics.h"
 
 namespace agg
@@ -53,12 +53,12 @@ namespace agg
         pod_auto_array() {}
         explicit pod_auto_array(const T* c)
         {
-            memcpy(m_array, c, sizeof(T) * Size);
+            std::memcpy(m_array, c, sizeof(T) * Size);
         }
 
         const self_type& operator = (const T* c)
         {
-            memcpy(m_array, c, sizeof(T) * Size);
+            std::memcpy(m_array, c, sizeof(T) * Size);
             return *this;
         }
 
@@ -121,7 +121,7 @@ namespace agg
             m_array(pod_allocator<T>::allocate(v.m_size)), 
             m_size(v.m_size) 
         {
-            memcpy(m_array, v.m_array, sizeof(T) * m_size);
+            std::memcpy(m_array, v.m_array, sizeof(T) * m_size);
         }
 
         void resize(unsigned size)
@@ -135,7 +135,7 @@ namespace agg
         const self_type& operator = (const self_type& v)
         {
             resize(v.size());
-            memcpy(m_array, v.m_array, sizeof(T) * m_size);
+            std::memcpy(m_array, v.m_array, sizeof(T) * m_size);
             return *this;
         }
 
@@ -185,7 +185,7 @@ namespace agg
 
         void zero()
         {
-            memset(m_array, 0, sizeof(T) * m_size);
+            std::memset(m_array, 0, sizeof(T) * m_size);
         }
 
         void add(const T& v)         { m_array[m_size++] = v; }
@@ -246,7 +246,7 @@ namespace agg
             if(new_size > m_capacity)
             {
                 T* data = pod_allocator<T>::allocate(new_size);
-                memcpy(data, m_array, m_size * sizeof(T));
+                std::memcpy(data, m_array, m_size * sizeof(T));
                 pod_allocator<T>::deallocate(m_array, m_capacity);
                 m_array = data;
             }
@@ -269,7 +269,7 @@ namespace agg
         m_capacity(v.m_capacity),
         m_array(v.m_capacity ? pod_allocator<T>::allocate(v.m_capacity) : 0)
     {
-        memcpy(m_array, v.m_array, sizeof(T) * v.m_size);
+        std::memcpy(m_array, v.m_array, sizeof(T) * v.m_size);
     }
 
     //------------------------------------------------------------------------
@@ -277,14 +277,14 @@ namespace agg
     pod_vector<T>::operator = (const pod_vector<T>&v)
     {
         allocate(v.m_size);
-        if(v.m_size) memcpy(m_array, v.m_array, sizeof(T) * v.m_size);
+        if(v.m_size) std::memcpy(m_array, v.m_array, sizeof(T) * v.m_size);
         return *this;
     }
 
     //------------------------------------------------------------------------
     template<class T> void pod_vector<T>::serialize(int8u* ptr) const
     { 
-        if(m_size) memcpy(ptr, m_array, m_size * sizeof(T)); 
+        if(m_size) std::memcpy(ptr, m_array, m_size * sizeof(T)); 
     }
 
     //------------------------------------------------------------------------
@@ -293,7 +293,7 @@ namespace agg
     {
         byte_size /= sizeof(T);
         allocate(byte_size);
-        if(byte_size) memcpy(m_array, data, byte_size * sizeof(T));
+        if(byte_size) std::memcpy(m_array, data, byte_size * sizeof(T));
     }
 
     //------------------------------------------------------------------------
@@ -306,7 +306,7 @@ namespace agg
         }
         else
         {
-            memmove(m_array + pos + 1, m_array + pos, (m_size - pos) * sizeof(T));
+            std::memmove(m_array + pos + 1, m_array + pos, (m_size - pos) * sizeof(T));
             m_array[pos] = val;
         }
         ++m_size;
@@ -586,7 +586,7 @@ namespace agg
         for(i = 0; i < v.m_num_blocks; ++i)
         {
             m_blocks[i] = pod_allocator<T>::allocate(block_size);
-            memcpy(m_blocks[i], v.m_blocks[i], block_size * sizeof(T));
+            std::memcpy(m_blocks[i], v.m_blocks[i], block_size * sizeof(T));
         }
     }
 
@@ -603,7 +603,7 @@ namespace agg
         }
         for(i = 0; i < v.m_num_blocks; ++i)
         {
-            memcpy(m_blocks[i], v.m_blocks[i], block_size * sizeof(T));
+            std::memcpy(m_blocks[i], v.m_blocks[i], block_size * sizeof(T));
         }
         m_size = v.m_size;
         return *this;
@@ -620,7 +620,7 @@ namespace agg
 
             if(m_blocks)
             {
-                memcpy(new_blocks, 
+                std::memcpy(new_blocks, 
                        m_blocks, 
                        m_num_blocks * sizeof(T*));
 
@@ -720,7 +720,7 @@ namespace agg
         unsigned i;
         for(i = 0; i < m_size; i++)
         {
-            memcpy(ptr, &(*this)[i], sizeof(T));
+            std::memcpy(ptr, &(*this)[i], sizeof(T));
             ptr += sizeof(T);
         }
     }
@@ -734,7 +734,7 @@ namespace agg
         for(unsigned i = 0; i < byte_size; ++i)
         {
             T* ptr = data_ptr();
-            memcpy(ptr, data, sizeof(T));
+            std::memcpy(ptr, data, sizeof(T));
             ++m_size;
             data += sizeof(T);
         }
@@ -757,12 +757,12 @@ namespace agg
         {
             if(start + i < m_size)
             {
-                memcpy(&((*this)[start + i]), data, sizeof(T));
+                std::memcpy(&((*this)[start + i]), data, sizeof(T));
             }
             else
             {
                 T* ptr = data_ptr();
-                memcpy(ptr, data, sizeof(T));
+                std::memcpy(ptr, data, sizeof(T));
                 ++m_size;
             }
             data += sizeof(T);
@@ -832,7 +832,7 @@ namespace agg
                 if(alignment > 1)
                 {
                     unsigned align = 
-                        (alignment - unsigned((size_t)ptr) % alignment) % alignment;
+                        (alignment - unsigned((std::size_t)ptr) % alignment) % alignment;
 
                     size += align;
                     ptr += align;
@@ -865,7 +865,7 @@ namespace agg
 
                 if(m_blocks)
                 {
-                    memcpy(new_blocks, 
+                    std::memcpy(new_blocks, 
                            m_blocks, 
                            m_num_blocks * sizeof(block_type));
                     pod_allocator<block_type>::deallocate(m_blocks, m_max_blocks);

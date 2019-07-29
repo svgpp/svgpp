@@ -13,7 +13,7 @@
 //          http://www.antigrain.com
 //----------------------------------------------------------------------------
 
-#include <math.h>
+#include <cmath>
 #include "agg_curves.h"
 #include "agg_math.h"
 
@@ -55,7 +55,7 @@ namespace agg
         double dx2 = x3 - x2;
         double dy2 = y3 - y2;
 
-        double len = sqrt(dx1 * dx1 + dy1 * dy1) + sqrt(dx2 * dx2 + dy2 * dy2); 
+        double len = std::sqrt(dx1 * dx1 + dy1 * dy1) + std::sqrt(dx2 * dx2 + dy2 * dy2); 
 
         m_num_steps = uround(len * 0.25 * m_scale);
 
@@ -159,7 +159,7 @@ namespace agg
 
         double dx = x3-x1;
         double dy = y3-y1;
-        double d = fabs(((x2 - x3) * dy - (y2 - y3) * dx));
+        double d = std::fabs(((x2 - x3) * dy - (y2 - y3) * dx));
         double da;
 
         if(d > curve_collinearity_epsilon)
@@ -179,7 +179,7 @@ namespace agg
 
                 // Angle & Cusp Condition
                 //----------------------
-                da = fabs(atan2(y3 - y2, x3 - x2) - atan2(y2 - y1, x2 - x1));
+                da = std::fabs(std::atan2(y3 - y2, x3 - x2) - std::atan2(y2 - y1, x2 - x1));
                 if(da >= pi) da = 2*pi - da;
 
                 if(da < m_angle_tolerance)
@@ -252,8 +252,10 @@ namespace agg
         return m_scale;
     }
 
+#if defined(_MSC_VER) && _MSC_VER <= 1200
     //------------------------------------------------------------------------
     static double MSC60_fix_ICE(double v) { return v; }
+#endif
 
     //------------------------------------------------------------------------
     void curve4_inc::init(double x1, double y1, 
@@ -273,9 +275,9 @@ namespace agg
         double dx3 = x4 - x3;
         double dy3 = y4 - y3;
 
-        double len = (sqrt(dx1 * dx1 + dy1 * dy1) + 
-                      sqrt(dx2 * dx2 + dy2 * dy2) + 
-                      sqrt(dx3 * dx3 + dy3 * dy3)) * 0.25 * m_scale;
+        double len = (std::sqrt(dx1 * dx1 + dy1 * dy1) + 
+                      std::sqrt(dx2 * dx2 + dy2 * dy2) + 
+                      std::sqrt(dx3 * dx3 + dy3 * dy3)) * 0.25 * m_scale;
 
 #if defined(_MSC_VER) && _MSC_VER <= 1200
         m_num_steps = uround(MSC60_fix_ICE(len));
@@ -417,8 +419,8 @@ namespace agg
         double dx = x4-x1;
         double dy = y4-y1;
 
-        double d2 = fabs(((x2 - x4) * dy - (y2 - y4) * dx));
-        double d3 = fabs(((x3 - x4) * dy - (y3 - y4) * dx));
+        double d2 = std::fabs(((x2 - x4) * dy - (y2 - y4) * dx));
+        double d3 = std::fabs(((x3 - x4) * dy - (y3 - y4) * dx));
         double da1, da2, k;
 
         switch((int(d2 > curve_collinearity_epsilon) << 1) +
@@ -487,7 +489,7 @@ namespace agg
 
                 // Angle Condition
                 //----------------------
-                da1 = fabs(atan2(y4 - y3, x4 - x3) - atan2(y3 - y2, x3 - x2));
+                da1 = std::fabs(std::atan2(y4 - y3, x4 - x3) - std::atan2(y3 - y2, x3 - x2));
                 if(da1 >= pi) da1 = 2*pi - da1;
 
                 if(da1 < m_angle_tolerance)
@@ -521,7 +523,7 @@ namespace agg
 
                 // Angle Condition
                 //----------------------
-                da1 = fabs(atan2(y3 - y2, x3 - x2) - atan2(y2 - y1, x2 - x1));
+                da1 = std::fabs(std::atan2(y3 - y2, x3 - x2) - std::atan2(y2 - y1, x2 - x1));
                 if(da1 >= pi) da1 = 2*pi - da1;
 
                 if(da1 < m_angle_tolerance)
@@ -558,9 +560,9 @@ namespace agg
 
                 // Angle & Cusp Condition
                 //----------------------
-                k   = atan2(y3 - y2, x3 - x2);
-                da1 = fabs(k - atan2(y2 - y1, x2 - x1));
-                da2 = fabs(atan2(y4 - y3, x4 - x3) - k);
+                k   = std::atan2(y3 - y2, x3 - x2);
+                da1 = std::fabs(k - std::atan2(y2 - y1, x2 - x1));
+                da2 = std::fabs(std::atan2(y4 - y3, x4 - x3) - k);
                 if(da1 >= pi) da1 = 2*pi - da1;
                 if(da2 >= pi) da2 = 2*pi - da2;
 

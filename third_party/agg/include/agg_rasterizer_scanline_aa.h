@@ -31,41 +31,12 @@
 
 #include "agg_rasterizer_cells_aa.h"
 #include "agg_rasterizer_sl_clip.h"
+#include "agg_rasterizer_scanline_aa_nogamma.h"
 #include "agg_gamma_functions.h"
 
 
 namespace agg
 {
-
-
-    //-----------------------------------------------------------------cell_aa
-    // A pixel cell. There're no constructors defined and it was done 
-    // intentionally in order to avoid extra overhead when allocating an 
-    // array of cells.
-    struct cell_aa
-    {
-        int x;
-        int y;
-        int cover;
-        int area;
-
-        void initial()
-        {
-            x = 0x7FFFFFFF;
-            y = 0x7FFFFFFF;
-            cover = 0;
-            area  = 0;
-        }
-
-        void style(const cell_aa&) {}
-
-        int not_equal(int ex, int ey, const cell_aa&) const
-        {
-            return (ex - x) | (ey - y);
-        }
-    };
-
-
     //==================================================rasterizer_scanline_aa
     // Polygon rasterizer that is used to render filled polygons with 
     // high-quality Anti-Aliasing. Internally, by default, the class uses 
@@ -122,8 +93,8 @@ namespace agg
         };
 
         //--------------------------------------------------------------------
-        rasterizer_scanline_aa() : 
-            m_outline(),
+        rasterizer_scanline_aa(unsigned cell_block_limit=1024) : 
+            m_outline(cell_block_limit),
             m_clipper(),
             m_filling_rule(fill_non_zero),
             m_auto_close(true),
@@ -137,8 +108,8 @@ namespace agg
 
         //--------------------------------------------------------------------
         template<class GammaF> 
-        rasterizer_scanline_aa(const GammaF& gamma_function) : 
-            m_outline(),
+        rasterizer_scanline_aa(const GammaF& gamma_function, unsigned cell_block_limit) : 
+            m_outline(cell_block_limit),
             m_clipper(m_outline),
             m_filling_rule(fill_non_zero),
             m_auto_close(true),

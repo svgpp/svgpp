@@ -9,7 +9,6 @@
 #include "agg_conv_curve.h"
 #include "agg_conv_contour.h"
 #include "agg_pixfmt_rgb.h"
-#include "agg_gamma_lut.h"
 #include "agg_font_win32_tt.h"
 #include "platform/agg_platform_support.h"
 
@@ -102,7 +101,7 @@ static char_type text[] =
 "it was decided not to introduce such an object like color in "
 "order not to restrict the possibilities in advance. Instead, "
 "there are objects that operate with concrete color spaces. "
-"Currently there are agg::rgba and agg::rgba8 that operate "
+"Currently there are agg::rgba and agg::srgba8 that operate "
 "with the most popular RGB color space (strictly speaking there's "
 "RGB plus Alpha). The RGB color space is used with different "
 "pixel formats, like 24-bit RGB or 32-bit RGBA with different "
@@ -136,33 +135,30 @@ static char_type text[] =
 "floating point coordinate pipelines in this case. ";
 
 
-
+#define AGG_BGR24
+#include "pixel_formats.h"
 
 bool text_flip = false;
 
 
 class the_application : public agg::platform_support
 {
-    typedef agg::gamma_lut<agg::int8u, agg::int16u, 8, 16> gamma_type;
-    typedef agg::pixfmt_bgr24_gamma<gamma_type> pixfmt_type;
-    typedef agg::renderer_base<pixfmt_type> base_ren_type;
+    typedef agg::renderer_base<pixfmt> base_ren_type;
     typedef agg::renderer_scanline_aa_solid<base_ren_type> renderer_solid;
     typedef agg::renderer_scanline_bin_solid<base_ren_type> renderer_bin;
     typedef agg::font_engine_win32_tt_int32 font_engine_type;
     typedef agg::font_cache_manager<font_engine_type> font_manager_type;
 
-    agg::rbox_ctrl<agg::rgba8>   m_ren_type;
-    agg::slider_ctrl<agg::rgba8> m_height;
-    agg::slider_ctrl<agg::rgba8> m_width;
-    agg::slider_ctrl<agg::rgba8> m_weight;
-    agg::slider_ctrl<agg::rgba8> m_gamma;
-    agg::cbox_ctrl<agg::rgba8>   m_hinting;
-    agg::cbox_ctrl<agg::rgba8>   m_kerning;
-    agg::cbox_ctrl<agg::rgba8>   m_performance;
+    agg::rbox_ctrl<agg::srgba8>   m_ren_type;
+    agg::slider_ctrl<agg::srgba8> m_height;
+    agg::slider_ctrl<agg::srgba8> m_width;
+    agg::slider_ctrl<agg::srgba8> m_weight;
+    agg::cbox_ctrl<agg::srgba8>   m_hinting;
+    agg::cbox_ctrl<agg::srgba8>   m_kerning;
+    agg::cbox_ctrl<agg::srgba8>   m_performance;
     font_engine_type             m_feng;
     font_manager_type            m_fman;
     double                       m_old_height;
-    gamma_type                   m_gamma_lut;
 
     // Pipeline to process the vectors glyph paths (curves + contour)
     typedef agg::conv_curve<font_manager_type::path_adaptor_type> conv_curve_type;
@@ -178,7 +174,6 @@ public:
         m_height       (160, 10.0, 640-5.0,    18.0,   !flip),
         m_width        (160, 30.0, 640-5.0,    38.0,   !flip),
         m_weight       (160, 50.0, 640-5.0,    58.0,   !flip),
-        m_gamma        (260, 70.0, 640-5.0,    78.0,   !flip),
         m_hinting      (160, 65.0, "Hinting", !flip),
         m_kerning      (160, 80.0, "Kerning", !flip),
         m_performance  (160, 95.0, "Test Performance", !flip),
@@ -218,13 +213,6 @@ public:
         m_weight.text_thickness(1.5);
         add_ctrl(m_weight);
         m_weight.no_transform();
-
-        m_gamma.label("Gamma=%.2f");
-        m_gamma.range(0.1, 2.0);
-        m_gamma.value(1.0);
-        m_gamma.text_thickness(1.5);
-        add_ctrl(m_gamma);
-        m_gamma.no_transform();
 
         add_ctrl(m_hinting);
         m_hinting.status(true);
@@ -315,14 +303,14 @@ public:
                     switch(glyph->data_type)
                     {
                     case agg::glyph_data_mono:
-                        ren_bin.color(agg::rgba8(0, 0, 0));
+                        ren_bin.color(agg::srgba8(0, 0, 0));
                         agg::render_scanlines(m_fman.mono_adaptor(), 
                                               m_fman.mono_scanline(), 
                                               ren_bin);
                         break;
 
                     case agg::glyph_data_gray8:
-                        ren_solid.color(agg::rgba8(0, 0, 0));
+                        ren_solid.color(agg::srgba8(0, 0, 0));
                         agg::render_scanlines(m_fman.gray8_adaptor(), 
                                               m_fman.gray8_scanline(), 
                                               ren_solid);
@@ -341,7 +329,7 @@ public:
                         {
                             ras.add_path(m_contour);
                         }
-                        ren_solid.color(agg::rgba8(0, 0, 0));
+                        ren_solid.color(agg::srgba8(0, 0, 0));
                         agg::render_scanlines(ras, sl, ren_solid);
                         break;
                     }
@@ -360,7 +348,7 @@ public:
 
     virtual void on_draw()
     {
-        pixfmt_type pf(rbuf_window(), m_gamma_lut);
+        pixfmt pf(rbuf_window());
         base_ren_type ren_base(pf);
         renderer_solid ren_solid(ren_base);
         renderer_bin ren_bin(ren_base);
@@ -379,23 +367,19 @@ public:
             // When rendering in mono format, 
             // Set threshold gamma = 0.5
             //-------------------
-            m_feng.gamma(agg::gamma_threshold(m_gamma.value() / 2.0));
+            m_feng.gamma(agg::gamma_threshold(0.5));
         }
         else
         {
             m_feng.gamma(agg::gamma_none());
-            m_gamma_lut.gamma(m_gamma.value());
         }
 
         draw_text(ras, sl, ren_solid, ren_bin);
-
-        ras.gamma(agg::gamma_power(1.0));
 
         agg::render_ctrl(ras, sl, ren_base, m_ren_type);
         agg::render_ctrl(ras, sl, ren_base, m_height);
         agg::render_ctrl(ras, sl, ren_base, m_width);
         agg::render_ctrl(ras, sl, ren_base, m_weight);
-        agg::render_ctrl(ras, sl, ren_base, m_gamma);
         agg::render_ctrl(ras, sl, ren_base, m_hinting);
         agg::render_ctrl(ras, sl, ren_base, m_kerning);
         agg::render_ctrl(ras, sl, ren_base, m_performance);
@@ -408,7 +392,7 @@ public:
     {
         if(m_performance.status())
         {
-            pixfmt_type pf(rbuf_window(), m_gamma_lut);
+            pixfmt pf(rbuf_window());
             base_ren_type ren_base(pf);
             renderer_solid ren_solid(ren_base);
             renderer_bin ren_bin(ren_base);

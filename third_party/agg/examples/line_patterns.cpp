@@ -18,10 +18,11 @@
 #include "ctrl/agg_bezier_ctrl.h"
 #include "platform/agg_platform_support.h"
 
+#define AGG_BGRA32
+//#define AGG_BGRA128
+#include "pixel_formats.h"
 
 enum flip_y_e { flip_y = true };
-
-typedef agg::pixfmt_bgr24 pixfmt;
 
 
 static agg::int8u brightness_to_alpha[256 * 3] = 
@@ -77,18 +78,22 @@ static agg::int8u brightness_to_alpha[256 * 3] =
 };
 
 
-class pattern_src_brightness_to_alpha_rgba8
+class pattern_src_brightness_to_alpha
 {
 public:
-    pattern_src_brightness_to_alpha_rgba8(agg::rendering_buffer& rb) : 
+    pattern_src_brightness_to_alpha(agg::rendering_buffer& rb) : 
         m_rb(&rb), m_pf(*m_rb) {}
 
     unsigned width()  const { return m_pf.width();  }
     unsigned height() const { return m_pf.height(); }
-    agg::rgba8 pixel(int x, int y) const
+    color_type pixel(int x, int y) const
     {
-        agg::rgba8 c = m_pf.pixel(x, y);
-        c.a = brightness_to_alpha[c.r + c.g + c.b];
+        color_type c = m_pf.pixel(x, y);
+        // It's a bit of a hack, but we can treat the 8-bit alpha value as a cover.
+        color_type::calc_type sum = c.r + c.g + c.b;
+        int i = int(sum * sizeof(brightness_to_alpha) / (3 * color_type::full_value()));
+        agg::cover_type cover = brightness_to_alpha[i];
+        c.a = color_type::mult_cover(color_type::full_value(), cover);
         return c;
     }
 
@@ -100,18 +105,18 @@ private:
 
 class the_application : public agg::platform_support
 {
-    agg::rgba8 m_ctrl_color;
-    agg::bezier_ctrl<agg::rgba8> m_curve1;
-    agg::bezier_ctrl<agg::rgba8> m_curve2;
-    agg::bezier_ctrl<agg::rgba8> m_curve3;
-    agg::bezier_ctrl<agg::rgba8> m_curve4;
-    agg::bezier_ctrl<agg::rgba8> m_curve5;
-    agg::bezier_ctrl<agg::rgba8> m_curve6;
-    agg::bezier_ctrl<agg::rgba8> m_curve7;
-    agg::bezier_ctrl<agg::rgba8> m_curve8;
-    agg::bezier_ctrl<agg::rgba8> m_curve9;
-    agg::slider_ctrl<agg::rgba8> m_scale_x;
-    agg::slider_ctrl<agg::rgba8> m_start_x;
+    agg::srgba8 m_ctrl_color;
+    agg::bezier_ctrl<color_type> m_curve1;
+    agg::bezier_ctrl<color_type> m_curve2;
+    agg::bezier_ctrl<color_type> m_curve3;
+    agg::bezier_ctrl<color_type> m_curve4;
+    agg::bezier_ctrl<color_type> m_curve5;
+    agg::bezier_ctrl<color_type> m_curve6;
+    agg::bezier_ctrl<color_type> m_curve7;
+    agg::bezier_ctrl<color_type> m_curve8;
+    agg::bezier_ctrl<color_type> m_curve9;
+    agg::slider_ctrl<color_type> m_scale_x;
+    agg::slider_ctrl<color_type> m_start_x;
 
 public:
     typedef agg::renderer_base<pixfmt> renderer_base;
@@ -215,17 +220,17 @@ public:
         // Any agg::renderer_base<> or derived
         // is good for the use as a source.
         //-----------------------------------
-        pattern_src_brightness_to_alpha_rgba8 p1(rbuf_img(0));
-        pattern_src_brightness_to_alpha_rgba8 p2(rbuf_img(1));
-        pattern_src_brightness_to_alpha_rgba8 p3(rbuf_img(2));
-        pattern_src_brightness_to_alpha_rgba8 p4(rbuf_img(3));
-        pattern_src_brightness_to_alpha_rgba8 p5(rbuf_img(4));
-        pattern_src_brightness_to_alpha_rgba8 p6(rbuf_img(5));
-        pattern_src_brightness_to_alpha_rgba8 p7(rbuf_img(6));
-        pattern_src_brightness_to_alpha_rgba8 p8(rbuf_img(7));
-        pattern_src_brightness_to_alpha_rgba8 p9(rbuf_img(8));
+        pattern_src_brightness_to_alpha p1(rbuf_img(0));
+        pattern_src_brightness_to_alpha p2(rbuf_img(1));
+        pattern_src_brightness_to_alpha p3(rbuf_img(2));
+        pattern_src_brightness_to_alpha p4(rbuf_img(3));
+        pattern_src_brightness_to_alpha p5(rbuf_img(4));
+        pattern_src_brightness_to_alpha p6(rbuf_img(5));
+        pattern_src_brightness_to_alpha p7(rbuf_img(6));
+        pattern_src_brightness_to_alpha p8(rbuf_img(7));
+        pattern_src_brightness_to_alpha p9(rbuf_img(8));
 
-        agg::pattern_filter_bilinear_rgba8 fltr;           // Filtering functor
+        agg::pattern_filter_bilinear_rgba<color_type> fltr;           // Filtering functor
 
         // agg::line_image_pattern is the main container for the patterns. It creates
         // a copy of the patterns extended according to the needs of the filter.
@@ -234,7 +239,7 @@ public:
         // version agg::line_image_pattern_pow2 because it works about 15-25 percent
         // faster than agg::line_image_pattern (because of using simple masking instead 
         // of expensive '%' operation). 
-        typedef agg::line_image_pattern<agg::pattern_filter_bilinear_rgba8> pattern_type;
+        typedef agg::line_image_pattern<agg::pattern_filter_bilinear_rgba<color_type> > pattern_type;
         typedef agg::renderer_base<pixfmt> base_ren_type;
         typedef agg::renderer_outline_image<base_ren_type, pattern_type> renderer_type;
         typedef agg::rasterizer_outline_aa<renderer_type>                rasterizer_type;
@@ -294,7 +299,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example. Drawing Lines with Image Patterns");
 
     if(!app.load_img(0, "1") ||

@@ -13,7 +13,7 @@
 //          http://www.antigrain.com
 //----------------------------------------------------------------------------
 
-#include <math.h>
+#include <cmath>
 #include "agg_vpgen_segmentator.h"
 
 namespace agg
@@ -36,7 +36,7 @@ namespace agg
         m_y1 += m_dy;
         m_dx  = x - m_x1;
         m_dy  = y - m_y1;
-        double len = sqrt(m_dx * m_dx + m_dy * m_dy) * m_approximation_scale;
+        double len = std::sqrt(m_dx * m_dx + m_dy * m_dy) * m_approximation_scale;
         if(len < 1e-30) len = 1e-30;
         m_ddl = 1.0 / len;
         m_dl  = (m_cmd == path_cmd_move_to) ? 0.0 : m_ddl;

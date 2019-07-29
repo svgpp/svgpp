@@ -13,7 +13,8 @@
 //          http://www.antigrain.com
 //----------------------------------------------------------------------------
 
-#include <stdio.h>
+#include <cstdio>
+#include <cstring>
 #include "agg_font_win32_tt.h"
 #include "agg_bitset_iterator.h"
 #include "agg_renderer_scanline.h"
@@ -412,7 +413,7 @@ namespace agg
     {
         m_curves16.approximation_scale(4.0);
         m_curves32.approximation_scale(4.0);
-        memset(&m_matrix, 0, sizeof(m_matrix));
+        std::memset(&m_matrix, 0, sizeof(m_matrix));
         m_matrix.eM11.value = 1;
         m_matrix.eM22.value = 1;
     }
@@ -425,7 +426,7 @@ namespace agg
         unsigned i;
         for(i = 0; i < m_num_fonts; ++i)
         {
-            if(strcmp(name, m_font_names[i]) == 0) return i;
+            if(std::strcmp(name, m_font_names[i]) == 0) return i;
         }
         return -1;
     }
@@ -490,18 +491,18 @@ namespace agg
                         delete [] m_font_names[0];
                         if(m_old_font) ::SelectObject(m_dc, m_old_font);
                         ::DeleteObject(m_fonts[0]);
-                        memcpy(m_fonts, 
+                        std::memcpy(m_fonts, 
                                m_fonts + 1, 
                                (m_max_fonts - 1) * sizeof(HFONT));
-                        memcpy(m_font_names, 
+                        std::memcpy(m_font_names, 
                                m_font_names + 1, 
                                (m_max_fonts - 1) * sizeof(char*));
                         m_num_fonts = m_max_fonts - 1;
                     }
 
                     update_signature();
-                    m_font_names[m_num_fonts] = new char[strlen(m_signature) + 1];
-                    strcpy(m_font_names[m_num_fonts], m_signature);
+                    m_font_names[m_num_fonts] = new char[std::strlen(m_signature) + 1];
+                    std::strcpy(m_font_names[m_num_fonts], m_signature);
                     m_fonts[m_num_fonts] = m_cur_font;
                     ++m_num_fonts;
                     ::SelectObject(m_dc, m_cur_font);
@@ -581,14 +582,14 @@ namespace agg
                 double mtx[6];
                 char buf[100];
                 m_affine.store_to(mtx);
-                sprintf(buf, ",%08X%08X%08X%08X%08X%08X", 
+                std::sprintf(buf, ",%08X%08X%08X%08X%08X%08X", 
                     dbl_to_plain_fx(mtx[0]), 
                     dbl_to_plain_fx(mtx[1]), 
                     dbl_to_plain_fx(mtx[2]), 
                     dbl_to_plain_fx(mtx[3]), 
                     dbl_to_plain_fx(mtx[4]), 
                     dbl_to_plain_fx(mtx[5]));
-                strcat(m_signature, buf);
+                std::strcat(m_signature, buf);
             }
             ++m_change_stamp;
         }

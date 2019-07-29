@@ -17,7 +17,7 @@
 //
 //----------------------------------------------------------------------------
 
-#include <math.h>
+#include <cmath>
 #include "agg_vcgen_dash.h"
 #include "agg_shorten_path.h"
 
@@ -67,7 +67,7 @@ namespace agg
     void vcgen_dash::dash_start(double ds)
     {
         m_dash_start = ds;
-        calc_dash_start(fabs(ds));
+        calc_dash_start(std::fabs(ds));
     }
 
 

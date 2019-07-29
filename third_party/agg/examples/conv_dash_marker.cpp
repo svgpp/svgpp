@@ -19,6 +19,9 @@
 #include "ctrl/agg_cbox_ctrl.h"
 #include "platform/agg_platform_support.h"
 
+#define AGG_BGR24
+//#define AGG_BGR96
+#include "pixel_formats.h"
 
 enum flip_y_e { flip_y = true };
 
@@ -31,11 +34,11 @@ class the_application : public agg::platform_support
     double m_dx;
     double m_dy;
     int    m_idx;
-    agg::rbox_ctrl<agg::rgba8>   m_cap;
-    agg::slider_ctrl<agg::rgba8> m_width;
-    agg::slider_ctrl<agg::rgba8> m_smooth;
-    agg::cbox_ctrl<agg::rgba8>   m_close;
-    agg::cbox_ctrl<agg::rgba8>   m_even_odd;
+    agg::rbox_ctrl<color_type>   m_cap;
+    agg::slider_ctrl<color_type> m_width;
+    agg::slider_ctrl<color_type> m_smooth;
+    agg::cbox_ctrl<color_type>   m_close;
+    agg::cbox_ctrl<color_type>   m_even_odd;
 
 
 public:
@@ -84,9 +87,9 @@ public:
 
     virtual void on_draw()
     {
-        typedef agg::renderer_base<agg::pixfmt_bgr24> ren_base;
+        typedef agg::renderer_base<pixfmt> ren_base;
 
-        agg::pixfmt_bgr24 pixf(rbuf_window());
+        pixfmt pixf(rbuf_window());
         ren_base renb(pixf);
         renb.clear(agg::rgba(1, 1, 1));
 
@@ -270,7 +273,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example. Line Join");
 
     if(app.init(500, 330, 0))

@@ -9,7 +9,7 @@
 //
 //----------------------------------------------------------------------------
 
-#include <string.h>
+#include <cstring>
 #include <Carbon.h>
 #include <QuickTimeComponents.h>
 #include <ImageCompression.h>
@@ -71,7 +71,7 @@ namespace agg
         // create_gray_scale_palette(m_pmap);  I didn't care about gray scale palettes so far.
         if(clear_val <= 255)
         {
-            memset(m_buf, clear_val, m_img_size);
+            std::memset(m_buf, clear_val, m_img_size);
         }
     }
 
@@ -80,7 +80,7 @@ namespace agg
     //------------------------------------------------------------------------
     void pixel_map::clear(unsigned clear_val)
     {
-        if(m_buf) memset(m_buf, clear_val, m_img_size);
+        if(m_buf) std::memset(m_buf, clear_val, m_img_size);
     }
 
 

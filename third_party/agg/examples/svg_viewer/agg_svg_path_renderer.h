@@ -1,6 +1,8 @@
 //----------------------------------------------------------------------------
 // Anti-Grain Geometry - Version 2.3
 // Copyright (C) 2002-2005 Maxim Shemanarev (http://www.antigrain.com)
+// Copyright (c) 2008 Rene Rebe <rene@exactcode.de> [arc parser code]
+// Copyright (c) 2017 John Horigan <john@glyphic.com> [align_subpath()]
 //
 // Permission to copy, use, modify, sell and distribute this software 
 // is granted provided this copyright notice appears in all copies. 
@@ -165,7 +167,11 @@ namespace svg
                     double x,  double y, bool rel=false);
         void curve4(double x2, double y2,                   // S, s
                     double x,  double y, bool rel=false);
+        void arc(double rx, double ry, double angle,        // A, a
+                 bool large_arc_flag, bool sweep_flag, double x, double y,
+                 bool rel=false);
         void close_subpath();                               // Z, z
+        void align_subpath(unsigned start_idx);
 
 //        template<class VertexSource> 
 //        void add_path(VertexSource& vs, 

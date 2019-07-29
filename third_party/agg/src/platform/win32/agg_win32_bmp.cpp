@@ -8,6 +8,8 @@
 //
 //----------------------------------------------------------------------------
 
+#include <cstring>
+#include <cstdio>
 #include "platform/win32/agg_win32_bmp.h"
 #include "agg_basics.h"
 
@@ -59,7 +61,7 @@ namespace agg
         m_is_internal = true;
         if(clear_val <= 255)
         {
-            memset(m_buf, clear_val, m_img_size);
+            std::memset(m_buf, clear_val, m_img_size);
         }
     }
 
@@ -80,7 +82,7 @@ namespace agg
         m_is_internal = true;
         if(clear_val <= 255)
         {
-            memset(m_buf, clear_val, m_img_size);
+            std::memset(m_buf, clear_val, m_img_size);
         }
         return h_bitmap;
     }
@@ -90,7 +92,7 @@ namespace agg
     //------------------------------------------------------------------------
     void pixel_map::clear(unsigned clear_val)
     {
-        if(m_buf) memset(m_buf, clear_val, m_img_size);
+        if(m_buf) std::memset(m_buf, clear_val, m_img_size);
     }
 
 
@@ -249,6 +251,12 @@ namespace agg
                      break;
 
             case 64: n *= 8; 
+                     break;
+
+            case 96: n *= 12; 
+                     break;
+
+            case 128: n *= 16; 
                      break;
 
             default: n = 0;
@@ -468,13 +476,13 @@ namespace agg
         BITMAPINFO       *bmi = 0;
         unsigned          bmp_size;
 
-        fread(&bmf, sizeof(bmf), 1, fd);
+        if (std::fread(&bmf, sizeof(bmf), 1, fd) != 1) goto bmperr;
         if(bmf.bfType != 0x4D42) goto bmperr;
 
         bmp_size = bmf.bfSize - sizeof(BITMAPFILEHEADER);
 
         bmi = (BITMAPINFO*) new unsigned char [bmp_size];
-        if(fread(bmi, 1, bmp_size, fd) != bmp_size) goto bmperr;
+        if(std::fread(bmi, 1, bmp_size, fd) != bmp_size) goto bmperr;
         destroy();
         m_bpp = bmi->bmiHeader.biBitCount;
         create_from_bmp(bmi);
@@ -491,12 +499,12 @@ namespace agg
     //------------------------------------------------------------------------
     bool pixel_map::load_from_bmp(const char *filename)
     {
-        FILE *fd = fopen(filename, "rb");
+        FILE *fd = std::fopen(filename, "rb");
         bool ret = false;
         if(fd)
         {
             ret = load_from_bmp(fd);
-            fclose(fd);
+            std::fclose(fd);
         }
         return ret;
     }
@@ -516,8 +524,8 @@ namespace agg
         bmf.bfReserved1 = 0;
         bmf.bfReserved2 = 0;
 
-        fwrite(&bmf, sizeof(bmf), 1, fd);
-        fwrite(m_bmp, m_full_size, 1, fd);
+        std::fwrite(&bmf, sizeof(bmf), 1, fd);
+        std::fwrite(m_bmp, m_full_size, 1, fd);
         return true;
     }
 
@@ -526,12 +534,12 @@ namespace agg
     //------------------------------------------------------------------------
     bool pixel_map::save_as_bmp(const char *filename) const
     {
-        FILE *fd = fopen(filename, "wb");
+        FILE *fd = std::fopen(filename, "wb");
         bool ret = false;
         if(fd)
         {
             ret = save_as_bmp(fd);
-            fclose(fd);
+            std::fclose(fd);
         }
         return ret;
     }

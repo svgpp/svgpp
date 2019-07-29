@@ -1,7 +1,7 @@
 #pragma once
 
 #include <vector>
-#include <boost/gil/gil_all.hpp>
+#include <boost/gil/typedefs.hpp>
 #include "common.hpp"
 
 class ClipBuffer

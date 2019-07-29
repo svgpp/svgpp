@@ -5,7 +5,6 @@
 #include "agg_scanline_u.h"
 #include "agg_renderer_scanline.h"
 #include "agg_pixfmt_rgb.h"
-#include "agg_gamma_lut.h"
 #include "agg_conv_dash.h"
 #include "agg_conv_stroke.h"
 #include "agg_span_gradient.h"
@@ -16,15 +15,14 @@
 #include "ctrl/agg_slider_ctrl.h"
 #include "ctrl/agg_cbox_ctrl.h"
 
+#define AGG_BGR24
+//#define AGG_SBGR24
+#include "pixel_formats.h"
 
 enum flip_y_e { flip_y = false };
 
 
-
-typedef agg::gamma_lut<agg::int8u, agg::int8u, 8, 8>        gamma_lut_type;
-typedef agg::pixfmt_bgr24_gamma<gamma_lut_type>             pixfmt_type;
-typedef pixfmt_type::color_type                             color_type;
-typedef agg::renderer_base<pixfmt_type>                     renderer_base_type;
+typedef agg::renderer_base<pixfmt>                     renderer_base_type;
 typedef agg::renderer_scanline_aa_solid<renderer_base_type> renderer_scanline_type;
 typedef agg::scanline_u8                                    scanline_type;
 typedef agg::rasterizer_scanline_aa<>                       rasterizer_type;
@@ -189,8 +187,8 @@ void calc_linear_gradient_transform(double x1, double y1, double x2, double y2,
 //---------------------------------------------------
 template<class ColorArrayT>
 void fill_color_array(ColorArrayT& array, 
-                      color_type begin, 
-                      color_type end)
+                      typename ColorArrayT::value_type begin, 
+                      typename ColorArrayT::value_type end)
 {
     unsigned i;
     for(i = 0; i < 256; ++i)
@@ -206,19 +204,10 @@ void fill_color_array(ColorArrayT& array,
 
 class the_application : public agg::platform_support
 {
-    gamma_lut_type              m_gamma;
-    agg::slider_ctrl<agg::rgba> m_slider_gamma;
-
 public:
     the_application(agg::pix_format_e format, bool flip_y) :
-        agg::platform_support(format, flip_y),
-        m_gamma(1.0),
-        m_slider_gamma(3, 3,    480-3, 8,    !flip_y)
+        agg::platform_support(format, flip_y)
     {
-        add_ctrl(m_slider_gamma);
-        m_slider_gamma.range(0.1, 3.0);
-        m_slider_gamma.value(1.6);
-        m_slider_gamma.label("Gamma=%4.3f");
     }
 
 
@@ -234,7 +223,7 @@ public:
 
     virtual void on_draw()
     {
-        pixfmt_type pixf(rbuf_window(), m_gamma);
+        pixfmt pixf(rbuf_window());
         renderer_base_type ren_base(pixf);
         renderer_scanline_type ren_sl(ren_base);
         scanline_type sl;
@@ -242,10 +231,6 @@ public:
 
         ren_base.clear(agg::rgba(0,0,0));
 
-
-        // gamma correction
-        //ras.gamma(agg::gamma_power());
-        m_gamma.gamma(m_slider_gamma.value());
 
         int i;
 
@@ -271,7 +256,7 @@ public:
         typedef agg::gradient_x gradient_func_type;
         typedef agg::span_interpolator_linear<> interpolator_type;
         typedef agg::span_allocator<color_type> span_allocator_type;
-        typedef agg::pod_auto_array<color_type, 256> color_array_type;
+        typedef agg::pod_auto_array<agg::srgba8, 256> color_array_type;
         typedef agg::span_gradient<color_type, 
                                    interpolator_type, 
                                    gradient_func_type, 
@@ -451,10 +436,6 @@ public:
             agg::render_scanlines(ras, sl, ren_gradient);
         }
 
-
-        // Reset AA Gamma and render the controls
-        ras.gamma(agg::gamma_power(1.0));
-        agg::render_ctrl(ras, sl, ren_base, m_slider_gamma);
     }
 
 
@@ -462,7 +443,7 @@ public:
     virtual void on_mouse_button_down(int x, int y, unsigned flags)
     {
         srand(123);
-        pixfmt_type pixf(rbuf_window(), m_gamma);
+        pixfmt pixf(rbuf_window());
         renderer_base_type ren_base(pixf);
         renderer_scanline_type ren_sl(ren_base);
         scanline_type sl;
@@ -587,7 +568,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example. Anti-Aliasing Test");
 
     if(app.init(480, 350, agg::window_resize))

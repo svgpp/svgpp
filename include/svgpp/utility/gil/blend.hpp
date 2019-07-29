@@ -31,13 +31,13 @@ struct blend_alpha_fn;
 
 // For signed channels we call unsigned analog, converting forward and back
 template<class BlendModeTag>
-struct blend_channel_fn<BlendModeTag, gil::bits8s>
+struct blend_channel_fn<BlendModeTag, boost::int8_t>
 {
-  gil::bits8s operator()(gil::bits8s channel_a, gil::bits8s channel_b, gil::bits8s alpha_a, gil::bits8s alpha_b) const
+  boost::int8_t operator()(boost::int8_t channel_a, boost::int8_t channel_b, boost::int8_t alpha_a, boost::int8_t alpha_b) const
   {
-    typedef gil::detail::channel_convert_to_unsigned<gil::bits8s> to_unsigned;
-    typedef gil::detail::channel_convert_from_unsigned<gil::bits8s> from_unsigned;
-    blend_channel_fn<BlendModeTag, gil::bits8> converter_unsigned;
+    typedef gil::detail::channel_convert_to_unsigned<boost::int8_t> to_unsigned;
+    typedef gil::detail::channel_convert_from_unsigned<boost::int8_t> from_unsigned;
+    blend_channel_fn<BlendModeTag, boost::uint8_t> converter_unsigned;
     return from_unsigned()(converter_unsigned(
       to_unsigned()(channel_a), to_unsigned()(channel_b), to_unsigned()(alpha_a), to_unsigned()(alpha_b)));
   }
@@ -45,9 +45,9 @@ struct blend_channel_fn<BlendModeTag, gil::bits8s>
 
 // normal	cr = (1 - alpha_a) * channel_b + channel_a
 template<>
-struct blend_channel_fn<tag::value::normal, gil::bits8>
+struct blend_channel_fn<tag::value::normal, boost::uint8_t>
 {
-  gil::bits8 operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
   {
     return clamp_channel_bits8(((255 - alpha_a) * channel_b) / 255 + channel_a);
   }
@@ -55,9 +55,9 @@ struct blend_channel_fn<tag::value::normal, gil::bits8>
 
 // multiply	cr = (1-alpha_a)*channel_b + (1-alpha_b)*channel_a + channel_a*channel_b
 template<>
-struct blend_channel_fn<tag::value::multiply, gil::bits8>
+struct blend_channel_fn<tag::value::multiply, boost::uint8_t>
 {
-  gil::bits8 operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
   {
     return clamp_channel_bits8(((255 - alpha_a) * channel_b + (255 - alpha_b) * channel_a + channel_a * channel_b) / 255);
   }
@@ -65,9 +65,9 @@ struct blend_channel_fn<tag::value::multiply, gil::bits8>
 
 // screen	cr = channel_b + channel_a - channel_a * channel_b
 template<>
-struct blend_channel_fn<tag::value::screen, gil::bits8>
+struct blend_channel_fn<tag::value::screen, boost::uint8_t>
 {
-  gil::bits8 operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
   {
     return clamp_channel_bits8(channel_b + channel_a - channel_a * channel_b / 255);
   }
@@ -75,9 +75,9 @@ struct blend_channel_fn<tag::value::screen, gil::bits8>
 
 // darken	cr = Min ((1 - alpha_a) * channel_b + channel_a, (1 - alpha_b) * channel_a + channel_b)
 template<>
-struct blend_channel_fn<tag::value::darken, gil::bits8>
+struct blend_channel_fn<tag::value::darken, boost::uint8_t>
 {
-  gil::bits8 operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
   {
     return clamp_channel_bits8(std::min((255 - alpha_a) * channel_b / 255 + channel_a, (255 - alpha_b) * channel_a / 255 + channel_b));
   }
@@ -85,9 +85,9 @@ struct blend_channel_fn<tag::value::darken, gil::bits8>
 
 // lighten	cr = Max ((1 - alpha_a) * channel_b + channel_a, (1 - alpha_b) * channel_a + channel_b)
 template<>
-struct blend_channel_fn<tag::value::lighten, gil::bits8>
+struct blend_channel_fn<tag::value::lighten, boost::uint8_t>
 {
-  gil::bits8 operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int channel_a, int channel_b, int alpha_a, int alpha_b) const
   {
     return clamp_channel_bits8(std::max((255 - alpha_a) * channel_b / 255 + channel_a, (255 - alpha_b) * channel_a / 255 + channel_b));
   }
@@ -95,9 +95,9 @@ struct blend_channel_fn<tag::value::lighten, gil::bits8>
 
 // qr = 1 - (1-alpha_a)*(1-alpha_b)
 template<>
-struct blend_alpha_fn<gil::bits8>
+struct blend_alpha_fn<boost::uint8_t>
 {
-  gil::bits8 operator()(int alpha_a, int alpha_b) const
+  boost::uint8_t operator()(int alpha_a, int alpha_b) const
   {
     return clamp_channel_bits8(255 - (255 - alpha_a) * (255 - alpha_b) / 255);
   }

@@ -16,9 +16,8 @@
 #ifndef AGG_SPAN_GRADIENT_INCLUDED
 #define AGG_SPAN_GRADIENT_INCLUDED
 
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cmath>
+#include <cstdlib>
 #include "agg_basics.h"
 #include "agg_math.h"
 #include "agg_array.h"
@@ -58,8 +57,8 @@ namespace agg
 
         //--------------------------------------------------------------------
         span_gradient(interpolator_type& inter,
-                      const GradientF& gradient_function,
-                      const ColorF& color_function,
+                      GradientF& gradient_function,
+                      ColorF& color_function,
                       double d1, double d2) : 
             m_interpolator(&inter),
             m_gradient_function(&gradient_function),
@@ -77,8 +76,8 @@ namespace agg
 
         //--------------------------------------------------------------------
         void interpolator(interpolator_type& i) { m_interpolator = &i; }
-        void gradient_function(const GradientF& gf) { m_gradient_function = &gf; }
-        void color_function(const ColorF& cf) { m_color_function = &cf; }
+        void gradient_function(GradientF& gf) { m_gradient_function = &gf; }
+        void color_function(ColorF& cf) { m_color_function = &cf; }
         void d1(double v) { m_d1 = iround(v * gradient_subpixel_scale); }
         void d2(double v) { m_d2 = iround(v * gradient_subpixel_scale); }
 
@@ -107,8 +106,8 @@ namespace agg
 
     private:
         interpolator_type* m_interpolator;
-        const GradientF*   m_gradient_function;
-        const ColorF*      m_color_function;
+        GradientF*         m_gradient_function;
+        ColorF*            m_color_function;
         int                m_d1;
         int                m_d2;
     };
@@ -125,12 +124,19 @@ namespace agg
         gradient_linear_color() {}
         gradient_linear_color(const color_type& c1, const color_type& c2, 
                               unsigned size = 256) :
-            m_c1(c1), m_c2(c2), m_size(size) {}
+            m_c1(c1), m_c2(c2), m_size(size)
+				// VFALCO 4/28/09
+				,m_mult(1/(double(size)-1))
+				// VFALCO
+			{}
 
         unsigned size() const { return m_size; }
         color_type operator [] (unsigned v) const 
         {
-            return m_c1.gradient(m_c2, double(v) / double(m_size - 1));
+			// VFALCO 4/28/09 
+            //return m_c1.gradient(m_c2, double(v) / double(m_size - 1));
+            return m_c1.gradient(m_c2, double(v) * m_mult );
+			// VFALCO
         }
 
         void colors(const color_type& c1, const color_type& c2, unsigned size = 256)
@@ -138,11 +144,17 @@ namespace agg
             m_c1 = c1;
             m_c2 = c2;
             m_size = size;
+			// VFALCO 4/28/09
+			m_mult=1/(double(size)-1);
+			// VFALCO
         }
 
         color_type m_c1;
         color_type m_c2;
         unsigned m_size;
+		// VFALCO 4/28/09
+		double m_mult;
+		// VFALCO
     };
 
 
@@ -178,7 +190,7 @@ namespace agg
     public:
         static AGG_INLINE int calculate(int x, int y, int)
         {
-            return uround(sqrt(double(x)*double(x) + double(y)*double(y)));
+            return uround(std::sqrt(double(x)*double(x) + double(y)*double(y)));
         }
     };
 
@@ -225,7 +237,7 @@ namespace agg
             double dy = y - m_fy;
             double d2 = dx * m_fy - dy * m_fx;
             double d3 = m_r2 * (dx * dx + dy * dy) - d2 * d2;
-            return iround((dx * m_fx + dy * m_fy + sqrt(fabs(d3))) * m_mul);
+            return iround((dx * m_fx + dy * m_fy + std::sqrt(std::fabs(d3))) * m_mul);
         }
 
     private:
@@ -284,8 +296,8 @@ namespace agg
     public:
         static AGG_INLINE int calculate(int x, int y, int) 
         { 
-            int ax = abs(x);
-            int ay = abs(y);
+            int ax = std::abs(x);
+            int ay = std::abs(y);
             return ax > ay ? ax : ay; 
         }
     };
@@ -296,7 +308,7 @@ namespace agg
     public:
         static AGG_INLINE int calculate(int x, int y, int d) 
         { 
-            return abs(x) * abs(y) / d; 
+            return std::abs(x) * std::abs(y) / d; 
         }
     };
 
@@ -306,7 +318,7 @@ namespace agg
     public:
         static AGG_INLINE int calculate(int x, int y, int) 
         { 
-            return fast_sqrt(abs(x) * abs(y)); 
+            return fast_sqrt(std::abs(x) * std::abs(y)); 
         }
     };
 
@@ -316,7 +328,7 @@ namespace agg
     public:
         static AGG_INLINE int calculate(int x, int y, int d) 
         { 
-            return uround(fabs(atan2(double(y), double(x))) * double(d) / pi);
+            return uround(std::fabs(std::atan2(double(y), double(x))) * double(d) / pi);
         }
     };
 

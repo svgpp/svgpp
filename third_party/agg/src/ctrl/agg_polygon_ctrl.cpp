@@ -121,7 +121,7 @@ namespace agg
 
 
 
-    bool polygon_ctrl_impl::in_rect(double x, double y) const
+    bool polygon_ctrl_impl::in_rect(double, double) const
     {
         return false;
     }
@@ -175,7 +175,7 @@ namespace agg
     }
 
 
-    bool polygon_ctrl_impl::on_mouse_move(double x, double y, bool button_flag)
+    bool polygon_ctrl_impl::on_mouse_move(double x, double y, bool)
     {
         bool ret = false;
         double dx;
@@ -224,7 +224,7 @@ namespace agg
         return ret;
     }
 
-    bool polygon_ctrl_impl::on_mouse_button_up(double x, double y)
+    bool polygon_ctrl_impl::on_mouse_button_up(double, double)
     {
         bool ret = (m_node >= 0) || (m_edge >= 0);
         m_node = -1;
@@ -233,7 +233,7 @@ namespace agg
     }
 
 
-    bool polygon_ctrl_impl::on_arrow_keys(bool left, bool right, bool down, bool up)
+    bool polygon_ctrl_impl::on_arrow_keys(bool, bool, bool, bool)
     {
         return false;
     }

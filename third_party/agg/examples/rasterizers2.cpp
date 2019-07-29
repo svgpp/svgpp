@@ -19,7 +19,7 @@
 #include "ctrl/agg_cbox_ctrl.h"
 #include "platform/agg_platform_support.h"
 
-#define AGG_BGR24 
+#define AGG_BGR24
 //#define AGG_RGB24
 //#define AGG_BGRA32 
 //#define AGG_RGBA32 
@@ -51,17 +51,18 @@ namespace agg
     class pattern_pixmap_argb32
     {
     public:
-        typedef rgba8 color_type;
+        typedef rgba color_type;
 
         pattern_pixmap_argb32(const int32u* pixmap) : m_pixmap(pixmap) {}
 
         unsigned width()  const { return m_pixmap[0]; }
         unsigned height() const { return m_pixmap[1]; }
 
-        rgba8 pixel(int x, int y) const
+        rgba pixel(int x, int y) const
         {
             int32u p = m_pixmap[y * width() + x + 2];
-            return rgba8((p >> 16) & 0xFF, (p >> 8) & 0xFF, p & 0xFF, p >> 24);
+            srgba8 c((p >> 16) & 0xFF, (p >> 8) & 0xFF, p & 0xFF, p >> 24);
+            return rgba(c).premultiply();
         }
     private:
         const int32u* m_pixmap;
@@ -137,24 +138,24 @@ struct roundoff
 
 class the_application : public agg::platform_support
 {
-    agg::slider_ctrl<agg::rgba8> m_step;
-    agg::slider_ctrl<agg::rgba8> m_width;
-    agg::cbox_ctrl<agg::rgba8>   m_test;
-    agg::cbox_ctrl<agg::rgba8>   m_rotate;
-    agg::cbox_ctrl<agg::rgba8>   m_accurate_joins;
-    agg::cbox_ctrl<agg::rgba8>   m_scale_pattern;
+    agg::slider_ctrl<color_type> m_step;
+    agg::slider_ctrl<color_type> m_width;
+    agg::cbox_ctrl<color_type>   m_test;
+    agg::cbox_ctrl<color_type>   m_rotate;
+    agg::cbox_ctrl<color_type>   m_accurate_joins;
+    agg::cbox_ctrl<color_type>   m_scale_pattern;
     double m_start_angle;
 
 
 public:
-    typedef agg::renderer_base<pixfmt> renderer_base;
+    typedef agg::renderer_base<pixfmt_pre> renderer_base;
     typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_aa;
     typedef agg::renderer_primitives<renderer_base> renderer_prim;
     typedef agg::rasterizer_outline<renderer_prim> rasterizer_outline;
     typedef agg::rasterizer_scanline_aa<> rasterizer_scanline;
     typedef agg::scanline_p8 scanline;
     typedef agg::renderer_outline_aa<renderer_base> renderer_oaa;
-    typedef agg::pattern_filter_bilinear_rgba8 pattern_filter;
+    typedef agg::pattern_filter_bilinear_rgba<color_type> pattern_filter;
     typedef agg::line_image_pattern_pow2<pattern_filter> image_pattern;
     typedef agg::renderer_outline_image<renderer_base, image_pattern> renderer_img;
     typedef agg::rasterizer_outline_aa<renderer_oaa> rasterizer_outline_aa;
@@ -179,7 +180,7 @@ public:
         m_step.no_transform();
 
         add_ctrl(m_width);
-        m_width.range(0.0, 7.0);
+        m_width.range(0.0, 14.0);
         m_width.value(3.0);
         m_width.label("Width=%1.2f");
         m_width.no_transform();
@@ -206,7 +207,7 @@ public:
 
     void draw_aliased_pix_accuracy(rasterizer_outline& ras, renderer_prim& prim)
     {
-        spiral s1(width()/5, height()/4+50, 5, 70, 8, m_start_angle);
+        spiral s1(width()/5, height()/4+50, 5, 70, 16, m_start_angle);
         roundoff rn;
         agg::conv_transform<spiral, roundoff> trans(s1, rn);
         prim.line_color(agg::rgba(0.4, 0.3, 0.1));
@@ -215,21 +216,21 @@ public:
 
     void draw_aliased_subpix_accuracy(rasterizer_outline& ras, renderer_prim& prim)
     {
-        spiral s2(width()/2, height()/4+50, 5, 70, 8, m_start_angle);
+        spiral s2(width()/2, height()/4+50, 5, 70, 16, m_start_angle);
         prim.line_color(agg::rgba(0.4, 0.3, 0.1));
         ras.add_path(s2);
     }
 
     void draw_anti_aliased_outline(rasterizer_outline_aa& ras, renderer_oaa& ren)
     {
-        spiral s3(width()/5, height() - height()/4 + 20, 5, 70, 8, m_start_angle);
+        spiral s3(width()/5, height() - height()/4 + 20, 5, 70, 16, m_start_angle);
         ren.color(agg::rgba(0.4, 0.3, 0.1));
         ras.add_path(s3);
     }
     
     void draw_anti_aliased_scanline(rasterizer_scanline& ras, scanline& sl, renderer_aa& ren)
     {
-        spiral s4(width()/2, height() - height()/4 + 20, 5, 70, 8, m_start_angle);
+        spiral s4(width()/2, height() - height()/4 + 20, 5, 70, 16, m_start_angle);
         agg::conv_stroke<spiral> stroke(s4);
         stroke.width(m_width.value());
         stroke.line_cap(agg::round_cap);
@@ -240,7 +241,7 @@ public:
 
     void draw_anti_aliased_outline_img(rasterizer_outline_img& ras, renderer_img& ren)
     {
-        spiral s5(width() - width()/5, height() - height()/4 + 20, 5, 70, 8, m_start_angle);
+        spiral s5(width() - width()/5, height() - height()/4 + 20, 5, 70, 16, m_start_angle);
         ras.add_path(s5);
     }
     
@@ -267,7 +268,7 @@ public:
 
     virtual void on_draw()
     {
-        pixfmt pf(rbuf_window());
+        pixfmt_pre pf(rbuf_window());
         renderer_base ren_base(pf);
         renderer_aa ren_aa(ren_base);
         renderer_prim ren_prim(ren_base);
@@ -316,13 +317,15 @@ public:
         text(ras_aa, sl, ren_aa, width()/2-50, height()/2+50, "Scanline rasterizer");
         text(ras_aa, sl, ren_aa, width() - width()/5 - 50, height()/2+50, "Arbitrary Image Pattern");
 
-
-        agg::render_ctrl(ras_aa, sl, ren_base, m_step);
-        agg::render_ctrl(ras_aa, sl, ren_base, m_width);
-        agg::render_ctrl(ras_aa, sl, ren_base, m_test);
-        agg::render_ctrl(ras_aa, sl, ren_base, m_rotate);
-        agg::render_ctrl(ras_aa, sl, ren_base, m_accurate_joins);
-        agg::render_ctrl(ras_aa, sl, ren_base, m_scale_pattern);
+        // The source colors of controls are "plain".
+        pixfmt pf2(rbuf_window());
+        agg::renderer_base<pixfmt> ren_base2(pf2);
+        agg::render_ctrl(ras_aa, sl, ren_base2, m_step);
+        agg::render_ctrl(ras_aa, sl, ren_base2, m_width);
+        agg::render_ctrl(ras_aa, sl, ren_base2, m_test);
+        agg::render_ctrl(ras_aa, sl, ren_base2, m_rotate);
+        agg::render_ctrl(ras_aa, sl, ren_base2, m_accurate_joins);
+        agg::render_ctrl(ras_aa, sl, ren_base2, m_scale_pattern);
 
 
 
@@ -355,7 +358,7 @@ profile.width(width);                  //mandatory!
 agg::pixfmt_bgr24 pixf(rbuf_window()); //or another
 base_ren_type base_ren(pixf);
 renderer_type ren(base_ren, profile);
-ren.color(agg::rgba8(0,0,0));          //mandatory!
+ren.color(agg::srgba8(0,0,0));          //mandatory!
 rasterizer_type ras(ren);
 ras.round_cap(true);                   //optional
 ras.accurate_join(true);               //optional
@@ -453,7 +456,7 @@ ras.render(false);     //false means "don't close
             on_draw();
             update_window();
 
-            pixfmt pf(rbuf_window());
+            pixfmt_pre pf(rbuf_window());
             renderer_base ren_base(pf);
             renderer_aa ren_aa(ren_base);
             renderer_prim ren_prim(ren_base);

@@ -15,6 +15,7 @@
 #ifndef AGG_RENDERER_OUTLINE_AA_INCLUDED
 #define AGG_RENDERER_OUTLINE_AA_INCLUDED
 
+#include <cstdlib>
 #include "agg_array.h"
 #include "agg_math.h"
 #include "agg_line_aa_basics.h"
@@ -474,20 +475,20 @@ namespace agg
         };
 
         //---------------------------------------------------------------------
-        line_interpolator_aa_base(renderer_type& ren, const line_parameters& lp) :
+        line_interpolator_aa_base(renderer_type& ren, line_parameters& lp) :
             m_lp(&lp),
             m_li(lp.vertical ? line_dbl_hr(lp.x2 - lp.x1) :
                                line_dbl_hr(lp.y2 - lp.y1),
-                 lp.vertical ? abs(lp.y2 - lp.y1) : 
-                               abs(lp.x2 - lp.x1) + 1),
+                 lp.vertical ? std::abs(lp.y2 - lp.y1) : 
+                               std::abs(lp.x2 - lp.x1) + 1),
             m_ren(ren),
             m_len((lp.vertical == (lp.inc > 0)) ? -lp.len : lp.len),
             m_x(lp.x1 >> line_subpixel_shift),
             m_y(lp.y1 >> line_subpixel_shift),
             m_old_x(m_x),
             m_old_y(m_y),
-            m_count((lp.vertical ? abs((lp.y2 >> line_subpixel_shift) - m_y) :
-                                   abs((lp.x2 >> line_subpixel_shift) - m_x))),
+            m_count((lp.vertical ? std::abs((lp.y2 >> line_subpixel_shift) - m_y) :
+                                   std::abs((lp.x2 >> line_subpixel_shift) - m_x))),
             m_width(ren.subpixel_width()),
             //m_max_extent(m_width >> (line_subpixel_shift - 2)),
             m_max_extent((m_width + line_subpixel_mask) >> line_subpixel_shift),
@@ -550,7 +551,7 @@ namespace agg
             operator = (const line_interpolator_aa_base<Renderer>&);
 
     protected:
-        const line_parameters* m_lp;
+        line_parameters* m_lp;
         dda2_line_interpolator m_li;
         renderer_type&         m_ren;
         int m_len;
@@ -582,7 +583,7 @@ namespace agg
         typedef line_interpolator_aa_base<Renderer> base_type;
 
         //---------------------------------------------------------------------
-        line_interpolator_aa0(renderer_type& ren, const line_parameters& lp) :
+        line_interpolator_aa0(renderer_type& ren, line_parameters& lp) :
             line_interpolator_aa_base<Renderer>(ren, lp),
             m_di(lp.x1, lp.y1, lp.x2, lp.y2, 
                  lp.x1 & ~line_subpixel_mask, lp.y1 & ~line_subpixel_mask)
@@ -676,7 +677,7 @@ namespace agg
         typedef line_interpolator_aa_base<Renderer> base_type;
 
         //---------------------------------------------------------------------
-        line_interpolator_aa1(renderer_type& ren, const line_parameters& lp, 
+        line_interpolator_aa1(renderer_type& ren, line_parameters& lp, 
                               int sx, int sy) :
             line_interpolator_aa_base<Renderer>(ren, lp),
             m_di(lp.x1, lp.y1, lp.x2, lp.y2, sx, sy,
@@ -887,7 +888,7 @@ namespace agg
         typedef line_interpolator_aa_base<Renderer> base_type;
 
         //---------------------------------------------------------------------
-        line_interpolator_aa2(renderer_type& ren, const line_parameters& lp, 
+        line_interpolator_aa2(renderer_type& ren, line_parameters& lp, 
                               int ex, int ey) :
             line_interpolator_aa_base<Renderer>(ren, lp),
             m_di(lp.x1, lp.y1, lp.x2, lp.y2, ex, ey, 
@@ -1036,7 +1037,7 @@ namespace agg
         typedef line_interpolator_aa_base<Renderer> base_type;
 
         //---------------------------------------------------------------------
-        line_interpolator_aa3(renderer_type& ren, const line_parameters& lp, 
+        line_interpolator_aa3(renderer_type& ren, line_parameters& lp, 
                               int sx, int sy, int ex, int ey) :
             line_interpolator_aa_base<Renderer>(ren, lp),
             m_di(lp.x1, lp.y1, lp.x2, lp.y2, sx, sy, ex, ey, 
@@ -1350,7 +1351,7 @@ namespace agg
         typedef typename base_ren_type::color_type color_type;
 
         //---------------------------------------------------------------------
-        renderer_outline_aa(base_ren_type& ren, const line_profile_aa& prof) :
+        renderer_outline_aa(base_ren_type& ren, line_profile_aa& prof) :
             m_ren(&ren),
             m_profile(&prof),
             m_clip_box(0,0,0,0),
@@ -1363,7 +1364,7 @@ namespace agg
         const color_type& color() const { return m_color; }
 
         //---------------------------------------------------------------------
-        void profile(const line_profile_aa& prof) { m_profile = &prof; }
+        void profile(line_profile_aa& prof) { m_profile = &prof; }
         const line_profile_aa& profile() const { return *m_profile; }
         line_profile_aa& profile() { return *m_profile; }
 
@@ -1546,7 +1547,7 @@ namespace agg
         }
 
         //-------------------------------------------------------------------------
-        void line0_no_clip(const line_parameters& lp)
+        void line0_no_clip(line_parameters& lp)
         {
             if(lp.len > line_max_length)
             {
@@ -1572,7 +1573,7 @@ namespace agg
         }
 
         //-------------------------------------------------------------------------
-        void line0(const line_parameters& lp)
+        void line0(line_parameters& lp)
         {
             if(m_clipping)
             {
@@ -1602,7 +1603,7 @@ namespace agg
         }
 
         //-------------------------------------------------------------------------
-        void line1_no_clip(const line_parameters& lp, int sx, int sy)
+        void line1_no_clip(line_parameters& lp, int sx, int sy)
         {
             if(lp.len > line_max_length)
             {
@@ -1627,7 +1628,7 @@ namespace agg
 
 
         //-------------------------------------------------------------------------
-        void line1(const line_parameters& lp, int sx, int sy)
+        void line1(line_parameters& lp, int sx, int sy)
         {
             if(m_clipping)
             {
@@ -1649,7 +1650,7 @@ namespace agg
                         }
                         else
                         {
-                            while(abs(sx - lp.x1) + abs(sy - lp.y1) > lp2.len)
+                            while(std::abs(sx - lp.x1) + std::abs(sy - lp.y1) > lp2.len)
                             {
                                 sx = (lp.x1 + sx) >> 1;
                                 sy = (lp.y1 + sy) >> 1;
@@ -1670,7 +1671,7 @@ namespace agg
         }
 
         //-------------------------------------------------------------------------
-        void line2_no_clip(const line_parameters& lp, int ex, int ey)
+        void line2_no_clip(line_parameters& lp, int ex, int ey)
         {
             if(lp.len > line_max_length)
             {
@@ -1694,7 +1695,7 @@ namespace agg
         }
 
         //-------------------------------------------------------------------------
-        void line2(const line_parameters& lp, int ex, int ey)
+        void line2(line_parameters& lp, int ex, int ey)
         {
             if(m_clipping)
             {
@@ -1716,7 +1717,7 @@ namespace agg
                         }
                         else
                         {
-                            while(abs(ex - lp.x2) + abs(ey - lp.y2) > lp2.len)
+                            while(std::abs(ex - lp.x2) + std::abs(ey - lp.y2) > lp2.len)
                             {
                                 ex = (lp.x2 + ex) >> 1;
                                 ey = (lp.y2 + ey) >> 1;
@@ -1737,7 +1738,7 @@ namespace agg
         }
 
         //-------------------------------------------------------------------------
-        void line3_no_clip(const line_parameters& lp, 
+        void line3_no_clip(line_parameters& lp, 
                            int sx, int sy, int ex, int ey)
         {
             if(lp.len > line_max_length)
@@ -1765,7 +1766,7 @@ namespace agg
         }
 
         //-------------------------------------------------------------------------
-        void line3(const line_parameters& lp, 
+        void line3(line_parameters& lp, 
                    int sx, int sy, int ex, int ey)
         {
             if(m_clipping)
@@ -1788,7 +1789,7 @@ namespace agg
                         }
                         else
                         {
-                            while(abs(sx - lp.x1) + abs(sy - lp.y1) > lp2.len)
+                            while(std::abs(sx - lp.x1) + std::abs(sy - lp.y1) > lp2.len)
                             {
                                 sx = (lp.x1 + sx) >> 1;
                                 sy = (lp.y1 + sy) >> 1;
@@ -1801,7 +1802,7 @@ namespace agg
                         }
                         else
                         {
-                            while(abs(ex - lp.x2) + abs(ey - lp.y2) > lp2.len)
+                            while(std::abs(ex - lp.x2) + std::abs(ey - lp.y2) > lp2.len)
                             {
                                 ex = (lp.x2 + ex) >> 1;
                                 ey = (lp.y2 + ey) >> 1;
@@ -1824,7 +1825,7 @@ namespace agg
 
     private:
         base_ren_type*         m_ren;
-        const line_profile_aa* m_profile; 
+        line_profile_aa* m_profile; 
         color_type             m_color;
         rect_i                 m_clip_box;
         bool                   m_clipping;

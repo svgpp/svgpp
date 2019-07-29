@@ -18,6 +18,9 @@
 #include "ctrl/agg_cbox_ctrl.h"
 #include "ctrl/agg_rbox_ctrl.h"
 
+#define AGG_BGR24
+//#define AGG_BGR96
+#include "pixel_formats.h"
 
 enum flip_y_e { flip_y = true };
 
@@ -119,8 +122,8 @@ void make_arrows(agg::path_storage& ps);
 
 class the_application : public agg::platform_support
 {
-    agg::rbox_ctrl<agg::rgba8> m_polygons;
-    agg::rbox_ctrl<agg::rgba8> m_operation;
+    agg::rbox_ctrl<color_type> m_polygons;
+    agg::rbox_ctrl<color_type> m_operation;
     double m_x;
     double m_y;
 
@@ -210,9 +213,9 @@ public:
     template<class Scanline, class Ras>
     unsigned render_gpc(Scanline& sl, Ras& ras)
     {
-        agg::pixfmt_bgr24 pf(rbuf_window());
-        agg::renderer_base<agg::pixfmt_bgr24> rb(pf);
-        agg::renderer_scanline_aa_solid<agg::renderer_base<agg::pixfmt_bgr24> > ren(rb);
+        pixfmt pf(rbuf_window());
+        agg::renderer_base<pixfmt> rb(pf);
+        agg::renderer_scanline_aa_solid<agg::renderer_base<pixfmt> > ren(rb);
 
 
         switch(m_polygons.cur_item())
@@ -526,9 +529,9 @@ if(fd)
 
     virtual void on_draw()
     {
-        typedef agg::renderer_base<agg::pixfmt_bgr24> base_ren_type;
+        typedef agg::renderer_base<pixfmt> base_ren_type;
 
-        agg::pixfmt_bgr24 pf(rbuf_window());
+        pixfmt pf(rbuf_window());
         base_ren_type ren_base(pf);
         ren_base.clear(agg::rgba(1,1,1));
 
@@ -559,10 +562,10 @@ if(fd)
         agg::scanline_u8 sl;
         agg::rasterizer_scanline_aa<> ras;
 
-        typedef agg::renderer_base<agg::pixfmt_bgr24> base_ren_type;
+        typedef agg::renderer_base<pixfmt> base_ren_type;
         typedef agg::renderer_scanline_aa_solid<base_ren_type> renderer_solid;
 
-        agg::pixfmt_bgr24 pf(rbuf_window());
+        pixfmt pf(rbuf_window());
         base_ren_type ren_base(pf);
         renderer_solid ren_solid(ren_base);
 
@@ -669,7 +672,7 @@ if(fd)
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("AGG Example. General Polygon Clipping (GPC)");
 
     if(app.init(640, 520, agg::window_resize))

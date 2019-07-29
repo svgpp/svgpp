@@ -16,14 +16,12 @@
 
 #include "ctrl/agg_spline_ctrl.h"
 
+#define AGG_BGR24
+//#define AGG_BGR48
+//#define AGG_BGR96
+#include "pixel_formats.h"
+
 enum flip_y_e { flip_y = true };
-
-
-
-#define pix_format agg::pix_format_bgr24
-typedef agg::pixfmt_bgr24 pixfmt_type;
-typedef pixfmt_type::color_type color_type;
-typedef color_type::value_type color_value_type;
 
 
 class the_application : public agg::platform_support
@@ -82,9 +80,9 @@ public:
 
     virtual void on_draw()
     {
-        typedef agg::renderer_base<pixfmt_type> base_ren_type;
+        typedef agg::renderer_base<pixfmt> base_ren_type;
 
-        pixfmt_type pf(rbuf_window());
+        pixfmt pf(rbuf_window());
         base_ren_type ren_base(pf);
         ren_base.clear(agg::rgba(1,1,1));
 
@@ -159,7 +157,7 @@ public:
 
         // Gradient alpha array adaptor
         //-----------------
-        typedef agg::pod_auto_array<color_value_type, 256> gradient_alpha_type;
+        typedef agg::pod_auto_array<color_type::value_type, 256> gradient_alpha_type;
 
         // The alpha gradient span converter working with the color_type 
         // color type. 
@@ -230,7 +228,7 @@ public:
         //----------------
         for(i = 0; i < 256; i++)
         {
-            alpha_array[i] = color_value_type(m_alpha.value(i / 255.0) * double(color_type::base_mask));
+            alpha_array[i] = color_type::from_double(m_alpha.value(i / 255.0));
         }
 
         ell.init(width()/2, height()/2, 150, 150, 100);

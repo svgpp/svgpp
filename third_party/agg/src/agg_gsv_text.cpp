@@ -16,8 +16,8 @@
 // Class gsv_text
 //
 //----------------------------------------------------------------------------
-#include <string.h>
-#include <stdio.h>
+#include <cstring>
+#include <cstdio>
 #include "agg_gsv_text.h"
 #include "agg_bounding_rect.h"
 
@@ -544,21 +544,23 @@ namespace agg
     void gsv_text::load_font(const char* file)
     {
         m_loaded_font.resize(0);
-        FILE* fd = fopen(file, "rb");
+        FILE* fd = std::fopen(file, "rb");
         if(fd)
         {
             unsigned len;
 
-            fseek(fd, 0l, SEEK_END);
-            len = ftell(fd);
-            fseek(fd, 0l, SEEK_SET);
+            std::fseek(fd, 0l, SEEK_END);
+            len = std::ftell(fd);
+            std::fseek(fd, 0l, SEEK_SET);
             if(len > 0)
             {
                 m_loaded_font.resize(len);
-                fread(&m_loaded_font[0], 1, len, fd);
-                m_font = &m_loaded_font[0];
+                if (std::fread(&m_loaded_font[0], 1, len, fd) == len)
+                    m_font = &m_loaded_font[0];
+                else
+                    m_font = 0;
             }
-            fclose(fd);
+            std::fclose(fd);
         }
     }
 
@@ -571,12 +573,12 @@ namespace agg
             m_text = m_chr;
             return;
         }
-        unsigned new_size = strlen(text) + 1;
+        unsigned new_size = std::strlen(text) + 1;
         if(new_size > m_text_buf.size())
         {
             m_text_buf.resize(new_size);
         }
-        memcpy(&m_text_buf[0], text, new_size);
+        std::memcpy(&m_text_buf[0], text, new_size);
         m_text = &m_text_buf[0];
     }
 

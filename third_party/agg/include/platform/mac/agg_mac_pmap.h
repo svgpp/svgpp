@@ -22,7 +22,6 @@
 #define AGG_MAC_PMAP_INCLUDED
 
 
-#include <stdio.h>
 #include <Carbon.h>
 
 

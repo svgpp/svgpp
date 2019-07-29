@@ -8,7 +8,6 @@
 #include "agg_trans_affine.h"
 #include "agg_conv_transform.h"
 #include "agg_conv_stroke.h"
-#include "agg_pixfmt_rgb.h"
 #include "agg_scanline_p.h"
 #include "agg_renderer_scanline.h"
 #include "agg_image_filters.h"
@@ -17,6 +16,9 @@
 #include "ctrl/agg_cbox_ctrl.h"
 #include "platform/agg_platform_support.h"
 
+#define AGG_BGR24
+//#define AGG_BGR96
+#include "pixel_formats.h"
 
 enum flip_y_e { flip_y = true };
 
@@ -165,7 +167,6 @@ public:
 
     virtual void on_draw()
     {
-        typedef agg::pixfmt_bgr24 pixfmt; 
         typedef agg::renderer_base<pixfmt> renderer_base;
         typedef agg::renderer_scanline_aa_solid<renderer_base> renderer_solid;
        
@@ -196,7 +197,7 @@ public:
             p.move_to(x+0.5, y_start);
             p.line_to(x+0.5, y_end);
             ras.add_path(tr);
-            rs.color(agg::rgba8(0, 0, 0, i == 8 ? 255 : 100));
+            rs.color(agg::srgba8(0, 0, 0, i == 8 ? 255 : 100));
             agg::render_scanlines(ras, sl, rs);
         }
 
@@ -206,11 +207,11 @@ public:
         p.move_to(x_start, ys);
         p.line_to(x_end,   ys);
         ras.add_path(tr);
-        rs.color(agg::rgba8(0, 0, 0));
+        rs.color(agg::srgba8(0, 0, 0));
         agg::render_scanlines(ras, sl, rs);
 
 
-        pl.width(1.0);
+        pl.width(1.5);
         
         for(i = 0; i < m_num_filters; i++)
         {
@@ -234,7 +235,7 @@ public:
                               ys + dy * m_filter_func[i]->calc_weight(j / 256.0 - radius));
                 }
                 ras.add_path(tr);
-                rs.color(agg::rgba8(100, 0, 0));
+                rs.color(agg::rgba(0.5, 0, 0));
                 agg::render_scanlines(ras, sl, rs);
 
                 p.remove_all();
@@ -261,7 +262,7 @@ public:
                     else          p.line_to(x, y);
                 }
                 ras.add_path(tr);
-                rs.color(agg::rgba8(0, 100, 0));
+                rs.color(agg::rgba(0, 0.5, 0));
                 agg::render_scanlines(ras, sl, rs);
 
                 agg::image_filter_lut normalized(*m_filter_func[i]);
@@ -277,7 +278,7 @@ public:
                               ys + dy * weights[j] / agg::image_filter_scale);
                 }
                 ras.add_path(tr);
-                rs.color(agg::rgba8(0, 0, 100, 255));
+                rs.color(agg::rgba(0, 0, 0.5));
                 agg::render_scanlines(ras, sl, rs);
             }
         }
@@ -301,7 +302,7 @@ public:
 
 int agg_main(int argc, char* argv[])
 {
-    the_application app(agg::pix_format_bgr24, flip_y);
+    the_application app(pix_format, flip_y);
     app.caption("Image filters' shape comparison");
 
     if(app.init(780, 300, agg::window_resize))

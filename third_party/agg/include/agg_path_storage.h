@@ -16,8 +16,7 @@
 #ifndef AGG_PATH_STORAGE_INCLUDED
 #define AGG_PATH_STORAGE_INCLUDED
 
-#include <string.h>
-#include <math.h>
+#include <cstring>
 #include "agg_math.h"
 #include "agg_array.h"
 #include "agg_bezier_arc.h"
@@ -308,11 +307,11 @@ namespace agg
 
             if(m_coord_blocks)
             {
-                memcpy(new_coords, 
+                std::memcpy(new_coords, 
                        m_coord_blocks, 
                        m_max_blocks * sizeof(T*));
 
-                memcpy(new_cmds, 
+                std::memcpy(new_cmds, 
                        m_cmd_blocks, 
                        m_max_blocks * sizeof(unsigned char*));
 
@@ -490,14 +489,14 @@ namespace agg
             m_stop(false)
         {}
 
-        poly_container_reverse_adaptor(const Container& data, bool closed) :
+        poly_container_reverse_adaptor(Container& data, bool closed) :
             m_container(&data), 
             m_index(-1),
             m_closed(closed),
             m_stop(false)
         {}
 
-        void init(const Container& data, bool closed)
+        void init(Container& data, bool closed)
         {
             m_container = &data;
             m_index = m_container->size() - 1;
@@ -531,7 +530,7 @@ namespace agg
         }
 
     private:
-        const Container* m_container;
+        Container* m_container;
         int  m_index;
         bool m_closed;
         bool m_stop;
@@ -835,6 +834,43 @@ namespace agg
         }
 
 
+        //--------------------------------------------------------------------
+        // If the end points of a path are very, very close then make them
+        // exactly equal so that the stroke converter is not confused.
+        //--------------------------------------------------------------------
+        unsigned align_path(unsigned idx = 0)
+        {
+            if (idx >= total_vertices() || !is_move_to(command(idx))) 
+            {
+                return total_vertices();
+            }
+
+            double start_x, start_y;
+            for (; idx < total_vertices() && is_move_to(command(idx)); ++idx)
+            {
+                vertex(idx, &start_x, &start_y);
+            }
+            while (idx < total_vertices() && is_drawing(command(idx)))
+                ++idx;
+
+            double x, y;
+            if (is_drawing(vertex(idx - 1, &x, &y)) &&
+                is_equal_eps(x, start_x, 1e-8) &&
+                is_equal_eps(y, start_y, 1e-8))
+            {
+                modify_vertex(idx - 1, start_x, start_y);
+            }
+
+            while (idx < total_vertices() && !is_move_to(command(idx)))
+                ++idx;
+            return idx;
+        }
+
+        void align_all_paths()
+        {
+            for (unsigned i = 0; i < total_vertices(); i = align_path(i));
+        }
+
 
     private:
         unsigned perceive_polygon_orientation(unsigned start, unsigned end);
@@ -949,8 +985,8 @@ namespace agg
             double y0 = 0.0;
             m_vertices.last_vertex(&x0, &y0);
 
-            rx = fabs(rx);
-            ry = fabs(ry);
+            rx = std::fabs(rx);
+            ry = std::fabs(ry);
 
             // Ensure radii are valid
             //-------------------------

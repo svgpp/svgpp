@@ -15,6 +15,7 @@
 #ifndef AGG_RENDERER_OUTLINE_IMAGE_INCLUDED
 #define AGG_RENDERER_OUTLINE_IMAGE_INCLUDED
 
+#include <cstdlib>
 #include "agg_array.h"
 #include "agg_math.h"
 #include "agg_line_aa_basics.h"
@@ -34,7 +35,8 @@ namespace agg
         line_image_scale(const Source& src, double height) :
             m_source(src), 
             m_height(height),
-            m_scale(src.height() / height)
+            m_scale(src.height() / height),
+            m_scale_inv(height / src.height())
         {
         }
 
@@ -43,13 +45,34 @@ namespace agg
 
         color_type pixel(int x, int y) const 
         { 
-            double src_y = (y + 0.5) * m_scale - 0.5;
-            int h  = m_source.height() - 1;
-            int y1 = ufloor(src_y);
-            int y2 = y1 + 1;
-            color_type pix1 = (y1 < 0) ? color_type::no_color() : m_source.pixel(x, y1);
-            color_type pix2 = (y2 > h) ? color_type::no_color() : m_source.pixel(x, y2);
-            return pix1.gradient(pix2, src_y - y1);
+            if (m_scale < 1.0)
+            {
+                // Interpolate between nearest source pixels.
+                double src_y = (y + 0.5) * m_scale - 0.5;
+                int h  = m_source.height() - 1;
+                int y1 = ifloor(src_y);
+                int y2 = y1 + 1;
+                rgba pix1 = (y1 < 0) ? rgba::no_color() : rgba(m_source.pixel(x, y1));
+                rgba pix2 = (y2 > h) ? rgba::no_color() : rgba(m_source.pixel(x, y2));
+                return pix1.gradient(pix2, src_y - y1);
+            }
+            else
+            {
+                // Average source pixels between y and y+1.
+                double src_y1 = (y + 0.5) * m_scale - 0.5;
+                double src_y2 = src_y1 + m_scale;
+                int h  = m_source.height() - 1;
+                int y1 = ifloor(src_y1);
+                int y2 = ifloor(src_y2);
+                rgba c = rgba::no_color();
+                if (y1 >= 0) c += rgba(m_source.pixel(x, y1)) *= y1 + 1 - src_y1;
+                while (++y1 < y2)
+                {
+                    if (y1 <= h) c += m_source.pixel(x, y1);
+                }
+                if (y2 <= h) c += rgba(m_source.pixel(x, y2)) *= src_y2 - y2;
+                return c *= m_scale_inv;
+            }
         }
 
     private:
@@ -59,6 +82,7 @@ namespace agg
         const Source& m_source;
         double        m_height;
         double        m_scale;
+        double        m_scale_inv;
     };
 
 
@@ -71,7 +95,7 @@ namespace agg
         typedef typename filter_type::color_type color_type;
 
         //--------------------------------------------------------------------
-        line_image_pattern(const Filter& filter) :
+        line_image_pattern(Filter& filter) :
             m_filter(&filter),
             m_dilation(filter.dilation() + 1),
             m_dilation_hr(m_dilation << line_subpixel_shift),
@@ -87,7 +111,7 @@ namespace agg
         // Create
         //--------------------------------------------------------------------
         template<class Source> 
-        line_image_pattern(const Filter& filter, const Source& src) :
+        line_image_pattern(Filter& filter, const Source& src) :
             m_filter(&filter),
             m_dilation(filter.dilation() + 1),
             m_dilation_hr(m_dilation << line_subpixel_shift),
@@ -210,14 +234,14 @@ namespace agg
         typedef Filter filter_type;
         typedef typename filter_type::color_type color_type;
         typedef line_image_pattern<Filter> base_type;
-	
+
         //--------------------------------------------------------------------
-        line_image_pattern_pow2(const Filter& filter) :
+        line_image_pattern_pow2(Filter& filter) :
             line_image_pattern<Filter>(filter), m_mask(line_subpixel_mask) {}
 
         //--------------------------------------------------------------------
         template<class Source> 
-        line_image_pattern_pow2(const Filter& filter, const Source& src) :
+        line_image_pattern_pow2(Filter& filter, const Source& src) :
             line_image_pattern<Filter>(filter), m_mask(line_subpixel_mask)
         {
             create(src);
@@ -488,8 +512,8 @@ namespace agg
             m_lp(lp),
             m_li(lp.vertical ? line_dbl_hr(lp.x2 - lp.x1) :
                                line_dbl_hr(lp.y2 - lp.y1),
-                 lp.vertical ? abs(lp.y2 - lp.y1) : 
-                               abs(lp.x2 - lp.x1) + 1),
+                 lp.vertical ? std::abs(lp.y2 - lp.y1) : 
+                               std::abs(lp.x2 - lp.x1) + 1),
             m_di(lp.x1, lp.y1, lp.x2, lp.y2, sx, sy, ex, ey, lp.len, scale_x,
                  lp.x1 & ~line_subpixel_mask, lp.y1 & ~line_subpixel_mask),
             m_ren(ren),
@@ -497,8 +521,8 @@ namespace agg
             m_y(lp.y1 >> line_subpixel_shift),
             m_old_x(m_x),
             m_old_y(m_y),
-            m_count((lp.vertical ? abs((lp.y2 >> line_subpixel_shift) - m_y) :
-                                   abs((lp.x2 >> line_subpixel_shift) - m_x))),
+            m_count((lp.vertical ? std::abs((lp.y2 >> line_subpixel_shift) - m_y) :
+                                   std::abs((lp.x2 >> line_subpixel_shift) - m_x))),
             m_width(ren.subpixel_width()),
             //m_max_extent(m_width >> (line_subpixel_shift - 2)),
             m_max_extent((m_width + line_subpixel_scale) >> line_subpixel_shift),
@@ -816,7 +840,7 @@ namespace agg
 
 
         //---------------------------------------------------------------------
-        renderer_outline_image(base_ren_type& ren, const pattern_type& patt) :
+        renderer_outline_image(base_ren_type& ren, pattern_type& patt) :
             m_ren(&ren),
             m_pattern(&patt),
             m_start(0),
@@ -827,8 +851,8 @@ namespace agg
         void attach(base_ren_type& ren) { m_ren = &ren; }
 
         //---------------------------------------------------------------------
-        void pattern(const pattern_type& p) { m_pattern = &p; }
-        const pattern_type& pattern() const { return *m_pattern; }
+        void pattern(pattern_type& p) { m_pattern = &p; }
+        pattern_type& pattern() const { return *m_pattern; }
 
         //---------------------------------------------------------------------
         void reset_clipping() { m_clipping = false; }
@@ -959,7 +983,7 @@ namespace agg
                         }
                         else
                         {
-                            while(abs(sx - lp.x1) + abs(sy - lp.y1) > lp2.len)
+                            while(std::abs(sx - lp.x1) + std::abs(sy - lp.y1) > lp2.len)
                             {
                                 sx = (lp.x1 + sx) >> 1;
                                 sy = (lp.y1 + sy) >> 1;
@@ -972,7 +996,7 @@ namespace agg
                         }
                         else
                         {
-                            while(abs(ex - lp.x2) + abs(ey - lp.y2) > lp2.len)
+                            while(std::abs(ex - lp.x2) + std::abs(ey - lp.y2) > lp2.len)
                             {
                                 ex = (lp.x2 + ex) >> 1;
                                 ey = (lp.y2 + ey) >> 1;
@@ -995,7 +1019,7 @@ namespace agg
 
     private:
         base_ren_type*      m_ren;
-        const pattern_type* m_pattern;
+        pattern_type* m_pattern;
         int                 m_start;
         double              m_scale_x;
         rect_i              m_clip_box;

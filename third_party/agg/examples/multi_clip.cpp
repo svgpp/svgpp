@@ -23,13 +23,17 @@
 #include "platform/agg_platform_support.h"
 
 
-//#define AGG_GRAY8 
-#define AGG_BGR24 
+//#define AGG_GRAY8
+//#define AGG_GRAY16
+//#define AGG_GRAY32
+#define AGG_BGR24
 //#define AGG_RGB24
 //#define AGG_BGRA32 
 //#define AGG_RGBA32 
 //#define AGG_ARGB32 
 //#define AGG_ABGR32
+//#define AGG_BGR96
+//#define AGG_BGRA128
 //#define AGG_RGB565
 //#define AGG_RGB555
 #include "pixel_formats.h"
@@ -39,7 +43,7 @@ enum flip_y_e { flip_y = true };
 agg::rasterizer_scanline_aa<> g_rasterizer;
 agg::scanline_u8  g_scanline;
 agg::path_storage g_path;
-agg::rgba8        g_colors[100];
+agg::srgba8        g_colors[100];
 unsigned          g_path_idx[100];
 unsigned          g_npaths = 0;
 double            g_x1 = 0;
@@ -55,7 +59,7 @@ double            g_skew_y = 0;
 int               g_nclick = 0;
 
 
-unsigned parse_lion(agg::path_storage& ps, agg::rgba8* colors, unsigned* path_idx);
+unsigned parse_lion(agg::path_storage& ps, agg::srgba8* colors, unsigned* path_idx);
 void parse_lion()
 {
     g_npaths = parse_lion(g_path, g_colors, g_path_idx);
@@ -68,13 +72,13 @@ void parse_lion()
 
 namespace agg
 {
-    // Specializations of the gradient_linear_color for rgba8 and gray8
+    // Specializations of the gradient_linear_color for srgba8 and sgray8
     // color types. Only for the sake of performance.
 
     //========================================================================
-    template<> struct gradient_linear_color<rgba8>
+    template<> struct gradient_linear_color<srgba8>
     {
-        typedef rgba8 color_type;
+        typedef srgba8 color_type;
 
         gradient_linear_color() {}
         gradient_linear_color(const color_type& c1, const color_type& c2) :
@@ -103,9 +107,9 @@ namespace agg
 
 
     //========================================================================
-    template<> struct gradient_linear_color<gray8>
+    template<> struct gradient_linear_color<sgray8>
     {
-        typedef gray8 color_type;
+        typedef sgray8 color_type;
 
         gradient_linear_color() {}
         gradient_linear_color(const color_type& c1, const color_type& c2) :
@@ -137,7 +141,7 @@ namespace agg
 
 class the_application : public agg::platform_support
 {
-    agg::slider_ctrl<agg::rgba8> m_num_cb;
+    agg::slider_ctrl<color_type> m_num_cb;
 
 public:
     the_application(agg::pix_format_e format, bool flip_y) :
@@ -229,11 +233,11 @@ public:
         agg::renderer_markers<base_ren_type> m(r);
         for(i = 0; i < 50; i++)
         {
-            m.line_color(agg::rgba8(rand() & 0x7F, 
+            m.line_color(agg::srgba8(rand() & 0x7F, 
                                     rand() & 0x7F, 
                                     rand() & 0x7F, 
                                     (rand() & 0x7F) + 0x7F)); 
-            m.fill_color(agg::rgba8(rand() & 0x7F, 
+            m.fill_color(agg::srgba8(rand() & 0x7F, 
                                     rand() & 0x7F, 
                                     rand() & 0x7F, 
                                     (rand() & 0x7F) + 0x7F));
@@ -260,7 +264,7 @@ public:
 
         for(i = 0; i < 50; i++)
         {
-            ren.color(agg::rgba8(rand() & 0x7F, 
+            ren.color(agg::srgba8(rand() & 0x7F, 
                                  rand() & 0x7F, 
                                  rand() & 0x7F, 
                                  (rand() & 0x7F) + 0x7F)); 
@@ -281,7 +285,7 @@ public:
 
         agg::trans_affine grm;
         grad_func grf;
-        grad_color grc(agg::rgba8(0,0,0), agg::rgba8(0,0,0));
+        grad_color grc(agg::srgba8(0,0,0), agg::srgba8(0,0,0));
         agg::ellipse ell;
         agg::span_allocator<color_type> sa;
         interpolator_type inter(grm);
@@ -295,8 +299,8 @@ public:
             grm *= agg::trans_affine_scaling(radius / 10.0);
             grm *= agg::trans_affine_translation(x, y);
             grm.invert();
-            grc.colors(agg::rgba8(255, 255, 255, 0),
-                       agg::rgba8(rand() & 0x7F, 
+            grc.colors(agg::srgba8(255, 255, 255, 0),
+                       agg::srgba8(rand() & 0x7F, 
                                   rand() & 0x7F, 
                                   rand() & 0x7F, 
                                   255));

@@ -18,11 +18,15 @@
 //----------------------------------------------------------------------------
 
 #include <windows.h>
-#include <string.h>
+#include <cstring>
 #include "platform/agg_platform_support.h"
 #include "platform/win32/agg_win32_bmp.h"
+#include "util/agg_color_conv.h"
 #include "util/agg_color_conv_rgb8.h"
 #include "util/agg_color_conv_rgb16.h"
+#include "agg_pixfmt_gray.h"
+#include "agg_pixfmt_rgb.h"
+#include "agg_pixfmt_rgba.h"
 
 
 namespace agg
@@ -148,14 +152,21 @@ namespace agg
             break;
 
         case pix_format_gray8:
-            m_sys_format = pix_format_gray8;
+        case pix_format_sgray8:
+            m_sys_format = pix_format_sgray8;
             m_bpp = 8;
             m_sys_bpp = 8;
             break;
 
         case pix_format_gray16:
-            m_sys_format = pix_format_gray8;
+            m_sys_format = pix_format_sgray8;
             m_bpp = 16;
+            m_sys_bpp = 8;
+            break;
+
+        case pix_format_gray32:
+            m_sys_format = pix_format_sgray8;
+            m_bpp = 32;
             m_sys_bpp = 8;
             break;
 
@@ -177,15 +188,24 @@ namespace agg
 
         case pix_format_rgb24:
         case pix_format_bgr24:
-            m_sys_format = pix_format_bgr24;
+        case pix_format_srgb24:
+        case pix_format_sbgr24:
+            m_sys_format = pix_format_sbgr24;
             m_bpp = 24;
             m_sys_bpp = 24;
             break;
 
         case pix_format_rgb48:
         case pix_format_bgr48:
-            m_sys_format = pix_format_bgr24;
+            m_sys_format = pix_format_sbgr24;
             m_bpp = 48;
+            m_sys_bpp = 24;
+            break;
+
+        case pix_format_rgb96:
+        case pix_format_bgr96:
+            m_sys_format = pix_format_sbgr24;
+            m_bpp = 96;
             m_sys_bpp = 24;
             break;
 
@@ -193,19 +213,33 @@ namespace agg
         case pix_format_abgr32:
         case pix_format_argb32:
         case pix_format_rgba32:
-            m_sys_format = pix_format_bgra32;
+        case pix_format_sbgra32:
+        case pix_format_sabgr32:
+        case pix_format_sargb32:
+        case pix_format_srgba32:
+            m_sys_format = pix_format_sbgr24;
             m_bpp = 32;
-            m_sys_bpp = 32;
+            m_sys_bpp = 24;
             break;
 
         case pix_format_bgra64:
         case pix_format_abgr64:
         case pix_format_argb64:
         case pix_format_rgba64:
-            m_sys_format = pix_format_bgra32;
+            m_sys_format = pix_format_sbgr24;
             m_bpp = 64;
-            m_sys_bpp = 32;
+            m_sys_bpp = 24;
             break;
+
+        case pix_format_bgra128:
+        case pix_format_abgr128:
+        case pix_format_argb128:
+        case pix_format_rgba128:
+            m_sys_format = pix_format_sbgr24;
+            m_bpp = 128;
+            m_sys_bpp = 24;
+            break;
+
         }
         ::QueryPerformanceFrequency(&m_sw_freq);
         ::QueryPerformanceCounter(&m_sw_start);
@@ -235,10 +269,15 @@ namespace agg
         switch(format)
         {
         case pix_format_gray8:
+            convert<pixfmt_sgray8, pixfmt_gray8>(dst, src);
             break;
 
         case pix_format_gray16:
-            color_conv(dst, src, color_conv_gray16_to_gray8());
+            convert<pixfmt_sgray8, pixfmt_gray16>(dst, src);
+            break;
+
+        case pix_format_gray32:
+            convert<pixfmt_sgray8, pixfmt_gray32>(dst, src);
             break;
 
         case pix_format_rgb565:
@@ -261,44 +300,96 @@ namespace agg
             color_conv(dst, src, color_conv_bgrABB_to_bgr24());
             break;
 
-        case pix_format_rgb24:
+        case pix_format_srgb24:
             color_conv(dst, src, color_conv_rgb24_to_bgr24());
             break;
 
+        case pix_format_rgb24:
+            convert<pixfmt_sbgr24, pixfmt_rgb24>(dst, src);
+            break;
+
+        case pix_format_bgr24:
+            convert<pixfmt_sbgr24, pixfmt_bgr24>(dst, src);
+            break;
+
         case pix_format_rgb48:
-            color_conv(dst, src, color_conv_rgb48_to_bgr24());
+            convert<pixfmt_sbgr24, pixfmt_rgb48>(dst, src);
             break;
 
         case pix_format_bgr48:
-            color_conv(dst, src, color_conv_bgr48_to_bgr24());
+            convert<pixfmt_sbgr24, pixfmt_bgr48>(dst, src);
+            break;
+
+        case pix_format_bgra32:
+            convert<pixfmt_sbgr24, pixfmt_bgrx32>(dst, src);
             break;
 
         case pix_format_abgr32:
-            color_conv(dst, src, color_conv_abgr32_to_bgra32());
+            convert<pixfmt_sbgr24, pixfmt_xbgr32>(dst, src);
             break;
 
         case pix_format_argb32:
-            color_conv(dst, src, color_conv_argb32_to_bgra32());
+            convert<pixfmt_sbgr24, pixfmt_xrgb32>(dst, src);
             break;
 
         case pix_format_rgba32:
-            color_conv(dst, src, color_conv_rgba32_to_bgra32());
+            convert<pixfmt_sbgr24, pixfmt_rgbx32>(dst, src);
+            break;
+
+        case pix_format_sbgra32:
+            convert<pixfmt_sbgr24, pixfmt_sbgrx32>(dst, src);
+            break;
+
+        case pix_format_sabgr32:
+            convert<pixfmt_sbgr24, pixfmt_sxbgr32>(dst, src);
+            break;
+
+        case pix_format_sargb32:
+            convert<pixfmt_sbgr24, pixfmt_sxrgb32>(dst, src);
+            break;
+
+        case pix_format_srgba32:
+            convert<pixfmt_sbgr24, pixfmt_srgbx32>(dst, src);
             break;
 
         case pix_format_bgra64:
-            color_conv(dst, src, color_conv_bgra64_to_bgra32());
+            convert<pixfmt_sbgr24, pixfmt_bgrx64>(dst, src);
             break;
 
         case pix_format_abgr64:
-            color_conv(dst, src, color_conv_abgr64_to_bgra32());
+            convert<pixfmt_sbgr24, pixfmt_xbgr64>(dst, src);
             break;
 
         case pix_format_argb64:
-            color_conv(dst, src, color_conv_argb64_to_bgra32());
+            convert<pixfmt_sbgr24, pixfmt_xrgb64>(dst, src);
             break;
 
         case pix_format_rgba64:
-            color_conv(dst, src, color_conv_rgba64_to_bgra32());
+            convert<pixfmt_sbgr24, pixfmt_rgbx64>(dst, src);
+            break;
+
+        case pix_format_rgb96:
+            convert<pixfmt_sbgr24, pixfmt_rgb96>(dst, src);
+            break;
+
+        case pix_format_bgr96:
+            convert<pixfmt_sbgr24, pixfmt_bgr96>(dst, src);
+            break;
+
+        case pix_format_bgra128:
+            convert<pixfmt_sbgr24, pixfmt_bgrx128>(dst, src);
+            break;
+
+        case pix_format_abgr128:
+            convert<pixfmt_sbgr24, pixfmt_xbgr128>(dst, src);
+            break;
+
+        case pix_format_argb128:
+            convert<pixfmt_sbgr24, pixfmt_xrgb128>(dst, src);
+            break;
+
+        case pix_format_rgba128:
+            convert<pixfmt_sbgr24, pixfmt_rgbx128>(dst, src);
             break;
         }
     }
@@ -390,7 +481,7 @@ namespace agg
 
         switch(m_format)
         {
-        case pix_format_gray8:
+        case pix_format_sgray8:
             switch(pmap_tmp.bpp())
             {
             //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_gray8()); break;
@@ -399,12 +490,28 @@ namespace agg
             }
             break;
 
+        case pix_format_gray8:
+            switch(pmap_tmp.bpp())
+            {
+            case 24: convert<pixfmt_gray8, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            }
+            break;
+
         case pix_format_gray16:
             switch(pmap_tmp.bpp())
             {
             //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_gray16()); break;
-            case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_gray16()); break;
+            case 24: convert<pixfmt_gray16, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
             //case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_gray16()); break;
+            }
+            break;
+
+        case pix_format_gray32:
+            switch(pmap_tmp.bpp())
+            {
+            //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_gray32()); break;
+            case 24: convert<pixfmt_gray32, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            //case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_gray32()); break;
             }
             break;
 
@@ -426,7 +533,7 @@ namespace agg
             }
             break;
 
-        case pix_format_rgb24:
+        case pix_format_srgb24:
             switch(pmap_tmp.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgb24()); break;
@@ -435,7 +542,7 @@ namespace agg
             }
             break;
 
-        case pix_format_bgr24:
+        case pix_format_sbgr24:
             switch(pmap_tmp.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_bgr24()); break;
@@ -444,11 +551,25 @@ namespace agg
             }
             break;
 
+        case pix_format_rgb24:
+            switch(pmap_tmp.bpp())
+            {
+            case 24: convert<pixfmt_rgb24, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            }
+            break;
+
+        case pix_format_bgr24:
+            switch(pmap_tmp.bpp())
+            {
+            case 24: convert<pixfmt_bgr24, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            }
+            break;
+
         case pix_format_rgb48:
             switch(pmap_tmp.bpp())
             {
             //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgb48()); break;
-            case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgb48()); break;
+            case 24: convert<pixfmt_rgb48, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
             //case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_rgb48()); break;
             }
             break;
@@ -457,12 +578,12 @@ namespace agg
             switch(pmap_tmp.bpp())
             {
             //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_bgr48()); break;
-            case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_bgr48()); break;
+            case 24: convert<pixfmt_bgr48, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
             //case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_bgr48()); break;
             }
             break;
 
-        case pix_format_abgr32:
+        case pix_format_sabgr32:
             switch(pmap_tmp.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_abgr32()); break;
@@ -471,7 +592,7 @@ namespace agg
             }
             break;
 
-        case pix_format_argb32:
+        case pix_format_sargb32:
             switch(pmap_tmp.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_argb32()); break;
@@ -480,7 +601,7 @@ namespace agg
             }
             break;
 
-        case pix_format_bgra32:
+        case pix_format_sbgra32:
             switch(pmap_tmp.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_bgra32()); break;
@@ -489,7 +610,7 @@ namespace agg
             }
             break;
 
-        case pix_format_rgba32:
+        case pix_format_srgba32:
             switch(pmap_tmp.bpp())
             {
             case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgba32()); break;
@@ -498,42 +619,103 @@ namespace agg
             }
             break;
 
+        case pix_format_abgr32:
+            switch(pmap_tmp.bpp())
+            {
+            case 24: convert<pixfmt_abgr32, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            }
+            break;
+
+        case pix_format_argb32:
+            switch(pmap_tmp.bpp())
+            {
+            case 24: convert<pixfmt_argb32, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            }
+            break;
+
+        case pix_format_bgra32:
+            switch(pmap_tmp.bpp())
+            {
+            case 24: convert<pixfmt_bgra32, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            }
+            break;
+
+        case pix_format_rgba32:
+            switch(pmap_tmp.bpp())
+            {
+            case 24: convert<pixfmt_rgba32, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            }
+            break;
+
         case pix_format_abgr64:
             switch(pmap_tmp.bpp())
             {
-            //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_abgr64()); break;
-            case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_abgr64()); break;
-            //case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_abgr64()); break;
+            case 24: convert<pixfmt_abgr64, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
             }
             break;
 
         case pix_format_argb64:
             switch(pmap_tmp.bpp())
             {
-            //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_argb64()); break;
-            case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_argb64()); break;
-            //case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_argb64()); break;
+            case 24: convert<pixfmt_argb64, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
             }
             break;
 
         case pix_format_bgra64:
             switch(pmap_tmp.bpp())
             {
-            //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_bgra64()); break;
-            case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_bgra64()); break;
-            //case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_bgra64()); break;
+            case 24: convert<pixfmt_bgra64, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
             }
             break;
 
         case pix_format_rgba64:
             switch(pmap_tmp.bpp())
             {
-            //case 16: color_conv(dst, &rbuf_tmp, color_conv_rgb555_to_rgba64()); break;
-            case 24: color_conv(dst, &rbuf_tmp, color_conv_bgr24_to_rgba64()); break;
-            //case 32: color_conv(dst, &rbuf_tmp, color_conv_bgra32_to_rgba64()); break;
+            case 24: convert<pixfmt_rgba64, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
             }
             break;
 
+        case pix_format_rgb96:
+            switch(pmap_tmp.bpp())
+            {
+            case 24: convert<pixfmt_rgb96, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            }
+            break;
+
+        case pix_format_bgr96:
+            switch(pmap_tmp.bpp())
+            {
+            case 24: convert<pixfmt_bgr96, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            }
+            break;
+
+        case pix_format_abgr128:
+            switch(pmap_tmp.bpp())
+            {
+            case 24: convert<pixfmt_abgr128, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            }
+            break;
+
+        case pix_format_argb128:
+            switch(pmap_tmp.bpp())
+            {
+            case 24: convert<pixfmt_argb128, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            }
+            break;
+
+        case pix_format_bgra128:
+            switch(pmap_tmp.bpp())
+            {
+            case 24: convert<pixfmt_bgra128, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            }
+            break;
+
+        case pix_format_rgba128:
+            switch(pmap_tmp.bpp())
+            {
+            case 24: convert<pixfmt_rgba128, pixfmt_sbgr24>(dst, &rbuf_tmp); break;
+            }
+            break;
         }
 
         return true;
@@ -565,7 +747,7 @@ namespace agg
         m_initial_width(10),
         m_initial_height(10)
     {
-        strcpy(m_caption, "Anti-Grain Geometry Application");
+        std::strcpy(m_caption, "Anti-Grain Geometry Application");
     }
 
 
@@ -580,7 +762,7 @@ namespace agg
     //------------------------------------------------------------------------
     void platform_support::caption(const char* cap)
     {
-        strcpy(m_caption, cap);
+        std::strcpy(m_caption, cap);
         if(m_specific->m_hwnd)
         {
             SetWindowText(m_specific->m_hwnd, m_caption);
@@ -630,7 +812,7 @@ namespace agg
         HDC paintDC;
 
 
-        void* user_data = reinterpret_cast<void*>(::GetWindowLong(hWnd, GWL_USERDATA));
+        void* user_data = reinterpret_cast<void*>(::GetWindowLongPtr(hWnd, GWLP_USERDATA));
         platform_support* app = 0;
 
         if(user_data)
@@ -1053,7 +1235,7 @@ namespace agg
                      height + (height - (rct.bottom - rct.top)),
                      FALSE);
    
-        ::SetWindowLong(m_specific->m_hwnd, GWL_USERDATA, (LONG)this);
+        ::SetWindowLongPtr(m_specific->m_hwnd, GWLP_USERDATA, (LONG)this);
         m_specific->create_pmap(width, height, &m_rbuf_window);
         m_initial_width = width;
         m_initial_height = height;
@@ -1118,11 +1300,11 @@ namespace agg
         if(idx < max_images)
         {
             char fn[1024];
-            strcpy(fn, file);
-            int len = strlen(fn);
-            if(len < 4 || stricmp(fn + len - 4, ".BMP") != 0)
+            std::strcpy(fn, file);
+            int len = std::strlen(fn);
+            if(len < 4 || _stricmp(fn + len - 4, ".BMP") != 0)
             {
-                strcat(fn, ".bmp");
+                std::strcat(fn, ".bmp");
             }
             return m_specific->load_pmap(fn, idx, &m_rbuf_img[idx]);
         }
@@ -1137,11 +1319,11 @@ namespace agg
         if(idx < max_images)
         {
             char fn[1024];
-            strcpy(fn, file);
-            int len = strlen(fn);
-            if(len < 4 || stricmp(fn + len - 4, ".BMP") != 0)
+            std::strcpy(fn, file);
+            int len = std::strlen(fn);
+            if(len < 4 || _stricmp(fn + len - 4, ".BMP") != 0)
             {
-                strcat(fn, ".bmp");
+                std::strcat(fn, ".bmp");
             }
             return m_specific->save_pmap(fn, idx, &m_rbuf_img[idx]);
         }
@@ -1298,7 +1480,7 @@ namespace agg
         tok.len = 0;
         if(m_src_string == 0 || m_start == -1) return tok;
 
-        register const char *pstr = m_src_string + m_start;
+        const char *pstr = m_src_string + m_start;
 
         if(*pstr == 0) 
         {
@@ -1330,7 +1512,7 @@ namespace agg
             char c = *pstr;
             int found = 0;
 
-            //We are outside of qotation: find one of separator symbols
+            //We are outside of quotation: find one of separator symbols
             if(quote_chr == 0)
             {
                 if(sep_len == 1)
@@ -1339,7 +1521,7 @@ namespace agg
                 }
                 else
                 {
-                    found = strncmp(m_sep, pstr, m_sep_len) == 0; 
+                    found = std::strncmp(m_sep, pstr, m_sep_len) == 0; 
                 }
             }
 
@@ -1436,11 +1618,11 @@ int PASCAL WinMain(HINSTANCE hInstance,
     agg::g_windows_instance = hInstance;
     agg::g_windows_cmd_show = nCmdShow;
 
-    char* argv_str = new char [strlen(lpszCmdLine) + 3];
+    char* argv_str = new char [std::strlen(lpszCmdLine) + 3];
     char* argv_ptr = argv_str;
 
     char* argv[64];
-    memset(argv, 0, sizeof(argv));
+    std::memset(argv, 0, sizeof(argv));
 
     agg::tokenizer cmd_line(" ", "\"' ", "\"'", '\\', agg::tokenizer::multiple);
     cmd_line.set_str(lpszCmdLine);
@@ -1455,7 +1637,7 @@ int PASCAL WinMain(HINSTANCE hInstance,
         if(tok.ptr == 0) break;
         if(tok.len)
         {
-            memcpy(argv_ptr, tok.ptr, tok.len);
+            std::memcpy(argv_ptr, tok.ptr, tok.len);
             argv[argc++] = argv_ptr;
             argv_ptr += tok.len;
             *argv_ptr++ = 0;

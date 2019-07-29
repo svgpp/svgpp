@@ -16,7 +16,7 @@
 #ifndef AGG_PATH_STORAGE_INTEGER_INCLUDED
 #define AGG_PATH_STORAGE_INTEGER_INCLUDED
 
-#include <string.h>
+#include <cstring>
 #include "agg_array.h"
 
 namespace agg
@@ -122,7 +122,7 @@ namespace agg
             unsigned i;
             for(i = 0; i < m_storage.size(); i++)
             {
-                memcpy(ptr, &m_storage[i], sizeof(vertex_integer_type));
+                std::memcpy(ptr, &m_storage[i], sizeof(vertex_integer_type));
                 ptr += sizeof(vertex_integer_type);
             }
         }
@@ -264,7 +264,7 @@ namespace agg
             }
 
             vertex_integer_type v;
-            memcpy(&v, m_ptr, sizeof(vertex_integer_type));
+            std::memcpy(&v, m_ptr, sizeof(vertex_integer_type));
             unsigned cmd = v.vertex(x, y, m_dx, m_dy, m_scale);
             if(is_move_to(cmd) && m_vertices > 2)
             {
