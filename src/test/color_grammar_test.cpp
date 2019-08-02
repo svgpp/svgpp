@@ -62,7 +62,8 @@ color_test_t ValidColorTests[] = {
   color_test_t("#000000", 0, 0, 0),
   color_test_t("aliceblue", 240, 248, 255),
   color_test_t("blanchedalmond", 255, 235, 205),
-  color_test_t("yellowgreen", 154, 205, 50)
+  color_test_t("yellowgreen", 154, 205, 50),
+  color_test_t("YeLlOwGrEeN", 154, 205, 50)
 };
 
 std::ostream & operator<< (std::ostream & os, color_test_t const & val)
