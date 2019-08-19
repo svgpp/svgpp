@@ -28,10 +28,10 @@ struct rgb_to_luminance_fn
   GrayChannelValue operator()(const RedChannel& red, const GreenChannel& green, const BlueChannel& blue) const 
   {
     using namespace boost::gil;
-    return channel_convert<GrayChannelValue>( bits32f(
-      channel_convert<bits32f>(red  )*0.2125f + 
-      channel_convert<bits32f>(green)*0.7154f + 
-      channel_convert<bits32f>(blue )*0.0721f) );
+    return channel_convert<GrayChannelValue>(
+      channel_convert<float32_t>(red  )*0.2125f +
+      channel_convert<float32_t>(green)*0.7154f +
+      channel_convert<float32_t>(blue )*0.0721f);
   }
 };
 
