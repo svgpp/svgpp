@@ -147,7 +147,17 @@ public:
   void path_close_subpath()
   {
     if (!path_types_.empty())
-      path_types_.back() |= Gdiplus::PathPointTypeCloseSubpath;
+    {
+      if (path_types_.back() == Gdiplus::PathPointTypeStart)
+      {
+        path_points_.pop_back();
+        path_types_.pop_back();
+      }
+      else 
+      {
+        path_types_.back() |= Gdiplus::PathPointTypeCloseSubpath;
+      }
+    }
   }
 
   void path_exit()
