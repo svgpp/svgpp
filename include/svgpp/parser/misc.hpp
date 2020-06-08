@@ -32,7 +32,7 @@ template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::type::integer, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
-  static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
+  static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value,
                                     PropertySource property_source)
   {
     namespace qi = boost::spirit::qi;
@@ -58,7 +58,7 @@ template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::attribute::viewBox, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue>
-  static bool parse(tag::attribute::viewBox tag, Context & context, AttributeValue const & attribute_value, 
+  static bool parse(tag::attribute::viewBox tag, Context & context, AttributeValue const & attribute_value,
                                     tag::source::attribute property_source)
   {
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
@@ -83,7 +83,7 @@ template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::attribute::bbox, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue>
-  static bool parse(tag::attribute::bbox tag, Context & context, AttributeValue const & attribute_value, 
+  static bool parse(tag::attribute::bbox tag, Context & context, AttributeValue const & attribute_value,
                                     tag::source::attribute property_source)
   {
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
@@ -109,7 +109,7 @@ template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::attribute::preserveAspectRatio, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue>
-  static bool parse(tag::attribute::preserveAspectRatio tag, Context & context, 
+  static bool parse(tag::attribute::preserveAspectRatio tag, Context & context,
     AttributeValue const & attribute_value, tag::source::attribute)
   {
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
@@ -119,8 +119,8 @@ struct value_parser<tag::attribute::preserveAspectRatio, SVGPP_TEMPLATE_ARGS_PAS
     preserveAspectRatio_value value;
     if (detail::parse_preserveAspectRatio(it, end, value) && it == end)
     {
-      typedef typename boost::parameter::parameters<
-        boost::parameter::optional<tag::value_events_policy>
+      typedef typename exboost::parameter::parameters<
+        exboost::parameter::optional<tag::value_events_policy>
       >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
       typedef typename detail::unwrap_context<Context, tag::value_events_policy> unwrap_value_events_policy_t;
       typedef typename unwrap_value_events_policy_t::template bind<args2_t>::type value_events_policy_t;
@@ -128,8 +128,8 @@ struct value_parser<tag::attribute::preserveAspectRatio, SVGPP_TEMPLATE_ARGS_PAS
       switch (value.align)
       {
         case preserveAspectRatio_value::none:
-        value_events_policy_t::set(unwrap_value_events_policy_t::get(context), 
-          tag::attribute::preserveAspectRatio(), 
+        value_events_policy_t::set(unwrap_value_events_policy_t::get(context),
+          tag::attribute::preserveAspectRatio(),
           tag::source::attribute(),
           value.defer, tag::value::none());
         break;
@@ -170,7 +170,7 @@ template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<boost::mpl::pair<tag::element::stop, tag::attribute::offset>, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue>
-  static bool parse(tag::attribute::offset tag, Context & context, AttributeValue const & attribute_value, 
+  static bool parse(tag::attribute::offset tag, Context & context, AttributeValue const & attribute_value,
                                     tag::source::attribute property_source)
   {
     namespace qi = boost::spirit::qi;
@@ -187,7 +187,7 @@ struct value_parser<boost::mpl::pair<tag::element::stop, tag::attribute::offset>
     bool percentage = false;
     if (qi::parse(it, end, number[phx::ref(value) = _1] >> -(qi::lit('%')[phx::ref(percentage) = true])) && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), 
+      args_t::value_events_policy::set(args_t::value_events_context::get(context),
         tag, property_source, percentage ? value / 100 : value);
       return true;
     }
@@ -202,26 +202,26 @@ template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::attribute::clip, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue, class PropertySource>
-  static bool parse(tag::attribute::clip tag, Context & context, AttributeValue const & attribute_value, 
+  static bool parse(tag::attribute::clip tag, Context & context, AttributeValue const & attribute_value,
                                     PropertySource property_source)
   {
     // 'auto' and 'inherit' values must be checked outside
 
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
-    typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::length_policy>
+    typedef typename exboost::parameter::parameters<
+      exboost::parameter::optional<tag::length_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
     typedef typename length_policy_context::template bind<args2_t>::type length_policy_t;
-    typename length_policy_t::length_factory_type & length_factory 
+    typename length_policy_t::length_factory_type & length_factory
       = length_policy_t::length_factory(length_policy_context::get(context));
 
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     typename length_policy_t::length_factory_type::length_type rect[4];
     if (detail::parse_clip(length_factory, it, end, property_source, rect) && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), 
+      args_t::value_events_policy::set(args_t::value_events_context::get(context),
         tag, property_source, tag::value::rect(), rect[0], rect[1], rect[2], rect[3]);
       return true;
     }
@@ -236,7 +236,7 @@ template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::attribute::enable_background, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue, class PropertySource>
-  static bool parse(tag::attribute::enable_background tag, Context & context, AttributeValue const & attribute_value, 
+  static bool parse(tag::attribute::enable_background tag, Context & context, AttributeValue const & attribute_value,
                                     PropertySource property_source)
   {
     // 'accumulate', 'new' and 'inherit' values must be checked outside
@@ -249,7 +249,7 @@ struct value_parser<tag::attribute::enable_background, SVGPP_TEMPLATE_ARGS_PASS>
     coordinate_t x, y, width, height;
     if (detail::parse_enable_background(it, end, property_source, x, y, width, height) && it == end)
     {
-      args_t::value_events_policy::set(args_t::value_events_context::get(context), 
+      args_t::value_events_policy::set(args_t::value_events_context::get(context),
         tag, property_source, tag::value::new_(), x, y, width, height);
       return true;
     }
@@ -264,7 +264,7 @@ template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::attribute::text_decoration, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class Context, class AttributeValue, class PropertySource>
-  static bool parse(tag::attribute::text_decoration tag, Context & context, AttributeValue const & attribute_value, 
+  static bool parse(tag::attribute::text_decoration tag, Context & context, AttributeValue const & attribute_value,
                                     PropertySource property_source)
   {
     // 'none' and 'inherit' values must be checked outside
@@ -278,7 +278,7 @@ struct value_parser<tag::attribute::text_decoration, SVGPP_TEMPLATE_ARGS_PASS>
 
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     bool underline = false, overline = false, line_through = false, blink = false;
-    const qi::rule<iterator_t> value = 
+    const qi::rule<iterator_t> value =
       detail::no_case_if_css(property_source)
       [
         qi::lit("underline")      [phx::ref(underline) = true]

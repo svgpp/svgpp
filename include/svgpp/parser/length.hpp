@@ -24,26 +24,26 @@
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
 #include <svgpp/traits/length_dimension_by_attribute.hpp>
 
-namespace svgpp 
-{ 
+namespace svgpp
+{
 
 template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::type::length, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
-  static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
+  static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value,
                                     PropertySource source)
   {
     typedef typename traits::length_dimension_by_attribute<AttributeTag>::type direction_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
-    typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::length_policy>
+    typedef typename exboost::parameter::parameters<
+      exboost::parameter::optional<tag::length_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
     typedef typename length_policy_context::template bind<args2_t>::type length_policy_t;
 
-    typename length_policy_t::length_factory_type & length_factory 
+    typename length_policy_t::length_factory_type & length_factory
       = length_policy_t::length_factory(length_policy_context::get(context));
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     typename length_policy_t::length_factory_type::length_type value;
@@ -64,7 +64,7 @@ template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::type::list_of<tag::type::length>, SVGPP_TEMPLATE_ARGS_PASS>
 {
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
-  static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
+  static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value,
                                     PropertySource property_source)
   {
     typedef typename traits::length_dimension_by_attribute<AttributeTag>::type direction_t;
@@ -77,13 +77,13 @@ struct value_parser<tag::type::list_of<tag::type::length>, SVGPP_TEMPLATE_ARGS_P
 
 protected:
   template<class LengthGrammarTag, class AttributeTag, class Context, class AttributeValue, class PropertySource, class Direction>
-  static bool parseT(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
+  static bool parseT(AttributeTag tag, Context & context, AttributeValue const & attribute_value,
                                     PropertySource property_source)
   {
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
-    typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::length_policy>
+    typedef typename exboost::parameter::parameters<
+      exboost::parameter::optional<tag::length_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
     typedef typename length_policy_context::template bind<args2_t>::type length_policy_t;
@@ -92,8 +92,8 @@ protected:
     typedef detail::comma_wsp_rule_no_skip<iterator_t> separator_t;
     typedef detail::parse_list_iterator<
       typename length_factory_t::length_type,
-      iterator_t, 
-      length_rule_t, 
+      iterator_t,
+      length_rule_t,
       separator_t
     > parse_list_iterator_t;
     typedef detail::finite_function_iterator<parse_list_iterator_t> output_iterator_t;
@@ -110,15 +110,15 @@ protected:
     SVGPP_STATIC_IF_SAFE const typename boost::mpl::if_<
       boost::is_same<LengthGrammarTag, detail::length_grammar_tag>,
       length_grammar<
-        PropertySource, 
-        iterator_t, 
-        length_factory_t, 
+        PropertySource,
+        iterator_t,
+        length_factory_t,
         Direction,
         typename length_factory_t::number_type
       >,
       percentage_or_length_css_grammar<
-        iterator_t, 
-        length_factory_t, 
+        iterator_t,
+        length_factory_t,
         typename length_factory_t::number_type
       >
     >::type length_grammar;
@@ -127,7 +127,7 @@ protected:
 
     SVGPP_STATIC_IF_SAFE const separator_t separator_grammar;
     parse_list_iterator_t parse_list(
-      boost::begin(attribute_value), boost::end(attribute_value), 
+      boost::begin(attribute_value), boost::end(attribute_value),
       length_rule,
       separator_grammar);
 

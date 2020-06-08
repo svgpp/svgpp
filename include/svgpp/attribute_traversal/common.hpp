@@ -7,15 +7,15 @@
 
 #pragma once
 
-#include <boost/parameter.hpp>
+#include <svgpp/utility/boost_parameter_fixed.hpp>
 #include <boost/noncopyable.hpp>
 #include <svgpp/policy/detail/css_name_to_id.hpp>
 
 namespace svgpp
 {
 
-BOOST_PARAMETER_TEMPLATE_KEYWORD(xml_attribute_policy)
-BOOST_PARAMETER_TEMPLATE_KEYWORD(css_name_to_id_policy)
+EXBOOST_PARAMETER_TEMPLATE_KEYWORD(xml_attribute_policy)
+EXBOOST_PARAMETER_TEMPLATE_KEYWORD(css_name_to_id_policy)
 
 namespace detail
 {

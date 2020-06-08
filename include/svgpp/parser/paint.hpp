@@ -26,15 +26,15 @@ namespace svgpp
 struct value_parser<tag::type::paint, SVGPP_TEMPLATE_ARGS_PASS>
   {
     template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
-    static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
+    static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value,
                                       PropertySource property_source)
     {
       typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
       typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
-      typedef typename boost::parameter::parameters<
-        boost::parameter::optional<tag::color_factory>,
-        boost::parameter::optional<tag::icc_color_policy>,
-        boost::parameter::optional<tag::iri_policy>
+      typedef typename exboost::parameter::parameters<
+        exboost::parameter::optional<tag::color_factory>,
+        exboost::parameter::optional<tag::icc_color_policy>,
+        exboost::parameter::optional<tag::iri_policy>
       >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
       typedef typename detail::unwrap_context<Context, tag::color_factory>::template bind<args2_t>::type color_factory_t;
       typedef detail::unwrap_context<Context, tag::icc_color_policy> icc_color_context_t;

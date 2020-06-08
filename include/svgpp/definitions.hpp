@@ -9,12 +9,12 @@
 
 #include <svgpp/detail/attribute_id.hpp>
 #include <svgpp/detail/element_type_id.hpp>
-#include <boost/parameter.hpp>
+#include <svgpp/utility/boost_parameter_fixed.hpp>
 #include <boost/mpl/vector.hpp>
 
-namespace svgpp { namespace tag 
-{ 
-  
+namespace svgpp { namespace tag
+{
+
 namespace element
 {
   struct any { protected: any() {} };
@@ -96,7 +96,7 @@ namespace type
 
 #define SVGPP_TYPE_OR_LITERAL_ARITY 10
   template<class Type, class Value,
-    BOOST_PP_ENUM_BINARY_PARAMS(SVGPP_TYPE_OR_LITERAL_ARITY, class Value, = boost::mpl::na BOOST_PP_INTERCEPT)> 
+    BOOST_PP_ENUM_BINARY_PARAMS(SVGPP_TYPE_OR_LITERAL_ARITY, class Value, = boost::mpl::na BOOST_PP_INTERCEPT)>
   struct type_or_literal;
 }
 
@@ -105,7 +105,7 @@ struct min_tag {};
 struct mid_tag {};
 struct max_tag {};
 
-namespace value 
+namespace value
 {
 #define SVGPP_ON_VALUE(tag) struct tag {};
 #define SVGPP_ON_VALUE2(tag, string) SVGPP_ON_VALUE(tag)

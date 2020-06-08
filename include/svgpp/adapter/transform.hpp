@@ -12,7 +12,7 @@
 #include <boost/noncopyable.hpp>
 #include <boost/math/constants/constants.hpp>
 #include <boost/mpl/if.hpp>
-#include <boost/parameter.hpp>
+#include <svgpp/utility/boost_parameter_fixed.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_floating_point.hpp>
 #include <svgpp/detail/adapt_context.hpp>
@@ -157,7 +157,7 @@ public:
   void transform_rotate(number_type angle)
   {
     BOOST_STATIC_ASSERT(boost::is_floating_point<number_type>::value);
-    number_type cosa = std::cos(angle * boost::math::constants::degree<number_type>()), 
+    number_type cosa = std::cos(angle * boost::math::constants::degree<number_type>()),
       sina = std::sin(angle * boost::math::constants::degree<number_type>());
     const boost::array<number_type, 6> matrix = {{cosa, sina, -sina, cosa, 0, 0}};
     this->transform_matrix(matrix);
@@ -166,7 +166,7 @@ public:
   void transform_skew_x(number_type angle)
   {
     BOOST_STATIC_ASSERT(boost::is_floating_point<number_type>::value);
-    const boost::array<number_type, 6> matrix = 
+    const boost::array<number_type, 6> matrix =
       {{1, 0, std::tan(angle * boost::math::constants::degree<number_type>()), 1, 0, 0}};
     this->transform_matrix(matrix);
   }
@@ -174,7 +174,7 @@ public:
   void transform_skew_y(number_type angle)
   {
     BOOST_STATIC_ASSERT(boost::is_floating_point<number_type>::value);
-    const boost::array<number_type, 6> matrix = 
+    const boost::array<number_type, 6> matrix =
       {{1, std::tan(angle * boost::math::constants::degree<number_type>()), 0, 1, 0, 0}};
     this->transform_matrix(matrix);
   }
@@ -186,12 +186,12 @@ struct transform_adapter_base
   typedef typename boost::mpl::if_c<
     TransformPolicy::join_transforms,
       matrix_only_transform_adapter<
-        join_transform_adapter<Context, Number, EventsPolicy> 
+        join_transform_adapter<Context, Number, EventsPolicy>
       >,
       typename boost::mpl::if_c<
         TransformPolicy::only_matrix_transform,
           matrix_only_transform_adapter<
-            passthrough_transform_adapter<Context, Number, EventsPolicy> 
+            passthrough_transform_adapter<Context, Number, EventsPolicy>
           >,
           passthrough_transform_adapter<Context, Number, EventsPolicy>
         >::type
@@ -201,7 +201,7 @@ struct transform_adapter_base
 } // namespace detail
 
 template<
-  class Context, 
+  class Context,
   class TransformPolicy = typename policy::transform::by_context<Context>::type,
   class EventsPolicy = policy::transform_events::default_policy<Context>,
   class Number = double,
@@ -209,15 +209,15 @@ template<
 class transform_adapter;
 
 template<
-  class Context, 
-  class TransformPolicy, 
+  class Context,
+  class TransformPolicy,
   class EventsPolicy,
   class Number
 >
 class transform_adapter<Context, TransformPolicy, EventsPolicy, Number,
   typename boost::enable_if_c<
-       TransformPolicy::no_shorthands 
-    || TransformPolicy::only_matrix_transform 
+       TransformPolicy::no_shorthands
+    || TransformPolicy::only_matrix_transform
     || TransformPolicy::join_transforms>::type
 >:
   public detail::transform_adapter_base<Context, TransformPolicy, EventsPolicy, Number>::type
@@ -254,15 +254,15 @@ public:
 };
 
 template<
-  class Context, 
-  class TransformPolicy, 
+  class Context,
+  class TransformPolicy,
   class EventsPolicy,
   class Number
 >
 class transform_adapter<Context, TransformPolicy, EventsPolicy, Number,
   typename boost::disable_if_c<
-       TransformPolicy::no_shorthands 
-    || TransformPolicy::only_matrix_transform 
+       TransformPolicy::no_shorthands
+    || TransformPolicy::only_matrix_transform
     || TransformPolicy::join_transforms>::type
 >:
   public detail::transform_adapter_base<Context, TransformPolicy, EventsPolicy, Number>::type
@@ -279,11 +279,11 @@ namespace detail
 {
 
 template<class TransformPolicy>
-struct need_transform_adapter: 
+struct need_transform_adapter:
   boost::mpl::bool_<
-       TransformPolicy::join_transforms 
+       TransformPolicy::join_transforms
     || TransformPolicy::no_rotate_about_point
-    || TransformPolicy::no_shorthands 
+    || TransformPolicy::no_shorthands
     || TransformPolicy::only_matrix_transform>
 {};
 
@@ -310,7 +310,7 @@ public:
 };
 
 template<class OriginalContext>
-struct transform_adapter_if_needed<OriginalContext, 
+struct transform_adapter_if_needed<OriginalContext,
   typename boost::enable_if<need_transform_adapter<typename detail::unwrap_context<OriginalContext, tag::transform_policy>::policy> >::type>
 {
 private:
@@ -320,16 +320,16 @@ private:
 
 public:
   typedef transform_adapter<
-    typename original_transform_events_policy::context_type, 
-    transform_policy, 
+    typename original_transform_events_policy::context_type,
+    transform_policy,
     original_transform_events_policy,
     number_type
   > type;
 
   typedef const adapted_context_wrapper<
-    OriginalContext, 
-    type, 
-    tag::transform_events_policy, 
+    OriginalContext,
+    type,
+    tag::transform_events_policy,
     policy::transform_events::forward_to_method<type>
   > adapted_context;
   typedef adapted_context adapted_context_holder;
@@ -339,7 +339,7 @@ public:
     return adapted_context(context, adapter);
   }
 
-  static void on_exit_attribute(type & adapter) 
+  static void on_exit_attribute(type & adapter)
   {
     adapter.on_exit_attribute();
   }

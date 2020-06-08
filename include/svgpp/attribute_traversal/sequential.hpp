@@ -29,26 +29,26 @@ template<class RequiredAttributes, bool ParseStyleAttribute = true, SVGPP_TEMPLA
 class attribute_traversal_sequential
 {
 private:
-  typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::xml_attribute_policy>,
-      boost::parameter::optional<tag::error_policy>,
-      boost::parameter::optional<tag::css_name_to_id_policy>
+  typedef typename exboost::parameter::parameters<
+      exboost::parameter::optional<tag::xml_attribute_policy>,
+      exboost::parameter::optional<tag::error_policy>,
+      exboost::parameter::optional<tag::css_name_to_id_policy>
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
-  typedef typename boost::parameter::value_type<args, tag::css_name_to_id_policy, 
+  typedef typename exboost::parameter::value_type<args, tag::css_name_to_id_policy,
     policy::css_name_to_id::default_policy>::type css_name_to_id_policy;
 
 public:
   template<class XMLAttributesIterator, class Dispatcher>
   static bool load(XMLAttributesIterator xml_attributes_iterator, Dispatcher & dispatcher)
   {
-    typedef typename boost::parameter::value_type<args, tag::xml_attribute_policy, 
+    typedef typename exboost::parameter::value_type<args, tag::xml_attribute_policy,
       policy::xml::attribute_iterator<XMLAttributesIterator> >::type xml_policy;
 
-    typedef typename boost::parameter::value_type<args, tag::error_policy, 
+    typedef typename exboost::parameter::value_type<args, tag::error_policy,
       policy::error::default_policy<typename Dispatcher::context_type> >::type error_policy;
 
     detail::required_attributes_check<RequiredAttributes> required_check;
-    for(; !xml_policy::is_end(xml_attributes_iterator); 
+    for(; !xml_policy::is_end(xml_attributes_iterator);
       xml_policy::advance(xml_attributes_iterator))
     {
       BOOST_SCOPED_ENUM(detail::namespace_id) ns = xml_policy::get_namespace(xml_attributes_iterator);
@@ -59,8 +59,8 @@ public:
       switch (id)
       {
       case detail::unknown_attribute_id:
-        if (!error_policy::unknown_attribute(dispatcher.context(), 
-          xml_policy::get_attribute(xml_attributes_iterator), 
+        if (!error_policy::unknown_attribute(dispatcher.context(),
+          xml_policy::get_attribute(xml_attributes_iterator),
           xml_policy::get_string_range(attribute_name), ns, tag::source::attribute()))
           return false;
         break;
@@ -100,7 +100,7 @@ private:
       detail::attribute_id style_id = css_name_to_id_policy::find(it->first);
       if (style_id == detail::unknown_attribute_id)
       {
-        if (!ErrorPolicy::unknown_attribute(dispatcher.context(), 
+        if (!ErrorPolicy::unknown_attribute(dispatcher.context(),
           XMLPolicy::get_attribute(xml_attributes_iterator), it->first, tag::source::css()))
           return false;
       }
@@ -114,9 +114,9 @@ private:
   template<class XMLPolicy, class ErrorPolicy, class XMLAttributesIterator, class Dispatcher>
   static bool load_style(XMLAttributesIterator const &, Dispatcher &,
     typename boost::disable_if_c<ParseStyleAttribute && (true || boost::is_void<XMLAttributesIterator>::value)>::type * = NULL)
-  { 
+  {
     BOOST_ASSERT(false); // Must not be called
-    return true; 
+    return true;
   }
 };
 

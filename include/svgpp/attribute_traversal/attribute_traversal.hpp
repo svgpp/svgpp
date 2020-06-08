@@ -15,7 +15,7 @@
 namespace svgpp
 {
 
-BOOST_PARAMETER_TEMPLATE_KEYWORD(attribute_traversal_policy)
+EXBOOST_PARAMETER_TEMPLATE_KEYWORD(attribute_traversal_policy)
 
 namespace detail
 {
@@ -45,12 +45,12 @@ template<class ElementTag, SVGPP_TEMPLATE_ARGS_DEF>
 struct attribute_traversal
 {
 private:
-  typedef typename boost::parameter::parameters<
-    boost::parameter::optional<tag::attribute_traversal_policy>
+  typedef typename exboost::parameter::parameters<
+    exboost::parameter::optional<tag::attribute_traversal_policy>
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
-  typedef typename boost::parameter::value_type<args, tag::attribute_traversal_policy, 
+  typedef typename exboost::parameter::value_type<args, tag::attribute_traversal_policy,
     policy::attribute_traversal::default_policy>::type attribute_traversal_policy;
-  typedef detail::get_attribute_traversal_policy_for_element<attribute_traversal_policy, ElementTag> 
+  typedef detail::get_attribute_traversal_policy_for_element<attribute_traversal_policy, ElementTag>
     element_attribute_traversal_policy;
 
 public:
@@ -60,12 +60,12 @@ public:
       || !boost::mpl::empty<typename element_attribute_traversal_policy::priority_attributes>::value
       || !boost::mpl::empty<typename element_attribute_traversal_policy::deferred_attributes>::value,
     attribute_traversal_prioritized<
-      element_attribute_traversal_policy, 
+      element_attribute_traversal_policy,
       SVGPP_TEMPLATE_ARGS_PASS
     >,
     attribute_traversal_sequential<
-      typename element_attribute_traversal_policy::required_attributes, 
-      element_attribute_traversal_policy::parse_style, 
+      typename element_attribute_traversal_policy::required_attributes,
+      element_attribute_traversal_policy::parse_style,
       SVGPP_TEMPLATE_ARGS_PASS
     >
   >::type type;

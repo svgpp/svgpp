@@ -26,7 +26,7 @@
 #include <boost/mpl/push_back.hpp>
 #include <boost/mpl/single_view.hpp>
 #include <boost/type_traits/is_same.hpp>
-#include <boost/parameter.hpp>
+#include <svgpp/utility/boost_parameter_fixed.hpp>
 
 #ifdef _MSC_VER
 # pragma warning(push)
@@ -100,7 +100,7 @@ namespace traversal_detail
 
   template<class ValueSaver, bool ParseStyleAttribute>
   class found_attributes;
-  
+
   template<class ValueSaver>
   class found_attributes<ValueSaver, true>
   {
@@ -155,7 +155,7 @@ namespace traversal_detail
               found_attributes_.attribute_found_.reset(id);
             }
 
-            return dispatcher_.load_attribute(id, 
+            return dispatcher_.load_attribute(id,
               ValueSaver::get_css_value(found_attributes_.attribute_or_css_saved_values_[id]),
               tag::source::css());
           }
@@ -175,7 +175,7 @@ namespace traversal_detail
             found_attributes_.attribute_found_.reset(id);
 
           typename ValueSaver::attribute_value value = ValueSaver::get_value(
-            found_attributes_.attribute_saved_values_[id - detail::styling_attribute_count]); 
+            found_attributes_.attribute_saved_values_[id - detail::styling_attribute_count]);
           return dispatcher_.load_attribute(id, ValueSaver::get_string_range(value),
             tag::source::attribute());
         }
@@ -222,7 +222,7 @@ namespace traversal_detail
             found_attributes_.attribute_found_.reset(id);
 
           typename ValueSaver::attribute_value value = ValueSaver::get_value(
-            found_attributes_.attribute_saved_values_[id]); 
+            found_attributes_.attribute_saved_values_[id]);
           return dispatcher_.load_attribute(id, ValueSaver::get_string_range(value),
             tag::source::attribute());
         }
@@ -331,23 +331,23 @@ namespace traversal_detail
 template<class AttributeTraversalPolicy, SVGPP_TEMPLATE_ARGS_DEF>
 struct attribute_traversal_prioritized
 {
-  typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::xml_attribute_policy>,
-      boost::parameter::optional<tag::error_policy>,
-      boost::parameter::optional<tag::css_name_to_id_policy>
+  typedef typename exboost::parameter::parameters<
+      exboost::parameter::optional<tag::xml_attribute_policy>,
+      exboost::parameter::optional<tag::error_policy>,
+      exboost::parameter::optional<tag::css_name_to_id_policy>
   >::bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
-  typedef typename boost::parameter::value_type<args, tag::css_name_to_id_policy, 
+  typedef typename exboost::parameter::value_type<args, tag::css_name_to_id_policy,
     policy::css_name_to_id::default_policy>::type css_name_to_id_policy;
 
   template<class XMLAttributesIterator, class Dispatcher>
   static bool load(XMLAttributesIterator xml_attributes_iterator, Dispatcher & dispatcher)
   {
-    typedef typename boost::parameter::value_type<args, tag::xml_attribute_policy, 
+    typedef typename exboost::parameter::value_type<args, tag::xml_attribute_policy,
       policy::xml::attribute_iterator<XMLAttributesIterator> >::type xml_policy;
 
     typedef traversal_detail::attribute_value_saver<XMLAttributesIterator, xml_policy> value_saver;
     typedef traversal_detail::found_attributes<value_saver, AttributeTraversalPolicy::parse_style> found_attributes;
-    typedef typename boost::parameter::value_type<args, tag::error_policy, 
+    typedef typename exboost::parameter::value_type<args, tag::error_policy,
       policy::error::default_policy<typename Dispatcher::context_type> >::type error_policy_t;
 
     detail::required_attributes_check<typename AttributeTraversalPolicy::required_attributes> required_check;
@@ -363,8 +363,8 @@ struct attribute_traversal_prioritized
       switch (id)
       {
       case detail::unknown_attribute_id:
-        if (!error_policy_t::unknown_attribute(dispatcher.context(), 
-          xml_policy::get_attribute(xml_attributes_iterator), 
+        if (!error_policy_t::unknown_attribute(dispatcher.context(),
+          xml_policy::get_attribute(xml_attributes_iterator),
           xml_policy::get_string_range(attribute_name), ns, tag::source::attribute()))
           return false;
         break;
@@ -385,14 +385,14 @@ struct attribute_traversal_prioritized
     detail::missing_attribute_visitor<error_policy_t> visitor(dispatcher.context());
     if (!required_check.visit_missing(visitor))
       return false;
-    
+
     {
       // Load priority attributes in required order,
       // mark them as loaded
       typedef typename boost::mpl::fold<
-        typename AttributeTraversalPolicy::priority_attributes, 
+        typename AttributeTraversalPolicy::priority_attributes,
         traversal_detail::priority_load_start,
-        traversal_detail::priority_load_op<boost::mpl::_1, boost::mpl::_2> 
+        traversal_detail::priority_load_op<boost::mpl::_1, boost::mpl::_2>
       >::type priority_load_operations_t;
 
       typename found_attributes::template load_func<Dispatcher, true> load_func(dispatcher, found);
@@ -416,9 +416,9 @@ struct attribute_traversal_prioritized
 
     // Loading deferred attributes
     typedef typename boost::mpl::fold<
-      typename AttributeTraversalPolicy::deferred_attributes, 
+      typename AttributeTraversalPolicy::deferred_attributes,
       traversal_detail::priority_load_start,
-      traversal_detail::priority_load_op<boost::mpl::_1, boost::mpl::_2> 
+      traversal_detail::priority_load_op<boost::mpl::_1, boost::mpl::_2>
     >::type deferred_load_operations_t;
 
     return deferred_load_operations_t::execute(dispatcher, load_func);
@@ -439,8 +439,8 @@ private:
       detail::attribute_id style_id = css_name_to_id_policy::find(it->first);
       if (style_id == detail::unknown_attribute_id)
       {
-        if (!ErrorPolicy::unknown_attribute(dispatcher.context(), 
-          XMLPolicy::get_attribute(xml_attributes_iterator), 
+        if (!ErrorPolicy::unknown_attribute(dispatcher.context(),
+          XMLPolicy::get_attribute(xml_attributes_iterator),
           it->first, tag::source::css()))
           return false;
       }

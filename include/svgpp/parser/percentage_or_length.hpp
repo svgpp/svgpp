@@ -9,8 +9,8 @@
 
 #include <svgpp/parser/length.hpp>
 
-namespace svgpp 
-{ 
+namespace svgpp
+{
 
 template<SVGPP_TEMPLATE_ARGS>
 struct value_parser<tag::type::percentage_or_length, SVGPP_TEMPLATE_ARGS_PASS>
@@ -19,18 +19,18 @@ struct value_parser<tag::type::percentage_or_length, SVGPP_TEMPLATE_ARGS_PASS>
   using value_parser<tag::type::length, SVGPP_TEMPLATE_ARGS_PASS>::parse;
 
   template<class AttributeTag, class Context, class AttributeValue>
-  static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
+  static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value,
                                     tag::source::css property_source)
   {
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     typedef detail::value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
-    typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::length_policy>
+    typedef typename exboost::parameter::parameters<
+      exboost::parameter::optional<tag::length_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename detail::unwrap_context<Context, tag::length_policy> length_policy_context;
     typedef typename length_policy_context::template bind<args2_t>::type length_policy_t;
 
-    typename length_policy_t::length_factory_type & length_factory 
+    typename length_policy_t::length_factory_type & length_factory
       = length_policy_t::length_factory(length_policy_context::get(context));
     iterator_t it = boost::begin(attribute_value), end = boost::end(attribute_value);
     typename length_policy_t::length_factory_type::length_type value;
@@ -56,14 +56,14 @@ struct value_parser<tag::type::list_of<tag::type::percentage_or_length>, SVGPP_T
   using base_type::parse;
 
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
-  static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value, 
+  static bool parse(AttributeTag tag, Context & context, AttributeValue const & attribute_value,
                                     tag::source::css property_source)
   {
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
     return base_type::template parseT<
       detail::percentage_or_length_grammar_tag,
-      AttributeTag, Context, AttributeValue, 
-      tag::source::css, 
+      AttributeTag, Context, AttributeValue,
+      tag::source::css,
       tag::length_dimension::not_width_nor_height>
       (tag, context, attribute_value, property_source);
   }

@@ -7,7 +7,7 @@
 
 #pragma once
 
-#include <boost/parameter.hpp>
+#include <svgpp/utility/boost_parameter_fixed.hpp>
 #include <svgpp/template_parameters.hpp>
 
 namespace svgpp

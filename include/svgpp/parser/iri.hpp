@@ -23,12 +23,12 @@ template<class GetGrammarMetafunction, SVGPP_TEMPLATE_ARGS>
 struct iri_value_parser
 {
   template<class AttributeTag, class Context, class AttributeValue, class PropertySource>
-  static bool parse(AttributeTag tag, Context & context, 
+  static bool parse(AttributeTag tag, Context & context,
     AttributeValue const & attribute_value, PropertySource property_source)
   {
     typedef value_parser_parameters<Context, SVGPP_TEMPLATE_ARGS_PASS> args_t;
-    typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::iri_policy>
+    typedef typename exboost::parameter::parameters<
+      exboost::parameter::optional<tag::iri_policy>
     >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args2_t;
     typedef typename detail::unwrap_context<Context, tag::iri_policy>::template bind<args2_t>::type iri_policy_t;
     typedef typename boost::range_const_iterator<AttributeValue>::type iterator_t;
@@ -39,7 +39,7 @@ struct iri_value_parser
     if (qi::parse(it, end, iri_rule, iri) && it == end)
     {
       typedef typename value_events_with_iri_policy<
-        typename args_t::value_events_policy, 
+        typename args_t::value_events_policy,
         iri_policy_t
       >::type value_events_policy_t;
       value_events_policy_t::set(args_t::value_events_context::get(context), tag, property_source, iri);

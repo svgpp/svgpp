@@ -9,7 +9,7 @@
 
 #include <svgpp/policy/detail/default_policies.hpp>
 
-namespace svgpp { namespace detail 
+namespace svgpp { namespace detail
 {
 
 template<class Context>
@@ -27,7 +27,7 @@ struct context_copy_or_reference
 };
 
 template<class Context>
-struct context_copy_or_reference<Context, 
+struct context_copy_or_reference<Context,
   typename boost::enable_if<is_context_inexpensively_copyable<Context> >::type>
 {
   typedef Context type;
@@ -79,15 +79,15 @@ struct is_context_inexpensively_copyable<
 
 template<class AdaptedPolicyTag, class AdaptedPolicy, class OriginalContext>
 adapted_policy_context_wrapper<
-  OriginalContext, 
-  AdaptedPolicyTag, 
+  OriginalContext,
+  AdaptedPolicyTag,
   AdaptedPolicy
-> 
+>
 adapt_context_policy(OriginalContext & original_context)
 {
   return adapted_policy_context_wrapper<
-    OriginalContext, 
-    AdaptedPolicyTag, 
+    OriginalContext,
+    AdaptedPolicyTag,
     AdaptedPolicy
   > (original_context);
 }
@@ -116,35 +116,35 @@ struct is_context_inexpensively_copyable<
 
 template<class AdaptedPolicyTag, class AdaptedPolicy, class OriginalContext, class AdapterContext>
 const adapted_context_wrapper<
-  OriginalContext, 
-  AdapterContext, 
-  AdaptedPolicyTag, 
-  AdaptedPolicy 
-> 
+  OriginalContext,
+  AdapterContext,
+  AdaptedPolicyTag,
+  AdaptedPolicy
+>
 adapt_context(OriginalContext & original_context, AdapterContext & adapter_context)
 {
   return adapted_context_wrapper<
-    OriginalContext, 
-    AdapterContext, 
-    AdaptedPolicyTag, 
-    AdaptedPolicy 
+    OriginalContext,
+    AdapterContext,
+    AdaptedPolicyTag,
+    AdaptedPolicy
   >(original_context, adapter_context);
 }
 
 template<class OriginalContext, class AdapterContext>
 const adapted_context_wrapper<
-  OriginalContext, 
-  AdapterContext, 
-  tag::value_events_policy, 
-  policy::value_events::default_policy<AdapterContext> 
-> 
+  OriginalContext,
+  AdapterContext,
+  tag::value_events_policy,
+  policy::value_events::default_policy<AdapterContext>
+>
 adapt_context_value_events(OriginalContext & original_context, AdapterContext & adapter_context)
 {
   return adapted_context_wrapper<
-    OriginalContext, 
-    AdapterContext, 
-    tag::value_events_policy, 
-    policy::value_events::default_policy<AdapterContext> 
+    OriginalContext,
+    AdapterContext,
+    tag::value_events_policy,
+    policy::value_events::default_policy<AdapterContext>
   >(original_context, adapter_context);
 }
 
@@ -161,11 +161,11 @@ struct unwrap_context
   template<class Parameters>
   struct bind
   {
-    typedef typename boost::parameter::value_type<Parameters, PolicyTag, 
+    typedef typename exboost::parameter::value_type<Parameters, PolicyTag,
       typename get_default_policy<Context, PolicyTag>::type>::type type;
   };
 
-  // Undefined "policy" stub may get referenced, when context is not bound to parameters 
+  // Undefined "policy" stub may get referenced, when context is not bound to parameters
   // via bind or bind_context_parameters_wrapper
   struct policy;
 };

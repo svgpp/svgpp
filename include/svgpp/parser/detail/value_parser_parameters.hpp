@@ -8,19 +8,19 @@
 #pragma once
 
 #include <svgpp/detail/adapt_context.hpp>
-#include <boost/parameter.hpp>
+#include <svgpp/utility/boost_parameter_fixed.hpp>
 #include <svgpp/template_parameters.hpp>
 
-namespace svgpp { namespace detail 
+namespace svgpp { namespace detail
 {
 
 template<class Context, SVGPP_TEMPLATE_ARGS>
 struct value_parser_parameters
 {
 private:
-  typedef typename boost::parameter::parameters<
-      boost::parameter::optional<tag::number_type>
-    , boost::parameter::optional<tag::error_policy>
+  typedef typename exboost::parameter::parameters<
+      exboost::parameter::optional<tag::number_type>
+    , exboost::parameter::optional<tag::error_policy>
   >::template bind<SVGPP_TEMPLATE_ARGS_PASS>::type args;
 
 public:
