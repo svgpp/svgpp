@@ -10,7 +10,7 @@
 #ifndef FILE_AF316121_84B7_4A69_BBE7_EEEADDABD0FF_H_
 #define FILE_AF316121_84B7_4A69_BBE7_EEEADDABD0FF_H_
 
-#include <boost/detail/scoped_enum_emulation.hpp>
+#include <boost/core/scoped_enum.hpp>
 #include <boost/preprocessor.hpp>
 #include <boost/range/iterator_range.hpp>
 #include <svgpp/detail/literal_char_types.hpp>
