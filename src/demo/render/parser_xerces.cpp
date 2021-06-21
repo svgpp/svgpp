@@ -30,7 +30,7 @@ namespace
 class XMLDocument::Impl
 {
 public:
-  std::auto_ptr<XercesDOMParser> parser_;
+  std::unique_ptr<XercesDOMParser> parser_;
 
   typedef std::map<svg_string_t, XMLElement> element_by_id_t;
   element_by_id_t element_by_id_;
