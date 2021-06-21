@@ -22,7 +22,7 @@ Take a look at [Tutorial](http://svgpp.org/lesson01.html) to get the idea about 
   * Import modules of vector editing software
   * Implementing path-only input of SVG format with minimal efforts in any graphics or math software
 * Requires only Boost library itself (demo, tests and sample have their own requirements)
-* Compatible with C++03, but requires conforming implementation, due to heavy usage of templates
+* Compatible with C++11, but requires conforming implementation, due to heavy usage of templates
 * Supports any character type (`char` and `wchar_t`). Other (Unicode from C++11) were not tested, but should be ok.
 
 #### SVG 1.1 features covered by SVG++

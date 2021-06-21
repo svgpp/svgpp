@@ -626,7 +626,7 @@ private:
   Document & document_;
   ImageBuffer * const image_buffer_; // Non-NULL only for topmost SVG element
   lazy_buffer_t parent_buffer_;
-  std::auto_ptr<ImageBuffer> own_buffer_;
+  std::unique_ptr<ImageBuffer> own_buffer_;
   boost::shared_ptr<ClipBuffer> clip_buffer_;
   length_factory_t length_factory_;
   bool rendering_disabled_;
