@@ -185,12 +185,17 @@ struct element_iterator<xmlNode *>
   typedef xmlNode * iterator_type;
   typedef boost::iterator_range<char const *> string_type;
   typedef boost::iterator_range<char const *> element_name_type;
-  typedef boost::iterator_range<char const *> element_text_type;
+  typedef detail::libxml_string_ptr element_text_type;
   typedef xmlAttr * attribute_enumerator_type;
 
   static string_type get_string_range(string_type const & str)
   { 
     return str;
+  }
+
+  static string_type get_string_range(element_text_type const & value)
+  {
+    return value.get_range();
   }
 
   static void advance_element(iterator_type & xml_element)
@@ -227,7 +232,7 @@ struct element_iterator<xmlNode *>
   static element_text_type get_text(iterator_type xml_element)
   {
     return detail::libxml_string_ptr(
-      xmlNodeListGetString(xml_element->doc, xml_element, 1)).get_range();
+      xmlNodeListGetString(xml_element->doc, xml_element, 1));
   }
 
   static attribute_enumerator_type get_attributes(iterator_type xml_element)
