@@ -5,7 +5,8 @@
 //
 // See http://github.com/svgpp/svgpp for library home page.
 
-// All SVG and subset of XLink and XML attributes sorted by name
+// Important:
+// All SVG and subsets of XLink and XML attributes must be sorted by name in lexicographic order!
 
 SVGPP_ON      (accent_height                      , accent-height)
 SVGPP_ON      (accumulate                         , accumulate)
