@@ -28,7 +28,7 @@ SVGPP_ON_ATTR(stroke_linejoin,                 (miter)(round)(bevel)(inherit)) /
 SVGPP_ON_ATTR(text_anchor,                     (start)(middle)(end)(inherit))  // Default: start
 SVGPP_ON_ATTR(text_rendering,                  (auto_)(optimizeSpeed)(optimizeLegibility)(geometricPrecision)(inherit))  // Default: auto
 SVGPP_ON_ATTR(unicode_bidi,                    (normal)(embed)(bidi_override)(inherit))   // Default: normal
-SVGPP_ON_ATTR(vector_effect,                   (none)(non_scaling_stroke)(non_scaling_size)(non_rotation)(fixed_position)) // Default: none
+SVGPP_ON_ATTR(vector_effect,                   (none)(non_scaling_stroke)) // Default: none
 SVGPP_ON_ATTR(visibility,                      (visible)(hidden)(collapse)(inherit))  // Default: visible
 SVGPP_ON_ATTR(writing_mode,                    (lr_tb)(rl_tb)(tb_rl)(lr)(rl)(tb)(inherit)) // Default: lr_tb
 

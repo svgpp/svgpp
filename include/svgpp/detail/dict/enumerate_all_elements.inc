@@ -5,7 +5,8 @@
 //
 // See http://github.com/svgpp/svgpp for library home page.
 
-// All SVG elements sorted by name
+// Important:
+// All SVG elements must be sorted by name in lexicographic order!
 
 SVGPP_ON(a,                             a)
 SVGPP_ON(altGlyph,                      altGlyph)
