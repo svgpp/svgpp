@@ -3,7 +3,7 @@
 // file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //
-// 2009.10.21 TDS remove depenency on boost::python::detail::referent_storage
+// 2009.10.21 TDS remove dependency on boost::python::detail::referent_storage
 //
 #ifndef EXBOOST_PARAMETER_MAYBE_091021_HPP_EXBOOST
 # define EXBOOST_PARAMETER_MAYBE_091021_HPP_EXBOOST

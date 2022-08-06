@@ -20,7 +20,7 @@ Default ``policy::error::raise_exception`` uses Boost.Exception for transporting
 data to the catch site.
 
 ``boost::error_info`` uses tags ``tag::error_info::xml_element`` and ``tag::error_info::xml_attribute`` 
-to pass information about place in SVG document where error occured alongside with the exception object.
+to pass information about place in SVG document where error occurred alongside with the exception object.
 Value type depends on XML parser and *XML Policy* used.
 
 Example of SVG++ exception handling when RapidXML NS parser is used::
