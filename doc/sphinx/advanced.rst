@@ -51,6 +51,6 @@ Understanding following types may cause some difficulties::
     };
 
   In this case ``saved_value_type`` may be defined as ``XmlAttribute const *``, instead of ``std::string``, 
-  to avoid expences of creating and coping string that may not be requested later.
+  to avoid expenses of creating and copying a string that may not be requested later.
 
 .. include::  value_parser.rst

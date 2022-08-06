@@ -65,7 +65,7 @@ Methods
 
 .. _fakeRef4:
 
-  ``load_expected_element`` loads ``xml_element`` and its descendands and passes parsed data
+  ``load_expected_element`` loads ``xml_element`` and its descendants and passes parsed data
   to ``context``. 
 
   ``load_expected_element`` expects that XML name of ``xml_element`` corresponds to ``ElementTag``.

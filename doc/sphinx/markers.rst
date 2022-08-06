@@ -97,7 +97,7 @@ or neither of them (``marker_none``).
 
 :ref:`Named class template parameter <named-params>` for *Marker Events Policy* is ``marker_events_policy``.
 
-Default *Marker Events Policy* (``policy::marker_events::forward_to_method``) fowards calls to its static methods
+Default *Marker Events Policy* (``policy::marker_events::forward_to_method``) forwards calls to its static methods
 to ``context`` object methods.
 
 Example::
