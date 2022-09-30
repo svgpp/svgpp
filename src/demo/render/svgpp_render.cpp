@@ -1656,7 +1656,10 @@ void renderDocument(XMLDocument & xmlDocument, ImageBuffer & buffer)
 {
   Document document(xmlDocument);
   Canvas canvas(document, buffer);
-  document_traversal_main::load_document(xmlDocument.getRoot(), canvas);
+  if (XMLElement root = xmlDocument.getRoot())
+    document_traversal_main::load_document(root, canvas);
+  else
+    throw std::runtime_error("No root XML element");
 }
 
 int main(int argc, char * argv[])
