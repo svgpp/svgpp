@@ -9,39 +9,53 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
-variables:
-- name: BoostUrl
-  value: 'https://archives.boost.io/release/1.84.0/source/boost_1_84_0.7z'
-
-steps:
-- task: CmdLine@2
-  displayName: Download Boost sources
-  inputs:
-    script: 'curl -o boost.7z $(BoostUrl)'
-- task: ExtractFiles@1
-  displayName: Extract Boost sources
-  inputs:
-    archiveFilePatterns: 'boost.7z'
-    destinationFolder: '$(agent.builddirectory)/boost'
-    cleanDestinationFolder: true
-    overwriteExistingFiles: false
-- task: CMake@1
-  displayName: 'Build with CMake'
-  inputs:
-    cmakeArgs: '-DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=$(agent.builddirectory)/boost/boost_1_84_0 ../src'
-- task: CmdLine@2
-  displayName: Compile svgpp 
-  inputs:
-    script: 'make'
-    workingDirectory: '$(Build.SourcesDirectory)/build'
-- task: CmdLine@2
-  displayName: Compile unit tests 
-  inputs:
-    script: 'make ParserGTest'
-    workingDirectory: '$(Build.SourcesDirectory)/build'
-- task: CmdLine@2
-  displayName: Run unit tests 
-  inputs:
-    script: '$(Build.SourcesDirectory)/build/bin/ParserGTest'
+parameters:
+- name: Configurations
+  type: object
+  default: 
+  - Release
+- name: BoostVersions
+  type: object
+  default: 
+  - '1.84.0'
   
-    
+jobs:
+- ${{ each Configuration in parameters.Configurations }}:
+  - ${{ each BoostVersion in parameters.BoostVersions }}:
+    - job: 'Build_$(BoostVersion)_$(Configuration)'
+        variables:
+        - name: BoostVersionUnderscore
+          value: $[replace(BoostVersion, '.', '_')]
+        - name: BoostUrl
+          value: 'https://archives.boost.io/release/$(BoostVersion)/source/boost_$(BoostVersionUnderscore).7z'
+        steps:
+        - task: CmdLine@2
+          displayName: Download Boost sources
+          inputs:
+            script: 'curl -o boost.7z $(BoostUrl)'
+        - task: ExtractFiles@1
+          displayName: Extract Boost sources
+          inputs:
+            archiveFilePatterns: 'boost.7z'
+            destinationFolder: '$(agent.builddirectory)/boost'
+            cleanDestinationFolder: true
+            overwriteExistingFiles: false
+        - task: CMake@1
+          displayName: 'Build with CMake'
+          inputs:
+            cmakeArgs: '-DCMAKE_BUILD_TYPE=$(Configuration) -DBOOST_ROOT=$(agent.builddirectory)/boost/boost_$(BoostVersionUnderscore) ../src'
+        - task: CmdLine@2
+          displayName: Compile svgpp 
+          inputs:
+            script: 'make'
+            workingDirectory: '$(Build.SourcesDirectory)/build'
+        - task: CmdLine@2
+          displayName: Compile unit tests 
+          inputs:
+            script: 'make ParserGTest'
+            workingDirectory: '$(Build.SourcesDirectory)/build'
+        - task: CmdLine@2
+          displayName: Run unit tests 
+          inputs:
+            script: '$(Build.SourcesDirectory)/build/bin/ParserGTest'
+          
