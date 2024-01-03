@@ -9,7 +9,22 @@ trigger:
 pool:
   vmImage: ubuntu-latest
 
+variables:
+- name: BoostUrl
+  value: 'https://archives.boost.io/release/1.84.0/source/boost_1_84_0.7z'
+
 steps:
+- task: CmdLine@2
+  displayName: Download Boost sources
+  inputs:
+    script: 'curl -o boost.zip $(BoostUrl)'
+- task: ExtractFiles@1
+  inputs:
+    archiveFilePatterns: 'boost.zip'
+    destinationFolder: '$(agent.builddirectory)/boost'
+    cleanDestinationFolder: true
+    overwriteExistingFiles: false
 - task: CMake@1
-  #inputs:
-  displayName: 'CMake'
+  displayName: 'Build with CMake'
+  inputs:
+    cmakeArgs: "-DCMAKE_BUILD_TYPE=Release ."
