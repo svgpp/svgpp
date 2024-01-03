@@ -25,7 +25,7 @@ jobs:
     - job: "Build_${{replace(BoostVersion, '.', '_')}}_${{Configuration}}"
       variables:
       - name: BoostVersionUnderscore
-        value: $[replace(BoostVersion, '.', '_')]
+        value: ${{replace(BoostVersion, '.', '_')}}
       - name: BoostUrl
         value: 'https://archives.boost.io/release/$(BoostVersion)/source/boost_$(BoostVersionUnderscore).7z'
       steps:
