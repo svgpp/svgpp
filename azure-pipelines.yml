@@ -25,12 +25,11 @@ jobs:
     - job: "Build_${{replace(BoostVersion, '.', '_')}}_${{Configuration}}"
       variables:
         BoostVersionUnderscore: "${{replace(BoostVersion, '.', '_')}}"
-        BoostUrl: 'https://archives.boost.io/release/${{BoostVersion}}/source/boost_${{BoostVersionUnderscore}}.7z'
       steps:
       - task: CmdLine@2
         displayName: Download Boost sources
         inputs:
-          script: 'curl -o boost.7z $(BoostUrl)'
+          script: 'curl -o boost.7z https://archives.boost.io/release/${{BoostVersion}}/source/boost_${{BoostVersionUnderscore}}.7z'
       - task: ExtractFiles@1
         displayName: Extract Boost sources
         inputs:
