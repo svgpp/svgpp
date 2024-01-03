@@ -29,7 +29,7 @@ jobs:
       - task: CmdLine@2
         displayName: Download Boost sources
         inputs:
-          script: 'curl -o boost.7z https://archives.boost.io/release/${{BoostVersion}}/source/boost_${{BoostVersionUnderscore}}.7z'
+          script: 'curl -o boost.7z https://archives.boost.io/release/${{BoostVersion}}/source/boost_$(BoostVersionUnderscore).7z'
       - task: ExtractFiles@1
         displayName: Extract Boost sources
         inputs:
