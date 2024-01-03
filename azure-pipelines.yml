@@ -24,10 +24,9 @@ jobs:
   - ${{ each BoostVersion in parameters.BoostVersions }}:
     - job: "Build_${{replace(BoostVersion, '.', '_')}}_${{Configuration}}"
       variables:
-      - name: BoostVersionUnderscore
-        value: "${{replace(BoostVersion, '.', '_')}}"
+      - BoostVersionUnderscore: "${{replace(BoostVersion, '.', '_')}}"
       - name: BoostUrl
-        value: 'https://archives.boost.io/release/$(BoostVersion)/source/boost_$(BoostVersionUnderscore).7z'
+        value: 'https://archives.boost.io/release/${{BoostVersion}}/source/boost_${{BoostVersionUnderscore}}.7z'
       steps:
       - task: CmdLine@2
         displayName: Download Boost sources
