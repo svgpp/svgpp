@@ -29,3 +29,19 @@ steps:
   displayName: 'Build with CMake'
   inputs:
     cmakeArgs: '-DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=$(agent.builddirectory)/boost/boost_1_84_0 ../src'
+- task: CmdLine@2
+  displayName: Compile svgpp 
+  inputs:
+    script: 'make'
+    workingDirectory: '$(Build.SourcesDirectory)/build'
+- task: CmdLine@2
+  displayName: Compile unit tests 
+  inputs:
+    script: 'make ParserGTest'
+    workingDirectory: '$(Build.SourcesDirectory)/build'
+- task: CmdLine@2
+  displayName: Run unit tests 
+  inputs:
+    script: '$(Build.SourcesDirectory)/build/bin/ParserGTest'
+  
+    
