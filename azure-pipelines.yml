@@ -28,4 +28,4 @@ steps:
 - task: CMake@1
   displayName: 'Build with CMake'
   inputs:
-    cmakeArgs: '-DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=$(agent.builddirectory)/boost ..'
+    cmakeArgs: '-DCMAKE_BUILD_TYPE=Release -DBOOST_ROOT=$(agent.builddirectory)/boost/boost_1_84_0 ../src'
