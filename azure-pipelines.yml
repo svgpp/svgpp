@@ -17,10 +17,11 @@ steps:
 - task: CmdLine@2
   displayName: Download Boost sources
   inputs:
-    script: 'curl -o boost.zip $(BoostUrl)'
+    script: 'curl -o boost.7z $(BoostUrl)'
 - task: ExtractFiles@1
+  displayName: Extract Boost sources
   inputs:
-    archiveFilePatterns: 'boost.zip'
+    archiveFilePatterns: 'boost.7z'
     destinationFolder: '$(agent.builddirectory)/boost'
     cleanDestinationFolder: true
     overwriteExistingFiles: false
