@@ -17,7 +17,7 @@ parameters:
 - name: BoostVersions
   type: object
   default: 
-  - '1.65.0'
+  - '1.68.0'
   - '1.84.0'
   
 jobs:
