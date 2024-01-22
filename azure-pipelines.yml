@@ -1,0 +1,50 @@
+trigger:
+- master
+
+pool:
+  vmImage: ubuntu-latest
+
+parameters:
+- name: Configurations
+  type: object
+  default: 
+  - Release
+- name: BoostVersions
+  type: object
+  default: 
+  - '1.68.0'
+  - '1.84.0'
+  
+jobs:
+- ${{ each Configuration in parameters.Configurations }}:
+  - ${{ each BoostVersion in parameters.BoostVersions }}:
+    - job: "Build_${{replace(BoostVersion, '.', '_')}}_${{Configuration}}"
+      displayName: "Build ${{Configuration}} with Boost ${{BoostVersion}}"
+      variables:
+        BoostVersionUnderscore: "${{replace(BoostVersion, '.', '_')}}"
+      steps:
+      - task: CmdLine@2
+        displayName: Download Boost sources
+        inputs:
+          script: 'curl -o boost.7z https://archives.boost.io/release/${{BoostVersion}}/source/boost_$(BoostVersionUnderscore).7z'
+      - task: ExtractFiles@1
+        displayName: Extract Boost sources
+        inputs:
+          archiveFilePatterns: 'boost.7z'
+          destinationFolder: '$(agent.builddirectory)/boost'
+          cleanDestinationFolder: true
+          overwriteExistingFiles: false
+      - task: CMake@1
+        displayName: 'Run CMake'
+        inputs:
+          cmakeArgs: '-DCMAKE_BUILD_TYPE=$(Configuration) -DBOOST_ROOT=$(agent.builddirectory)/boost/boost_$(BoostVersionUnderscore) ../src'
+      - task: CmdLine@2
+        displayName: Compile svgpp 
+        inputs:
+          script: 'make'
+          workingDirectory: '$(Build.SourcesDirectory)/build'
+      - task: CmdLine@2
+        displayName: Run unit tests 
+        inputs:
+          script: '$(Build.SourcesDirectory)/build/bin/ParserGTest'
+        

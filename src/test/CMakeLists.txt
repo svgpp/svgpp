@@ -97,7 +97,7 @@ if (1)
 		full_parse_test_common.hpp
 	)
 
-	if (UNIX)
+	if (FALSE AND UNIX)
 		target_link_libraries(FullParseTest
 			boost_timer
 			boost_system
