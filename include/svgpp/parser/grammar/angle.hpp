@@ -10,7 +10,7 @@
 #include <svgpp/definitions.hpp>
 #include <svgpp/parser/detail/common.hpp>
 #include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 #include <boost/spirit/include/qi_grammar.hpp>
 
 namespace svgpp 

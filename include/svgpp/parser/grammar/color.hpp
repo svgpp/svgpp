@@ -10,7 +10,7 @@
 #include <svgpp/parser/detail/common.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 
 namespace svgpp 
 {
