@@ -1,6 +1,6 @@
 #include "full_parse_test_common.hpp"
 #include <rapidxml_ns/rapidxml_ns_utils.hpp>
-#include <boost/timer/timer.hpp>
+// #include <boost/timer/timer.hpp>
 
 #include <svgpp/parser/external_function/parse_all_impl.hpp>
 
@@ -28,12 +28,12 @@ int main(int argc, char * argv[])
     rapidxml_ns::xml_document<> doc;
     {
       std::cout << "Parsing XML ";
-      boost::timer::auto_cpu_timer xml_timer;
+      // boost::timer::auto_cpu_timer xml_timer;
       doc.parse<rapidxml_ns::parse_no_string_terminators>(xml_file.data());  
     }
 
     std::cout << "Parsing SVG ";
-    boost::timer::auto_cpu_timer svg_timer;
+    // boost::timer::auto_cpu_timer svg_timer;
     parse(doc.first_node());
   }
   catch (std::exception const & e)
