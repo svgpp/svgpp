@@ -15,7 +15,7 @@
 #include <svgpp/parser/detail/value_parser_parameters.hpp>
 #include <svgpp/parser/value_parser_fwd.hpp>
 #include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/phoenix.hpp>
+#include <boost/phoenix.hpp>
 
 namespace svgpp { 
 
