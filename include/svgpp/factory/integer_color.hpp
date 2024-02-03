@@ -20,6 +20,11 @@ struct percentage_adapter: BaseFactory
     return BaseFactory::create(cast_percent(r), cast_percent(g), cast_percent(b));
   }
 
+  static typename BaseFactory::color_type create_from_percent(percentage_type r, percentage_type g, percentage_type b, unsigned char a)
+  {
+    return BaseFactory::create(cast_percent(r), cast_percent(g), cast_percent(b), a);
+  }
+
 private:
   static unsigned char cast_percent(percentage_type c)
   {

@@ -49,9 +49,11 @@ public:
     using qi::_1;
     using qi::_2;
     using qi::_3;
+    using qi::_4;
     using qi::_a;
     using qi::_b;
     using qi::_c;
+    using qi::_d;
     using qi::_val;
     using qi::lit;
     using detail::character_encoding_namespace::space;
@@ -71,6 +73,15 @@ public:
               >> *space 
               >> ')' 
             )
+        |   (
+                 detail::no_case_if_css(PropertySource())[ lit("rgba(") ]
+              >> *space
+              >> (  components_rgba_rule [_val = _1]
+                 |  percentage_rgba_rule [_val = _1]
+                 )
+              >> *space
+              >> ')'
+            )
         |   qi::no_case[detail::color_keywords::symbols_ [_val = phx::bind(&color_grammar::color_keyword, _1)]];
 
     hex_rule 
@@ -88,6 +99,16 @@ public:
             >> integer
             ) [_val = phx::bind(&color_grammar::absolute_components, _1, _2, _3)];
 
+    components_rgba_rule 
+        =   (  integer
+            >> comma 
+            >> integer
+            >> comma 
+            >> integer
+            >> comma
+            >> number
+            ) [_val = phx::bind(&color_grammar::absolute_rgba_components, _1, _2, _3, _4)];
+
     percentage_rule 
         =   (  number 
             >> '%'
@@ -98,6 +119,19 @@ public:
             >> number 
             >> '%'
             ) [_val = phx::bind(&color_grammar::percent_components, _1, _2, _3)];
+
+    percentage_rgba_rule 
+        =   (  number 
+            >> '%'
+            >> comma 
+            >> number 
+            >> '%' 
+            >> comma 
+            >> number 
+            >> '%'
+            >> comma
+            >> number
+            ) [_val = phx::bind(&color_grammar::percent_rgba_components, _1, _2, _3, _4)];
   }
 
 private:
@@ -107,7 +141,9 @@ private:
   qi::rule<Iterator> comma;
   qi::rule<Iterator, color_type (), qi::locals<unsigned int> > hex_rule;
   qi::rule<Iterator, color_type ()> components_rule;
+  qi::rule<Iterator, color_type ()> components_rgba_rule;
   qi::rule<Iterator, color_type ()> percentage_rule;
+  qi::rule<Iterator, color_type ()> percentage_rgba_rule;
   qi::uint_parser<unsigned char, 10, 1, 3> integer;
   // There was mistake in SVG 1.1 that limits percentage to integer values, while CSS permits floating point numbers.
   // Till fixed version is not released, we will use CSS version of percentage definition.
@@ -135,9 +171,19 @@ private:
     return ColorFactory::create(r, g, b);
   }
 
+  static color_type absolute_rgba_components(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+  {
+     return ColorFactory::create(r, g, b, a);
+  }
+
   static color_type percent_components(number_type r, number_type g, number_type b)
   {
     return ColorFactory::create_from_percent(r, g, b);
+  }
+
+  static color_type percent_rgba_components(number_type r, number_type g, number_type b, unsigned char a)
+  {
+    return ColorFactory::create_from_percent(r, g, b, a);
   }
 
   static color_type color_keyword(detail::rgb_t const & rgb)
