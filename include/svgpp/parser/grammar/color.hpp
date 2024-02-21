@@ -171,7 +171,7 @@ private:
     return ColorFactory::create(r, g, b);
   }
 
-  static color_type absolute_rgba_components(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
+  static color_type absolute_rgba_components(unsigned char r, unsigned char g, unsigned char b, float a)
   {
      return ColorFactory::create(r, g, b, a);
   }
@@ -181,7 +181,7 @@ private:
     return ColorFactory::create_from_percent(r, g, b);
   }
 
-  static color_type percent_rgba_components(number_type r, number_type g, number_type b, unsigned char a)
+  static color_type percent_rgba_components(number_type r, number_type g, number_type b, float a)
   {
     return ColorFactory::create_from_percent(r, g, b, a);
   }
