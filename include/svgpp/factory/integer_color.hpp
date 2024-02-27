@@ -20,19 +20,19 @@ struct percentage_adapter: BaseFactory
     return BaseFactory::create(cast_percent(r), cast_percent(g), cast_percent(b));
   }
 
-  static typename BaseFactory::color_type create_from_percent(percentage_type r, percentage_type g, percentage_type b, float a)
+  static typename BaseFactory::color_type create_from_percent(percentage_type r, percentage_type g, percentage_type b, double a)
   {
-    return BaseFactory::create(cast_percent(r), cast_percent(g), cast_percent(b), a);
+    return BaseFactory::create(cast_percent(r), cast_percent(g), cast_percent(b), cast_alpha(a));
   }
 
 private:
   static unsigned char cast_percent(percentage_type c)
   {
-    if (c > 100)
-      c = 100;
-    else if (c < 0)
-      c = 0;
-    return static_cast<unsigned char>(c * 2.55 + 0.0049);
+    return static_cast<unsigned char>(std::clamp(c, 0.0, 100.0) * 2.55 + 0.0049);
+  }
+  static unsigned char cast_alpha(double a)
+  {
+    return static_cast<unsigned char>(std::clamp(a, 0.0, 1.0) * 255 + 0.0049);
   }
 };
 
