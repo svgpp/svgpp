@@ -185,12 +185,12 @@ private:
 #ifdef SVGPP_ACCEPT_RGBA_COLOR
   static color_type absolute_rgba_components(unsigned char r, unsigned char g, unsigned char b, double a)
   {
-    return ColorFactory::create(r, g, b, static_cast<unsigned char>(std::clamp(a, 0.0, 1.0) * 255 + 0.0049));
+    return ColorFactory::create(r, g, b, a);
   }
 
   static color_type percent_rgba_components(number_type r, number_type g, number_type b, double a)
   {
-    return ColorFactory::create_from_percent(r, g, b, a);
+    return ColorFactory::create_from_percent(r, g, b, static_cast<float>(a));
   }
 #endif
 
