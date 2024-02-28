@@ -190,7 +190,7 @@ private:
 
   static color_type percent_rgba_components(number_type r, number_type g, number_type b, double a)
   {
-    return ColorFactory::create_from_percent(r, g, b, static_cast<float>(a));
+    return ColorFactory::create_from_percent(r, g, b, a);
   }
 #endif
 
