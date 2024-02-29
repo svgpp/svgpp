@@ -20,6 +20,13 @@ struct percentage_adapter: BaseFactory
     return BaseFactory::create(cast_percent(r), cast_percent(g), cast_percent(b));
   }
 
+#ifdef SVGPP_ACCEPT_RGBA_COLOR
+  static typename BaseFactory::color_type create_from_percent(percentage_type r, percentage_type g, percentage_type b, double a)
+  {
+    return BaseFactory::create(cast_percent(r), cast_percent(g), cast_percent(b), a);
+  }
+#endif
+
 private:
   static unsigned char cast_percent(percentage_type c)
   {
