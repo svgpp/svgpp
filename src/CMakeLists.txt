@@ -2,6 +2,7 @@ cmake_minimum_required (VERSION 2.8)
 
 project(svgpp)
 
+cmake_policy(SET CMP0167 OLD)
 find_package(Boost REQUIRED)
 
 if (Boost_FOUND)
